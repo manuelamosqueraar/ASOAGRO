@@ -1,0 +1,70 @@
+@page "/registrar-documentos"
+@rendermode InteractiveServer
+
+<h3>Registrar Documentos del Asociado</h3>
+
+@if (!string.IsNullOrEmpty(mensajeExito))
+{
+    <div class="alert alert-success" role="alert">
+        @mensajeExito
+    </div>
+}
+
+<EditForm Model="@documentoModel" OnValidSubmit="GuardarDocumento">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-3">
+        <label for="documentoAsociado" class="form-label">Número de Documento del Asociado:</label>
+        <InputText id="documentoAsociado" class="form-control" @bind-Value="documentoModel.DocumentoAsociado" />
+        <ValidationMessage For="@(() => documentoModel.DocumentoAsociado)" />
+    </div>
+
+    <div class="mb-3">
+        <label for="tipoDocumento" class="form-label">Tipo de Documento:</label>
+        <InputSelect id="tipoDocumento" class="form-select" @bind-Value="documentoModel.TipoDocumento">
+            <option value="">Seleccione el tipo...</option>
+            <option value="CertificadoFinca">Certificado de Tradición y Libertad</option>
+            <option value="CedulaCiudadania">Cédula de Ciudadanía</option>
+            <option value="RegistroBPA">Buenas Prácticas Agrícolas (BPA)</option>
+        </InputSelect>
+        <ValidationMessage For="@(() => documentoModel.TipoDocumento)" />
+    </div>
+
+    <div class="mb-3">
+        <label for="archivo" class="form-label">Seleccionar Archivo (PDF / Imagen):</label>
+        <input type="file" id="archivo" class="form-control" @onchange="CargarArchivo" />
+    </div>
+
+    <button type="submit" class="btn btn-primary">Subir y Registrar Documento</button>
+</EditForm>
+
+@code {
+    private DocumentoModel documentoModel = new();
+    private string mensajeExito = string.Empty;
+    private string nombreArchivo = string.Empty;
+
+    private void CargarArchivo(Microsoft.AspNetCore.Components.ChangeEventArgs e)
+    {
+        // Captura el nombre del archivo seleccionado de forma simulada
+        if (e.Value is not null)
+        {
+            nombreArchivo = e.Value.ToString() ?? "archivo_cargado.pdf";
+        }
+    }
+
+    private void GuardarDocumento()
+    {
+        mensajeExito = $"¡Documento '{documentoModel.TipoDocumento}' registrado con éxito para el asociado con cédula {documentoModel.DocumentoAsociado}!";
+        documentoModel = new();
+    }
+
+    public class DocumentoModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El documento del asociado es obligatorio.")]
+        public string DocumentoAsociado { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Debe seleccionar el tipo de documento.")]
+        public string TipoDocumento { get; set; } = string.Empty;
+    }
+}

@@ -1,0 +1,67 @@
+@page "/consultar-asociados"
+@rendermode InteractiveServer
+
+<h3>Consultar Asociados Registrados</h3>
+
+<div class="mb-3">
+    <label for="filtro" class="form-label">Buscar por nombre o número de documento:</label>
+    <input id="filtro" class="form-control" @bind="textoFiltro" @bind:event="oninput" placeholder="Escribe para buscar..." />
+</div>
+
+@if (AsociadosFiltrados.Any())
+{
+    <table class="table table-striped mt-3">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Documento</th>
+                <th>Finca</th>
+                <th>Cultivo</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var asociado in AsociadosFiltrados)
+            {
+                <tr>
+                    <td>@asociado.Nombre</td>
+                    <td>@asociado.Documento</td>
+                    <td>@asociado.Finca</td>
+                    <td>@asociado.Cultivo</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <div class="alert alert-warning mt-3" role="alert">
+        No se encontraron asociados con ese criterio de búsqueda.
+    </div>
+}
+
+@code {
+    private string textoFiltro = string.Empty;
+
+    // Lista de ejemplo con datos simulados para la consulta
+    private List<AsociadoDto> listaAsociados = new()
+    {
+        new() { Nombre = "Carlos Pérez", Documento = "12345678", Finca = "La Esperanza", Cultivo = "Plátano" },
+        new() { Nombre = "Ana Gómez", Documento = "87654321", Finca = "El Paraíso", Cultivo = "Cacao" },
+        new() { Nombre = "Luis Martínez", Documento = "11223344", Finca = "San José", Cultivo = "Banano" }
+    };
+
+    private IEnumerable<AsociadoDto> AsociadosFiltrados => 
+        string.IsNullOrWhiteSpace(textoFiltro) 
+            ? listaAsociados 
+            : listaAsociados.Where(a => 
+                a.Nombre.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) || 
+                a.Documento.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase));
+
+    public class AsociadoDto
+    {
+        public string Nombre { get; set; } = string.Empty;
+        public string Documento { get; set; } = string.Empty;
+        public string Finca { get; set; } = string.Empty;
+        public string Cultivo { get; set; } = string.Empty;
+    }
+}
