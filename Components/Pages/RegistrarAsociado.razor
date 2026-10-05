@@ -1,5 +1,6 @@
 @page "/registrar-asociado"
 @rendermode InteractiveServer
+@inject HttpClient Http
 
 <h3>Registro de Asociado Productor</h3>
 
@@ -9,6 +10,12 @@
         @mensajeExito
     </div>
 }
+@if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="alert alert-danger" role="alert">
+        @mensajeError
+    </div>
+}
 
 <EditForm Model="@asociado" OnValidSubmit="ManejarValidacion">
     <DataAnnotationsValidator />
@@ -16,62 +23,78 @@
 
     <div class="mb-3">
         <label for="nombre" class="form-label">Nombre Completo:</label>
-        <InputText id="nombre" class="form-control" @bind-Value="asociado.Nombre" />
-        <ValidationMessage For="@(() => asociado.Nombre)" />
+        <InputText id="nombre" class="form-control" @bind-Value="asociado.NombreCompleto" />
+        <ValidationMessage For="@(() => asociado.NombreCompleto)" />
     </div>
 
     <div class="mb-3">
-        <label for="documento" class="form-label">Número de Documento:</label>
-        <InputText id="documento" class="form-control" @bind-Value="asociado.Documento" />
-        <ValidationMessage For="@(() => asociado.Documento)" />
+        <label for="documento" class="form-label">Cédula:</label>
+        <InputText id="documento" class="form-control" @bind-Value="asociado.Cedula" />
+        <ValidationMessage For="@(() => asociado.Cedula)" />
     </div>
 
     <div class="mb-3">
-        <label for="finca" class="form-label">Nombre de la Finca:</label>
-        <InputText id="finca" class="form-control" @bind-Value="asociado.Finca" />
-        <ValidationMessage For="@(() => asociado.Finca)" />
+        <label for="finca" class="form-label">Finca / Vereda:</label>
+        <InputText id="finca" class="form-control" @bind-Value="asociado.FincaVereda" />
+        <ValidationMessage For="@(() => asociado.FincaVereda)" />
     </div>
 
     <div class="mb-3">
         <label for="cultivo" class="form-label">Línea Productiva / Cultivo:</label>
-        <InputSelect id="cultivo" class="form-select" @bind-Value="asociado.Cultivo">
+        <InputSelect id="cultivo" class="form-select" @bind-Value="asociado.CultivoPrincipal">
             <option value="">Seleccione un cultivo...</option>
             <option value="Platano">Plátano</option>
             <option value="Banano">Banano</option>
             <option value="Cacao">Cacao</option>
             <option value="Ganaderia">Ganadería</option>
         </InputSelect>
-        <ValidationMessage For="@(() => asociado.Cultivo)" />
+        <ValidationMessage For="@(() => asociado.CultivoPrincipal)" />
     </div>
 
-    <button type="submit" class="btn btn-primary">Registrar Asociado</button>
+    <div class="form-check mb-3">
+        <InputCheckbox id="bpa" class="form-check-input" @bind-Value="asociado.TieneBPA" />
+        <label for="bpa" class="form-check-label">Cuenta con Buenas Prácticas Agrícolas (BPA)</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary" disabled="@guardando">
+        @(guardando ? "Registrando..." : "Registrar Asociado")
+    </button>
 </EditForm>
 
 @code {
-    private AsociadoModel asociado = new();
+    private Asociado asociado = new();
     private string mensajeExito = string.Empty;
+    private string mensajeError = string.Empty;
+    private bool guardando;
 
-    private void ManejarValidacion()
+    private async Task ManejarValidacion()
     {
-        // Aquí se confirma la creación exitosa cumpliendo el criterio de Jira
-        mensajeExito = $"¡Asociado {asociado.Nombre} registrado con éxito en la finca {asociado.Finca}!";
-        
-        // Limpiamos el formulario para uno nuevo
-        asociado = new();
-    }
+        guardando = true;
+        mensajeExito = string.Empty;
+        mensajeError = string.Empty;
 
-    public class AsociadoModel
-    {
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El nombre es obligatorio.")]
-        public string Nombre { get; set; } = string.Empty;
+        try
+        {
+            var respuesta = await Http.PostAsJsonAsync("api/asociados", asociado);
 
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El documento es obligatorio.")]
-        public string Documento { get; set; } = string.Empty;
+            if (respuesta.IsSuccessStatusCode)
+            {
+                mensajeExito = $"¡Asociado {asociado.NombreCompleto} registrado con éxito!";
+                asociado = new();
+                return;
+            }
 
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El nombre de la finca es obligatorio.")]
-        public string Finca { get; set; } = string.Empty;
-
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Debe seleccionar un cultivo.")]
-        public string Cultivo { get; set; } = string.Empty;
+            mensajeError = respuesta.StatusCode == System.Net.HttpStatusCode.Conflict
+                ? "Ya existe un asociado registrado con esa cédula."
+                : "No fue posible registrar el asociado. Intenta nuevamente.";
+        }
+        catch (HttpRequestException)
+        {
+            mensajeError = "No fue posible conectar con el servidor.";
+        }
+        finally
+        {
+            guardando = false;
+        }
     }
 }

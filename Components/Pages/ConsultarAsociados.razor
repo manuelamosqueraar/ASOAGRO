@@ -1,5 +1,6 @@
 @page "/consultar-asociados"
 @rendermode InteractiveServer
+@inject HttpClient Http
 
 <h3>Consultar Asociados Registrados</h3>
 
@@ -8,7 +9,17 @@
     <input id="filtro" class="form-control" @bind="textoFiltro" @bind:event="oninput" placeholder="Escribe para buscar..." />
 </div>
 
-@if (AsociadosFiltrados.Any())
+@if (cargando)
+{
+    <p><em>Cargando asociados...</em></p>
+}
+else if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="alert alert-danger mt-3" role="alert">
+        @mensajeError
+    </div>
+}
+else if (AsociadosFiltrados.Any())
 {
     <table class="table table-striped mt-3">
         <thead>
@@ -23,10 +34,10 @@
             @foreach (var asociado in AsociadosFiltrados)
             {
                 <tr>
-                    <td>@asociado.Nombre</td>
-                    <td>@asociado.Documento</td>
-                    <td>@asociado.Finca</td>
-                    <td>@asociado.Cultivo</td>
+                    <td>@asociado.NombreCompleto</td>
+                    <td>@asociado.Cedula</td>
+                    <td>@asociado.FincaVereda</td>
+                    <td>@asociado.CultivoPrincipal</td>
                 </tr>
             }
         </tbody>
@@ -41,27 +52,30 @@ else
 
 @code {
     private string textoFiltro = string.Empty;
+    private string mensajeError = string.Empty;
+    private bool cargando = true;
+    private List<Asociado> listaAsociados = new();
 
-    // Lista de ejemplo con datos simulados para la consulta
-    private List<AsociadoDto> listaAsociados = new()
+    protected override async Task OnInitializedAsync()
     {
-        new() { Nombre = "Carlos Pérez", Documento = "12345678", Finca = "La Esperanza", Cultivo = "Plátano" },
-        new() { Nombre = "Ana Gómez", Documento = "87654321", Finca = "El Paraíso", Cultivo = "Cacao" },
-        new() { Nombre = "Luis Martínez", Documento = "11223344", Finca = "San José", Cultivo = "Banano" }
-    };
+        try
+        {
+            listaAsociados = await Http.GetFromJsonAsync<List<Asociado>>("api/asociados") ?? new();
+        }
+        catch (HttpRequestException)
+        {
+            mensajeError = "No fue posible cargar los asociados registrados.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
 
-    private IEnumerable<AsociadoDto> AsociadosFiltrados => 
+    private IEnumerable<Asociado> AsociadosFiltrados =>
         string.IsNullOrWhiteSpace(textoFiltro) 
             ? listaAsociados 
             : listaAsociados.Where(a => 
-                a.Nombre.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) || 
-                a.Documento.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase));
-
-    public class AsociadoDto
-    {
-        public string Nombre { get; set; } = string.Empty;
-        public string Documento { get; set; } = string.Empty;
-        public string Finca { get; set; } = string.Empty;
-        public string Cultivo { get; set; } = string.Empty;
-    }
+                a.NombreCompleto.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) ||
+                a.Cedula.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase));
 }
