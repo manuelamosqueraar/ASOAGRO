@@ -9,14 +9,17 @@ main {
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background:
+        radial-gradient(circle at 50% 0%, rgba(201, 233, 121, 0.22), transparent 16rem),
+        linear-gradient(180deg, #0e2417 0%, #173823 100%);
 }
 
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
+    background: rgba(255, 253, 246, 0.72);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(26, 70, 45, 0.12);
     justify-content: flex-end;
-    height: 3.5rem;
+    min-height: 4rem;
     display: flex;
     align-items: center;
 }
@@ -52,7 +55,7 @@ main {
     }
 
     .sidebar {
-        width: 250px;
+        width: 270px;
         height: 100vh;
         position: sticky;
         top: 0;

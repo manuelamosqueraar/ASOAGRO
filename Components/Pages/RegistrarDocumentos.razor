@@ -1,7 +1,14 @@
 @page "/registrar-documentos"
 @rendermode InteractiveServer
 
-<h3>Registrar Documentos del Asociado</h3>
+<div class="page-header">
+    <div>
+        <p class="eyebrow text-success">Documentos</p>
+        <h1>Registrar documento</h1>
+        <p>Asocia soportes a un productor para alimentar el futuro control de vencimientos.</p>
+    </div>
+    <span class="status-chip">Módulo inicial</span>
+</div>
 
 @if (!string.IsNullOrEmpty(mensajeExito))
 {
@@ -10,34 +17,46 @@
     </div>
 }
 
-<EditForm Model="@documentoModel" OnValidSubmit="GuardarDocumento">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    <div class="mb-3">
-        <label for="documentoAsociado" class="form-label">Número de Documento del Asociado:</label>
-        <InputText id="documentoAsociado" class="form-control" @bind-Value="documentoModel.DocumentoAsociado" />
-        <ValidationMessage For="@(() => documentoModel.DocumentoAsociado)" />
+<div class="content-card">
+    <div class="form-intro">
+        <div>
+            <h2>Información del soporte</h2>
+            <p>La carga de archivos aún es simulada; esta pantalla prepara el flujo visual del módulo documental.</p>
+        </div>
     </div>
 
-    <div class="mb-3">
-        <label for="tipoDocumento" class="form-label">Tipo de Documento:</label>
-        <InputSelect id="tipoDocumento" class="form-select" @bind-Value="documentoModel.TipoDocumento">
-            <option value="">Seleccione el tipo...</option>
-            <option value="CertificadoFinca">Certificado de Tradición y Libertad</option>
-            <option value="CedulaCiudadania">Cédula de Ciudadanía</option>
-            <option value="RegistroBPA">Buenas Prácticas Agrícolas (BPA)</option>
-        </InputSelect>
-        <ValidationMessage For="@(() => documentoModel.TipoDocumento)" />
-    </div>
+    <EditForm Model="@documentoModel" OnValidSubmit="GuardarDocumento">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
-    <div class="mb-3">
-        <label for="archivo" class="form-label">Seleccionar Archivo (PDF / Imagen):</label>
-        <input type="file" id="archivo" class="form-control" @onchange="CargarArchivo" />
-    </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="documentoAsociado" class="form-label">Número de Documento del Asociado</label>
+                <InputText id="documentoAsociado" class="form-control" @bind-Value="documentoModel.DocumentoAsociado" />
+                <ValidationMessage For="@(() => documentoModel.DocumentoAsociado)" />
+            </div>
 
-    <button type="submit" class="btn btn-primary">Subir y Registrar Documento</button>
-</EditForm>
+            <div class="col-md-6">
+                <label for="tipoDocumento" class="form-label">Tipo de Documento</label>
+                <InputSelect id="tipoDocumento" class="form-select" @bind-Value="documentoModel.TipoDocumento">
+                    <option value="">Seleccione el tipo...</option>
+                    <option value="CertificadoFinca">Certificado de Tradición y Libertad</option>
+                    <option value="CedulaCiudadania">Cédula de Ciudadanía</option>
+                    <option value="RegistroBPA">Buenas Prácticas Agrícolas (BPA)</option>
+                </InputSelect>
+                <ValidationMessage For="@(() => documentoModel.TipoDocumento)" />
+            </div>
+        </div>
+
+        <div class="upload-zone my-4">
+            <label for="archivo" class="form-label">Seleccionar Archivo (PDF / Imagen)</label>
+            <input type="file" id="archivo" class="form-control" @onchange="CargarArchivo" />
+            <small>Formatos sugeridos: PDF, JPG o PNG. La validación real se agregará con el almacenamiento de archivos.</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg">Subir y Registrar Documento</button>
+    </EditForm>
+</div>
 
 @code {
     private DocumentoModel documentoModel = new();

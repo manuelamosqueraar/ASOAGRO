@@ -2,17 +2,23 @@
 @rendermode InteractiveServer
 @inject HttpClient Http
 
-<h3>Consultar Asociados Registrados</h3>
-<p class="text-muted">Busca productores registrados por nombre completo o cédula.</p>
+<div class="page-header">
+    <div>
+        <p class="eyebrow text-success">Consulta</p>
+        <h1>Asociados registrados</h1>
+        <p>Busca productores por nombre completo o cédula y revisa la información registrada.</p>
+    </div>
+    <span class="status-chip">@listaAsociados.Count registros</span>
+</div>
 
-<div class="content-card mb-3">
+<div class="content-card search-card mb-3">
     <label for="filtro" class="form-label">Buscar por nombre o número de documento:</label>
     <input id="filtro" class="form-control" @bind="textoFiltro" @bind:event="oninput" placeholder="Escribe para buscar..." />
 </div>
 
 @if (cargando)
 {
-    <p><em>Cargando asociados...</em></p>
+    <div class="loading-state">Cargando asociados...</div>
 }
 else if (!string.IsNullOrEmpty(mensajeError))
 {
@@ -30,7 +36,7 @@ else if (AsociadosFiltrados.Any())
                     <th>Documento</th>
                     <th>Finca</th>
                     <th>Cultivo</th>
-                    <th>Registro</th>
+                    <th>Fecha de registro</th>
                 </tr>
             </thead>
             <tbody>
@@ -51,8 +57,9 @@ else if (AsociadosFiltrados.Any())
 else
 {
     <div class="empty-state mt-3" role="status">
-        <strong>No hay asociados para mostrar.</strong>
+        <strong>No hay asociados para mostrar</strong>
         <p class="mb-0">Registra un nuevo asociado o cambia el criterio de búsqueda.</p>
+        <a class="btn btn-success mt-3" href="registrar-asociado">Registrar asociado</a>
     </div>
 }
 

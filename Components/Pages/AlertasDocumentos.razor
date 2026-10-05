@@ -2,15 +2,22 @@
 @rendermode InteractiveServer
 @inject HttpClient Http
 
-<h3>Panel de Alertas y Vencimientos de Documentos</h3>
+<div class="page-header">
+    <div>
+        <p class="eyebrow text-success">Alertas</p>
+        <h1>Vencimientos de documentos</h1>
+        <p>Prioriza certificados y soportes próximos a vencer según umbrales operativos.</p>
+    </div>
+    <span class="status-chip">30 / 15 / 7 días</span>
+</div>
 
-<div class="alert alert-info" role="alert">
-    Mostrando alertas basadas en los umbrales configurados (30, 15 y 7 días para el vencimiento de certificados y documentos de fincas).
+<div class="notice-card" role="note">
+    Mostrando alertas basadas en umbrales de 30, 15 y 7 días para documentos de productores y fincas.
 </div>
 
 @if (cargando)
 {
-    <p><em>Cargando alertas...</em></p>
+    <div class="loading-state">Cargando alertas...</div>
 }
 else if (!string.IsNullOrEmpty(mensajeError))
 {
@@ -21,8 +28,8 @@ else if (!string.IsNullOrEmpty(mensajeError))
 else if (alertasPendientes.Any())
 {
     <div class="content-card table-responsive">
-        <table class="table table-striped table-bordered align-middle mb-0">
-            <thead class="table-dark">
+        <table class="table table-striped align-middle mb-0">
+            <thead>
                 <tr>
                     <th>Asociado</th>
                     <th>Documento</th>
@@ -55,7 +62,7 @@ else if (alertasPendientes.Any())
 else
 {
     <div class="empty-state mt-3" role="status">
-        <strong>No hay alertas pendientes.</strong>
+        <strong>No hay alertas pendientes</strong>
         <p class="mb-0">Los documentos registrados no tienen vencimientos próximos.</p>
     </div>
 }
