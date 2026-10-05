@@ -1,5 +1,9 @@
 using Asoagro.Components;
+using Asoagro.Configuration;
+using Asoagro.Models;
+using Asoagro.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,7 +11,28 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-builder.Services.AddControllers();
+builder.Services.Configure<AsoagroOptions>(builder.Configuration.GetSection(AsoagroOptions.SectionName));
+builder.Services.AddControllers()
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var details = context.ModelState
+                .Where(item => item.Value?.Errors.Count > 0)
+                .ToDictionary(
+                    item => item.Key,
+                    item => item.Value!.Errors.Select(error => error.ErrorMessage).ToArray());
+
+            return new BadRequestObjectResult(new ApiError
+            {
+                Code = "validation_error",
+                Message = "La solicitud contiene datos inválidos.",
+                Details = details
+            });
+        };
+    });
+builder.Services.AddSingleton<IAsociadoService, InMemoryAsociadoService>();
+builder.Services.AddSingleton<IAlertaDocumentoService, InMemoryAlertaDocumentoService>();
 
 builder.Services.AddScoped(sp =>
 {
@@ -33,3 +58,5 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+public partial class Program;

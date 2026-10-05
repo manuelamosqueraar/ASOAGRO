@@ -1,5 +1,6 @@
 @page "/alertas-documentos"
 @rendermode InteractiveServer
+@inject HttpClient Http
 
 <h3>Panel de Alertas y Vencimientos de Documentos</h3>
 
@@ -7,52 +8,78 @@
     Mostrando alertas basadas en los umbrales configurados (30, 15 y 7 días para el vencimiento de certificados y documentos de fincas).
 </div>
 
-@if (alertasPendientes.Any())
+@if (cargando)
 {
-    <table class="table table-striped table-bordered mt-3">
-        <thead class="table-dark">
-            <tr>
-                <th>Asociado</th>
-                <th>Documento</th>
-                <th>Fecha de Vencimiento</th>
-                <th>Días Restantes</th>
-                <th>Estado de Alerta</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var alerta in alertasPendientes)
-            {
+    <p><em>Cargando alertas...</em></p>
+}
+else if (!string.IsNullOrEmpty(mensajeError))
+{
+    <div class="alert alert-danger mt-3" role="alert">
+        @mensajeError
+    </div>
+}
+else if (alertasPendientes.Any())
+{
+    <div class="content-card table-responsive">
+        <table class="table table-striped table-bordered align-middle mb-0">
+            <thead class="table-dark">
                 <tr>
-                    <td>@alerta.NombreAsociado</td>
-                    <td>@alerta.TipoDocumento</td>
-                    <td>@alerta.FechaVencimiento.ToShortDateString()</td>
-                    <td>
-                        <span class="badge @ObtenerColorBadge(alerta.DiasRestantes)">
-                            @alerta.DiasRestantes días
-                        </span>
-                    </td>
-                    <td>
-                        <strong>@alerta.MensajeAlerta</strong>
-                    </td>
+                    <th>Asociado</th>
+                    <th>Documento</th>
+                    <th>Fecha de Vencimiento</th>
+                    <th>Días Restantes</th>
+                    <th>Estado de Alerta</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var alerta in alertasPendientes)
+                {
+                    <tr>
+                        <td>@alerta.NombreAsociado</td>
+                        <td>@alerta.TipoDocumento</td>
+                        <td>@alerta.FechaVencimiento.ToLocalTime().ToString("dd/MM/yyyy")</td>
+                        <td>
+                            <span class="badge @ObtenerColorBadge(alerta.DiasRestantes)">
+                                @alerta.DiasRestantes días
+                            </span>
+                        </td>
+                        <td>
+                            <strong>@alerta.MensajeAlerta</strong>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 else
 {
-    <div class="alert alert-success mt-3" role="alert">
-        No hay alertas pendientes por vencimiento en este momento.
+    <div class="empty-state mt-3" role="status">
+        <strong>No hay alertas pendientes.</strong>
+        <p class="mb-0">Los documentos registrados no tienen vencimientos próximos.</p>
     </div>
 }
 
 @code {
-    private List<AlertaDto> alertasPendientes = new()
+    private List<AlertaDocumento> alertasPendientes = new();
+    private string mensajeError = string.Empty;
+    private bool cargando = true;
+
+    protected override async Task OnInitializedAsync()
     {
-        new() { NombreAsociado = "Carlos Pérez", TipoDocumento = "Certificado de Tradición", FechaVencimiento = DateTime.Now.AddDays(5), DiasRestantes = 5, MensajeAlerta = "¡Alerta Crítica! Vence en menos de 7 días" },
-        new() { NombreAsociado = "Ana Gómez", TipoDocumento = "Buenas Prácticas Agrícolas (BPA)", FechaVencimiento = DateTime.Now.AddDays(12), DiasRestantes = 12, MensajeAlerta = "Advertencia: Vence en menos de 15 días" },
-        new() { NombreAsociado = "Luis Martínez", TipoDocumento = "Registro ICA", FechaVencimiento = DateTime.Now.AddDays(25), DiasRestantes = 25, MensajeAlerta = "Aviso preventivo: Vence en menos de 30 días" }
-    };
+        try
+        {
+            alertasPendientes = await Http.GetFromJsonAsync<List<AlertaDocumento>>("api/alertas-documentos") ?? new();
+        }
+        catch (HttpRequestException)
+        {
+            mensajeError = "No fue posible cargar las alertas de documentos.";
+        }
+        finally
+        {
+            cargando = false;
+        }
+    }
 
     private string ObtenerColorBadge(int dias)
     {
@@ -61,12 +88,4 @@ else
         return "bg-info text-dark";
     }
 
-    public class AlertaDto
-    {
-        public string NombreAsociado { get; set; } = string.Empty;
-        public string TipoDocumento { get; set; } = string.Empty;
-        public DateTime FechaVencimiento { get; set; }
-        public int DiasRestantes { get; set; }
-        public string MensajeAlerta { get; set; } = string.Empty;
-    }
 }

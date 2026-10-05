@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="Asoagro.csproj" />
+  <Project Path="Asoagro.Tests/Asoagro.Tests.csproj" />
+</Solution>

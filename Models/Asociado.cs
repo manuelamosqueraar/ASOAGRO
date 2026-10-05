@@ -23,5 +23,13 @@ namespace Asoagro.Models
         public bool TieneBPA { get; set; } = false;
 
         public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
+
+        public DateTime FechaActualizacion { get; set; } = DateTime.UtcNow;
+
+        [StringLength(80)]
+        public string CreadoPor { get; set; } = string.Empty;
+
+        [StringLength(80)]
+        public string ActualizadoPor { get; set; } = string.Empty;
     }
 }

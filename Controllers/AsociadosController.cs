@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Asoagro.Models;
+using Asoagro.Services;
 
 namespace Asoagro.Controllers
 {
@@ -7,8 +8,12 @@ namespace Asoagro.Controllers
     [ApiController]
     public class AsociadosController : ControllerBase
     {
-        private static readonly List<Asociado> _listaAsociados = new();
-        private static readonly object _lock = new();
+        private readonly IAsociadoService asociadoService;
+
+        public AsociadosController(IAsociadoService asociadoService)
+        {
+            this.asociadoService = asociadoService;
+        }
 
         [HttpPost]
         public IActionResult RegistrarAsociado([FromBody] Asociado asociado)
@@ -18,28 +23,20 @@ namespace Asoagro.Controllers
                 return BadRequest(ModelState);
             }
 
-            lock (_lock)
-            {
-                if (_listaAsociados.Any(a => a.Cedula == asociado.Cedula))
-                {
-                    return Conflict(new { mensaje = "Ya existe un asociado registrado con esa cédula." });
-                }
+            var resultado = asociadoService.Registrar(asociado);
 
-                asociado.Id = _listaAsociados.Count + 1;
-                asociado.FechaRegistro = DateTime.UtcNow;
-                _listaAsociados.Add(asociado);
+            if (!resultado.Exitoso)
+            {
+                return Conflict(new ApiError { Code = "asociado_duplicado", Message = resultado.Mensaje });
             }
 
-            return Ok(new { mensaje = "Asociado registrado exitosamente en el servidor de Asoagro", data = asociado });
+            return Ok(new { mensaje = resultado.Mensaje, data = resultado.Asociado });
         }
 
         [HttpGet]
         public ActionResult<IEnumerable<Asociado>> ObtenerAsociados()
         {
-            lock (_lock)
-            {
-                return Ok(_listaAsociados.ToList());
-            }
+            return Ok(asociadoService.ObtenerTodos());
         }
     }
 }

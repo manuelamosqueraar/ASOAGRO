@@ -88,6 +88,14 @@ dotnet run
 
 La aplicación expone páginas Blazor y endpoints API en el mismo proyecto.
 
+## Pruebas
+
+Ejecutar toda la suite:
+
+```bash
+dotnet test Asoagro.slnx
+```
+
 ## Cómo detener la aplicación
 
 En la terminal donde se está ejecutando el proyecto, presiona:
@@ -118,6 +126,12 @@ Consultar asociados:
 GET /api/asociados
 ```
 
+Consultar alertas de documentos:
+
+```http
+GET /api/alertas-documentos
+```
+
 Ejemplo de datos para registrar un asociado:
 
 ```json
@@ -130,6 +144,24 @@ Ejemplo de datos para registrar un asociado:
 }
 ```
 
+Respuestas relevantes:
+
+- `200 OK`: operación exitosa.
+- `400 Bad Request`: datos inválidos.
+- `409 Conflict`: cédula duplicada.
+
+Los errores del API usan una estructura común:
+
+```json
+{
+  "code": "validation_error",
+  "message": "La solicitud contiene datos inválidos.",
+  "details": {
+    "Cedula": ["La cédula es obligatoria."]
+  }
+}
+```
+
 ## Funcionalidad actual
 
 - Registro de asociados contra `POST /api/asociados`.
@@ -138,13 +170,56 @@ Ejemplo de datos para registrar un asociado:
 - Detección de cédulas duplicadas en memoria.
 - Pantallas iniciales para documentos y alertas.
 
+## Estructura del proyecto
+
+- `Components/`: componentes y páginas Blazor.
+- `Components/Pages/`: pantallas principales de la aplicación.
+- `Components/Layout/`: layout general y navegación lateral.
+- `Controllers/`: endpoints HTTP usados por la UI.
+- `Models/`: modelos de dominio y validaciones básicas.
+- `Services/`: servicios de aplicación. Actualmente contiene la gestión en memoria de asociados.
+- `wwwroot/`: archivos estáticos como CSS, Bootstrap e íconos.
+- `Configuration/`: opciones tipadas leídas desde `appsettings`.
+- `Asoagro.Tests/`: pruebas automatizadas de API.
+
+## Configuración
+
+La configuración principal vive en:
+
+- `appsettings.json`
+- `appsettings.Development.json`
+- `appsettings.Production.json`
+
+Sección propia del sistema:
+
+```json
+"Asoagro": {
+  "Audit": {
+    "DefaultUser": "Sistema"
+  }
+}
+```
+
+`DefaultUser` se usa para auditoría básica mientras no exista autenticación real.
+
+## Auditoría
+
+El modelo `Asociado` guarda:
+
+- `FechaRegistro`
+- `FechaActualizacion`
+- `CreadoPor`
+- `ActualizadoPor`
+
+Actualmente el usuario de auditoría viene desde configuración.
+
 ## Limitaciones actuales
 
 - Los datos se guardan en memoria y se pierden al reiniciar la aplicación.
 - El módulo de documentos todavía es simulado.
-- Las alertas de vencimiento todavía usan datos de ejemplo.
+- Las alertas de vencimiento todavía usan un servicio en memoria con datos de ejemplo.
 - No hay autenticación ni autorización.
-- No hay pruebas automatizadas.
+- No hay persistencia real en base de datos.
 
 ## Próximos pasos recomendados
 

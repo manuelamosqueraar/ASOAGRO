@@ -3,6 +3,7 @@
 @inject HttpClient Http
 
 <h3>Registro de Asociado Productor</h3>
+<p class="text-muted">Registra productores asociados y conserva datos de auditoría básicos.</p>
 
 @if (!string.IsNullOrEmpty(mensajeExito))
 {
@@ -17,49 +18,53 @@
     </div>
 }
 
-<EditForm Model="@asociado" OnValidSubmit="ManejarValidacion">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="content-card">
+    <EditForm Model="@asociado" OnValidSubmit="ManejarValidacion">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
-    <div class="mb-3">
-        <label for="nombre" class="form-label">Nombre Completo:</label>
-        <InputText id="nombre" class="form-control" @bind-Value="asociado.NombreCompleto" />
-        <ValidationMessage For="@(() => asociado.NombreCompleto)" />
-    </div>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label for="nombre" class="form-label">Nombre Completo</label>
+                <InputText id="nombre" class="form-control" @bind-Value="asociado.NombreCompleto" />
+                <ValidationMessage For="@(() => asociado.NombreCompleto)" />
+            </div>
 
-    <div class="mb-3">
-        <label for="documento" class="form-label">Cédula:</label>
-        <InputText id="documento" class="form-control" @bind-Value="asociado.Cedula" />
-        <ValidationMessage For="@(() => asociado.Cedula)" />
-    </div>
+            <div class="col-md-6">
+                <label for="documento" class="form-label">Cédula</label>
+                <InputText id="documento" class="form-control" @bind-Value="asociado.Cedula" />
+                <ValidationMessage For="@(() => asociado.Cedula)" />
+            </div>
 
-    <div class="mb-3">
-        <label for="finca" class="form-label">Finca / Vereda:</label>
-        <InputText id="finca" class="form-control" @bind-Value="asociado.FincaVereda" />
-        <ValidationMessage For="@(() => asociado.FincaVereda)" />
-    </div>
+            <div class="col-md-6">
+                <label for="finca" class="form-label">Finca / Vereda</label>
+                <InputText id="finca" class="form-control" @bind-Value="asociado.FincaVereda" />
+                <ValidationMessage For="@(() => asociado.FincaVereda)" />
+            </div>
 
-    <div class="mb-3">
-        <label for="cultivo" class="form-label">Línea Productiva / Cultivo:</label>
-        <InputSelect id="cultivo" class="form-select" @bind-Value="asociado.CultivoPrincipal">
-            <option value="">Seleccione un cultivo...</option>
-            <option value="Platano">Plátano</option>
-            <option value="Banano">Banano</option>
-            <option value="Cacao">Cacao</option>
-            <option value="Ganaderia">Ganadería</option>
-        </InputSelect>
-        <ValidationMessage For="@(() => asociado.CultivoPrincipal)" />
-    </div>
+            <div class="col-md-6">
+                <label for="cultivo" class="form-label">Línea Productiva / Cultivo</label>
+                <InputSelect id="cultivo" class="form-select" @bind-Value="asociado.CultivoPrincipal">
+                    <option value="">Seleccione un cultivo...</option>
+                    <option value="Platano">Plátano</option>
+                    <option value="Banano">Banano</option>
+                    <option value="Cacao">Cacao</option>
+                    <option value="Ganaderia">Ganadería</option>
+                </InputSelect>
+                <ValidationMessage For="@(() => asociado.CultivoPrincipal)" />
+            </div>
+        </div>
 
-    <div class="form-check mb-3">
-        <InputCheckbox id="bpa" class="form-check-input" @bind-Value="asociado.TieneBPA" />
-        <label for="bpa" class="form-check-label">Cuenta con Buenas Prácticas Agrícolas (BPA)</label>
-    </div>
+        <div class="form-check my-4">
+            <InputCheckbox id="bpa" class="form-check-input" @bind-Value="asociado.TieneBPA" />
+            <label for="bpa" class="form-check-label">Cuenta con Buenas Prácticas Agrícolas (BPA)</label>
+        </div>
 
-    <button type="submit" class="btn btn-primary" disabled="@guardando">
-        @(guardando ? "Registrando..." : "Registrar Asociado")
-    </button>
-</EditForm>
+        <button type="submit" class="btn btn-primary" disabled="@guardando">
+            @(guardando ? "Registrando..." : "Registrar Asociado")
+        </button>
+    </EditForm>
+</div>
 
 @code {
     private Asociado asociado = new();
@@ -84,9 +89,8 @@
                 return;
             }
 
-            mensajeError = respuesta.StatusCode == System.Net.HttpStatusCode.Conflict
-                ? "Ya existe un asociado registrado con esa cédula."
-                : "No fue posible registrar el asociado. Intenta nuevamente.";
+            var apiError = await respuesta.Content.ReadFromJsonAsync<ApiError>();
+            mensajeError = apiError?.Message ?? "No fue posible registrar el asociado. Intenta nuevamente.";
         }
         catch (HttpRequestException)
         {

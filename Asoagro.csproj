@@ -7,4 +7,10 @@
     <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Asoagro.Tests\**" />
+    <Content Remove="Asoagro.Tests\**" />
+    <None Remove="Asoagro.Tests\**" />
+  </ItemGroup>
+
 </Project>
