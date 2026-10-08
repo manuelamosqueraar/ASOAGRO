@@ -1,0 +1,152 @@
+@page "/consultar-estado-documentos"
+
+<PageTitle>Consultar Estado de Documentación</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex align-items-center mb-4">
+        <h3 class="fw-bold mb-0 text-primary">
+            <span class="bi bi-file-earmark-check-fill me-2"></span>Estado de Documentación por Asociado
+        </h3>
+    </div>
+
+    <!-- Buscador -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-center">
+                <div class="col-md-8">
+                    <label class="form-label fw-bold">Buscar Asociado</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control" placeholder="Ingrese Cédula o Nombre completo..." @bind="criterioBusqueda" @bind:event="oninput" />
+                    </div>
+                </div>
+                <div class="col-md-4 d-flex align-items-end">
+                    <button class="btn btn-outline-secondary w-100" @onclick="LimpiarFiltro">
+                        <i class="bi bi-x-circle me-1"></i> Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados -->
+    @if (asociadoSeleccionado != null)
+    {
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="fw-bold mb-0">@asociadoSeleccionado.NombreCompleto</h5>
+                    <small class="text-muted">Cédula: @asociadoSeleccionado.Cedula | Finca: @asociadoSeleccionado.FincaVereda</small>
+                </div>
+                <span class="badge bg-info text-dark">@asociadoSeleccionado.CultivoPrincipal</span>
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold mb-3">Documentos Registrados:</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tipo de Documento</th>
+                                <th>Fecha de Emisión</th>
+                                <th>Fecha de Vencimiento</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var doc in asociadoSeleccionado.Documentos)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@doc.TipoDocumento</td>
+                                    <td>@doc.FechaEmision.ToString("dd/MM/yyyy")</td>
+                                    <td>@(doc.FechaVencimiento.HasValue ? doc.FechaVencimiento.Value.ToString("dd/MM/yyyy") : "N/A")</td>
+                                    <td>
+                                        <span class="badge @ObtenerClaseBadge(doc.Estado)">
+                                            @doc.Estado
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center shadow-sm">
+            <i class="bi bi-info-circle me-2"></i> Ingrese un nombre o cédula en el buscador para consultar los documentos del asociado.
+        </div>
+    }
+</div>
+
+@code {
+    private string criterioBusqueda = "";
+
+    private class DocumentoEstado
+    {
+        public string TipoDocumento { get; set; } = "";
+        public DateTime FechaEmision { get; set; }
+        public DateTime? FechaVencimiento { get; set; }
+        public string Estado { get; set; } = "Vigente"; // Vigente, Próximo a Vencer, Vencido
+    }
+
+    private class AsociadoConDocumentos
+    {
+        public string Cedula { get; set; } = "";
+        public string NombreCompleto { get; set; } = "";
+        public string FincaVereda { get; set; } = "";
+        public string CultivoPrincipal { get; set; } = "";
+        public List<DocumentoEstado> Documentos { get; set; } = new();
+    }
+
+    // Datos simulados para la consulta
+    private List<AsociadoConDocumentos> listaAsociados = new()
+    {
+        new AsociadoConDocumentos
+        {
+            Cedula = "1012345678",
+            NombreCompleto = "Juan Pérez",
+            FincaVereda = "Finca La Esperanza - Vereda Central",
+            CultivoPrincipal = "Cacao",
+            Documentos = new List<DocumentoEstado>
+            {
+                new DocumentoEstado { TipoDocumento = "Cédula de Ciudadanía", FechaEmision = new DateTime(2015, 5, 10), FechaVencimiento = null, Estado = "Vigente" },
+                new DocumentoEstado { TipoDocumento = "Certificación BPA", FechaEmision = new DateTime(2023, 1, 15), FechaVencimiento = new DateTime(2025, 1, 15), Estado = "Vencido" },
+                new DocumentoEstado { TipoDocumento = "Uso de Suelo", FechaEmision = new DateTime(2024, 6, 1), FechaVencimiento = new DateTime(2026, 11, 1), Estado = "Próximo a Vencer" }
+            }
+        },
+        new AsociadoConDocumentos
+        {
+            Cedula = "1098765432",
+            NombreCompleto = "María Rodríguez",
+            FincaVereda = "Finca El Porvenir - Vereda La Selva",
+            CultivoPrincipal = "Plátano",
+            Documentos = new List<DocumentoEstado>
+            {
+                new DocumentoEstado { TipoDocumento = "Cédula de Ciudadanía", FechaEmision = new DateTime(2018, 3, 20), FechaVencimiento = null, Estado = "Vigente" },
+                new DocumentoEstado { TipoDocumento = "Registro RUT", FechaEmision = new DateTime(2022, 8, 10), FechaVencimiento = new DateTime(2027, 8, 10), Estado = "Vigente" }
+            }
+        }
+    };
+
+    private AsociadoConDocumentos? asociadoSeleccionado =>
+        string.IsNullOrWhiteSpace(criterioBusqueda) 
+            ? null 
+            : listaAsociados.FirstOrDefault(a => 
+                a.Cedula.Contains(criterioBusqueda, StringComparison.OrdinalIgnoreCase) || 
+                a.NombreCompleto.Contains(criterioBusqueda, StringComparison.OrdinalIgnoreCase));
+
+    private void LimpiarFiltro()
+    {
+        criterioBusqueda = "";
+    }
+
+    private string ObtenerClaseBadge(string estado) => estado switch
+    {
+        "Vigente" => "bg-success",
+        "Próximo a Vencer" => "bg-warning text-dark",
+        "Vencido" => "bg-danger",
+        _ => "bg-secondary"
+    };
+}
