@@ -1,4 +1,5 @@
 @page "/consultar-estado-documentos"
+@rendermode InteractiveServer
 
 <PageTitle>Consultar Estado de Documentación</PageTitle>
 
@@ -9,20 +10,25 @@
         </h3>
     </div>
 
-    <!-- Buscador -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-            <div class="row g-3 align-items-center">
-                <div class="col-md-8">
-                    <label class="form-label fw-bold">Buscar Asociado</label>
+    <!-- Buscador Compacto -->
+    <div class="card shadow-sm mb-4 border-0 rounded-3">
+        <div class="card-body p-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-7">
+                    <label class="form-label fw-bold small text-muted mb-1">Buscar Asociado</label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control" placeholder="Ingrese Cédula o Nombre completo..." @bind="criterioBusqueda" @bind:event="oninput" />
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Ingrese Cédula o Nombre completo..." @bind="criterioBusqueda" />
                     </div>
                 </div>
-                <div class="col-md-4 d-flex align-items-end">
-                    <button class="btn btn-outline-secondary w-100" @onclick="LimpiarFiltro">
-                        <i class="bi bi-x-circle me-1"></i> Limpiar
+                <div class="col-md-3 d-flex align-items-end mt-3 mt-md-0">
+                    <button class="btn btn-primary w-100 fw-semibold" @onclick="EjecutarBusqueda">
+                        <i class="bi bi-search me-1"></i> Buscar
+                    </button>
+                </div>
+                <div class="col-md-2 d-flex align-items-end mt-3 mt-md-0">
+                    <button class="btn btn-outline-secondary btn-sm w-100 py-2" @onclick="LimpiarFiltro" title="Limpiar búsqueda">
+                        <i class="bi bi-x-lg me-1"></i> Limpiar
                     </button>
                 </div>
             </div>
@@ -30,15 +36,15 @@
     </div>
 
     <!-- Resultados -->
-    @if (asociadoSeleccionado != null)
+    @if (asociadoEncontrado != null)
     {
         <div class="card shadow-sm border-0 mb-4">
             <div class="card-header bg-light d-flex justify-content-between align-items-center">
                 <div>
-                    <h5 class="fw-bold mb-0">@asociadoSeleccionado.NombreCompleto</h5>
-                    <small class="text-muted">Cédula: @asociadoSeleccionado.Cedula | Finca: @asociadoSeleccionado.FincaVereda</small>
+                    <h5 class="fw-bold mb-0">@asociadoEncontrado.NombreCompleto</h5>
+                    <small class="text-muted">Cédula: @asociadoEncontrado.Cedula | Finca: @asociadoEncontrado.FincaVereda</small>
                 </div>
-                <span class="badge bg-info text-dark">@asociadoSeleccionado.CultivoPrincipal</span>
+                <span class="badge bg-info text-dark">@asociadoEncontrado.CultivoPrincipal</span>
             </div>
             <div class="card-body">
                 <h6 class="fw-bold mb-3">Documentos Registrados:</h6>
@@ -53,7 +59,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var doc in asociadoSeleccionado.Documentos)
+                            @foreach (var doc in asociadoEncontrado.Documentos)
                             {
                                 <tr>
                                     <td class="fw-semibold">@doc.TipoDocumento</td>
@@ -72,23 +78,31 @@
             </div>
         </div>
     }
+    else if (busquedaRealizada)
+    {
+        <div class="alert alert-warning text-center shadow-sm">
+            <i class="bi bi-exclamation-triangle me-2"></i> No se encontró ningún asociado registrado con el criterio "<strong>@criterioBusqueda</strong>".
+        </div>
+    }
     else
     {
         <div class="alert alert-info text-center shadow-sm">
-            <i class="bi bi-info-circle me-2"></i> Ingrese un nombre o cédula en el buscador para consultar los documentos del asociado.
+            <i class="bi bi-info-circle me-2"></i> Ingrese un nombre o cédula en el buscador y presione <strong>Buscar</strong> para consultar los documentos del asociado.
         </div>
     }
 </div>
 
 @code {
     private string criterioBusqueda = "";
+    private bool busquedaRealizada = false;
+    private AsociadoConDocumentos? asociadoEncontrado;
 
     private class DocumentoEstado
     {
         public string TipoDocumento { get; set; } = "";
         public DateTime FechaEmision { get; set; }
         public DateTime? FechaVencimiento { get; set; }
-        public string Estado { get; set; } = "Vigente"; // Vigente, Próximo a Vencer, Vencido
+        public string Estado { get; set; } = "Vigente";
     }
 
     private class AsociadoConDocumentos
@@ -99,8 +113,7 @@
         public string CultivoPrincipal { get; set; } = "";
         public List<DocumentoEstado> Documentos { get; set; } = new();
     }
-
-    // Datos simulados para la consulta
+ 
     private List<AsociadoConDocumentos> listaAsociados = new()
     {
         new AsociadoConDocumentos
@@ -130,16 +143,21 @@
         }
     };
 
-    private AsociadoConDocumentos? asociadoSeleccionado =>
-        string.IsNullOrWhiteSpace(criterioBusqueda) 
-            ? null 
-            : listaAsociados.FirstOrDefault(a => 
-                a.Cedula.Contains(criterioBusqueda, StringComparison.OrdinalIgnoreCase) || 
-                a.NombreCompleto.Contains(criterioBusqueda, StringComparison.OrdinalIgnoreCase));
+    private void EjecutarBusqueda()
+    {
+        if (string.IsNullOrWhiteSpace(criterioBusqueda)) return;
+
+        busquedaRealizada = true;
+        asociadoEncontrado = listaAsociados.FirstOrDefault(a =>
+            a.Cedula.Contains(criterioBusqueda, StringComparison.OrdinalIgnoreCase) ||
+            a.NombreCompleto.Contains(criterioBusqueda, StringComparison.OrdinalIgnoreCase));
+    }
 
     private void LimpiarFiltro()
     {
         criterioBusqueda = "";
+        busquedaRealizada = false;
+        asociadoEncontrado = null;
     }
 
     private string ObtenerClaseBadge(string estado) => estado switch
