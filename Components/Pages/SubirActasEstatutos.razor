@@ -1,0 +1,284 @@
+@page "/subir-actas-estatutos"
+
+<PageTitle>Actas y Estatutos</PageTitle>
+
+<div class="container mt-4">
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <h3 class="fw-bold mb-0 text-primary">
+            <span class="bi bi-file-earmark-pdf-fill me-2"></span>Gestión e Histórico de Actas y Estatutos
+        </h3>
+    </div>
+
+    @if (!string.IsNullOrEmpty(mensajeExito))
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@mensajeExito
+            <button type="button" class="btn-close" @onclick="() => mensajeExito = null"></button>
+        </div>
+    }
+
+    <!-- Pestañas de Navegación -->
+    <ul class="nav nav-tabs mb-4 fw-bold">
+        <li class="nav-item">
+            <button class="nav-link @(pestanaActiva == "historico" ? "active text-primary" : "text-secondary")" @onclick='() => pestanaActiva = "historico"'>
+                <i class="bi bi-clock-history me-1"></i> Histórico de Actas
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link @(pestanaActiva == "subir" ? "active text-primary" : "text-secondary")" @onclick='() => pestanaActiva = "subir"'>
+                <i class="bi bi-cloud-upload me-1"></i> Registrar Nueva Acta / Estatuto
+            </button>
+        </li>
+    </ul>
+
+    @if (pestanaActiva == "historico")
+    {
+        <!-- Pestaña: CONSULTAR HISTÓRICO -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label fw-bold">Buscar Acta o Documento</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control" placeholder="Buscar por título, N° de acta o descripción..." @bind="busqueda" @bind:event="oninput" />
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Filtrar por Tipo</label>
+                        <select class="form-select" @bind="filtroTipo">
+                            <option value="">Todos los tipos</option>
+                            <option value="Acta de Asamblea">Acta de Asamblea</option>
+                            <option value="Estatuto Actualizado">Estatuto Actualizado</option>
+                            <option value="Reglamento Interno">Reglamento Interno</option>
+                            <option value="Resolución Legal">Resolución Legal</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button class="btn btn-outline-secondary w-100" @onclick="LimpiarFiltros">
+                            <i class="bi bi-x-circle me-1"></i> Limpiar Filtros
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla del Histórico -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-journal-text me-2"></i>Histórico Registrado (@documentosFiltrados.Count() documentos)</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>N° / Título del Acta</th>
+                                <th>Tipo de Documento</th>
+                                <th>Fecha de Registro</th>
+                                <th>Descripción / Detalle</th>
+                                <th>Archivo</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (documentosFiltrados.Any())
+                            {
+                                @foreach (var doc in documentosFiltrados)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-dark">@doc.Titulo</td>
+                                        <td>
+                                            <span class="badge bg-primary">@doc.Tipo</span>
+                                        </td>
+                                        <td>@doc.Fecha.ToString("dd/MM/yyyy")</td>
+                                        <td><small class="text-muted">@doc.Descripcion</small></td>
+                                        <td>
+                                            <span class="badge bg-light text-dark border">
+                                                <i class="bi bi-file-earmark-pdf text-danger me-1"></i>@doc.ArchivoNombre
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-sm btn-outline-primary me-1" title="Descargar Documento">
+                                                <i class="bi bi-download"></i> Descargar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        <i class="bi bi-folder-x display-6 d-block mb-2"></i>
+                                        No se encontraron actas ni documentos que coincidan con la búsqueda.
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- Pestaña: REGISTRAR / SUBIR -->
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-primary text-white fw-bold">
+                        <i class="bi bi-cloud-upload me-2"></i>Subir Nuevo Documento al Histórico
+                    </div>
+                    <div class="card-body">
+                        <EditForm Model="nuevoDocumento" OnValidSubmit="GuardarDocumento">
+                            <DataAnnotationsValidator />
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Tipo de Documento</label>
+                                    <InputSelect class="form-select" @bind-Value="nuevoDocumento.Tipo">
+                                        <option value="Acta de Asamblea">Acta de Asamblea</option>
+                                        <option value="Estatuto Actualizado">Estatuto Actualizado</option>
+                                        <option value="Reglamento Interno">Reglamento Interno</option>
+                                        <option value="Resolución Legal">Resolución Legal</option>
+                                    </InputSelect>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Fecha del Documento</label>
+                                    <InputDate class="form-control" @bind-Value="nuevoDocumento.Fecha" />
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Título / N° de Acta</label>
+                                    <InputText class="form-control" placeholder="Ej: Acta N° 015 - Asamblea Ordinaria 2024" @bind-Value="nuevoDocumento.Titulo" />
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Descripción / Resumen de Acuerdos</label>
+                                    <InputTextArea class="form-control" rows="3" placeholder="Resumen de temas aprobados o compromisos de la asamblea..." @bind-Value="nuevoDocumento.Descripcion" />
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Adjuntar Archivo Escaneado (PDF / Imagen)</label>
+                                    <InputFile class="form-control" OnChange="CargarArchivo" accept=".pdf,.png,.jpg,.jpeg" />
+                                    @if (!string.IsNullOrEmpty(nombreArchivoCargado))
+                                    {
+                                        <div class="form-text text-success fw-semibold mt-1">
+                                            <i class="bi bi-paperclip me-1"></i>@nombreArchivoCargado
+                                        </div>
+                                    }
+                                </div>
+
+                                <div class="col-12 text-end mt-4">
+                                    <button type="submit" class="btn btn-primary fw-bold px-4" disabled="@string.IsNullOrEmpty(nombreArchivoCargado)">
+                                        <i class="bi bi-save me-1"></i> Guardar en Histórico
+                                    </button>
+                                </div>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string pestanaActiva = "historico";
+    private string? mensajeExito;
+    private string? nombreArchivoCargado;
+    private string busqueda = "";
+    private string filtroTipo = "";
+
+    private class DocumentoInstitucional
+    {
+        public string Tipo { get; set; } = "Acta de Asamblea";
+        public string Titulo { get; set; } = "";
+        public DateTime Fecha { get; set; } = DateTime.Today;
+        public string Descripcion { get; set; } = "";
+        public string ArchivoNombre { get; set; } = "";
+    }
+
+    private DocumentoInstitucional nuevoDocumento = new();
+
+    private List<DocumentoInstitucional> listaDocumentos = new()
+    {
+        new DocumentoInstitucional
+        {
+            Tipo = "Acta de Asamblea",
+            Titulo = "Acta N° 014 - Asamblea Ordinaria Anual 2024",
+            Fecha = new DateTime(2024, 2, 10),
+            Descripcion = "Aprobación de estados financieros y plan de inversión de proyectos.",
+            ArchivoNombre = "Acta_014_2024.pdf"
+        },
+        new DocumentoInstitucional
+        {
+            Tipo = "Acta de Asamblea",
+            Titulo = "Acta N° 013 - Nombramiento de Revisor Fiscal",
+            Fecha = new DateTime(2023, 11, 05),
+            Descripcion = "Elección y posesión del nuevo revisor fiscal de la asociación.",
+            ArchivoNombre = "Acta_013_Revisor.pdf"
+        },
+        new DocumentoInstitucional
+        {
+            Tipo = "Estatuto Actualizado",
+            Titulo = "Estatutos Generales Asoagro 2023",
+            Fecha = new DateTime(2023, 3, 15),
+            Descripcion = "Reforma estatutaria aprobada en Asamblea Extraordinaria.",
+            ArchivoNombre = "Estatutos_Generales_2023.pdf"
+        },
+        new DocumentoInstitucional
+        {
+            Tipo = "Reglamento Interno",
+            Titulo = "Reglamento Interno de Uso de Maquinaria",
+            Fecha = new DateTime(2022, 8, 20),
+            Descripcion = "Normas y tarifas para el préstamo de herramientas a asociados.",
+            ArchivoNombre = "Reglamento_Maquinaria.pdf"
+        }
+    };
+
+    private IEnumerable<DocumentoInstitucional> documentosFiltrados =>
+        listaDocumentos.Where(d =>
+            (string.IsNullOrWhiteSpace(busqueda) || 
+             d.Titulo.Contains(busqueda, StringComparison.OrdinalIgnoreCase) || 
+             d.Descripcion.Contains(busqueda, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrWhiteSpace(filtroTipo) || d.Tipo == filtroTipo)
+        );
+
+    private void LimpiarFiltros()
+    {
+        busqueda = "";
+        filtroTipo = "";
+    }
+
+    private void CargarArchivo(InputFileChangeEventArgs e)
+    {
+        var archivo = e.File;
+        if (archivo != null)
+        {
+            nombreArchivoCargado = archivo.Name;
+            nuevoDocumento.ArchivoNombre = archivo.Name;
+        }
+    }
+
+    private void GuardarDocumento()
+    {
+        if (string.IsNullOrWhiteSpace(nuevoDocumento.Titulo)) return;
+
+        listaDocumentos.Insert(0, new DocumentoInstitucional
+        {
+            Tipo = nuevoDocumento.Tipo,
+            Titulo = nuevoDocumento.Titulo,
+            Fecha = nuevoDocumento.Fecha,
+            Descripcion = nuevoDocumento.Descripcion,
+            ArchivoNombre = nuevoDocumento.ArchivoNombre
+        });
+
+        mensajeExito = $"El documento '{nuevoDocumento.Titulo}' fue guardado correctamente en el histórico.";
+        nuevoDocumento = new();
+        nombreArchivoCargado = null;
+        pestanaActiva = "historico";
+    }
+}
