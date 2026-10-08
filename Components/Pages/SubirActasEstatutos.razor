@@ -1,5 +1,6 @@
 @page "/subir-actas-estatutos"
 @rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
 
 <PageTitle>Actas e Histórico Documental</PageTitle>
 
@@ -149,35 +150,41 @@
 
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold text-secondary">Tipo de Documento</label>
+                                    <label class="form-label fw-bold text-secondary">Tipo de Documento <span class="text-danger">*</span></label>
                                     <InputSelect class="form-select shadow-none" @bind-Value="nuevoDocumento.Tipo">
+                                        <option value="">Seleccione el tipo...</option>
                                         <option value="Acta de Asamblea">Acta de Asamblea</option>
                                         <option value="Estatuto Actualizado">Estatuto Actualizado</option>
                                         <option value="Reglamento Interno">Reglamento Interno</option>
                                         <option value="Resolución Legal">Resolución Legal</option>
                                     </InputSelect>
+                                    <ValidationMessage For="@(() => nuevoDocumento.Tipo)" class="text-danger small mt-1 d-block" />
                                 </div>
 
                                 <div class="col-md-6">
-                                    <label class="form-label fw-bold text-secondary">Fecha del Documento</label>
+                                    <label class="form-label fw-bold text-secondary">Fecha del Documento <span class="text-danger">*</span></label>
                                     <InputDate class="form-control shadow-none" @bind-Value="nuevoDocumento.Fecha" />
+                                    <ValidationMessage For="@(() => nuevoDocumento.Fecha)" class="text-danger small mt-1 d-block" />
                                 </div>
 
                                 <div class="col-12">
-                                    <label class="form-label fw-bold text-secondary">Título / N° de Acta</label>
+                                    <label class="form-label fw-bold text-secondary">Título / N° de Acta <span class="text-danger">*</span></label>
                                     <InputText class="form-control shadow-none" placeholder="Ej: Acta N° 015 - Asamblea Ordinaria 2024" @bind-Value="nuevoDocumento.Titulo" />
+                                    <ValidationMessage For="@(() => nuevoDocumento.Titulo)" class="text-danger small mt-1 d-block" />
                                 </div>
 
                                 <div class="col-12">
-                                    <label class="form-label fw-bold text-secondary">Descripción o Resumen</label>
+                                    <label class="form-label fw-bold text-secondary">Descripción o Resumen <span class="text-danger">*</span></label>
                                     <InputTextArea class="form-control shadow-none" rows="3" placeholder="Puntos principales o acuerdos aprobados..." @bind-Value="nuevoDocumento.Descripcion" />
+                                    <ValidationMessage For="@(() => nuevoDocumento.Descripcion)" class="text-danger small mt-1 d-block" />
                                 </div>
 
                                 <div class="col-12">
-                                    <label class="form-label fw-bold text-secondary">Adjuntar Archivo Escaneado (PDF / Imagen)</label>
+                                    <label class="form-label fw-bold text-secondary">Adjuntar Archivo Escaneado (PDF / Imagen) <span class="text-danger">*</span></label>
                                     <div class="p-3 border border-2 border-dashed text-center rounded-3 bg-light">
                                         <i class="bi bi-cloud-upload display-5 text-primary d-block mb-2"></i>
                                         <InputFile class="form-control w-75 mx-auto mb-2" OnChange="CargarArchivo" accept=".pdf,.png,.jpg,.jpeg" />
+                                        <ValidationMessage For="@(() => nuevoDocumento.ArchivoNombre)" class="text-danger small mt-1 d-block" />
                                         @if (!string.IsNullOrEmpty(nombreArchivoCargado))
                                         {
                                             <span class="badge bg-success px-3 py-2 mt-2 d-inline-block">
@@ -192,7 +199,7 @@
                                 </div>
 
                                 <div class="col-12 text-end mt-4">
-                                    <button type="submit" class="btn btn-primary fw-bold px-4 py-2 rounded-pill shadow-sm" disabled="@string.IsNullOrEmpty(nombreArchivoCargado)">
+                                    <button type="submit" class="btn btn-primary fw-bold px-4 py-2 rounded-pill shadow-sm">
                                         <i class="bi bi-check-lg me-1"></i> Guardar en Histórico
                                     </button>
                                 </div>
@@ -219,10 +226,19 @@
 
     private class DocumentoInstitucional
     {
-        public string Tipo { get; set; } = "Acta de Asamblea";
+        [Required(ErrorMessage = "Debe seleccionar el tipo de documento.")]
+        public string Tipo { get; set; } = "";
+
+        [Required(ErrorMessage = "El título o número de acta es obligatorio.")]
         public string Titulo { get; set; } = "";
+
+        [Required(ErrorMessage = "La fecha del documento es obligatoria.")]
         public DateTime Fecha { get; set; } = DateTime.Today;
+
+        [Required(ErrorMessage = "La descripción o resumen es obligatoria.")]
         public string Descripcion { get; set; } = "";
+
+        [Required(ErrorMessage = "Debe adjuntar un archivo digitalizado.")]
         public string ArchivoNombre { get; set; } = "";
     }
 
@@ -289,9 +305,7 @@
     }
 
     private void GuardarDocumento()
-    {
-        if (string.IsNullOrWhiteSpace(nuevoDocumento.Titulo)) return;
-
+    { 
         listaDocumentos.Insert(0, new DocumentoInstitucional
         {
             Tipo = nuevoDocumento.Tipo,
