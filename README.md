@@ -1,11 +1,11 @@
 # ASOAGRO - GUIA DE APOYO
-# 🚨 REGLAS OBLIGATORIAS PARA TRABAJAR EN EL PROYECTO
+# REGLAS OBLIGATORIAS PARA TRABAJAR EN EL PROYECTO
 
 Para no borrar el trabajo de los demás y mantener el proyecto al día, todos debemos seguir este flujo sin excepción.
 
 ---
 
-## 🛑 REGLA 1: ANTES de empezar a programar o modificar algo
+## REGLA 1: ANTES de empezar a programar o modificar algo
 
 Cada vez que vayas a abrir VS Code para empezar a trabajar, **LO PRIMERO** que debes hacer es actualizar tu proyecto local con lo que subieron los demás.
 
@@ -18,7 +18,7 @@ Cada vez que vayas a abrir VS Code para empezar a trabajar, **LO PRIMERO** que d
 
 ---
 
-## 🚀 REGLA 2: DESPUÉS de hacer cualquier cambio o crear algo
+## REGLA 2: DESPUÉS de hacer cualquier cambio o crear algo
 
 Cada vez que termines una pantalla, arregles un error o modifiques algún archivo, **LO OBLIGATORIO** es guardar tus archivos en VS Code con `Ctrl + S` y ejecutar estos 3 comandos en la terminal para subir tus avances:
 
@@ -45,11 +45,11 @@ Cada vez que termines una pantalla, arregles un error o modifiques algún archiv
 
 ---
 
-## 💡 Resumen rápido (Mano de santo):
+##  Resumen:
 
-1. 📥 **Antes de programar:** `git pull`
-2. 💾 **Guardar en VS Code:** `Ctrl + S`
-3. 📤 **Al terminar:** `git add .` ➔ `git commit -m "..."` ➔ `git push`
+1. **Antes de programar:** `git pull`
+2. **Guardar en VS Code:** `Ctrl + S`
+3. **Al terminar:** `git add .` ➔ `git commit -m "..."` ➔ `git push`
 
 Aplicación ASP.NET Core Blazor para la gestión inicial de asociados productores, documentos y alertas de vencimiento.
 
