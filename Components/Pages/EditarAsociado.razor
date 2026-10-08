@@ -1,0 +1,72 @@
+@page "/editar-asociado"
+@using Asoagro.Models
+
+<PageTitle>Editar Asociado - Asoagro</PageTitle>
+
+<h3>Editar Información del Asociado</h3>
+
+@if (mensajeExito)
+{
+    <div class="alert alert-success">
+        ¡Información del asociado actualizada con éxito!
+    </div>
+}
+
+<EditForm Model="@asociado" OnValidSubmit="GuardarCambiosLocal">
+    <DataAnnotationsValidator />
+
+    <div class="mb-3">
+        <label class="form-label">Cédula (No editable):</label>
+        <input type="text" class="form-control" value="@asociado.Cedula" disabled />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Nombre Completo:</label>
+        <InputText @bind-Value="asociado.NombreCompleto" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Finca / Vereda:</label>
+        <InputText @bind-Value="asociado.FincaVereda" class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Cultivo Principal:</label>
+        <InputSelect @bind-Value="asociado.CultivoPrincipal" class="form-control">
+            <option value="Cacao">Cacao</option>
+            <option value="Plátano">Plátano</option>
+            <option value="Maracuyá">Maracuyá</option>
+            <option value="Limón Tahití">Limón Tahití</option>
+            <option value="Ganadería">Ganadería</option>
+        </InputSelect>
+    </div>
+
+    <div class="form-check mb-3">
+        <InputCheckbox @bind-Value="asociado.TieneBPA" class="form-check-input" id="bpaCheck" />
+        <label class="form-check-label" for="bpaCheck">Cuenta con certificación BPA</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+</EditForm>
+
+@code {
+    private Asociado asociado = new Asociado
+    {
+        Id = 1,
+        Cedula = "1038000111",
+        NombreCompleto = "Juan Pérez",
+        FincaVereda = "Vereda El Salado - Finca La Esperanza",
+        CultivoPrincipal = "Cacao",
+        TieneBPA = true,
+        CreadoPor = "Admin"
+    };
+
+    private bool mensajeExito = false;
+
+    private void GuardarCambiosLocal()
+    {
+        asociado.FechaActualizacion = DateTime.UtcNow;
+        asociado.ActualizadoPor = "Usuario Actual";
+        mensajeExito = true;
+    }
+}
