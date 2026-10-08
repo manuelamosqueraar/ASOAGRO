@@ -1,4 +1,55 @@
-# ASOAGRO
+# ASOAGRO - GUIA DE APOYO
+# 🚨 REGLAS OBLIGATORIAS PARA TRABAJAR EN EL PROYECTO
+
+Para no borrar el trabajo de los demás y mantener el proyecto al día, todos debemos seguir este flujo sin excepción.
+
+---
+
+## 🛑 REGLA 1: ANTES de empezar a programar o modificar algo
+
+Cada vez que vayas a abrir VS Code para empezar a trabajar, **LO PRIMERO** que debes hacer es actualizar tu proyecto local con lo que subieron los demás.
+
+1. Abre la terminal en VS Code (`Menú superior > Terminal > New Terminal`).
+2. Escribe y ejecuta:
+
+`git pull`
+
+> **¿Por qué?** Si no haces `git pull` antes de tocar código, vas a trabajar sobre una versión vieja y vas a causar conflictos con los cambios que tus compañeros ya subieron.
+
+---
+
+## 🚀 REGLA 2: DESPUÉS de hacer cualquier cambio o crear algo
+
+Cada vez que termines una pantalla, arregles un error o modifiques algún archivo, **LO OBLIGATORIO** es guardar tus archivos en VS Code con `Ctrl + S` y ejecutar estos 3 comandos en la terminal para subir tus avances:
+
+### 1. Preparar todo lo que modificaste:
+`git add .`
+
+*(No olvides el punto `.` al final, sirve para incluir todos los archivos creados o editados).*
+
+---
+
+### 2. Guardar el avance explicando qué hiciste:
+`git commit -m "Escribe aquí la descripción detallada de lo que hiciste"`
+
+*Ejemplos:* 
+* `git commit -m "Se creo el formulario de Editar Asociado y se agrego al menu"`
+* `git commit -m "Se corrigieron los campos en Asociado.cs"`
+
+---
+
+### 3. Subir tus cambios a GitHub:
+`git push`
+
+> **¿Por qué?** Si haces cambios en tu PC pero no ejecutas `git add .`, `git commit` y `git push`, nadie más podrá ver tu trabajo y tus compañeros no tendrán tu código actualizado.
+
+---
+
+## 💡 Resumen rápido (Mano de santo):
+
+1. 📥 **Antes de programar:** `git pull`
+2. 💾 **Guardar en VS Code:** `Ctrl + S`
+3. 📤 **Al terminar:** `git add .` ➔ `git commit -m "..."` ➔ `git push`
 
 Aplicación ASP.NET Core Blazor para la gestión inicial de asociados productores, documentos y alertas de vencimiento.
 
