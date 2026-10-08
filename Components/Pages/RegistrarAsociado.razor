@@ -1,5 +1,6 @@
 @page "/registrar-asociado"
 @rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
 @inject HttpClient Http
 
 <div class="page-header">
@@ -28,35 +29,34 @@
     <div class="form-intro">
         <div>
             <h2>Datos del asociado</h2>
-            <p>Los campos de cédula y nombre son obligatorios para crear el registro.</p>
+            <p>Todos los campos son obligatorios para crear el registro del productor.</p>
         </div>
     </div>
 
     <EditForm Model="@asociado" OnValidSubmit="ManejarValidacion">
-        <DataAnnotationsValidator />
-        
+        <DataAnnotationsValidator /> 
 
         <div class="row g-3">
             <div class="col-md-6">
-                <label for="nombre" class="form-label">Nombre Completo</label>
-                <InputText id="nombre" class="form-control" @bind-Value="asociado.NombreCompleto" />
-                <ValidationMessage For="@(() => asociado.NombreCompleto)" />
+                <label for="nombre" class="form-label fw-bold">Nombre Completo <span class="text-danger">*</span></label>
+                <InputText id="nombre" class="form-control" placeholder="Ej: Juan Pérez" @bind-Value="asociado.NombreCompleto" />
+                <ValidationMessage For="@(() => asociado.NombreCompleto)" class="text-danger small mt-1 d-block" />
             </div>
 
             <div class="col-md-6">
-                <label for="documento" class="form-label">Cédula</label>
-                <InputText id="documento" class="form-control" @bind-Value="asociado.Cedula" />
-                <ValidationMessage For="@(() => asociado.Cedula)" />
+                <label for="documento" class="form-label fw-bold">Cédula <span class="text-danger">*</span></label>
+                <InputText id="documento" class="form-control" placeholder="Ej: 1045123890" @bind-Value="asociado.Cedula" />
+                <ValidationMessage For="@(() => asociado.Cedula)" class="text-danger small mt-1 d-block" />
             </div>
 
             <div class="col-md-6">
-                <label for="finca" class="form-label">Finca / Vereda</label>
-                <InputText id="finca" class="form-control" @bind-Value="asociado.FincaVereda" />
-                <ValidationMessage For="@(() => asociado.FincaVereda)" />
+                <label for="finca" class="form-label fw-bold">Finca / Vereda <span class="text-danger">*</span></label>
+                <InputText id="finca" class="form-control" placeholder="Ej: La Esperanza - Vereda El Tres" @bind-Value="asociado.FincaVereda" />
+                <ValidationMessage For="@(() => asociado.FincaVereda)" class="text-danger small mt-1 d-block" />
             </div>
 
             <div class="col-md-6">
-                <label for="cultivo" class="form-label">Línea Productiva / Cultivo</label>
+                <label for="cultivo" class="form-label fw-bold">Línea Productiva / Cultivo <span class="text-danger">*</span></label>
                 <InputSelect id="cultivo" class="form-select" @bind-Value="asociado.CultivoPrincipal">
                     <option value="">Seleccione un cultivo...</option>
                     <option value="Platano">Plátano</option>
@@ -64,7 +64,7 @@
                     <option value="Cacao">Cacao</option>
                     <option value="Ganaderia">Ganadería</option>
                 </InputSelect>
-                <ValidationMessage For="@(() => asociado.CultivoPrincipal)" />
+                <ValidationMessage For="@(() => asociado.CultivoPrincipal)" class="text-danger small mt-1 d-block" />
             </div>
         </div>
 
@@ -80,6 +80,28 @@
 </div>
 
 @code {
+    public class Asociado
+    {
+        [Required(ErrorMessage = "El nombre completo es obligatorio.")]
+        public string NombreCompleto { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La cédula es obligatoria.")]
+        public string Cedula { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La finca o vereda es obligatoria.")]
+        public string FincaVereda { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Debe seleccionar una línea productiva / cultivo.")]
+        public string CultivoPrincipal { get; set; } = string.Empty;
+
+        public bool TieneBPA { get; set; }
+    }
+
+    public class ApiError
+    {
+        public string? Message { get; set; }
+    }
+
     private Asociado asociado = new();
     private string mensajeExito = string.Empty;
     private string mensajeError = string.Empty;
@@ -114,4 +136,4 @@
             guardando = false;
         }
     }
-}
+} 
