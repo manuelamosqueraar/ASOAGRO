@@ -1,4 +1,18 @@
 :root {
+    --asoagro-verde-oscuro: var(--aso-green-950);
+    --asoagro-verde: var(--aso-green-800);
+    --asoagro-verde-medio: var(--aso-green-600);
+    --asoagro-lima: var(--aso-lime);
+    --asoagro-trigo: #d9a441;
+    --asoagro-crema: var(--aso-paper);
+    --asoagro-crema-oscura: var(--aso-cream);
+    --asoagro-texto: var(--aso-ink);
+    --asoagro-texto-suave: var(--aso-muted);
+    --asoagro-borde: var(--aso-line);
+    --asoagro-fuente: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
     --aso-ink: #142218;
     --aso-muted: #6b7568;
     --aso-green-950: #0e2417;
@@ -43,12 +57,26 @@ a, .btn-link {
 }
 
 .btn-outline-success {
+    background: rgba(255, 255, 255, 0.7);
+    border-color: var(--aso-green-600);
+    color: var(--aso-green-800);
+}
+
+.btn-outline-success:hover {
+    background: var(--aso-green-600);
+    border-color: var(--aso-green-600);
+    color: white;
+}
+
+.sidebar .btn-outline-success,
+.hero-panel .btn-outline-success {
     background: rgba(255, 255, 255, 0.14);
     border-color: rgba(255, 255, 255, 0.48);
     color: white;
 }
 
-.btn-outline-success:hover {
+.sidebar .btn-outline-success:hover,
+.hero-panel .btn-outline-success:hover {
     background: white;
     border-color: white;
     color: var(--aso-green-800);
