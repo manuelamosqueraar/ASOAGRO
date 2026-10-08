@@ -1,5 +1,6 @@
 @page "/registrar-documentos"
 @rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
 
 <div class="page-header">
     <div>
@@ -21,37 +22,47 @@
     <div class="form-intro">
         <div>
             <h2>Información del soporte</h2>
-            <p>La carga de archivos aún es simulada; esta pantalla prepara el flujo visual del módulo documental.</p>
+            <p>Carga y asocia los documentos requeridos para cada asociado.</p>
         </div>
     </div>
 
     <EditForm Model="@documentoModel" OnValidSubmit="GuardarDocumento">
         <DataAnnotationsValidator />
-        
-
+ 
         <div class="row g-3">
             <div class="col-md-6">
-                <label for="documentoAsociado" class="form-label">Número de Documento del Asociado</label>
-                <InputText id="documentoAsociado" class="form-control" @bind-Value="documentoModel.DocumentoAsociado" />
-                <ValidationMessage For="@(() => documentoModel.DocumentoAsociado)" />
+                <label for="documentoAsociado" class="form-label fw-bold">Número de Documento del Asociado <span class="text-danger">*</span></label>
+                <InputText id="documentoAsociado" class="form-control" placeholder="Ej: 1045123890" @bind-Value="documentoModel.DocumentoAsociado" />
+                <ValidationMessage For="@(() => documentoModel.DocumentoAsociado)" class="text-danger small mt-1 d-block" />
             </div>
 
             <div class="col-md-6">
-                <label for="tipoDocumento" class="form-label">Tipo de Documento</label>
+                <label for="tipoDocumento" class="form-label fw-bold">Tipo de Documento <span class="text-danger">*</span></label>
                 <InputSelect id="tipoDocumento" class="form-select" @bind-Value="documentoModel.TipoDocumento">
                     <option value="">Seleccione el tipo...</option>
                     <option value="CertificadoFinca">Certificado de Tradición y Libertad</option>
                     <option value="CedulaCiudadania">Cédula de Ciudadanía</option>
                     <option value="RegistroBPA">Buenas Prácticas Agrícolas (BPA)</option>
                 </InputSelect>
-                <ValidationMessage For="@(() => documentoModel.TipoDocumento)" />
+                <ValidationMessage For="@(() => documentoModel.TipoDocumento)" class="text-danger small mt-1 d-block" />
             </div>
         </div>
 
-        <div class="upload-zone my-4">
-            <label for="archivo" class="form-label">Seleccionar Archivo (PDF / Imagen)</label>
-            <input type="file" id="archivo" class="form-control" @onchange="CargarArchivo" />
-            <small>Formatos sugeridos: PDF, JPG o PNG. La validación real se agregará con el almacenamiento de archivos.</small>
+        <div class="upload-zone my-4 p-3 border border-2 border-dashed rounded text-center bg-light">
+            <label for="archivo" class="form-label fw-bold d-block">Seleccionar Archivo (PDF / Imagen) <span class="text-danger">*</span></label>
+            <InputFile id="archivo" class="form-control w-75 mx-auto mb-2" OnChange="CargarArchivo" accept=".pdf,.png,.jpg,.jpeg" />
+            <ValidationMessage For="@(() => documentoModel.ArchivoNombre)" class="text-danger small mt-1 d-block" />
+            
+            @if (!string.IsNullOrEmpty(documentoModel.ArchivoNombre))
+            {
+                <span class="badge bg-success px-3 py-2 mt-2 d-inline-block">
+                    <i class="bi bi-check-circle me-1"></i>@documentoModel.ArchivoNombre
+                </span>
+            }
+            else
+            {
+                <small class="text-muted d-block">Formatos sugeridos: PDF, JPG o PNG.</small>
+            }
         </div>
 
         <button type="submit" class="btn btn-primary btn-lg">Subir y Registrar Documento</button>
@@ -61,14 +72,13 @@
 @code {
     private DocumentoModel documentoModel = new();
     private string mensajeExito = string.Empty;
-    private string nombreArchivo = string.Empty;
-
-    private void CargarArchivo(Microsoft.AspNetCore.Components.ChangeEventArgs e)
+ 
+    private void CargarArchivo(InputFileChangeEventArgs e)
     {
-        // Captura el nombre del archivo seleccionado de forma simulada
-        if (e.Value is not null)
+        var archivo = e.File;
+        if (archivo != null)
         {
-            nombreArchivo = e.Value.ToString() ?? "archivo_cargado.pdf";
+            documentoModel.ArchivoNombre = archivo.Name;
         }
     }
 
@@ -80,10 +90,13 @@
 
     public class DocumentoModel
     {
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "El documento del asociado es obligatorio.")]
+        [Required(ErrorMessage = "El documento del asociado es obligatorio.")]
         public string DocumentoAsociado { get; set; } = string.Empty;
 
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Debe seleccionar el tipo de documento.")]
+        [Required(ErrorMessage = "Debe seleccionar el tipo de documento.")]
         public string TipoDocumento { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Debe adjuntar un archivo digitalizado.")]
+        public string ArchivoNombre { get; set; } = string.Empty;
     }
-}
+} 
