@@ -1,4 +1,6 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+@implements IDisposable
 
 <div class="page">
     <div class="sidebar">
@@ -8,11 +10,55 @@
     <main>
         <div class="top-row px-4 mb-3 d-flex justify-content-between align-items-center">
             <span class="fw-bold fs-5">Asoagro - Gestión de Productores</span>
-            <span class="top-pill">Panel Administrativo</span>
+            <span class="top-pill">@ObtenerRolSegunRuta()</span>
         </div>
 
         <article class="content px-4">
             @Body
         </article>
     </main>
-</div> 
+</div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        // Se suscribe a los cambios de ruta/navegación para refrescar el encabezado
+        Navigation.LocationChanged += EnCambioDeRuta;
+    }
+
+    private void EnCambioDeRuta(object? sender, LocationChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private string ObtenerRolSegunRuta()
+    {
+        var rutaActual = Navigation.ToBaseRelativePath(Navigation.Uri).ToLower();
+
+        // Rol Tesorería: Gestión directa de asociados y soportes financieros/documentales
+        if (rutaActual.Contains("registrar-asociado") || 
+            rutaActual.Contains("editar-asociado") || 
+            rutaActual.Contains("registrar-documentos"))
+        {
+            return "Vista: Tesorería / Gestión de Productores";
+        }
+        
+        // Rol Presidencia: Control legal, seguimiento de vencimientos y estatutos
+        if (rutaActual.Contains("consultar-estado-documentos") || 
+            rutaActual.Contains("subir-actas-estatutos") || 
+            rutaActual.Contains("alertas-vencimiento") ||
+            rutaActual.Contains("actas"))
+        {
+            return "Vista: Presidencia / Control Legal";
+        }
+
+        // Rol Dirección Ejecutiva: Consultas consolidadas, proyectos e inicio
+        return "Vista: Dirección Ejecutiva / Proyectos";
+    }
+
+    public void Dispose()
+    {
+        // Desuscripción para evitar fugas de memoria
+        Navigation.LocationChanged -= EnCambioDeRuta;
+    }
+}

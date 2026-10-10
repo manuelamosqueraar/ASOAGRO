@@ -1,4 +1,6 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold" href="">ASOAGRO</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -10,59 +12,93 @@
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
         
-        <div class="nav-item px-3 mb-2">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Inicio
-            </NavLink>
-        </div>
+        <!-- INICIO: Visible para cualquier usuario autenticado -->
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3 mb-2">
+                    <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Inicio
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
 
-        <div class="nav-section px-3">Asociados</div>
+        <!-- SECCIÓN ASOCIADOS (Director) -->
+        <AuthorizeView Roles="Director">
+            <Authorized>
+                <div class="nav-section px-3">Asociados</div>
 
-        <div class="nav-item px-3 mb-2">
-            <NavLink class="nav-link" href="registrar-asociado">
-                <span class="nav-dot" aria-hidden="true"></span> Registrar Asociado
-            </NavLink>
-        </div>
+                <div class="nav-item px-3 mb-2">
+                    <NavLink class="nav-link" href="registrar-asociado">
+                        <span class="nav-dot" aria-hidden="true"></span> Registrar Asociado
+                    </NavLink>
+                </div>
 
-        <div class="nav-item px-3 mb-2">
-            <NavLink class="nav-link" href="consultar-asociados">
-                <span class="nav-dot" aria-hidden="true"></span> Consultar Asociados
-            </NavLink>
-        </div>
+                <div class="nav-item px-3 mb-2">
+                    <NavLink class="nav-link" href="consultar-asociados">
+                        <span class="nav-dot" aria-hidden="true"></span> Consultar Asociados
+                    </NavLink>
+                </div>
 
-        <div class="nav-item px-3 mb-2">
-            <NavLink class="nav-link" href="editar-asociado">
-                <span class="nav-dot" aria-hidden="true"></span> Editar Asociado
-            </NavLink>
-        </div>
+                <div class="nav-item px-3 mb-2">
+                    <NavLink class="nav-link" href="editar-asociado">
+                        <span class="nav-dot" aria-hidden="true"></span> Editar Asociado
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
 
-        <div class="nav-section px-3">Documentos</div>
+        <!-- SECCIÓN DOCUMENTOS (Tesorero y Presidente) -->
+        <AuthorizeView Roles="Tesorero, Presidente">
+            <Authorized>
+                <div class="nav-section px-3">Documentos</div>
+            </Authorized>
+        </AuthorizeView>
 
-        <div class="nav-item px-3 mb-2">
-            <NavLink class="nav-link" href="registrar-documentos">
-                <span class="nav-dot" aria-hidden="true"></span> Registrar Documentos
-            </NavLink>
-        </div>
+        <!-- Módulos específicos de Tesorero -->
+        <AuthorizeView Roles="Tesorero">
+            <Authorized>
+                <div class="nav-item px-3 mb-2">
+                    <NavLink class="nav-link" href="registrar-documentos">
+                        <span class="nav-dot" aria-hidden="true"></span> Registrar Documentos
+                    </NavLink>
+                </div>
 
-        <div class="nav-item px-3 mb-2">
-            <NavLink class="nav-link" href="consultar-estado-documentos">
-                <span class="nav-dot" aria-hidden="true"></span> Estado de Documentación
-            </NavLink>
-        </div>
+                <div class="nav-item px-3 mb-2">
+                    <NavLink class="nav-link" href="consultar-estado-documentos">
+                        <span class="nav-dot" aria-hidden="true"></span> Estado de Documentación
+                    </NavLink>
+                </div>
 
-        <div class="nav-item px-3 mb-2">
-          <NavLink class="nav-link" href="subir-actas-estatutos">
-             <span class="nav-dot" aria-hidden="true"></span> Actas e Histórico
-          </NavLink>
-        </div>
+                <div class="nav-item px-3 mb-2">
+                    <NavLink class="nav-link" href="alertas-documentos">
+                        <span class="nav-dot" aria-hidden="true"></span> Alertas de Vencimiento
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
 
-       
+        <!-- Módulos específicos de Presidente -->
+        <AuthorizeView Roles="Presidente">
+            <Authorized>
+                <div class="nav-item px-3 mb-2">
+                    <NavLink class="nav-link" href="subir-actas-estatutos">
+                        <span class="nav-dot" aria-hidden="true"></span> Actas e Histórico
+                    </NavLink>
+                </div>
+            </Authorized>
+        </AuthorizeView>
 
-        <div class="nav-item px-3 mb-2">
-            <NavLink class="nav-link" href="alertas-documentos">
-                <span class="nav-dot" aria-hidden="true"></span> Alertas de Vencimiento
-            </NavLink>
-        </div>
+        <!-- CERRAR SESIÓN -->
+        <AuthorizeView>
+            <Authorized>
+                <div class="nav-item px-3 mt-4">
+                    <a class="nav-link text-danger" href="/Auth/logout">
+                        <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Cerrar Sesión
+                    </a>
+                </div>
+            </Authorized>
+        </AuthorizeView>
 
     </nav>
 </div>
@@ -75,5 +111,5 @@
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
-     }
- }
+    }
+}

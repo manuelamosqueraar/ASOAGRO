@@ -1,0 +1,20 @@
+@page "/login"
+@using Microsoft.AspNetCore.Authorization
+@attribute [AllowAnonymous]
+@layout Layout.AuthLayout
+
+<PageTitle>Asoagro - Iniciar Sesión</PageTitle>
+
+<div class="card shadow-lg p-4 rounded-3" style="max-width: 420px; width: 100%;">
+    <div class="text-center mb-4">
+        <h3 class="fw-bold text-success mb-2">Asoagro Dashboard</h3>
+        <p class="text-muted small">Inicia sesión con tu cuenta institucional para acceder a tu panel.</p>
+    </div>
+
+    <a href="/Auth/login-google" class="btn btn-danger w-100 py-2 fw-bold d-flex align-items-center justify-content-center gap-2 shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-google" viewBox="0 0 16 16">
+            <path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0c2.158 0 3.992.784 5.38 2.05L11.53 3.82c-.83-.787-1.92-1.285-3.53-1.285-2.91 0-5.32 2.37-5.32 5.465s2.41 5.465 5.32 5.465c3.21 0 4.41-2.26 4.605-3.415H8V6.558h7.545z"/>
+        </svg>
+        Iniciar sesión con Google
+    </a>
+</div>
