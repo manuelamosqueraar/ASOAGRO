@@ -35,25 +35,32 @@
     {
         var rutaActual = Navigation.ToBaseRelativePath(Navigation.Uri).ToLower();
 
-        // Rol Tesorería: Gestión directa de asociados y soportes financieros/documentales
+        // Rol Director: Control y administración de asociados (Registrar, Consultar, Editar)
         if (rutaActual.Contains("registrar-asociado") || 
-            rutaActual.Contains("editar-asociado") || 
-            rutaActual.Contains("registrar-documentos"))
+            rutaActual.Contains("consultar-asociados") || 
+            rutaActual.Contains("editar-asociado"))
         {
-            return "Vista: Tesorería / Gestión de Productores";
+            return "Dirección Ejecutiva / Asociados";
         }
         
-        // Rol Presidencia: Control legal, seguimiento de vencimientos y estatutos
-        if (rutaActual.Contains("consultar-estado-documentos") || 
-            rutaActual.Contains("subir-actas-estatutos") || 
-            rutaActual.Contains("alertas-vencimiento") ||
-            rutaActual.Contains("actas"))
+        // Rol Tesorería: Registro, seguimiento de estados y alertas de vencimiento de documentos
+        if (rutaActual.Contains("registrar-documentos") || 
+            rutaActual.Contains("consultar-estado-documentos") || 
+            rutaActual.Contains("alertas-documentos") ||
+            rutaActual.Contains("alertas-vencimiento"))
         {
-            return "Vista: Presidencia / Control Legal";
+            return "Tesorería / Gestión Documental";
         }
 
-        // Rol Dirección Ejecutiva: Consultas consolidadas, proyectos e inicio
-        return "Vista: Dirección Ejecutiva / Proyectos";
+        // Rol Presidente: Custodia de actas e histórico documental
+        if (rutaActual.Contains("subir-actas-estatutos") || 
+            rutaActual.Contains("actas"))
+        {
+            return "Presidencia / Actas e Histórico";
+        }
+
+        // Vista por defecto (Inicio o dashboard principal)
+        return "Dirección Ejecutiva / General";
     }
 
     public void Dispose()

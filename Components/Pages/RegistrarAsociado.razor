@@ -1,4 +1,5 @@
 @page "/registrar-asociado"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Director")]
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using System.Net.Http.Json
@@ -6,7 +7,7 @@
 
 <div class="page-header">
     <div>
-        <p class="eyebrow text-success">Asociados</p>
+        <p class="eyebrow text-success">Dirección Ejecutiva / Asociados</p>
         <h1>Registrar productor</h1>
         <p>Captura la información base del asociado y deja trazabilidad inicial del registro.</p>
     </div>
@@ -116,9 +117,8 @@
 
         try
         {
-            // Simulación de guardado exitoso en el entorno administrativo local
-            await Task.Delay(500); // Pequeña pausa para simular procesamiento
-            mensajeExito = $"¡Asociado {asociado.NombreCompleto} registrado con éxito en Tesorería!";
+            await Task.Delay(500);
+            mensajeExito = $"¡Asociado {asociado.NombreCompleto} registrado con éxito en la Dirección Ejecutiva!";
             asociado = new();
         }
         catch (Exception ex)

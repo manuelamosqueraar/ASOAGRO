@@ -1,4 +1,5 @@
 @page "/subir-actas-estatutos"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Presidente")]
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 
