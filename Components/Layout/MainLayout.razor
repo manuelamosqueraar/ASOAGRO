@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager Navigation
+@using Microsoft.AspNetCore.Components.Authorization
 @implements IDisposable
 
 <div class="page">
@@ -8,64 +9,373 @@
     </div>
 
     <main>
-        <div class="top-row px-4 mb-3 d-flex justify-content-between align-items-center">
-            <span class="fw-bold fs-5">Asoagro - Gestión de Productores</span>
-            <span class="top-pill">@ObtenerRolSegunRuta()</span>
-        </div>
+        <!-- Header Enterprise Moderno -->
+        <header class="top-row px-4 py-2 d-flex justify-content-between align-items-center position-relative">
+            
+            <!-- Breadcrumbs / Navegación Limpia -->
+            <div class="d-flex align-items-center gap-2">
+                <div class="icon-box-small bg-success-subtle text-success rounded-3 p-2 d-flex align-items-center justify-content-center">
+                    <i class="bi bi-compass-fill fs-5"></i>
+                </div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb mb-0">
+                        <li class="breadcrumb-item"><a href="" class="text-decoration-none text-muted fw-semibold small">Inicio</a></li>
+                        <li class="breadcrumb-item active fw-bold text-success small" aria-current="page">@ObtenerUbicacionLimpia()</li>
+                    </ol>
+                </nav>
+            </div>
 
-        <article class="content px-4">
+            <!-- Acciones de Usuario & Notificaciones -->
+            <div class="d-flex align-items-center gap-3">
+                
+                <!-- Centro de Notificaciones -->
+                <div class="position-relative">
+                    <button class="btn btn-light rounded-circle p-2 d-flex align-items-center justify-content-center shadow-sm border position-relative hover-scale" 
+                            @onclick="ToggleNotificaciones" 
+                            title="Centro de Alertas Asoagro" 
+                            style="width: 44px; height: 44px; background-color: #ffffff;">
+                        <!-- SVG de Campana visible, vectorizado e infalible -->
+                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light shadow-sm" style="font-size: 0.68rem; margin-left: -8px; margin-top: 6px;">
+                            @notificacionesFiltradas.Count
+                        </span>
+                    </button>
+
+                    <!-- Ventana Flotante de Notificaciones Enterprise -->
+                    @if (mostrarNotificaciones)
+                    {
+                        <div class="dropdown-panel-notifications shadow-lg border-0 rounded-4 position-absolute end-0 mt-3 bg-white" style="width: 380px; z-index: 1050;">
+                            
+                            <div class="p-3 bg-dark text-white rounded-top-4 d-flex justify-content-between align-items-center border-bottom border-secondary-subtle">
+                                <div>
+                                    <h6 class="fw-bold mb-0 text-white d-flex align-items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                        </svg> 
+                                        Alertas del Sistema
+                                    </h6>
+                                    <small class="text-muted" style="font-size: 0.75rem;">Centro de eventos y vencimientos</small>
+                                </div>
+                                <span class="badge bg-success text-white rounded-pill fw-bold px-2 py-1">@notificacionesFiltradas.Count Activas</span>
+                            </div>
+
+                            <!-- Filtros interactivos dinámicos -->
+                            <div class="d-flex border-bottom bg-light px-3 py-2 gap-2">
+                                <button class="btn btn-sm @(filtroActivo == "Todas" ? "btn-success fw-bold" : "btn-outline-secondary border-0") rounded-pill px-3 extra-small" @onclick='() => FiltrarNotificaciones("Todas")'>Todas</button>
+                                <button class="btn btn-sm @(filtroActivo == "Documentos" ? "btn-success fw-bold" : "btn-outline-secondary border-0") rounded-pill px-3 extra-small" @onclick='() => FiltrarNotificaciones("Documentos")'>Documentos</button>
+                                <button class="btn btn-sm @(filtroActivo == "Productores" ? "btn-success fw-bold" : "btn-outline-secondary border-0") rounded-pill px-3 extra-small" @onclick='() => FiltrarNotificaciones("Productores")'>Productores</button>
+                            </div>
+
+                            <!-- Lista filtrada con tarjetas limpias -->
+                            <div class="p-2 overflow-auto" style="max-height: 320px;">
+                                @if (!notificacionesFiltradas.Any())
+                                {
+                                    <div class="p-4 text-center text-muted small">No hay alertas disponibles en esta categoría.</div>
+                                }
+                                else
+                                {
+                                    @foreach (var item in notificacionesFiltradas)
+                                    {
+                                        <a href="@item.Enlace" class="noti-card-item d-block p-3 mb-2 text-decoration-none rounded-3 border-start border-4 @item.BordeColor bg-white shadow-sm hover-card" @onclick="CerrarDropdowns">
+                                            <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                                                <span class="badge @item.BadgeColor fw-bold extra-small">@item.Categoria</span>
+                                                <small class="text-muted extra-small">@item.Tiempo</small>
+                                            </div>
+                                            <h6 class="mb-1 text-dark fw-bold small">@item.Titulo</h6>
+                                            <p class="mb-0 text-secondary extra-small text-truncate-2">@item.Descripcion</p>
+                                        </a>
+                                    }
+                                }
+                            </div>
+
+                            <div class="p-2 bg-light text-center border-top rounded-bottom-4">
+                                <a href="alertas-documentos" class="text-success text-decoration-none fw-bold extra-small" @onclick="CerrarDropdowns">
+                                    Ver panel de alertas completo &rarr;
+                                </a>
+                            </div>
+
+                        </div>
+                    }
+                </div>
+
+                <div class="vr mx-1 my-auto" style="height: 24px; opacity: 0.2;"></div>
+
+                <!-- Perfil del Usuario Interactivo -->
+                <AuthorizeView>
+                    <Authorized>
+                        <div class="position-relative">
+                            
+                            <button class="btn bg-white border shadow-sm px-3 py-1 rounded-pill d-flex align-items-center gap-2 hover-scale" 
+                                    @onclick="TogglePerfil"
+                                    type="button">
+                                <div class="position-relative">
+                                    <div class="user-avatar bg-success text-white fw-bold rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; font-size: 0.9rem;">
+                                        @ObtenerIniciales(context.User.Identity?.Name ?? "Manuela Mosquera")
+                                    </div>
+                                    <span class="position-absolute bottom-0 end-0 p-1 bg-success border border-light rounded-circle"></span>
+                                </div>
+                                <div class="d-none d-md-block text-start lh-1 me-1">
+                                    <span class="fw-bold d-block text-dark small mb-1">@(context.User.Identity?.Name ?? "Manuela Mosquera")</span>
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle extra-small fw-bold">
+                                        @ObtenerNombreRolLimpio()
+                                    </span>
+                                </div>
+                                <i class="bi bi-chevron-down text-muted small ms-1"></i>
+                            </button>
+
+                            <!-- Ventana Flotante de Usuario -->
+                            @if (mostrarPerfil)
+                            {
+                                <div class="dropdown-panel-user shadow-lg border-0 rounded-4 position-absolute end-0 mt-3 bg-white p-0" style="width: 300px; z-index: 1050;">
+                                    
+                                    <div class="p-3 bg-light rounded-top-4 border-bottom text-center">
+                                        <div class="user-avatar bg-success text-white fw-bold rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center shadow" style="width: 52px; height: 52px; font-size: 1.25rem;">
+                                            @ObtenerIniciales(context.User.Identity?.Name ?? "Manuela Mosquera")
+                                        </div>
+                                        <h6 class="fw-bold mb-0 text-dark">@(context.User.Identity?.Name ?? "Manuela Mosquera")</h6>
+                                        <small class="text-muted d-block mt-1 extra-small">directora@asoagro-faaua.org</small>
+                                        <span class="badge bg-success text-white rounded-pill px-3 py-1 extra-small mt-2 fw-bold">
+                                            @ObtenerNombreRolLimpio()
+                                        </span>
+                                    </div>
+
+                                    <div class="p-2">
+                                        <div class="text-uppercase text-muted extra-small px-3 py-1 fw-bold">Mi Cuenta</div>
+                                        
+                                        <button type="button" class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-3 text-secondary hover-menu-item" @onclick='() => AbrirModal("Perfil")'>
+                                            <i class="bi bi-person-gear text-success fs-5"></i>
+                                            <div>
+                                                <span class="d-block fw-semibold text-dark small">Perfil de Usuario</span>
+                                                <span class="extra-small text-muted">Editar datos e información</span>
+                                            </div>
+                                        </button>
+
+                                        <button type="button" class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-3 text-secondary hover-menu-item" @onclick='() => AbrirModal("Seguridad")'>
+                                            <i class="bi bi-shield-lock-fill text-primary fs-5"></i>
+                                            <div>
+                                                <span class="d-block fw-semibold text-dark small">Seguridad & Clave</span>
+                                                <span class="extra-small text-muted">Verificación de acceso</span>
+                                            </div>
+                                        </button>
+
+                                        <div class="dropdown-divider my-2"></div>
+                                        <div class="text-uppercase text-muted extra-small px-3 py-1 fw-bold">Organización</div>
+
+                                        <button type="button" class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-3 text-secondary hover-menu-item" @onclick='() => AbrirModal("Organización")'>
+                                            <i class="bi bi-building-check text-warning fs-5"></i>
+                                            <div>
+                                                <span class="d-block fw-semibold text-dark small">Asociación Base</span>
+                                                <span class="extra-small text-muted">Asoagro • Adscrito a FAAUA</span>
+                                            </div>
+                                        </button>
+
+                                        <button type="button" class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-3 text-secondary hover-menu-item" @onclick='() => AbrirModal("Soporte")'>
+                                            <i class="bi bi-headset text-info fs-5"></i>
+                                            <div>
+                                                <span class="d-block fw-semibold text-dark small">Soporte Técnico</span>
+                                                <span class="extra-small text-muted">Asistencia plataforma</span>
+                                            </div>
+                                        </button>
+
+                                        <div class="dropdown-divider my-2"></div>
+
+                                        <a class="dropdown-item rounded-3 py-2 px-3 text-danger fw-bold d-flex align-items-center gap-3 bg-danger-subtle hover-logout" href="/Auth/logout">
+                                            <i class="bi bi-box-arrow-right fs-5"></i>
+                                            <span>Cerrar Sesión</span>
+                                        </a>
+                                    </div>
+
+                                </div>
+                            }
+                        </div>
+                    </Authorized>
+                    <NotAuthorized>
+                        <a href="/login" class="btn btn-sm btn-success fw-bold px-3 rounded-pill">
+                            Iniciar Sesión
+                        </a>
+                    </NotAuthorized>
+                </AuthorizeView>
+
+            </div>
+        </header>
+
+        <article class="content px-4" @onclick="CerrarDropdowns">
             @Body
         </article>
     </main>
 </div>
 
+<!-- Modal Interactivo Global -->
+@if (modalActivo != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.55); z-index: 2000;">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header bg-success text-white rounded-top-4">
+                    <h5 class="modal-title fw-bold"><i class="bi bi-info-circle me-2"></i>@modalActivo</h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    @if (modalActivo == "Perfil")
+                    {
+                        <p class="text-secondary small mb-3">Información detallada del usuario en sesión:</p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Nombre Completo</label>
+                            <input type="text" class="form-control rounded-3" value="Manuela Andrea Mosquera Martinez" readonly />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Correo Electrónico</label>
+                            <input type="text" class="form-control rounded-3" value="directora@asoagro-faaua.org" readonly />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small">Rol Asignado</label>
+                            <input type="text" class="form-control rounded-3" value="Dirección Ejecutiva" readonly />
+                        </div>
+                    }
+                    else if (modalActivo == "Seguridad")
+                    {
+                        <div class="alert alert-success small"><i class="bi bi-shield-check me-2"></i>Autenticación gestionada vía Google OAuth 2.0.</div>
+                        <p class="small text-muted mb-0">Tu sesión está protegida bajo estándares de la federación FAAUA con roles y permisos centralizados.</p>
+                    }
+                    else if (modalActivo == "Organización")
+                    {
+                        <h6 class="fw-bold text-success">Asoagro</h6>
+                        <p class="small text-secondary">Asociación de base agropecuaria adscrita a la Federación de Asociaciones Agropecuarias del Urabá Antioqueño (FAAUA).</p>
+                        <span class="badge bg-light text-dark border p-2">Convenio Marco de Operación 2026</span>
+                    }
+                    else if (modalActivo == "Soporte")
+                    {
+                        <p class="small text-secondary mb-3">¿Tienes inconvenientes con la plataforma?</p>
+                        <div class="p-3 bg-light rounded-3 text-center border">
+                            <i class="bi bi-envelope-check text-success fs-3 d-block mb-1"></i>
+                            <span class="fw-bold small d-block text-dark">soporte@faaua.org</span>
+                            <small class="text-muted extra-small">Atención Lunes a Viernes 8:00 AM - 5:00 PM</small>
+                        </div>
+                    }
+                </div>
+                <div class="modal-footer border-top-0">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" @onclick="CerrarModal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
+    private bool mostrarNotificaciones = false;
+    private bool mostrarPerfil = false;
+    private string filtroActivo = "Todas";
+    private string? modalActivo = null;
+
+    private class NotificacionItem
+    {
+        public string Categoria { get; set; } = "";
+        public string Titulo { get; set; } = "";
+        public string Descripcion { get; set; } = "";
+        public string Tiempo { get; set; } = "";
+        public string Enlace { get; set; } = "";
+        public string BadgeColor { get; set; } = "";
+        public string BordeColor { get; set; } = "";
+        public string Tipo { get; set; } = "";
+    }
+
+    private List<NotificacionItem> todasNotificaciones = new()
+    {
+        new NotificacionItem { Tipo = "Documentos", Categoria = "Urgente", Titulo = "Estatuto por Vencer", Descripcion = "Los Estatutos de la Vereda El Tres vencen en 5 días.", Tiempo = "Hace 15 min", Enlace = "alertas-documentos", BadgeColor = "bg-danger-subtle text-danger", BordeColor = "border-danger" },
+        new NotificacionItem { Tipo = "Productores", Categoria = "Registro", Titulo = "Nuevo Asociado Registrado", Descripcion = "Productor Carlos Mendoza ingresó a la línea de Plátano.", Tiempo = "Hace 1 hora", Enlace = "consultar-asociados", BadgeColor = "bg-success-subtle text-success", BordeColor = "border-success" },
+        new NotificacionItem { Tipo = "Documentos", Categoria = "Documento", Titulo = "Acta de Asamblea Disponible", Descripcion = "Acta N° 014 cargada exitosamente para descarga.", Tiempo = "Ayer", Enlace = "subir-actas-estatutos", BadgeColor = "bg-primary-subtle text-primary", BordeColor = "border-primary" }
+    };
+
+    private List<NotificacionItem> notificacionesFiltradas = new();
+
     protected override void OnInitialized()
     {
-        // Se suscribe a los cambios de ruta/navegación para refrescar el encabezado
+        notificacionesFiltradas = todasNotificaciones;
         Navigation.LocationChanged += EnCambioDeRuta;
     }
 
     private void EnCambioDeRuta(object? sender, LocationChangedEventArgs e)
     {
+        CerrarDropdowns();
         InvokeAsync(StateHasChanged);
     }
 
-    private string ObtenerRolSegunRuta()
+    private void FiltrarNotificaciones(string tipo)
+    {
+        filtroActivo = tipo;
+        if (tipo == "Todas")
+            notificacionesFiltradas = todasNotificaciones;
+        else
+            notificacionesFiltradas = todasNotificaciones.Where(n => n.Tipo == tipo).ToList();
+    }
+
+    private void ToggleNotificaciones()
+    {
+        mostrarNotificaciones = !mostrarNotificaciones;
+        if (mostrarNotificaciones) mostrarPerfil = false;
+    }
+
+    private void TogglePerfil()
+    {
+        mostrarPerfil = !mostrarPerfil;
+        if (mostrarPerfil) mostrarNotificaciones = false;
+    }
+
+    private void CerrarDropdowns()
+    {
+        mostrarNotificaciones = false;
+        mostrarPerfil = false;
+    }
+
+    private void AbrirModal(string nombreModal)
+    {
+        CerrarDropdowns();
+        modalActivo = nombreModal;
+    }
+
+    private void CerrarModal()
+    {
+        modalActivo = null;
+    }
+
+    private string ObtenerUbicacionLimpia()
     {
         var rutaActual = Navigation.ToBaseRelativePath(Navigation.Uri).ToLower();
 
-        // Rol Director: Control y administración de asociados (Registrar, Consultar, Editar)
-        if (rutaActual.Contains("registrar-asociado") || 
-            rutaActual.Contains("consultar-asociados") || 
-            rutaActual.Contains("editar-asociado"))
-        {
-            return "Dirección Ejecutiva / Asociados";
-        }
+        if (rutaActual.Contains("registrar-asociado")) return "Dirección Ejecutiva / Registrar Productor";
+        if (rutaActual.Contains("consultar-asociados")) return "Dirección Ejecutiva / Consultar Asociados";
+        if (rutaActual.Contains("editar-asociado")) return "Dirección Ejecutiva / Editar Asociado";
         
-        // Rol Tesorería: Registro, seguimiento de estados y alertas de vencimiento de documentos
-        if (rutaActual.Contains("registrar-documentos") || 
-            rutaActual.Contains("consultar-estado-documentos") || 
-            rutaActual.Contains("alertas-documentos") ||
-            rutaActual.Contains("alertas-vencimiento"))
-        {
-            return "Tesorería / Gestión Documental";
-        }
+        if (rutaActual.Contains("registrar-documentos")) return "Tesorería / Registrar Documentos";
+        if (rutaActual.Contains("consultar-estado-documentos")) return "Tesorería / Estado de Documentación";
+        if (rutaActual.Contains("alertas-documentos")) return "Tesorería / Alertas de Vencimiento";
 
-        // Rol Presidente: Custodia de actas e histórico documental
-        if (rutaActual.Contains("subir-actas-estatutos") || 
-            rutaActual.Contains("actas"))
-        {
-            return "Presidencia / Actas e Histórico";
-        }
+        if (rutaActual.Contains("subir-actas-estatutos")) return "Presidencia / Actas e Histórico";
 
-        // Vista por defecto (Inicio o dashboard principal)
-        return "Dirección Ejecutiva / General";
+        return "Panel Principal";
+    }
+
+    private string ObtenerNombreRolLimpio()
+    {
+        var ubicacion = ObtenerUbicacionLimpia();
+        if (ubicacion.Contains("/")) return ubicacion.Split('/')[0].Trim();
+        return "Dirección Ejecutiva";
+    }
+
+    private string ObtenerIniciales(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre)) return "MM";
+        var partes = nombre.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length == 1) return partes[0].Substring(0, Math.Min(2, partes[0].Length)).ToUpper();
+        return $"{partes[0][0]}{partes[1][0]}".ToUpper();
     }
 
     public void Dispose()
     {
-        // Desuscripción para evitar fugas de memoria
         Navigation.LocationChanged -= EnCambioDeRuta;
     }
 }
