@@ -1,3 +1,66 @@
+# 🌾 Asoagro - Sistema de Gestión e Inicio de Sesión (OAuth 2.0 & RBAC)
+
+
+## 🚀 Instrucciones de Ejecución y Autenticación
+
+Sigue estos pasos para compilar, ejecutar la aplicación localmente e iniciar sesión:
+
+### 1. Iniciar el servidor
+Abre tu terminal en la raíz del proyecto y ejecuta el siguiente comando:
+```bash
+dotnet run --launch-profile https
+```
+Asegúrate de que la consola muestre la confirmación del servidor escuchando en el puerto HTTPS:
+Now listening on: https://localhost:7136
+
+
+### 2. Autenticación y Acceso por Roles
+En la página https://localhost:7136/login, haz clic en el botón "Iniciar sesión con Google".
+
+Selecciona tu cuenta de correo institucional autorizada.
+
+🔐 Mapeo de Roles y Permisos en el Menú Lateral
+Según la cuenta utilizada para iniciar sesión en https://localhost:7136/login, el sistema adaptará dinámicamente las opciones del menú lateral (NavMenu):
+
+Director
+Correo autorizado: manuela.mosqueraar@amigo.edu.co
+
+Módulos visibles:
+
+🏠 Inicio
+
+👥 Registrar Asociado
+
+👥 Consultar Asociados
+
+👥 Editar Asociado
+
+Tesorero
+Correo autorizado: (Correo asignado a Tesorería)
+
+Módulos visibles:
+
+🏠 Inicio
+
+📄 Registrar Documentos
+
+📄 Estado de Documentación
+
+📄 Alertas de Vencimiento
+
+Presidente
+Correo autorizado: (Correo asignado a Presidencia)
+
+Módulos visibles:
+
+🏠 Inicio
+
+📄 Actas e Histórico
+
+
+🛑 Notas de Desarrollo y Solución de Problemas
+Certificado HTTPS Local: Si el navegador bloquea la conexión en https://localhost:7136/login por un certificado no seguro, ejecuta en la terminal:
+
 # ASOAGRO - GUIA DE APOYO
 # REGLAS OBLIGATORIAS PARA TRABAJAR EN EL PROYECTO
 
