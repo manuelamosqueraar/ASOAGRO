@@ -5,79 +5,277 @@
 @using System.Net.Http.Json
 @inject HttpClient Http
 
-<div class="page-header">
-    <div>
-        <p class="eyebrow text-success">Dirección Ejecutiva / Asociados</p>
-        <h1>Registrar productor</h1>
-        <p>Captura la información base del asociado y deja trazabilidad inicial del registro.</p>
-    </div>
-    <span class="status-chip">Validación activa</span>
-</div>
-
-@if (!string.IsNullOrEmpty(mensajeExito))
-{
-    <div class="alert alert-success" role="alert">
-        @mensajeExito
-    </div>
-}
-@if (!string.IsNullOrEmpty(mensajeError))
-{
-    <div class="alert alert-danger" role="alert">
-        @mensajeError
-    </div>
-}
-
-<div class="content-card">
-    <div class="form-intro">
+<div class="container-fluid px-0">
+    <!-- Header Principal -->
+    <div class="glass-header-premium p-4 mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
         <div>
-            <h2>Datos del asociado</h2>
-            <p>Todos los campos son obligatorios para crear el registro del productor.</p>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-white text-dark fw-bold rounded-pill px-3 py-1 extra-small shadow-sm">
+                    <i class="bi bi-shield-check text-success me-1"></i>DIRECCIÓN EJECUTIVA
+                </span>
+                
+            </div>
+            <h2 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-person-plus-fill text-warning fs-3"></i> Registro de Productores e Infraestructura
+            </h2>
+            <p class="text-white-50 small mb-0 mt-1">Diligencie la información para vincular al asociado al sistema Asoagro.</p>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 bg-white bg-opacity-10 px-3 py-2 rounded-pill border border-white border-opacity-25">
+            <span class="spinner-grow spinner-grow-sm text-warning" role="status"></span>
+            <span class="fw-bold small text-white">Servidor Activo (HTTPS)</span>
         </div>
     </div>
+
+    <!-- Stepper de Progreso -->
+    <div class="stepper-flow-container p-3 mb-4">
+        <div class="stepper-line-track">
+            <div class="stepper-line-progress"></div>
+        </div>
+        <div class="d-flex justify-content-between align-items-center position-relative" style="z-index: 2;">
+            
+            <div class="step-node active">
+                <div class="step-circle-num">1</div>
+                <div>
+                    <span class="step-label d-block">Identificación</span>
+                    <span class="extra-small text-muted d-none d-md-block">Datos personales</span>
+                </div>
+            </div>
+
+            <div class="step-node active">
+                <div class="step-circle-num">2</div>
+                <div>
+                    <span class="step-label d-block">Geografía & Predio</span>
+                    <span class="extra-small text-muted d-none d-md-block">Ubicación finca</span>
+                </div>
+            </div>
+
+            <div class="step-node active">
+                <div class="step-circle-num">3</div>
+                <div>
+                    <span class="step-label d-block">Cultivo & BPA</span>
+                    <span class="extra-small text-muted d-none d-md-block">Caracterización</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Mensajes de Notificación -->
+    @if (!string.IsNullOrEmpty(mensajeExito))
+    {
+        <div class="alert alert-success border-0 shadow-sm rounded-4 p-3 mb-4 d-flex align-items-center gap-3 bg-success text-white">
+            <i class="bi bi-check-circle-fill fs-2"></i>
+            <div>
+                <h6 class="fw-bold mb-0">¡Registro Completado!</h6>
+                <small>@mensajeExito</small>
+            </div>
+        </div>
+    }
+    @if (!string.IsNullOrEmpty(mensajeError))
+    {
+        <div class="alert alert-danger border-0 shadow-sm rounded-4 p-3 mb-4 d-flex align-items-center gap-3 bg-danger text-white">
+            <i class="bi bi-exclamation-triangle-fill fs-2"></i>
+            <div>
+                <h6 class="fw-bold mb-0">Atención en el Registro</h6>
+                <small>@mensajeError</small>
+            </div>
+        </div>
+    }
 
     <EditForm Model="@asociado" OnValidSubmit="ManejarValidacion">
-        <DataAnnotationsValidator /> 
+        <DataAnnotationsValidator />
 
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label for="nombre" class="form-label fw-bold">Nombre Completo <span class="text-danger">*</span></label>
-                <InputText id="nombre" class="form-control" placeholder="Ej: Juan Pérez" @bind-Value="asociado.NombreCompleto" />
-                <ValidationMessage For="@(() => asociado.NombreCompleto)" class="text-danger small mt-1 d-block" />
+        <div class="row g-4">
+            <!-- COLUMNA IZQUIERDA: GRAN PANEL FORMULARIO UNIFICADO -->
+            <div class="col-lg-8">
+                <div class="unified-form-panel p-4">
+                    
+                    <!-- BLOQUE 1 -->
+                    <div class="mb-4">
+                        <div class="section-header-title mb-3">
+                            <div class="section-icon-badge">
+                                <i class="bi bi-person-vcard-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-0">1. Identificación Personal</h6>
+                                <span class="extra-small text-muted">Datos del titular de la producción</span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="nombre" class="form-label fw-bold small text-secondary">Nombre Completo <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text input-group-text-unified"><i class="bi bi-person"></i></span>
+                                    <InputText id="nombre" class="form-control form-control-unified" placeholder="Ej: Juan Antonio Pérez" @bind-Value="asociado.NombreCompleto" />
+                                </div>
+                                <ValidationMessage For="@(() => asociado.NombreCompleto)" class="text-danger small mt-1 d-block" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="documento" class="form-label fw-bold small text-secondary">Cédula de Ciudadanía <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text input-group-text-unified"><i class="bi bi-card-text"></i></span>
+                                    <InputText id="documento" class="form-control form-control-unified" placeholder="Ej: 1045123890" @bind-Value="asociado.Cedula" />
+                                </div>
+                                <ValidationMessage For="@(() => asociado.Cedula)" class="text-danger small mt-1 d-block" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DIVISOR SUTIL -->
+                    <div class="section-divider my-4"></div>
+
+                    <!-- BLOQUE 2 -->
+                    <div class="mb-4">
+                        <div class="section-header-title mb-3">
+                            <div class="section-icon-badge">
+                                <i class="bi bi-geo-alt-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-0">2. Ubicación Geográfica del Predio</h6>
+                                <span class="extra-small text-muted">Información del terreno y vereda</span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label for="finca" class="form-label fw-bold small text-secondary">Finca / Vereda / Sector <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text input-group-text-unified"><i class="bi bi-pin-map"></i></span>
+                                    <InputText id="finca" class="form-control form-control-unified" placeholder="Ej: Finca La Esperanza - Vereda El Tres" @bind-Value="asociado.FincaVereda" />
+                                </div>
+                                <ValidationMessage For="@(() => asociado.FincaVereda)" class="text-danger small mt-1 d-block" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DIVISOR SUTIL -->
+                    <div class="section-divider my-4"></div>
+
+                    <!-- BLOQUE 3 -->
+                    <div class="mb-4">
+                        <div class="section-header-title mb-3">
+                            <div class="section-icon-badge">
+                                <i class="bi bi-tree-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-dark mb-0">3. Línea Productiva y BPA</h6>
+                                <span class="extra-small text-muted">Caracterización técnica agrícola</span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="cultivo" class="form-label fw-bold small text-secondary">Línea Productiva Principal <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text input-group-text-unified"><i class="bi bi-flower2"></i></span>
+                                    <InputSelect id="cultivo" class="form-select form-select-unified" @bind-Value="asociado.CultivoPrincipal">
+                                        <option value="">Seleccione cultivo...</option>
+                                        <option value="Platano">🍌 Plátano de Exportación</option>
+                                        <option value="Banano">🍌 Banano Comercial</option>
+                                        <option value="Cacao">🍫 Cacao Fino de Aroma</option>
+                                        <option value="Ganaderia">🐄 Ganadería Sostenible</option>
+                                    </InputSelect>
+                                </div>
+                                <ValidationMessage For="@(() => asociado.CultivoPrincipal)" class="text-danger small mt-1 d-block" />
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="bpa-box p-3 d-flex align-items-center justify-content-between h-100">
+                                    <div>
+                                        <h6 class="fw-bold text-success mb-1 small"><i class="bi bi-award-fill me-1"></i>Certificación BPA</h6>
+                                        <p class="text-muted extra-small mb-0">¿Predio con Buenas Prácticas Agrícolas?</p>
+                                    </div>
+                                    <div class="form-check form-switch fs-4 mb-0">
+                                        <InputCheckbox id="bpa" class="form-check-input" @bind-Value="asociado.TieneBPA" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOTÓN DE ENVÍO -->
+                    <div class="d-flex justify-content-end pt-3">
+                        <button type="submit" class="btn btn-asoagro-submit d-flex align-items-center gap-2" disabled="@guardando">
+                            @if (guardando)
+                            {
+                                <span class="spinner-border spinner-border-sm" role="status"></span>
+                                <span>Procesando...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>Guardar Registro</span>
+                            }
+                        </button>
+                    </div>
+
+                </div>
             </div>
 
-            <div class="col-md-6">
-                <label for="documento" class="form-label fw-bold">Cédula <span class="text-danger">*</span></label>
-                <InputText id="documento" class="form-control" placeholder="Ej: 1045123890" @bind-Value="asociado.Cedula" />
-                <ValidationMessage For="@(() => asociado.Cedula)" class="text-danger small mt-1 d-block" />
+            <!-- COLUMNA DERECHA: CARNET DIGITAL DE ASOCIADO -->
+            <div class="col-lg-4">
+                <div class="id-card-container sticky-top" style="top: 20px;">
+                    <!-- Cabecera del Carnet -->
+                    <div class="id-card-header">
+                        <span class="badge bg-white text-dark fw-bold rounded-pill px-3 py-1 extra-small mb-3 shadow-sm">
+                            CREDENCIAL PROVISIONAL
+                        </span>
+                        <div class="id-card-avatar mb-2">
+                            @(string.IsNullOrWhiteSpace(asociado.NombreCompleto) ? "A" : asociado.NombreCompleto.Substring(0, 1).ToUpper())
+                        </div>
+                        <h6 class="fw-bold text-white mb-0">
+                            @(string.IsNullOrWhiteSpace(asociado.NombreCompleto) ? "Nombre del Productor" : asociado.NombreCompleto)
+                        </h6>
+                        <span class="text-white-50 extra-small">
+                            CC: @(string.IsNullOrWhiteSpace(asociado.Cedula) ? "---" : asociado.Cedula)
+                        </span>
+                    </div>
+
+                    <!-- Cuerpo del Carnet -->
+                    <div class="id-card-body">
+                        <div class="id-data-row">
+                            <span class="text-muted extra-small"><i class="bi bi-geo-alt text-success me-1"></i>Predio:</span>
+                            <span class="fw-bold text-dark extra-small text-end">
+                                @(string.IsNullOrWhiteSpace(asociado.FincaVereda) ? "Sin especificar" : asociado.FincaVereda)
+                            </span>
+                        </div>
+
+                        <div class="id-data-row">
+                            <span class="text-muted extra-small"><i class="bi bi-tree text-success me-1"></i>Cultivo:</span>
+                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill extra-small fw-bold">
+                                @(string.IsNullOrWhiteSpace(asociado.CultivoPrincipal) ? "Pendiente" : asociado.CultivoPrincipal)
+                            </span>
+                        </div>
+
+                        <div class="id-data-row">
+                            <span class="text-muted extra-small"><i class="bi bi-shield-check text-success me-1"></i>Certificado BPA:</span>
+                            @if (asociado.TieneBPA)
+                            {
+                                <span class="badge bg-success text-white rounded-pill extra-small">
+                                    <i class="bi bi-check-circle-fill me-1"></i>Vigente
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-light text-muted border rounded-pill extra-small">
+                                    No Registra
+                                </span>
+                            }
+                        </div>
+
+                        <div class="text-center pt-3 mt-2 border-top">
+                            <span class="extra-small text-muted">
+                                <i class="bi bi-qr-code-scan me-1"></i>Asociación Asoagro - FAAUA
+                            </span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="col-md-6">
-                <label for="finca" class="form-label fw-bold">Finca / Vereda <span class="text-danger">*</span></label>
-                <InputText id="finca" class="form-control" placeholder="Ej: La Esperanza - Vereda El Tres" @bind-Value="asociado.FincaVereda" />
-                <ValidationMessage For="@(() => asociado.FincaVereda)" class="text-danger small mt-1 d-block" />
-            </div>
-
-            <div class="col-md-6">
-                <label for="cultivo" class="form-label fw-bold">Línea Productiva / Cultivo <span class="text-danger">*</span></label>
-                <InputSelect id="cultivo" class="form-select" @bind-Value="asociado.CultivoPrincipal">
-                    <option value="">Seleccione un cultivo...</option>
-                    <option value="Platano">Plátano</option>
-                    <option value="Banano">Banano</option>
-                    <option value="Cacao">Cacao</option>
-                    <option value="Ganaderia">Ganadería</option>
-                </InputSelect>
-                <ValidationMessage For="@(() => asociado.CultivoPrincipal)" class="text-danger small mt-1 d-block" />
-            </div>
-        </div>
-
-        <div class="form-check my-4">
-            <InputCheckbox id="bpa" class="form-check-input" @bind-Value="asociado.TieneBPA" />
-            <label for="bpa" class="form-check-label">Cuenta con Buenas Prácticas Agrícolas (BPA)</label>
-        </div>
-
-        <button type="submit" class="btn btn-primary btn-lg" disabled="@guardando">
-            @(guardando ? "Registrando..." : "Registrar Asociado")
-        </button>
+        </div> 
     </EditForm>
 </div>
 
@@ -97,12 +295,7 @@
         public string CultivoPrincipal { get; set; } = string.Empty;
 
         public bool TieneBPA { get; set; }
-    }
-
-    public class ApiError
-    {
-        public string? Message { get; set; }
-    }
+    } 
 
     private Asociado asociado = new();
     private string mensajeExito = string.Empty;
@@ -117,13 +310,13 @@
 
         try
         {
-            await Task.Delay(500);
-            mensajeExito = $"¡Asociado {asociado.NombreCompleto} registrado con éxito en la Dirección Ejecutiva!";
+            await Task.Delay(800);
+            mensajeExito = $"¡Productor {asociado.NombreCompleto} registrado correctamente!";
             asociado = new();
         }
         catch (Exception ex)
         {
-            mensajeError = $"Error al registrar el asociado: {ex.Message}";
+            mensajeError = $"Error en el servidor: {ex.Message}";
         }
         finally
         {
