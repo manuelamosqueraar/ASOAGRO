@@ -3,83 +3,118 @@
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using System.Net.Http.Json
+@using Asoagro.Services
 @inject HttpClient Http
+@inject AsociadoService AsociadoService
+@inject NavigationManager Navigation
 
-<div class="container-fluid px-0">
-    <!-- Header Principal -->
-    <div class="glass-header-premium p-4 mb-4 d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge bg-white text-dark fw-bold rounded-pill px-3 py-1 extra-small shadow-sm">
-                    <i class="bi bi-shield-check text-success me-1"></i>DIRECCIÓN EJECUTIVA
-                </span>
-                
+<div class="asoagro-registro-wrapper container-fluid px-0 pb-5">
+    
+    <!-- BANNER HERO EJECUTIVO ASOAGRO -->
+    <div class="asoagro-hero-banner p-4 p-md-5 mb-4 position-relative overflow-hidden rounded-4">
+        <div class="hero-bg-shapes"></div>
+        <div class="row align-items-center position-relative" style="z-index: 2;">
+            <div class="col-lg-8">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <span class="badge-agri-pill">
+                        <i class="bi bi-seedling me-1"></i> FAAUA · Urabá Antioqueño
+                    </span>
+                    <span class="badge-agri-pill-sub">
+                        <i class="bi bi-shield-fill-check me-1"></i> Módulo Directivo
+                    </span>
+                </div>
+                <h1 class="fw-extrabold text-white mb-2 tracking-tight" style="font-size: 1.85rem; font-weight: 800;">
+                    Admisión y Expediente de Productores
+                </h1>
+                <p class="text-white-50 mb-0 small" style="max-width: 600px; line-height: 1.6;">
+                    Plataforma centralizada para la caracterización predial, trazabilidad de cultivos y emisión de credenciales de asociados en tiempo real.
+                </p>
             </div>
-            <h2 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
-                <i class="bi bi-person-plus-fill text-warning fs-3"></i> Registro de Productores e Infraestructura
-            </h2>
-            <p class="text-white-50 small mb-0 mt-1">Diligencie la información para vincular al asociado al sistema Asoagro.</p>
-        </div>
-
-        <div class="d-flex align-items-center gap-2 bg-white bg-opacity-10 px-3 py-2 rounded-pill border border-white border-opacity-25">
-            <span class="spinner-grow spinner-grow-sm text-warning" role="status"></span>
-            <span class="fw-bold small text-white">Servidor Activo (HTTPS)</span>
+            
+            <div class="col-lg-4 mt-4 mt-lg-0 text-lg-end">
+                <div class="hero-stats-glass p-3 rounded-4 d-inline-block text-start w-100" style="max-width: 260px;">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="hero-stat-icon">
+                            <i class="bi bi-activity"></i>
+                        </div>
+                        <div>
+                            <span class="d-block extra-small text-white-50">Estado del Registro</span>
+                            <span class="fw-bold text-success small d-flex align-items-center gap-1.5">
+                                <span class="pulse-dot"></span> Sincronizado
+                            </span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between gap-3 pt-2 border-top border-white border-opacity-10">
+                        <span class="extra-small text-white-50">Avance del Censo</span>
+                        <span class="fw-bold text-white small">@CalcularProgreso()%</span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Stepper de Progreso -->
-    <div class="stepper-flow-container p-3 mb-4">
+    <!-- STEPPER INTERACTIVO DE NAVEGACIÓN DINÁMICA -->
+    <div class="stepper-flow-container p-3 p-md-4 mb-4">
         <div class="stepper-line-track">
-            <div class="stepper-line-progress"></div>
+            <div class="stepper-line-progress" style="width: @(CalcularProgresoStepper())%;"></div>
         </div>
         <div class="d-flex justify-content-between align-items-center position-relative" style="z-index: 2;">
             
-            <div class="step-node active">
-                <div class="step-circle-num">1</div>
+            <div class="step-node @(PasoActual == 1 ? "active" : (Paso1Completo ? "completed" : ""))" @onclick="() => CambiarPaso(1)">
+                <div class="step-circle-num">
+                    @if (Paso1Completo) { <i class="bi bi-check-lg"></i> } else { <span>1</span> }
+                </div>
                 <div>
                     <span class="step-label d-block">Identificación</span>
-                    <span class="extra-small text-muted d-none d-md-block">Datos personales</span>
+                    <span class="extra-small text-muted d-none d-md-block">Datos y Contacto</span>
                 </div>
             </div>
 
-            <div class="step-node active">
-                <div class="step-circle-num">2</div>
+            <div class="step-node @(PasoActual == 2 ? "active" : (Paso2Completo ? "completed" : ""))" @onclick="() => IrAlPaso(2)">
+                <div class="step-circle-num">
+                    @if (Paso2Completo) { <i class="bi bi-check-lg"></i> } else { <span>2</span> }
+                </div>
                 <div>
                     <span class="step-label d-block">Geografía & Predio</span>
-                    <span class="extra-small text-muted d-none d-md-block">Ubicación finca</span>
+                    <span class="extra-small text-muted d-none d-md-block">Finca, Vereda & Área</span>
                 </div>
             </div>
 
-            <div class="step-node active">
-                <div class="step-circle-num">3</div>
+            <div class="step-node @(PasoActual == 3 ? "active" : (Paso3Completo ? "completed" : ""))" @onclick="() => IrAlPaso(3)">
+                <div class="step-circle-num">
+                    @if (Paso3Completo) { <i class="bi bi-check-lg"></i> } else { <span>3</span> }
+                </div>
                 <div>
                     <span class="step-label d-block">Cultivo & BPA</span>
-                    <span class="extra-small text-muted d-none d-md-block">Caracterización</span>
+                    <span class="extra-small text-muted d-none d-md-block">Línea & Aval ICA</span>
+                </div>
+            </div>
+
+            <div class="step-node @(PasoActual == 4 ? "active" : (Paso4Completo ? "completed" : ""))" @onclick="() => IrAlPaso(4)">
+                <div class="step-circle-num">
+                    @if (Paso4Completo) { <i class="bi bi-check-lg"></i> } else { <span>4</span> }
+                </div>
+                <div>
+                    <span class="step-label d-block">Social & Jurídico</span>
+                    <span class="extra-small text-muted d-none d-md-block">Víctimas & Membresía</span>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <!-- Mensajes de Notificación -->
+    <!-- ALERTAS -->
     @if (!string.IsNullOrEmpty(mensajeExito))
     {
-        <div class="alert alert-success border-0 shadow-sm rounded-4 p-3 mb-4 d-flex align-items-center gap-3 bg-success text-white">
-            <i class="bi bi-check-circle-fill fs-2"></i>
-            <div>
-                <h6 class="fw-bold mb-0">¡Registro Completado!</h6>
-                <small>@mensajeExito</small>
+        <div class="toast-banner toast-success p-3 mb-4 d-flex align-items-center justify-content-between animate-fade-in">
+            <div class="d-flex align-items-center gap-3">
+                <div class="toast-icon-box bg-success text-white"><i class="bi bi-check2-all fs-4"></i></div>
+                <div>
+                    <h6 class="fw-bold mb-0 text-dark">¡Expediente Registrado con Éxito!</h6>
+                    <span class="small text-secondary">@mensajeExito</span>
+                </div>
             </div>
-        </div>
-    }
-    @if (!string.IsNullOrEmpty(mensajeError))
-    {
-        <div class="alert alert-danger border-0 shadow-sm rounded-4 p-3 mb-4 d-flex align-items-center gap-3 bg-danger text-white">
-            <i class="bi bi-exclamation-triangle-fill fs-2"></i>
-            <div>
-                <h6 class="fw-bold mb-0">Atención en el Registro</h6>
-                <small>@mensajeError</small>
-            </div>
+            <button type="button" class="btn-close" @onclick="() => mensajeExito = string.Empty"></button>
         </div>
     }
 
@@ -87,189 +122,330 @@
         <DataAnnotationsValidator />
 
         <div class="row g-4">
-            <!-- COLUMNA IZQUIERDA: GRAN PANEL FORMULARIO UNIFICADO -->
+            <!-- COLUMNA IZQUIERDA: FORMULARIO MODULAR -->
             <div class="col-lg-8">
-                <div class="unified-form-panel p-4">
+                <div class="unified-form-panel p-4 p-md-5">
                     
-                    <!-- BLOQUE 1 -->
-                    <div class="mb-4">
-                        <div class="section-header-title mb-3">
-                            <div class="section-icon-badge">
-                                <i class="bi bi-person-vcard-fill"></i>
-                            </div>
-                            <div>
-                                <h6 class="fw-bold text-dark mb-0">1. Identificación Personal</h6>
-                                <span class="extra-small text-muted">Datos del titular de la producción</span>
-                            </div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="nombre" class="form-label fw-bold small text-secondary">Nombre Completo <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text input-group-text-unified"><i class="bi bi-person"></i></span>
-                                    <InputText id="nombre" class="form-control form-control-unified" placeholder="Ej: Juan Antonio Pérez" @bind-Value="asociado.NombreCompleto" />
-                                </div>
-                                <ValidationMessage For="@(() => asociado.NombreCompleto)" class="text-danger small mt-1 d-block" />
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="documento" class="form-label fw-bold small text-secondary">Cédula de Ciudadanía <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text input-group-text-unified"><i class="bi bi-card-text"></i></span>
-                                    <InputText id="documento" class="form-control form-control-unified" placeholder="Ej: 1045123890" @bind-Value="asociado.Cedula" />
-                                </div>
-                                <ValidationMessage For="@(() => asociado.Cedula)" class="text-danger small mt-1 d-block" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- DIVISOR SUTIL -->
-                    <div class="section-divider my-4"></div>
-
-                    <!-- BLOQUE 2 -->
-                    <div class="mb-4">
-                        <div class="section-header-title mb-3">
-                            <div class="section-icon-badge">
-                                <i class="bi bi-geo-alt-fill"></i>
-                            </div>
-                            <div>
-                                <h6 class="fw-bold text-dark mb-0">2. Ubicación Geográfica del Predio</h6>
-                                <span class="extra-small text-muted">Información del terreno y vereda</span>
-                            </div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-12">
-                                <label for="finca" class="form-label fw-bold small text-secondary">Finca / Vereda / Sector <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text input-group-text-unified"><i class="bi bi-pin-map"></i></span>
-                                    <InputText id="finca" class="form-control form-control-unified" placeholder="Ej: Finca La Esperanza - Vereda El Tres" @bind-Value="asociado.FincaVereda" />
-                                </div>
-                                <ValidationMessage For="@(() => asociado.FincaVereda)" class="text-danger small mt-1 d-block" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- DIVISOR SUTIL -->
-                    <div class="section-divider my-4"></div>
-
-                    <!-- BLOQUE 3 -->
-                    <div class="mb-4">
-                        <div class="section-header-title mb-3">
-                            <div class="section-icon-badge">
-                                <i class="bi bi-tree-fill"></i>
-                            </div>
-                            <div>
-                                <h6 class="fw-bold text-dark mb-0">3. Línea Productiva y BPA</h6>
-                                <span class="extra-small text-muted">Caracterización técnica agrícola</span>
-                            </div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="cultivo" class="form-label fw-bold small text-secondary">Línea Productiva Principal <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text input-group-text-unified"><i class="bi bi-flower2"></i></span>
-                                    <InputSelect id="cultivo" class="form-select form-select-unified" @bind-Value="asociado.CultivoPrincipal">
-                                        <option value="">Seleccione cultivo...</option>
-                                        <option value="Platano">🍌 Plátano de Exportación</option>
-                                        <option value="Banano">🍌 Banano Comercial</option>
-                                        <option value="Cacao">🍫 Cacao Fino de Aroma</option>
-                                        <option value="Ganaderia">🐄 Ganadería Sostenible</option>
-                                    </InputSelect>
-                                </div>
-                                <ValidationMessage For="@(() => asociado.CultivoPrincipal)" class="text-danger small mt-1 d-block" />
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="bpa-box p-3 d-flex align-items-center justify-content-between h-100">
+                    @if (PasoActual == 1)
+                    {
+                        <div class="form-section-block animate-slide-in">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <div class="section-header-title">
+                                    <div class="section-icon-badge icon-purple"><i class="bi bi-person-vcard-fill"></i></div>
                                     <div>
-                                        <h6 class="fw-bold text-success mb-1 small"><i class="bi bi-award-fill me-1"></i>Certificación BPA</h6>
-                                        <p class="text-muted extra-small mb-0">¿Predio con Buenas Prácticas Agrícolas?</p>
+                                        <h6 class="fw-bold text-dark mb-0">1. Identificación y Contacto del Productor</h6>
+                                        <span class="extra-small text-muted">Datos personales y medios de contacto del titular</span>
                                     </div>
-                                    <div class="form-check form-switch fs-4 mb-0">
+                                </div>
+                                <span class="status-chip @(Paso1Completo ? "chip-done" : "chip-pending")">
+                                    @(Paso1Completo ? "Completado" : "Requerido")
+                                </span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label class="form-label-modern">Nombre Completo <span class="text-danger">*</span></label>
+                                    <div class="input-modern-wrapper">
+                                        <i class="bi bi-person-fill input-icon"></i>
+                                        <InputText class="form-control form-control-modern" placeholder="Ej: Juan Antonio Pérez Mosquera" @bind-Value="asociado.NombreCompleto" />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label-modern">Cédula de Ciudadanía <span class="text-danger">*</span></label>
+                                    <div class="input-modern-wrapper">
+                                        <i class="bi bi-credit-card-2-front-fill input-icon"></i>
+                                        <InputText class="form-control form-control-modern" placeholder="Ej: 1045123890" @bind-Value="asociado.Cedula" />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label-modern">Número de Celular <span class="text-danger">*</span></label>
+                                    <div class="input-modern-wrapper">
+                                        <i class="bi bi-phone-fill input-icon"></i>
+                                        <InputText class="form-control form-control-modern" placeholder="Ej: 3104567890" @bind-Value="asociado.Telefono" />
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label-modern">Correo Electrónico (Opcional)</label>
+                                    <div class="input-modern-wrapper">
+                                        <i class="bi bi-envelope-fill input-icon"></i>
+                                        <InputText class="form-control form-control-modern" placeholder="Ej: juan.perez@email.com" @bind-Value="asociado.Correo" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-end pt-4 mt-4 border-top">
+                                <button type="button" class="btn btn-asoagro-next" @onclick="SiguientePaso">
+                                    <span>Siguiente: Geografía y Predio</span>
+                                    <i class="bi bi-arrow-right-short fs-5 ms-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    }
+
+                    @if (PasoActual == 2)
+                    {
+                        <div class="form-section-block animate-slide-in">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <div class="section-header-title">
+                                    <div class="section-icon-badge icon-emerald"><i class="bi bi-geo-alt-fill"></i></div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">2. Ubicación Geográfica & Nombre del Predio</h6>
+                                        <span class="extra-small text-muted">Detalle de la finca, vereda y extensión rural</span>
+                                    </div>
+                                </div>
+                                <span class="status-chip @(Paso2Completo ? "chip-done" : "chip-pending")">
+                                    @(Paso2Completo ? "Completado" : "Requerido")
+                                </span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label-modern">Nombre del Predio / Finca <span class="text-danger">*</span></label>
+                                    <div class="input-modern-wrapper">
+                                        <i class="bi bi-house-door-fill input-icon"></i>
+                                        <InputText class="form-control form-control-modern" placeholder="Ej: Finca La Esperanza" @bind-Value="asociado.NombrePredio" />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label-modern">Vereda / Sector <span class="text-danger">*</span></label>
+                                    <div class="input-modern-wrapper">
+                                        <i class="bi bi-pin-map-fill input-icon"></i>
+                                        <InputText class="form-control form-control-modern" placeholder="Ej: Vereda El Tres" @bind-Value="asociado.VeredaSector" />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label-modern">Municipio <span class="text-danger">*</span></label>
+                                    <div class="input-modern-wrapper">
+                                        <i class="bi bi-map-fill input-icon"></i>
+                                        <InputText class="form-control form-control-modern" placeholder="Ej: Carepa / Apartadó" @bind-Value="asociado.Municipio" />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label-modern">Área del Predio (Hectáreas) <span class="text-danger">*</span></label>
+                                    <div class="input-modern-wrapper">
+                                        <i class="bi bi-rulers input-icon"></i>
+                                        <InputNumber class="form-control form-control-modern" placeholder="Ej: 4.5" @bind-Value="asociado.HectareasPredio" min="1" step="0.1" />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between pt-4 mt-4 border-top">
+                                <button type="button" class="btn btn-asoagro-back" @onclick="AnteriorPaso">
+                                    <i class="bi bi-arrow-left-short fs-5 me-1"></i><span>Anterior</span>
+                                </button>
+                                <button type="button" class="btn btn-asoagro-next" @onclick="SiguientePaso">
+                                    <span>Siguiente: Cultivo & BPA</span><i class="bi bi-arrow-right-short fs-5 ms-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    }
+
+                    @if (PasoActual == 3)
+                    {
+                        <div class="form-section-block animate-slide-in">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <div class="section-header-title">
+                                    <div class="section-icon-badge icon-amber"><i class="bi bi-tree-fill"></i></div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">3. Línea Productiva y Certificación BPA</h6>
+                                        <span class="extra-small text-muted">Caracterización exigida por la asociación</span>
+                                    </div>
+                                </div>
+                                <span class="status-chip @(Paso3Completo ? "chip-done" : "chip-pending")">
+                                    @(Paso3Completo ? "Completado" : "Seleccione")
+                                </span>
+                            </div>
+
+                            <label class="form-label-modern mb-2">Línea Productiva Principal <span class="text-danger">*</span></label>
+                            <div class="row g-3 mb-3">
+                                @foreach (var item in LineasCultivo)
+                                {
+                                    bool seleccionado = asociado.CultivoPrincipal == item.Valor;
+                                    <div class="col-sm-6">
+                                        <div class="crop-select-card @(seleccionado ? "selected" : "")" @onclick="() => SeleccionarCultivo(item.Valor)">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="crop-emoji-box"><i class="bi @item.Icono"></i></div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="fw-bold mb-0 small text-dark">@item.Titulo</h6>
+                                                    <span class="extra-small text-muted">@item.Subtitulo</span>
+                                                </div>
+                                                <div><i class="bi @(seleccionado ? "bi-check-circle-fill text-success fs-5" : "bi-circle text-muted")"></i></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="bpa-interactive-card @(asociado.TieneBPA ? "bpa-active" : "bpa-inactive") p-3" @onclick="AlternarBPA">
+                                <div class="d-flex align-items-center justify-content-between gap-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="bpa-icon-circle"><i class="bi @(asociado.TieneBPA ? "bi-patch-check-fill" : "bi-shield-exclamation")"></i></div>
+                                        <div>
+                                            <h6 class="fw-bold mb-0 small">Buenas Prácticas Agrícolas (BPA - ICA)</h6>
+                                            <p class="extra-small mb-0 mt-1 opacity-75">@(asociado.TieneBPA ? "Predio con aval fitosanitario vigente." : "Haga clic para certificar si cumple la norma.")</p>
+                                        </div>
+                                    </div>
+                                    <div class="form-check form-switch fs-4 mb-0" @onclick:stopPropagation="true">
                                         <InputCheckbox id="bpa" class="form-check-input" @bind-Value="asociado.TieneBPA" />
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
 
-                    <!-- BOTÓN DE ENVÍO -->
-                    <div class="d-flex justify-content-end pt-3">
-                        <button type="submit" class="btn btn-asoagro-submit d-flex align-items-center gap-2" disabled="@guardando">
-                            @if (guardando)
-                            {
-                                <span class="spinner-border spinner-border-sm" role="status"></span>
-                                <span>Procesando...</span>
-                            }
-                            else
-                            {
-                                <i class="bi bi-check-circle-fill"></i>
-                                <span>Guardar Registro</span>
-                            }
-                        </button>
-                    </div>
+                            <div class="d-flex justify-content-between pt-4 mt-4 border-top">
+                                <button type="button" class="btn btn-asoagro-back" @onclick="AnteriorPaso">
+                                    <i class="bi bi-arrow-left-short fs-5 me-1"></i><span>Anterior</span>
+                                </button>
+                                <button type="button" class="btn btn-asoagro-next" @onclick="SiguientePaso">
+                                    <span>Siguiente: Social & Jurídico</span><i class="bi bi-arrow-right-short fs-5 ms-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                    }
+
+                    @if (PasoActual == 4)
+                    {
+                        <div class="form-section-block animate-slide-in">
+                            <div class="d-flex align-items-center justify-content-between mb-4">
+                                <div class="section-header-title">
+                                    <div class="section-icon-badge icon-indigo"><i class="bi bi-shield-shaded"></i></div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0">4. Componente Social & Unidad de Víctimas</h6>
+                                        <span class="extra-small text-muted">Requisito especial de enfoque diferencial</span>
+                                    </div>
+                                </div>
+                                <span class="status-chip chip-done"><i class="bi bi-check-circle-fill me-1"></i> Final</span>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label-modern">¿Cuenta con Certificado Unidad de Víctimas?</label>
+                                    <InputSelect class="form-select form-control-modern" @bind-Value="asociado.EsVictima">
+                                        <option value="No">No registra / Prefiere no indicar</option>
+                                        <option value="Si">Sí, cuenta con certificado activo</option>
+                                    </InputSelect>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label-modern">Estado de Cuota Social / Membresía</label>
+                                    <InputSelect class="form-select form-control-modern" @bind-Value="asociado.EstadoMembresia">
+                                        <option value="AlDia">Al Día (Habilitado para Convocatorias)</option>
+                                        <option value="Gracia">En Período de Gracia</option>
+                                    </InputSelect>
+                                </div>
+                            </div>
+
+                            <div class="d-flex justify-content-between pt-4 mt-4 border-top">
+                                <button type="button" class="btn btn-asoagro-back" @onclick="AnteriorPaso">
+                                    <i class="bi bi-arrow-left-short fs-5 me-1"></i><span>Anterior</span>
+                                </button>
+
+                                <button type="submit" class="btn btn-asoagro-submit d-flex align-items-center gap-2" disabled="@guardando">
+                                    @if (guardando)
+                                    {
+                                        <span class="spinner-border spinner-border-sm" role="status"></span>
+                                        <span>Registrando en el Sistema...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-cloud-arrow-up-fill fs-5"></i>
+                                        <span>Finalizar y Guardar Expediente</span>
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    }
 
                 </div>
             </div>
 
-            <!-- COLUMNA DERECHA: CARNET DIGITAL DE ASOCIADO -->
+            <!-- COLUMNA DERECHA: CARNET DIGITAL -->
             <div class="col-lg-4">
-                <div class="id-card-container sticky-top" style="top: 20px;">
-                    <!-- Cabecera del Carnet -->
-                    <div class="id-card-header">
-                        <span class="badge bg-white text-dark fw-bold rounded-pill px-3 py-1 extra-small mb-3 shadow-sm">
-                            CREDENCIAL PROVISIONAL
-                        </span>
-                        <div class="id-card-avatar mb-2">
-                            @(string.IsNullOrWhiteSpace(asociado.NombreCompleto) ? "A" : asociado.NombreCompleto.Substring(0, 1).ToUpper())
-                        </div>
-                        <h6 class="fw-bold text-white mb-0">
-                            @(string.IsNullOrWhiteSpace(asociado.NombreCompleto) ? "Nombre del Productor" : asociado.NombreCompleto)
-                        </h6>
-                        <span class="text-white-50 extra-small">
-                            CC: @(string.IsNullOrWhiteSpace(asociado.Cedula) ? "---" : asociado.Cedula)
-                        </span>
-                    </div>
-
-                    <!-- Cuerpo del Carnet -->
-                    <div class="id-card-body">
-                        <div class="id-data-row">
-                            <span class="text-muted extra-small"><i class="bi bi-geo-alt text-success me-1"></i>Predio:</span>
-                            <span class="fw-bold text-dark extra-small text-end">
-                                @(string.IsNullOrWhiteSpace(asociado.FincaVereda) ? "Sin especificar" : asociado.FincaVereda)
-                            </span>
-                        </div>
-
-                        <div class="id-data-row">
-                            <span class="text-muted extra-small"><i class="bi bi-tree text-success me-1"></i>Cultivo:</span>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill extra-small fw-bold">
-                                @(string.IsNullOrWhiteSpace(asociado.CultivoPrincipal) ? "Pendiente" : asociado.CultivoPrincipal)
-                            </span>
-                        </div>
-
-                        <div class="id-data-row">
-                            <span class="text-muted extra-small"><i class="bi bi-shield-check text-success me-1"></i>Certificado BPA:</span>
-                            @if (asociado.TieneBPA)
-                            {
-                                <span class="badge bg-success text-white rounded-pill extra-small">
-                                    <i class="bi bi-check-circle-fill me-1"></i>Vigente
+                <div class="sticky-top" style="top: 20px;">
+                    <div class="id-card-container">
+                        <div class="id-card-header">
+                            <div class="id-card-pattern"></div>
+                            
+                            <div class="d-flex justify-content-between align-items-center position-relative mb-3" style="z-index: 2;">
+                                <span class="badge-credential-type">
+                                    <i class="bi bi-person-badge-fill me-1"></i> CREDENCIAL PROVISIONAL
                                 </span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-light text-muted border rounded-pill extra-small">
-                                    No Registra
+                                <span class="extra-small text-white-50 fw-semibold">
+                                    CC: @(string.IsNullOrWhiteSpace(asociado.Cedula) ? "0000" : asociado.Cedula)
                                 </span>
-                            }
+                            </div>
+
+                            <div class="id-card-avatar-wrapper mb-2 position-relative" style="z-index: 2;">
+                                <div class="id-card-avatar @(Paso1Completo ? "avatar-ready" : "")">
+                                    @ObtenerIniciales(asociado.NombreCompleto)
+                                </div>
+                                @if (asociado.TieneBPA)
+                                {
+                                    <span class="bpa-avatar-verified" title="BPA Vigente">
+                                        <i class="bi bi-patch-check-fill"></i>
+                                    </span>
+                                }
+                            </div>
+
+                            <h6 class="fw-bolder text-white mb-0 position-relative text-truncate px-2" style="z-index: 2;">
+                                @(string.IsNullOrWhiteSpace(asociado.NombreCompleto) ? "Nombre del Productor" : asociado.NombreCompleto)
+                            </h6>
+                            <span class="text-white-50 extra-small d-block mt-1 position-relative" style="z-index: 2;">
+                                <i class="bi bi-telephone-fill me-1"></i>Tel: @(string.IsNullOrWhiteSpace(asociado.Telefono) ? "Pendiente" : asociado.Telefono)
+                            </span>
                         </div>
 
-                        <div class="text-center pt-3 mt-2 border-top">
-                            <span class="extra-small text-muted">
-                                <i class="bi bi-qr-code-scan me-1"></i>Asociación Asoagro - FAAUA
-                            </span>
+                        <div class="id-card-body">
+                            <div class="id-data-row">
+                                <span class="text-muted extra-small"><i class="bi bi-house-door-fill text-success me-1"></i>Predio:</span>
+                                <span class="fw-bold text-dark extra-small text-end text-truncate" style="max-width: 150px;">
+                                    @(string.IsNullOrWhiteSpace(asociado.NombrePredio) ? "Sin registrar" : $"{asociado.NombrePredio} ({asociado.HectareasPredio} ha)")
+                                </span>
+                            </div>
+
+                            <div class="id-data-row">
+                                <span class="text-muted extra-small"><i class="bi bi-tree-fill text-success me-1"></i>Cultivo Eje:</span>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill extra-small fw-bold">
+                                    @(string.IsNullOrWhiteSpace(asociado.CultivoPrincipal) ? "Pendiente" : asociado.CultivoPrincipal)
+                                </span>
+                            </div>
+
+                            <div class="id-data-row">
+                                <span class="text-muted extra-small"><i class="bi bi-shield-check text-success me-1"></i>Certificación BPA:</span>
+                                @if (asociado.TieneBPA)
+                                {
+                                    <span class="badge bg-success text-white rounded-pill extra-small"><i class="bi bi-check-circle me-1"></i>Vigente ICA</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-light text-muted border rounded-pill extra-small">No registra</span>
+                                }
+                            </div>
+
+                            <div class="credential-progress-box p-3 rounded-3 mt-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="extra-small fw-bold text-secondary">Estado del Expediente</span>
+                                    <span class="extra-small fw-bolder text-success">@CalcularProgreso()%</span>
+                                </div>
+                                <div class="progress" style="height: 6px; border-radius: 10px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: @(CalcularProgreso())%; transition: width 0.35s ease;"></div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex align-items-center justify-content-between pt-3 mt-3 border-top">
+                                <div>
+                                    <span class="d-block fw-bold text-dark extra-small">ASOAGRO · FAAUA</span>
+                                    <span class="extra-small text-muted">Gestión de Asociados</span>
+                                </div>
+                                <div class="qr-placeholder-box" title="Código QR Oficial">
+                                    <i class="bi bi-qr-code fs-4"></i>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -282,41 +458,123 @@
 @code {
     public class Asociado
     {
-        [Required(ErrorMessage = "El nombre completo es obligatorio.")]
         public string NombreCompleto { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "La cédula es obligatoria.")]
         public string Cedula { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "La finca o vereda es obligatoria.")]
-        public string FincaVereda { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Debe seleccionar una línea productiva / cultivo.")]
+        public string Telefono { get; set; } = string.Empty;
+        public string Correo { get; set; } = string.Empty;
+        public string NombrePredio { get; set; } = string.Empty;
+        public string VeredaSector { get; set; } = string.Empty;
+        public string Municipio { get; set; } = string.Empty;
+        public double HectareasPredio { get; set; } = 1.0;
         public string CultivoPrincipal { get; set; } = string.Empty;
-
         public bool TieneBPA { get; set; }
+        public string EsVictima { get; set; } = "No";
+        public string EstadoMembresia { get; set; } = "AlDia";
     } 
 
+    private record OpcionCultivo(string Valor, string Titulo, string Subtitulo, string Icono);
+
+    private readonly List<OpcionCultivo> LineasCultivo = new()
+    {
+        new("Platano", "Plátano de Exportación", "Hartón / Dominico", "bi-basket2-fill"),
+        new("Banano", "Banano Comercial", "Cavendish Tipo Exportación", "bi-tree-fill"),
+        new("Cacao", "Cacao Fino de Aroma", "Agroforestal Sostenible", "bi-flower2"),
+        new("Ganaderia", "Ganadería Sostenible", "Doble Propósito", "bi-moisture")
+    };
+
     private Asociado asociado = new();
+    private int PasoActual = 1;
     private string mensajeExito = string.Empty;
-    private string mensajeError = string.Empty;
-    private bool guardando;
+    private bool guardando; 
+
+    private bool Paso1Completo => !string.IsNullOrWhiteSpace(asociado.NombreCompleto) && !string.IsNullOrWhiteSpace(asociado.Cedula) && !string.IsNullOrWhiteSpace(asociado.Telefono);
+    private bool Paso2Completo => !string.IsNullOrWhiteSpace(asociado.NombrePredio) && !string.IsNullOrWhiteSpace(asociado.VeredaSector) && !string.IsNullOrWhiteSpace(asociado.Municipio) && asociado.HectareasPredio >= 1;
+    private bool Paso3Completo => !string.IsNullOrWhiteSpace(asociado.CultivoPrincipal);
+    private bool Paso4Completo => true;
+
+    private int CalcularProgreso()
+    {
+        int p = 0;
+        if (Paso1Completo) p += 25;
+        if (Paso2Completo) p += 25;
+        if (Paso3Completo) p += 25;
+        if (Paso4Completo && PasoActual == 4) p += 25;
+        else if (PasoActual > 3) p += 25;
+        return p > 100 ? 100 : p;
+    }
+
+    private int CalcularProgresoStepper()
+    {
+        if (PasoActual == 1) return 15;
+        if (PasoActual == 2) return 40;
+        if (PasoActual == 3) return 70;
+        return 100;
+    }
+
+    private void SiguientePaso()
+    {
+        if (PasoActual < 4) PasoActual++;
+    }
+
+    private void AnteriorPaso()
+    {
+        if (PasoActual > 1) PasoActual--;
+    }
+
+    private void CambiarPaso(int paso) => PasoActual = paso;
+    private void IrAlPaso(int paso)
+    {
+        if (paso <= PasoActual || (paso == 2 && Paso1Completo) || (paso == 3 && Paso2Completo))
+        {
+            PasoActual = paso;
+        }
+    }
+
+    private void SeleccionarCultivo(string valor) => asociado.CultivoPrincipal = valor;
+    private void AlternarBPA() => asociado.TieneBPA = !asociado.TieneBPA;
+
+    private string ObtenerIniciales(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre)) return "AS";
+        var partes = nombre.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length == 1) return partes[0].Substring(0, 1).ToUpper();
+        return $"{partes[0][0]}{partes[1][0]}".ToUpper();
+    }
 
     private async Task ManejarValidacion()
     {
         guardando = true;
         mensajeExito = string.Empty;
-        mensajeError = string.Empty;
 
         try
         {
             await Task.Delay(800);
-            mensajeExito = $"¡Productor {asociado.NombreCompleto} registrado correctamente!";
+            
+            // Sincronizar con el servicio compartido para que aparezca en Consultar Asociados
+            AsociadoService.AgregarAsociado(new AsociadoModel
+            {
+                NombreCompleto = asociado.NombreCompleto,
+                Cedula = asociado.Cedula,
+                Telefono = asociado.Telefono,
+                Correo = asociado.Correo,
+                NombrePredio = asociado.NombrePredio,
+                VeredaSector = asociado.VeredaSector,
+                Municipio = asociado.Municipio,
+                HectareasPredio = asociado.HectareasPredio,
+                CultivoPrincipal = asociado.CultivoPrincipal,
+                TieneBPA = asociado.TieneBPA,
+                EsVictima = asociado.EsVictima,
+                EstadoMembresia = asociado.EstadoMembresia,
+                FechaRegistro = DateTime.Now
+            });
+
+            mensajeExito = $"¡Productor {asociado.NombreCompleto} vinculado exitosamente al padrón FAAUA!";
             asociado = new();
+            PasoActual = 1;
         }
-        catch (Exception ex)
+        catch
         {
-            mensajeError = $"Error en el servidor: {ex.Message}";
+            mensajeExito = string.Empty;
         }
         finally
         {

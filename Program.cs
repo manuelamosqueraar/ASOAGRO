@@ -48,7 +48,7 @@ builder.Services.AddAuthentication(options =>
             else if (email == "karen.argumedoco@amigo.edu.co")
             {
                 identity.AddClaim(new Claim(ClaimTypes.Role, "Tesorero"));
-            }
+            }   
             else if (email == "manumosque743@gmail.com")
             {
                 identity.AddClaim(new Claim(ClaimTypes.Role, "Invitado"));
@@ -100,7 +100,7 @@ builder.Services.AddScoped(sp =>
     var navigationManager = sp.GetRequiredService<NavigationManager>();
     return new HttpClient { BaseAddress = new Uri(navigationManager.BaseUri) };
 });
-
+builder.Services.AddSingleton<AsociadoService>();
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

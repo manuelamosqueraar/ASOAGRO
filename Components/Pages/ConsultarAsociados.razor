@@ -1,94 +1,247 @@
 @page "/consultar-asociados"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Director")]
 @rendermode InteractiveServer
-@inject HttpClient Http
+@using Asoagro.Services
+@inject AsociadoService AsociadoService
 
-<div class="page-header">
-    <div>
-        <p class="eyebrow text-success">Consulta</p>
-        <h1>Asociados registrados</h1>
-        <p>Busca productores por nombre completo o cédula y revisa la información registrada.</p>
+<div class="asoagro-consulta-wrapper container-fluid px-0 pb-5">
+
+    <!-- BANNER HERO EJECUTIVO -->
+    <div class="asoagro-hero-banner p-4 p-md-5 mb-4 position-relative overflow-hidden rounded-4">
+        <div class="hero-bg-shapes"></div>
+        <div class="row align-items-center position-relative" style="z-index: 2;">
+            <div class="col-lg-8">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <span class="badge-agri-pill">
+                        <i class="bi bi-people-fill me-1"></i> FAAUA · Urabá Antioqueño
+                    </span>
+                    <span class="badge-agri-pill-sub">
+                        <i class="bi bi-shield-fill-check me-1"></i> Control Administrativo & Comercial
+                    </span>
+                </div>
+                <h1 class="fw-extrabold text-white mb-2 tracking-tight" style="font-size: 1.85rem; font-weight: 800;">
+                    Historial y Padrón Estratégico de Productores
+                </h1>
+                <p class="text-white-50 mb-0 small" style="max-width: 600px; line-height: 1.6;">
+                    Módulo directivo para la consulta integral de familias productoras, trazabilidad de cosechas, cumplimiento de BPA y elegibilidad para convocatorias.
+                </p>
+            </div>
+            
+            <div class="col-lg-4 mt-4 mt-lg-0 text-lg-end">
+                <div class="hero-stats-glass p-3 rounded-4 d-inline-block text-start w-100" style="max-width: 260px;">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="hero-stat-icon">
+                            <i class="bi bi-person-check-fill"></i>
+                        </div>
+                        <div>
+                            <span class="d-block extra-small text-white-50">Total en Padrón</span>
+                            <span class="fw-bold text-white fs-5">@listaAsociados.Count</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between gap-3 pt-2 border-top border-white border-opacity-10">
+                        <span class="extra-small text-white-50">Sincronización</span>
+                        <span class="fw-bold text-success small d-flex align-items-center gap-1.5">
+                            <span class="pulse-dot"></span> Activo
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <span class="status-chip">@listaAsociados.Count registros</span>
+
+    <!-- PANEL DE BÚSQUEDA Y FILTROS -->
+    <div class="content-card search-card p-4 mb-4">
+        <div class="row g-3 align-items-center mb-3">
+            <div class="col-md-8">
+                <label for="filtro" class="form-label fw-bold small text-secondary mb-1">
+                    <i class="bi bi-search text-success me-1"></i> Búsqueda por nombre, cédula o vereda:
+                </label>
+                <div class="input-modern-wrapper">
+                    <i class="bi bi-person-bounding-box input-icon"></i>
+                    <input id="filtro" class="form-control form-control-modern" @bind="textoFiltro" @bind:event="oninput" placeholder="Escribe para filtrar en tiempo real..." />
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end d-flex gap-2 justify-content-md-end align-items-end">
+                <button class="btn btn-asoagro-export py-2.5 px-3 d-flex align-items-center gap-2" @onclick="ExportarReporte" title="Exportar Padrón Ejecutivo">
+                    <i class="bi bi-file-earmark-excel-fill text-success"></i>
+                    <span class="small fw-bold">Exportar Excel</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap align-items-center gap-2 pt-3 border-top">
+            <span class="extra-small text-muted fw-bold me-1"><i class="bi bi-filter me-1"></i> Filtrar por Cultivo:</span>
+            <button class="filter-chip @(filtroCultivo == "" ? "active" : "")" @onclick='() => filtroCultivo = ""'>Todos</button>
+            <button class="filter-chip @(filtroCultivo == "Platano" ? "active" : "")" @onclick='() => filtroCultivo = "Platano"'>Plátano</button>
+            <button class="filter-chip @(filtroCultivo == "Banano" ? "active" : "")" @onclick='() => filtroCultivo = "Banano"'>Banano</button>
+            <button class="filter-chip @(filtroCultivo == "Cacao" ? "active" : "")" @onclick='() => filtroCultivo = "Cacao"'>Cacao</button>
+            <button class="filter-chip @(filtroCultivo == "Ganaderia" ? "active" : "")" @onclick='() => filtroCultivo = "Ganaderia"'>Ganadería</button>
+        </div>
+    </div>
+
+    @if (AsociadosFiltrados.Any())
+    {
+        <div class="row g-4">
+            @foreach (var asociado in AsociadosFiltrados)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="producer-card p-4 h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="d-flex align-items-center justify-content-between mb-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="producer-avatar">
+                                        @ObtenerIniciales(asociado.NombreCompleto)
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0 text-truncate" style="max-width: 170px;">@asociado.NombreCompleto</h6>
+                                        <span class="extra-small text-muted"><i class="bi bi-credit-card me-1"></i>CC: @asociado.Cedula</span>
+                                    </div>
+                                </div>
+                                <span class="badge @(asociado.EstadoMembresia == "AlDia" ? "bg-success-subtle text-success border border-success-subtle" : "bg-warning-subtle text-warning") rounded-pill extra-small fw-bold px-2.5 py-1">
+                                    @(asociado.EstadoMembresia == "AlDia" ? "Al Día" : "En Gracia")
+                                </span>
+                            </div>
+
+                            <div class="producer-details-box p-3 rounded-3 mb-3">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="extra-small text-muted"><i class="bi bi-house-door-fill text-success me-1"></i>Predio:</span>
+                                    <span class="fw-bold text-dark extra-small text-end text-truncate" style="max-width: 150px;">@asociado.NombrePredio</span>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="extra-small text-muted"><i class="bi bi-geo-alt-fill text-success me-1"></i>Ubicación:</span>
+                                    <span class="fw-semibold text-secondary extra-small text-end text-truncate" style="max-width: 150px;">@asociado.VeredaSector, @asociado.Municipio</span>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <span class="extra-small text-muted"><i class="bi bi-rulers text-success me-1"></i>Extensión:</span>
+                                    <span class="fw-bold text-dark extra-small">@asociado.HectareasPredio Hectáreas</span>
+                                </div>
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <span class="extra-small text-muted"><i class="bi bi-tree-fill text-success me-1"></i>Cultivo Eje:</span>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill extra-small fw-bold">
+                                        @asociado.CultivoPrincipal
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-center justify-content-between pt-3 border-top">
+                            <span class="extra-small text-muted">
+                                <i class="bi bi-shield-check text-success me-1"></i>@(asociado.TieneBPA ? "BPA Vigente" : "Sin BPA")
+                            </span>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-asoagro-detail rounded-pill px-2.5 extra-small fw-bold d-flex align-items-center gap-1" @onclick="() => VerDetalle(asociado)">
+                                    <i class="bi bi-eye-fill"></i> Ver
+                                </button>
+                                <a href="@($"/editar-asociado/{asociado.Cedula}")" class="btn btn-sm btn-outline-primary rounded-pill px-2.5 extra-small fw-bold d-flex align-items-center gap-1">
+                                    <i class="bi bi-pencil-square"></i> Editar
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="content-card text-center p-5 mt-3 rounded-4 shadow-sm bg-white" role="status">
+            <div class="empty-icon-box mb-3 mx-auto">
+                <i class="bi bi-search fs-2 text-muted"></i>
+            </div>
+            <h5 class="fw-bold text-dark mb-1">No se encontraron productores</h5>
+            <p class="text-muted small mb-4">No hay registros que coincidan con los filtros seleccionados en el sistema.</p>
+            <a class="btn btn-success rounded-pill px-4 py-2 fw-bold small" href="registrar-asociado">
+                <i class="bi bi-person-plus-fill me-1"></i> Registrar nuevo asociado
+            </a>
+        </div>
+    }
+
+    @if (asociadoSeleccionado != null)
+    {
+        <div class="modal-backdrop-custom fade-in">
+            <div class="modal-card-custom p-4 p-md-5">
+                <div class="d-flex justify-content-between align-items-start mb-4 pb-3 border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="modal-avatar-exec">
+                            @ObtenerIniciales(asociadoSeleccionado.NombreCompleto)
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill extra-small fw-bold px-2.5 py-0.5">
+                                    <i class="bi bi-shield-fill-check me-1"></i> EXPEDIENTE OFICIAL FAAUA
+                                </span>
+                            </div>
+                            <h4 class="fw-bolder text-dark mb-0">@asociadoSeleccionado.NombreCompleto</h4>
+                            <span class="text-muted small">
+                                Cédula: <strong>@asociadoSeleccionado.Cedula</strong> · Celular: <strong>@asociadoSeleccionado.Telefono</strong>
+                            </span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close shadow-none" @onclick="CerrarDetalle"></button>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="exec-info-box p-4 rounded-4 h-100">
+                            <h6 class="fw-bold text-dark mb-3 small uppercase">Ubicación y Predio</h6>
+                            <ul class="list-unstyled mb-0 small">
+                                <li class="d-flex justify-content-between py-2 border-bottom"><span>Predio:</span> <strong>@asociadoSeleccionado.NombrePredio</strong></li>
+                                <li class="d-flex justify-content-between py-2 border-bottom"><span>Vereda:</span> <strong>@asociadoSeleccionado.VeredaSector</strong></li>
+                                <li class="d-flex justify-content-between py-2 border-bottom"><span>Municipio:</span> <strong>@asociadoSeleccionado.Municipio</strong></li>
+                                <li class="d-flex justify-content-between py-2"><span>Extensión:</span> <strong class="text-success">@asociadoSeleccionado.HectareasPredio Ha</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="exec-info-box p-4 rounded-4 h-100">
+                            <h6 class="fw-bold text-dark mb-3 small uppercase">Caracterización & Social</h6>
+                            <ul class="list-unstyled mb-0 small">
+                                <li class="d-flex justify-content-between py-2 border-bottom"><span>Cultivo:</span> <strong>@asociadoSeleccionado.CultivoPrincipal</strong></li>
+                                <li class="d-flex justify-content-between py-2 border-bottom"><span>BPA:</span> <strong class="text-success">@(asociadoSeleccionado.TieneBPA ? "Vigente" : "No registra")</strong></li>
+                                <li class="d-flex justify-content-between py-2 border-bottom"><span>Víctimas:</span> <strong>@(asociadoSeleccionado.EsVictima == "Si" ? "Sí" : "No")</strong></li>
+                                <li class="d-flex justify-content-between py-2"><span>Registro:</span> <strong>@asociadoSeleccionado.FechaRegistro.ToString("dd/MM/yyyy")</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end pt-3 border-top">
+                    <button class="btn btn-asoagro-close rounded-pill px-4 py-2 small fw-bold" @onclick="CerrarDetalle">Cerrar Expediente</button>
+                </div>
+            </div>
+        </div>
+    }
 </div>
-
-<div class="content-card search-card mb-3">
-    <label for="filtro" class="form-label">Buscar por nombre o número de documento:</label>
-    <input id="filtro" class="form-control" @bind="textoFiltro" @bind:event="oninput" placeholder="Escribe para buscar..." />
-</div>
-
-@if (cargando)
-{
-    <div class="loading-state">Cargando asociados...</div>
-}
-else if (!string.IsNullOrEmpty(mensajeError))
-{
-    <div class="alert alert-danger mt-3" role="alert">
-        @mensajeError
-    </div>
-}
-else if (AsociadosFiltrados.Any())
-{
-    <div class="content-card table-responsive">
-        <table class="table table-striped align-middle mb-0">
-            <thead>
-                <tr>
-                    <th>Nombre</th>
-                    <th>Documento</th>
-                    <th>Finca</th>
-                    <th>Cultivo</th>
-                    <th>Fecha de registro</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var asociado in AsociadosFiltrados)
-                {
-                    <tr>
-                        <td>@asociado.NombreCompleto</td>
-                        <td>@asociado.Cedula</td>
-                        <td>@asociado.FincaVereda</td>
-                        <td>@asociado.CultivoPrincipal</td>
-                        <td>@asociado.FechaRegistro.ToLocalTime().ToString("dd/MM/yyyy")</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
-else
-{
-    <div class="empty-state mt-3" role="status">
-        <strong>No hay asociados para mostrar</strong>
-        <p class="mb-0">Registra un nuevo asociado o cambia el criterio de búsqueda.</p>
-        <a class="btn btn-success mt-3" href="registrar-asociado">Registrar asociado</a>
-    </div>
-}
 
 @code {
     private string textoFiltro = string.Empty;
-    private string mensajeError = string.Empty;
-    private bool cargando = true;
-    private List<Asociado> listaAsociados = new();
+    private string filtroCultivo = string.Empty;
+    private List<AsociadoModel> listaAsociados = new();
+    private AsociadoModel? asociadoSeleccionado = null;
 
-    protected override async Task OnInitializedAsync()
+    protected override void OnInitialized()
     {
-        try
-        {
-            listaAsociados = await Http.GetFromJsonAsync<List<Asociado>>("api/asociados") ?? new();
-        }
-        catch (HttpRequestException)
-        {
-            mensajeError = "No fue posible cargar los asociados registrados.";
-        }
-        finally
-        {
-            cargando = false;
-        }
+        listaAsociados = AsociadoService.ObtenerAsociados();
     }
 
-    private IEnumerable<Asociado> AsociadosFiltrados =>
-        string.IsNullOrWhiteSpace(textoFiltro) 
-            ? listaAsociados 
-            : listaAsociados.Where(a => 
-                a.NombreCompleto.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) ||
-                a.Cedula.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase));
+    private IEnumerable<AsociadoModel> AsociadosFiltrados =>
+        listaAsociados.Where(a => 
+            (string.IsNullOrWhiteSpace(textoFiltro) || 
+             a.NombreCompleto.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) ||
+             a.Cedula.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) ||
+             a.VeredaSector.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrWhiteSpace(filtroCultivo) || a.CultivoPrincipal.Equals(filtroCultivo, StringComparison.OrdinalIgnoreCase))
+        );
+
+    private void VerDetalle(AsociadoModel asociado) => asociadoSeleccionado = asociado;
+    private void CerrarDetalle() => asociadoSeleccionado = null;
+    private void ExportarReporte() { }
+
+    private string ObtenerIniciales(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre)) return "AS";
+        var partes = nombre.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length == 1) return partes[0].Substring(0, 1).ToUpper();
+        return $"{partes[0][0]}{partes[1][0]}".ToUpper();
+    }
 }

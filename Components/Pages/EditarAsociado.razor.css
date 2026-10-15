@@ -1,0 +1,79 @@
+/* ==========================================================================
+   ESTILOS PANEL DE EDICIÓN - ASOAGRO & FAAUA
+   ========================================================================== */
+
+.asoagro-editar-wrapper { background-color: #f8fafc; }
+
+.asoagro-hero-banner {
+    background: linear-gradient(135deg, #072a16 0%, #115e2e 55%, #1e1b4b 100%);
+    color: #ffffff; border-radius: 22px; box-shadow: 0 18px 38px -10px rgba(7, 42, 22, 0.32);
+}
+
+.badge-agri-pill { background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); color: #4ade80; font-size: 0.72rem; font-weight: 700; padding: 5px 14px; border-radius: 50px; }
+.badge-agri-pill-sub { background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #e2e8f0; font-size: 0.72rem; font-weight: 600; padding: 5px 14px; border-radius: 50px; }
+
+.hero-stats-glass { background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.12); }
+.hero-stat-icon { width: 38px; height: 38px; border-radius: 10px; background: rgba(16, 185, 129, 0.2); color: #34d399; display: flex; align-items: center; justify-content: center; }
+
+.pulse-dot { width: 8px; height: 8px; background-color: #4ade80; border-radius: 50%; display: inline-block; margin-right: 6px; box-shadow: 0 0 0 rgba(74, 222, 128, 0.7); animation: pulseGlow 2s infinite; }
+@keyframes pulseGlow { 0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); } 70% { box-shadow: 0 0 0 8px rgba(74, 222, 128, 0); } 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); } }
+
+.unified-form-panel { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 22px; box-shadow: 0 12px 32px -8px rgba(15, 23, 42, 0.05); }
+.section-divider { border-top: 1px dashed #e2e8f0; }
+.section-header-title { display: flex; align-items: center; gap: 12px; }
+
+.section-icon-badge {
+    width: 40px; height: 40px; border-radius: 11px; display: flex; align-items: center; justify-content: center; font-size: 1.15rem;
+}
+.icon-purple { background: #eef2ff; color: #4f46e5; }
+.icon-emerald { background: #ecfdf5; color: #059669; }
+.icon-amber { background: #fffbeb; color: #d97706; }
+
+.form-label-modern { font-size: 0.82rem; font-weight: 700; color: #334155; margin-bottom: 6px; display: block; }
+.input-modern-wrapper { position: relative; display: flex; align-items: center; }
+.input-icon { position: absolute; left: 14px; color: #64748b; font-size: 1rem; pointer-events: none; }
+
+.form-control-modern {
+    padding: 12px 14px 12px 40px; font-size: 0.94rem; font-weight: 500; color: #0f172a;
+    background-color: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 12px; transition: all 0.2s ease;
+}
+.form-control-modern:focus { background-color: #ffffff; border-color: #10b981; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.14); outline: none; }
+
+/* Tarjeta BPA */
+.bpa-interactive-card { border-radius: 14px; cursor: pointer; transition: all 0.2s ease; }
+.bpa-inactive { background: #f8fafc; border: 1.5px dashed #cbd5e1; color: #334155; }
+.bpa-active { background: #f0fdf4; border: 1.5px solid #22c55e; color: #064e3b; }
+
+.bpa-icon-circle { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+.bpa-inactive .bpa-icon-circle { background: #e2e8f0; color: #64748b; }
+.bpa-active .bpa-icon-circle { background: #16a34a; color: #ffffff; }
+
+/* Botón Guardar */
+.btn-asoagro-submit {
+    background: linear-gradient(135deg, #0b3c1e 0%, #15803d 60%, #059669 100%);
+    color: #ffffff !important; border: none; padding: 12px 28px; font-size: 0.95rem; font-weight: 700; border-radius: 50px;
+    box-shadow: 0 10px 22px -5px rgba(21, 128, 61, 0.4); transition: all 0.25s ease;
+}
+.btn-asoagro-submit:hover { transform: translateY(-2px); box-shadow: 0 14px 28px -5px rgba(21, 128, 61, 0.55); }
+
+/* Carnet / Resumen Lateral */
+.id-card-container { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 22px; overflow: hidden; box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.1); }
+.id-card-header { background: linear-gradient(145deg, #072a16 0%, #15803d 65%, #312e81 100%); padding: 22px 20px; text-align: center; color: #ffffff; position: relative; overflow: hidden; }
+.id-card-pattern { position: absolute; inset: 0; background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px); background-size: 16px 16px; opacity: 0.6; }
+.badge-credential-type { background: rgba(255, 255, 255, 0.16); backdrop-filter: blur(6px); border: 1px solid rgba(255, 255, 255, 0.25); color: #ffffff; font-size: 0.68rem; font-weight: 700; padding: 4px 11px; border-radius: 50px; }
+
+.id-card-avatar {
+    width: 72px; height: 72px; border-radius: 50%; background: #ffffff; color: #072a16;
+    font-size: 1.6rem; font-weight: 800; display: flex; align-items: center; justify-content: center;
+    margin: 0 auto; border: 3px solid #4ade80; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.22);
+}
+.bpa-avatar-verified {
+    position: absolute; bottom: 0; right: -2px; width: 26px; height: 26px; border-radius: 50%;
+    background: #10b981; color: #ffffff; border: 2px solid #ffffff; display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+}
+.id-card-body { padding: 20px; background: #ffffff; }
+.id-data-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #e2e8f0; }
+
+.toast-banner { background: #ffffff; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08); border-left: 5px solid #16a34a; }
+.toast-icon-box { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+.extra-small { font-size: 0.75rem; }
