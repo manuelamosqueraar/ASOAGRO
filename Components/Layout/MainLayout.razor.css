@@ -162,3 +162,25 @@ article {
         right: 0.75rem;
         top: 0.5rem;
     }
+
+    /* ==========================================================================
+   CONTROL DE DESLIZAMIENTO DE LA BARRA LATERAL (SIDEBAR DRAWER)
+   ========================================================================== */
+
+.sidebar {
+    width: 270px;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(0);
+    z-index: 1000;
+}
+
+/* Clase que contrae y oculta por completo la barra verde hacia la izquierda */
+.sidebar.sidebar-collapsed {
+    transform: translateX(-100%);
+    width: 0 !important;
+    overflow: hidden;
+    box-shadow: none;
+}
