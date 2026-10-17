@@ -1,59 +1,190 @@
 ﻿@page "/"
+@inject NavigationManager Navigation
 
-<PageTitle>Inicio - Asoagro</PageTitle>
+<PageTitle>Inicio - Asoagro / FAAUA</PageTitle>
 
-<section class="hero-panel mb-4">
-    <div>
-        <p class="eyebrow">Panel administrativo</p>
-        <h1>Productores, fincas y documentos bajo control.</h1>
-        <p class="hero-copy">
-            Una base operativa para registrar asociados, consultar productores y anticipar vencimientos antes de que afecten la gestión de la asociación.
-        </p>
-        <div class="d-flex flex-wrap gap-2 mt-4">
-            <a class="btn btn-success btn-lg" href="registrar-asociado">Registrar asociado</a>
-            <a class="btn btn-outline-success btn-lg" href="consultar-asociados">Consultar registros</a>
-        </div>
-    </div>
-    <div class="hero-card" aria-label="Resumen de módulos base">
-        <span class="hero-number">3</span>
-        <span class="hero-label">módulos base</span>
-        <strong>Asociados, documentos y alertas.</strong>
-        <small>Preparado para conectar persistencia real.</small>
-    </div>
-</section>
+<div class="home-container-fluid">
 
-<div class="row g-3">
-    <div class="col-md-4">
-        <div class="metric-card">
-            <span>01</span>
-            <h2>Registro</h2>
-            <p>Captura datos básicos del productor y evita cédulas duplicadas.</p>
+    <!-- SECCIÓN 1: HERO PRINCIPAL (Con Imagen Renovada y Transición de Entrada) -->
+    <section class="hero-section hero-image position-relative d-flex align-items-center justify-content-center text-white text-center">
+        <div class="parallax-bg img-hero-1"></div>
+        <div class="overlay"></div>
+
+        <div class="container position-relative z-2 px-3 animate-fade-in">
+            <span class="badge bg-success text-white px-3 py-2 rounded-pill fw-bold mb-3 tracking-wider text-uppercase extra-small shadow-sm">
+                🌾 Sistema de Gestión Estratégica • Asoagro FAAUA
+            </span>
+            <h1 class="display-3 fw-bold mb-4 text-white text-shadow font-heading">
+                Articulación y Control para el Agro en el Urabá Antioqueño
+            </h1>
+            <p class="lead mb-5 mx-auto text-light opacity-90 text-shadow-sm font-sans" style="max-width: 800px; font-size: 1.15rem;">
+                Centralizamos digitalmente los procesos administrativos de las asociaciones de base para potenciar la competitividad, la gobernanza y el acceso a financiamiento.
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <button class="btn btn-success btn-lg px-5 py-3 rounded-pill shadow fw-bold hover-scale" @onclick='() => NavegarA("registrar-asociado")'>
+                    Registrar Asociado
+                </button>
+                <button class="btn btn-outline-light btn-lg px-5 py-3 rounded-pill shadow-sm fw-bold hover-scale" @onclick='() => NavegarA("consultar-asociados")'>
+                    Consultar Padrón
+                </button>
+            </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="metric-card">
-            <span>02</span>
-            <h2>Consulta</h2>
-            <p>Busca asociados por nombre o documento desde una tabla responsive.</p>
+    </section>
+
+    <!-- SECCIÓN 2: PADRÓN E INTEGRACIÓN (Fondo Plano Corporativo con Transición al Scroll) -->
+    <section class="hero-section hero-flat-bg d-flex align-items-center justify-content-center text-dark text-center">
+        <div class="container px-3 scroll-reveal">
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold mb-3 tracking-wider text-uppercase extra-small">
+                Módulo 01 • Articulación Interasociativa
+            </span>
+            <h2 class="display-4 fw-bold mb-4 text-dark font-heading">
+                Gestión Unificada de las Asociaciones de Base
+            </h2>
+            <p class="lead mb-5 mx-auto text-secondary font-sans" style="max-width: 750px; font-size: 1.1rem;">
+                Resolvemos la desarticulación administrativa conectando los padrones de productores, fincas y juntas directivas en un único directorio federado y confiable.
+            </p>
+            <div>
+                <button class="btn btn-success btn-lg px-5 py-3 rounded-pill shadow fw-bold hover-scale font-heading" @onclick='() => NavegarA("historia/origenes")'>
+                    Conocer Orígenes
+                </button>
+            </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="metric-card">
-            <span>03</span>
-            <h2>Alertas</h2>
-            <p>Visualiza documentos próximos a vencer con estados por prioridad.</p>
+    </section>
+
+    <!-- SECCIÓN 3: GOBERNANZA Y CUMPLIMIENTO (Tarjetas Dinámicas Grid) -->
+    <section class="hero-section hero-flat-bg d-flex align-items-center justify-content-center text-dark py-5">
+        <div class="container px-3 scroll-reveal">
+            <div class="text-center mb-5">
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold mb-2 tracking-wider text-uppercase extra-small">
+                    Módulo 02 • Gobernanza y Legalidad
+                </span>
+                <h2 class="display-5 fw-bold text-dark font-heading">Control Oportuno de Obligaciones y Estatutos</h2>
+                <p class="text-secondary font-sans">Pilares fundamentales para mantener la elegibilidad de las asociaciones.</p>
+            </div>
+
+            <div class="row g-4 justify-content-center">
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white hover-card">
+                        <div class="icon-box bg-success text-white rounded-3 p-3 d-inline-flex mb-3 shadow-sm">
+                            <span class="fw-bold fs-5">01</span>
+                        </div>
+                        <h3 class="h5 fw-bold text-dark font-heading">Asambleas al Día</h3>
+                        <p class="text-secondary small font-sans">Seguimiento automatizado de las fechas de renovación de juntas directivas y actas estatutarias.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white hover-card">
+                        <div class="icon-box bg-success text-white rounded-3 p-3 d-inline-flex mb-3 shadow-sm">
+                            <span class="fw-bold fs-5">02</span>
+                        </div>
+                        <h3 class="h5 fw-bold text-dark font-heading">Obligaciones Tributarias</h3>
+                        <p class="text-secondary small font-sans">Control preventivo de requisitos fiscales para evitar la pérdida de beneficios gremiales.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white hover-card">
+                        <div class="icon-box bg-success text-white rounded-3 p-3 d-inline-flex mb-3 shadow-sm">
+                            <span class="fw-bold fs-5">03</span>
+                        </div>
+                        <h3 class="h5 fw-bold text-dark font-heading">Gobernanza Interna</h3>
+                        <p class="text-secondary small font-sans">Articulación directa entre la FAAUA y las juntas locales de las 37 asociaciones de base.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- SECCIÓN 4: TRAZABILIDAD Y BPA (Con Imagen de Fondo Fullscreen) -->
+    <section class="hero-section hero-image position-relative d-flex align-items-center justify-content-center text-white text-center">
+        <div class="parallax-bg img-trazabilidad"></div>
+        <div class="overlay"></div>
+
+        <div class="container position-relative z-2 px-3 scroll-reveal">
+            <span class="badge bg-success text-white px-3 py-2 rounded-pill fw-bold mb-3 tracking-wider text-uppercase extra-small shadow-sm">
+                Módulo 03 • Impacto Agrícola
+            </span>
+            <h2 class="display-4 fw-bold mb-4 text-white text-shadow font-heading">
+                Trazabilidad Comercial en Cadenas Productivas
+            </h2>
+            <p class="lead mb-5 mx-auto text-light opacity-95 text-shadow-sm font-sans" style="max-width: 750px; font-size: 1.1rem;">
+                Monitoreo detallado de predios en líneas de plátano, banano, cacao y ganadería, impulsando la adopción de normativas de inocuidad alimentaria.
+            </p>
+            <div>
+                <button class="btn btn-light text-success btn-lg px-5 py-3 rounded-pill shadow fw-bold hover-scale font-heading" @onclick='() => NavegarA("historia/impacto")'>
+                    Explorar Trazabilidad
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN 5: ELEGIBILIDAD PARA FINANCIACIÓN (Fondo Plano Corporativo) -->
+    <section class="hero-section hero-flat-bg d-flex align-items-center justify-content-center text-dark text-center">
+        <div class="container px-3 scroll-reveal">
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold mb-3 tracking-wider text-uppercase extra-small">
+                Módulo 04 • Core Estratégico
+            </span>
+            <h2 class="display-4 fw-bold mb-4 text-dark font-heading">
+                Acceso Oportuno a Fuentes de Financiación
+            </h2>
+            <p class="lead mb-5 mx-auto text-secondary font-sans" style="max-width: 750px; font-size: 1.1rem;">
+                Evitamos que las asociaciones pierdan oportunidades de recursos externos por falta de padrones listos o documentación desactualizada en convocatorias.
+            </p>
+            <div>
+                <button class="btn btn-success btn-lg px-5 py-3 rounded-pill shadow fw-bold hover-scale font-heading" @onclick='() => NavegarA("consultar-asociados")'>
+                    Revisar Elegibilidad
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN 6: ALERTAS Y VENCIMIENTOS (Con Imagen de Fondo Fullscreen) -->
+    <section class="hero-section hero-image position-relative d-flex align-items-center justify-content-center text-white text-center">
+        <div class="parallax-bg img-alertas"></div>
+        <div class="overlay"></div>
+
+        <div class="container position-relative z-2 px-3 scroll-reveal">
+            <span class="badge bg-success text-white px-3 py-2 rounded-pill fw-bold mb-3 tracking-wider text-uppercase extra-small shadow-sm">
+                Módulo 05 • Gestión Preventiva
+            </span>
+            <h2 class="display-4 fw-bold mb-4 text-white text-shadow font-heading">
+                Anticipación Inteligente de Vencimientos
+            </h2>
+            <p class="lead mb-5 mx-auto text-light opacity-95 text-shadow-sm font-sans" style="max-width: 750px; font-size: 1.1rem;">
+                Sistema automatizado de alertas prioritarias para que la Dirección Ejecutiva y Tesorería actúen antes de que caduquen los documentos críticos.
+            </p>
+            <div>
+                <button class="btn btn-light text-success btn-lg px-5 py-3 rounded-pill shadow fw-bold hover-scale font-heading" @onclick='() => NavegarA("alertas-documentos")'>
+                    Ver Panel de Alertas
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- SECCIÓN 7: CIERRE INSTITUCIONAL (Fondo Plano Corporativo) -->
+    <section class="hero-section hero-flat-bg d-flex align-items-center justify-content-center text-dark text-center">
+        <div class="container px-3 scroll-reveal">
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold mb-3 tracking-wider text-uppercase extra-small">
+                Compromiso Regional
+            </span>
+            <h2 class="display-4 fw-bold mb-4 text-dark font-heading">
+                Impulsando el Bienestar de las Familias Productoras
+            </h2>
+            <p class="lead mb-5 mx-auto text-secondary font-sans" style="max-width: 750px; font-size: 1.1rem;">
+                Únete a la plataforma que está transforming la administración agropecuaria en el Urabá Antioqueño bajo los estándares de la FAAUA.
+            </p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <button class="btn btn-success btn-lg px-5 py-3 rounded-pill shadow fw-bold hover-scale font-heading" @onclick='() => NavegarA("registrar-asociado")'>
+                    Empezar Ahora
+                </button>
+            </div>
+        </div>
+    </section>
+
 </div>
 
-<section class="workflow-panel mt-4">
-    <div>
-        <p class="eyebrow text-success mb-2">Flujo recomendado</p>
-        <h2>Empieza por asociados, continúa con documentos y revisa alertas.</h2>
-    </div>
-    <ol class="workflow-list">
-        <li>Registra el productor con su cédula y cultivo principal.</li>
-        <li>Consulta el padrón para validar que quedó disponible.</li>
-        <li>Revisa alertas de documentos próximos a vencer.</li>
-    </ol>
-</section> 
+@code {
+    private void NavegarA(string ruta)
+    {
+        Navigation.NavigateTo(ruta);
+    }
+}
