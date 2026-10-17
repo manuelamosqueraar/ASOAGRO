@@ -26,7 +26,7 @@ article {
 
 /* Header Enterprise */
 .top-row {
-    background: rgba(255, 255, 255, 0.95) !important;
+    background: #0d4424c7 !important;
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-bottom: 1px solid var(--asoagro-borde);
@@ -183,4 +183,21 @@ article {
     width: 0 !important;
     overflow: hidden;
     box-shadow: none;
+}
+
+.search-bar-container input::placeholder {
+    color: rgba(255, 255, 255, 0.75) !important;
+}
+
+
+.search-bar-container input::placeholder {
+    color: rgba(255, 255, 255, 0.75) !important;
+    font-style: italic !important;
+}
+
+.search-bar-container input:focus {
+    color: white !important;
+    font-style: italic !important;
+    box-shadow: none !important;
+    border-color: #ffffff !important;
 }
