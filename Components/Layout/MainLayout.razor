@@ -1,5 +1,6 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 @using Microsoft.AspNetCore.Components.Authorization
 @implements IDisposable
 
@@ -10,9 +11,9 @@
     </div>
 
     <main>
-        <!-- Header Enterprise estático (sticky) en la parte superior con un tono oscuro unificado -->
-        <header class="top-row px-4 py-1 d-flex justify-content-between align-items-center position-sticky top-0 border-0" 
-                style="min-height: 3.2rem; z-index: 1050; background-color: #051f10; border-bottom: 1px solid rgba(201, 233, 121, 0.12);">
+        <!-- Header con el ID, grosor original y la clase dinámica para transparencia en el Home -->
+        <header id="main-header" class="top-row px-4 py-1.8 d-flex justify-content-between align-items-center position-sticky top-0 border-0 @(IsHomePage() ? "nav-transparent" : "nav-scrolled")" 
+                style="min-height: 3.5rem; z-index: 1050; transition: background-color 0.3s ease, border-color 0.3s ease;">
             
             <!-- Lado Izquierdo: Botón de las 3 rayitas BLANCAS -->
             <div class="d-flex align-items-center">
@@ -27,79 +28,69 @@
                 </button>
             </div>
 
-            <!-- Lado Derecho: Barra de búsqueda e icono de notificaciones -->
+            <!-- Lado Derecho: Solo icono de notificaciones (Sin barra de búsqueda y oculto en el Home) -->
             <div class="d-flex align-items-center gap-3">
                 
-               <!-- Barra de búsqueda sobre línea inferior con lupita completa y texto en cursiva -->
-<div class="search-bar-container position-relative d-none d-md-flex align-items-center">
-    <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" class="position-absolute ms-1" style="top: 50%; transform: translateY(-50%);">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-    </svg>
-    <input type="text" class="form-control border-0 border-bottom rounded-0 ps-4 shadow-none bg-transparent text-white small py-1 fst-italic" 
-           placeholder="Buscar en Asoagro..." 
-           style="border-color: #ffffff !important; width: 220px; font-size: 0.85rem;" />
-</div>
+                @if (!IsHomePage())
+                {
+                    <div class="position-relative">
+                        <button class="btn btn-link p-2 text-decoration-none position-relative shadow-none" 
+                                @onclick="ToggleNotificaciones" 
+                                title="Centro de Alertas Asoagro">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-white text-dark fw-bold shadow-sm" style="font-size: 0.68rem; padding: 0.3em 0.5em; margin-left: -6px; margin-top: 4px;">
+                                 @notificacionesFiltradas.Count
+                             </span>
+                        </button>
 
-                <!-- Centro de Notificaciones (Campana BLANCA, Círculo y Número negros) -->
-                <div class="position-relative">
-                    <button class="btn btn-link p-2 text-decoration-none position-relative shadow-none" 
-                            @onclick="ToggleNotificaciones" 
-                            title="Centro de Alertas Asoagro">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                        </svg>
-                        <!-- Círculo y texto modificados a colores oscuros/negros -->
-                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-white text-dark fw-bold shadow-sm" style="font-size: 0.68rem; padding: 0.3em 0.5em; margin-left: -6px; margin-top: 4px;">
-                             @notificacionesFiltradas.Count
-                        </span>
-                    </button>
-
-                    <!-- Ventana Flotante de Notificaciones -->
-                    @if (mostrarNotificaciones)
-                    {
-                        <div class="dropdown-panel-notifications shadow-lg border-0 rounded-4 position-absolute end-0 mt-3 bg-white" style="width: 380px; z-index: 1050;">
-                            <div class="p-3 bg-dark text-white rounded-top-4 d-flex justify-content-between align-items-center border-bottom border-secondary-subtle">
-                                <div>
-                                    <h6 class="fw-bold mb-0 text-white d-flex align-items-center gap-2">Alertas del Sistema</h6>
-                                    <small class="text-muted" style="font-size: 0.75rem;">Centro de eventos y vencimientos</small>
+                        <!-- Ventana Flotante de Notificaciones -->
+                        @if (mostrarNotificaciones)
+                        {
+                            <div class="dropdown-panel-notifications shadow-lg border-0 rounded-4 position-absolute end-0 mt-3 bg-white" style="width: 380px; z-index: 1050;">
+                                <div class="p-3 bg-dark text-white rounded-top-4 d-flex justify-content-between align-items-center border-bottom border-secondary-subtle">
+                                    <div>
+                                        <h6 class="fw-bold mb-0 text-white d-flex align-items-center gap-2">Alertas del Sistema</h6>
+                                        <small class="text-muted" style="font-size: 0.75rem;">Centro de eventos y vencimientos</small>
+                                    </div>
+                                    <span class="badge bg-success text-white rounded-pill fw-bold px-2 py-1">@notificacionesFiltradas.Count Activas</span>
                                 </div>
-                                <span class="badge bg-success text-white rounded-pill fw-bold px-2 py-1">@notificacionesFiltradas.Count Activas</span>
-                            </div>
 
-                            <div class="d-flex border-bottom bg-light px-3 py-2 gap-2">
-                                <button class="btn btn-sm @(filtroActivo == "Todas" ? "btn-success fw-bold" : "btn-outline-secondary border-0") rounded-pill px-3 extra-small" @onclick='() => FiltrarNotificaciones("Todas")'>Todas</button>
-                                <button class="btn btn-sm @(filtroActivo == "Documentos" ? "btn-success fw-bold" : "btn-outline-secondary border-0") rounded-pill px-3 extra-small" @onclick='() => FiltrarNotificaciones("Documentos")'>Documentos</button>
-                                <button class="btn btn-sm @(filtroActivo == "Productores" ? "btn-success fw-bold" : "btn-outline-secondary border-0") rounded-pill px-3 extra-small" @onclick='() => FiltrarNotificaciones("Productores")'>Productores</button>
-                            </div>
+                                <div class="d-flex border-bottom bg-light px-3 py-2 gap-2">
+                                    <button class="btn btn-sm @(filtroActivo == "Todas" ? "btn-success fw-bold" : "btn-outline-secondary border-0") rounded-pill px-3 extra-small" @onclick='() => FiltrarNotificaciones("Todas")'>Todas</button>
+                                    <button class="btn btn-sm @(filtroActivo == "Documentos" ? "btn-success fw-bold" : "btn-outline-secondary border-0") rounded-pill px-3 extra-small" @onclick='() => FiltrarNotificaciones("Documentos")'>Documentos</button>
+                                    <button class="btn btn-sm @(filtroActivo == "Productores" ? "btn-success fw-bold" : "btn-outline-secondary border-0") rounded-pill px-3 extra-small" @onclick='() => FiltrarNotificaciones("Productores")'>Productores</button>
+                                </div>
 
-                            <div class="p-2 overflow-auto" style="max-height: 320px;">
-                                @if (!notificacionesFiltradas.Any())
-                                {
-                                    <div class="p-4 text-center text-muted small">No hay alertas disponibles.</div>
-                                }
-                                else
-                                {
-                                    @foreach (var item in notificacionesFiltradas)
+                                <div class="p-2 overflow-auto" style="max-height: 320px;">
+                                    @if (!notificacionesFiltradas.Any())
                                     {
-                                        <a href="@item.Enlace" class="noti-card-item d-block p-3 mb-2 text-decoration-none rounded-3 border-start border-4 @item.BordeColor bg-white shadow-sm hover-card" @onclick="CerrarDropdowns">
-                                            <div class="d-flex w-100 justify-content-between align-items-center mb-1">
-                                                <span class="badge @item.BadgeColor fw-bold extra-small">@item.Categoria</span>
-                                                <small class="text-muted extra-small">@item.Tiempo</small>
-                                            </div>
-                                            <h6 class="mb-1 text-dark fw-bold small">@item.Titulo</h6>
-                                            <p class="mb-0 text-secondary extra-small text-truncate-2">@item.Descripcion</p>
-                                        </a>
+                                        <div class="p-4 text-center text-muted small">No hay alertas disponibles.</div>
                                     }
-                                }
+                                    else
+                                    {
+                                        @foreach (var item in notificacionesFiltradas)
+                                        {
+                                            <a href="@item.Enlace" class="noti-card-item d-block p-3 mb-2 text-decoration-none rounded-3 border-start border-4 @item.BordeColor bg-white shadow-sm hover-card" @onclick="CerrarDropdowns">
+                                                <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                                                    <span class="badge @item.BadgeColor fw-bold extra-small">@item.Categoria</span>
+                                                    <small class="text-muted extra-small">@item.Tiempo</small>
+                                                </div>
+                                                <h6 class="mb-1 text-dark fw-bold small">@item.Titulo</h6>
+                                                <p class="mb-0 text-secondary extra-small text-truncate-2">@item.Descripcion</p>
+                                            </a>
+                                        }
+                                    }
+                                </div>
+                                <div class="p-2 bg-light text-center border-top rounded-bottom-4">
+                                    <a href="alertas-documentos" class="text-success text-decoration-none fw-bold extra-small" @onclick="CerrarDropdowns">Ver panel completo &rarr;</a>
+                                </div>
                             </div>
-                            <div class="p-2 bg-light text-center border-top rounded-bottom-4">
-                                <a href="alertas-documentos" class="text-success text-decoration-none fw-bold extra-small" @onclick="CerrarDropdowns">Ver panel completo &rarr;</a>
-                            </div>
-                        </div>
-                    }
-                </div>
+                        }
+                    </div>
+                }
 
             </div>
         </header>
@@ -138,6 +129,36 @@
     {
         notificacionesFiltradas = todasNotificaciones;
         Navigation.LocationChanged += EnCambioDeRuta;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("eval", @"
+                window.addEventListener('scroll', function() {
+                    const header = document.getElementById('main-header');
+                    if (header) {
+                        if (window.location.pathname === '/' || window.location.pathname.toLowerCase() === '/home') {
+                            if (window.scrollY > 30) {
+                                header.classList.add('nav-scrolled');
+                                header.classList.remove('nav-transparent');
+                            } else {
+                                header.classList.remove('nav-scrolled');
+                                header.classList.add('nav-transparent');
+                            }
+                        }
+                    }
+                });
+            ");
+        }
+    }
+
+    private bool IsHomePage()
+    {
+        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri);
+        return string.IsNullOrEmpty(relativePath) || 
+               relativePath.Equals("home", StringComparison.OrdinalIgnoreCase);
     }
 
     private void ToggleNavMenu()
