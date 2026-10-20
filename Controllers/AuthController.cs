@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Asoagro.Controllers
 {
@@ -27,7 +28,31 @@ namespace Asoagro.Controllers
                 return Redirect("/login?error=auth_failed");
             }
 
-            return LocalRedirect(returnUrl);
+            // Obtenemos el rol que se le asignó automáticamente en el Program.cs según su correo
+            var rolUsuario = result.Principal?.FindFirstValue(ClaimTypes.Role);
+
+            // Redirección inteligente según el rol del equipo
+            if (!string.IsNullOrEmpty(rolUsuario))
+            {
+                if (rolUsuario == "Director" || rolUsuario == "Presidente" || rolUsuario == "Tesorero")
+                {
+                    // Los mandamos directo al panel principal de gestión donde SÍ sale el menú lateral completo
+                    return LocalRedirect("/consultar-asociados");
+                }
+                else if (rolUsuario == "Invitado")
+                {
+                    // Si es invitado, lo podemos mandar a una vista general o donde prefieras
+                    return LocalRedirect("/consultar-asociados");
+                }
+            }
+
+            // Si viene con otra URL específica, respeta la ruta
+            if (!string.IsNullOrEmpty(returnUrl) && returnUrl != "/")
+            {
+                return LocalRedirect(returnUrl);
+            }
+
+            return LocalRedirect("/");
         }
 
         [HttpGet("logout")]

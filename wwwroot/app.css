@@ -431,3 +431,13 @@ h1:focus {
         font-size: 1rem !important;
     }
 }
+
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&display=swap');
+
+/* Aplicar Merriweather de forma global a todo el proyecto o layout */
+
+
+body, h1, h2, h3, h4, h5, h6, p, a, button, span {
+    font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+}

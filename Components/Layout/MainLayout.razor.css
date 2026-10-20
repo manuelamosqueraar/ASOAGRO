@@ -205,8 +205,8 @@ article {
 
 /* Forzar la altura exacta y delgada de la barra superior */
 header.top-row {
-    height: 3.5rem !important; /* Puedes bajarlo a 2.5rem si la quieres más delgada aún */
-    min-height: 3.5rem !important;
+    height: 4rem !important; /* Puedes bajarlo a 2.5rem si la quieres más delgada aún */
+    min-height: 4rem !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
 }
@@ -219,7 +219,7 @@ header.top-row {
 }
 
 #main-header.nav-scrolled {
-    background-color: #113e237d !important;
+    background-color: #ffffffff !important;
     border-bottom: 1px solid rgba(201, 233, 121, 0.12) !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }

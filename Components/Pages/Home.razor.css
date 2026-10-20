@@ -176,3 +176,13 @@ article.content {
 .hover-card:hover svg {
     transform: scale(1.12) !important;
 } 
+
+
+
+
+.home-container-fluid,
+.home-container-fluid *,
+.font-heading,
+.font-sans {
+    font-family: 'Merriweather', Georgia, serif !important;
+}
