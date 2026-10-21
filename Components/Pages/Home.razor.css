@@ -186,3 +186,29 @@ article.content {
 .font-sans {
     font-family: 'Merriweather', Georgia, serif !important;
 }
+
+/* ---------- 1. Hero corregido para que la imagen llene todo arriba ---------- */
+    .ag-hero {
+        position: relative !important;
+        overflow: hidden !important;
+    }
+
+    .ag-capa { 
+        position: absolute !important; 
+        top: 0 !important; 
+        bottom: 0 !important; 
+        left: 0 !important; 
+        right: 0 !important; 
+        z-index: 0 !important; 
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    .ag-capa .parallax-bg, .img-hero-1 { 
+        position: absolute !important; 
+        inset: 0 !important; 
+        width: 100% !important;
+        height: 100% !important;
+        background-size: cover !important; 
+        background-position: center center !important; 
+    }

@@ -219,7 +219,7 @@ header.top-row {
 }
 
 #main-header.nav-scrolled {
-    background-color: #ffffffff !important;
+    background-color: rgba(255, 255, 255, 0.834) !important;
     border-bottom: 1px solid rgba(201, 233, 121, 0.12) !important;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
 }
