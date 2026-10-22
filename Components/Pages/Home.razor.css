@@ -225,14 +225,16 @@ article.content {
     font-family: var(--ag-texto, 'Asap Sharp', system-ui, sans-serif);
 }
 
-/* Líneas de fondo tipo contorno */
+/* Fondo: cordilleras y curvas de nivel, inspiradas en la referencia */
 .ag-pie::before {
     content: "";
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='240' viewBox='0 0 300 240'%3E%3Cg fill='none' stroke='%23b9e77a' stroke-opacity='.07' stroke-width='1.2'%3E%3Cpath d='M-10 50C50 16 100 84 160 52S250 14 310 46'/%3E%3Cpath d='M-10 124C50 90 100 158 160 126S250 88 310 120'/%3E%3Cpath d='M-10 198C50 164 100 232 160 200S250 162 310 194'/%3E%3C/g%3E%3C/svg%3E");
-    background-size: 300px 240px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='300' viewBox='0 0 600 300'%3E%3Cg fill='none' stroke='%23b9e77a' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath stroke-opacity='.18' stroke-width='1.3' d='M0 160C50 120 90 110 140 135S220 70 290 110S370 40 440 100S540 60 600 160'/%3E%3Cpath stroke-opacity='.14' stroke-width='1.2' d='M0 230C70 190 120 200 180 215S280 170 340 205S460 160 520 210S570 200 600 230'/%3E%3Cpath stroke-opacity='.12' stroke-width='1.1' d='M0 290C60 260 140 262 200 280S320 250 390 285S500 265 600 290'/%3E%3Cpath stroke-opacity='.1' stroke-width='1' d='M150 150C200 128 240 130 290 150S360 120 400 128M120 180C180 160 230 165 280 185S350 160 420 170'/%3E%3Cpath stroke-opacity='.09' stroke-width='1' d='M200 250l-8 12M214 248l-8 12M228 246l-8 12M242 244l-8 12M430 240l-8 12M444 238l-8 12M458 236l-8 12M472 234l-8 12'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 600px 300px;
+    background-position: center bottom;
+    background-repeat: repeat-x;
 }
 
 /* Franja superior en degradado trigo */
@@ -485,5 +487,200 @@ article.content {
     .ag-pie-legal {
         flex-direction: column;
         align-items: flex-start;
+    }
+}
+
+/* ---------- 5. Financiación ---------- */
+.ag-fin {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    padding: 6.5rem clamp(1.25rem, 5vw, 4rem);
+    color: #f2f7ec;
+    font-family: var(--ag-ui, 'Inter', system-ui, sans-serif);
+    background:
+        radial-gradient(circle at 92% 8%, rgba(232, 197, 107, .2), transparent 26rem),
+        radial-gradient(circle at 0% 100%, rgba(185, 231, 122, .12), transparent 24rem),
+        linear-gradient(135deg, #0b2e1c 0%, #17603a 100%);
+}
+
+/* Franja trigo inferior, igual que en el resto del sitio */
+.ag-fin::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #e8c56b, transparent);
+    opacity: .7;
+    pointer-events: none;
+}
+
+.ag-fin-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
+    gap: 4rem;
+    align-items: center;
+}
+
+.ag-fin-insignia {
+    display: inline-block;
+    margin-bottom: 1.25rem;
+    padding: .4rem .95rem;
+    border-radius: 999px;
+    background: rgba(185, 231, 122, .14);
+    border: 1px solid rgba(185, 231, 122, .3);
+    color: #b9e77a;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.ag-fin-titulo {
+    margin: 0 0 1.25rem;
+    font-family: var(--ag-titulo, 'Maname', serif);
+    font-size: clamp(2rem, 4vw, 3.1rem);
+    font-weight: 700;
+    line-height: 1.12;
+    color: #ffffff;
+}
+
+.ag-fin-descripcion {
+    max-width: 620px;
+    margin: 0 0 2.25rem;
+    font-size: 1.08rem;
+    line-height: 1.7;
+    color: rgba(242, 247, 236, .8);
+}
+
+.ag-fin-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: .6rem;
+    padding: 1rem 1.9rem;
+    border: 0;
+    border-radius: 999px;
+    background: #b9e77a;
+    color: #0b2e1c;
+    font-family: var(--ag-ui, 'Inter', sans-serif);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 14px 28px -14px rgba(185, 231, 122, .9);
+    transition: transform .25s ease, box-shadow .25s ease, background-color .25s ease;
+}
+
+.ag-fin-btn:hover {
+    transform: translateY(-2px);
+    background: #c9ec92;
+    box-shadow: 0 18px 32px -14px rgba(185, 231, 122, 1);
+}
+
+.ag-fin-btn:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.ag-fin-flecha {
+    width: 18px;
+    height: 18px;
+    transform: rotate(-90deg);
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Pilares */
+.ag-fin-pilares {
+    display: grid;
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.ag-fin-pilar {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.3rem 1.5rem;
+    border-radius: 1.25rem;
+    background: rgba(255, 255, 255, .07);
+    border: 1px solid rgba(185, 231, 122, .2);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background-color .25s ease, transform .25s ease, border-color .25s ease;
+}
+
+.ag-fin-pilar:hover {
+    background: rgba(255, 255, 255, .11);
+    border-color: rgba(185, 231, 122, .4);
+    transform: translateX(4px);
+}
+
+.ag-fin-pilar-ico {
+    width: 2.8rem;
+    height: 2.8rem;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    border-radius: .95rem;
+    background: rgba(185, 231, 122, .16);
+    color: #b9e77a;
+}
+
+.ag-fin-pilar-ico svg,
+.ag-fin-btn svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.ag-fin-pilar-ico svg {
+    width: 20px;
+    height: 20px;
+}
+
+.ag-fin-pilar h3 {
+    margin: 0 0 .3rem;
+    font-family: var(--ag-titulo, 'Maname', serif);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.ag-fin-pilar p {
+    margin: 0;
+    font-size: .92rem;
+    line-height: 1.55;
+    color: rgba(242, 247, 236, .75);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 900px) {
+    .ag-fin {
+        padding: 5rem 1.25rem;
+    }
+
+    .ag-fin-inner {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .ag-fin-btn {
+        width: 100%;
+        justify-content: center;
     }
 }
