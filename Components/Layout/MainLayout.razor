@@ -1,227 +1,342 @@
 ﻿@inherits LayoutComponentBase
 @inject NavigationManager Navigation
-@inject IJSRuntime JS
-@using Microsoft.AspNetCore.Components.Authorization
 @implements IDisposable
 
-<div class="page">
-    <!-- Barra lateral: SOLO se muestra si NO estamos en el Home -->
-    @if (!IsHomePage())
+<svg class="ag-sprite" aria-hidden="true" focusable="false">
+    <defs>
+        <symbol id="ico-brote" viewBox="0 0 24 24"><path d="M12 22v-9" /><path d="M12 13C12 7.5 7.5 4 2 4c0 5.5 3.5 10 10 10z" /><path d="M12 13c0-5.5 4.5-9 10-9 0 5.5-3.5 10-10 10z" /></symbol>
+        <symbol id="ico-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></symbol>
+        <symbol id="ico-usuario-mas" viewBox="0 0 24 24"><circle cx="9" cy="8" r="4" /><path d="M2 21c0-4 3.1-7 7-7s7 3 7 7M19 8v6M22 11h-6" /></symbol>
+        <symbol id="ico-lista" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" /></symbol>
+        <symbol id="ico-alerta" viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01" /></symbol>
+        <symbol id="ico-escudo" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6zM9 12l2 2 4-4" /></symbol>
+        <symbol id="ico-mapa" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2zM9 4v14M15 6v14" /></symbol>
+        <symbol id="ico-red" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5" /><circle cx="5" cy="18" r="2.5" /><circle cx="19" cy="18" r="2.5" /><path d="M12 7.5v4M12 11.5l-5 4M12 11.5l5 4" /></symbol>
+        <symbol id="ico-doc" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5" /></symbol>
+        <symbol id="ico-check" viewBox="0 0 24 24"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1M22 4L12 14l-3-3" /></symbol>
+        <symbol id="ico-sobre" viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M22 6l-10 7L2 6" /></symbol>
+        <symbol id="ico-entrar" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3" /></symbol>
+        <symbol id="ico-salir" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></symbol>
+        <symbol id="ico-ajustes" viewBox="0 0 24 24"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6" /></symbol>
+        <symbol id="ico-campana" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" /></symbol>
+        <symbol id="ico-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" /></symbol>
+        <symbol id="ico-flecha" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></symbol>
+    </defs>
+</svg>
+
+<div class="page @(EsInicio ? "ag-pagina-inicio" : "ag-pagina-admin")">
+
+    @if (!EsInicio)
     {
-        <div class="sidebar @(collapseNavMenu ? "sidebar-collapsed" : "")">
+        <div class="sidebar @(collapseNavMenu ? "sidebar-collapsed" : "") @(menuMovilAbierto ? "sidebar-open" : "")" @onclick="CerrarMenuMovil">
             <NavMenu />
+        </div>
+        <div class="ag-velo-menu @(menuMovilAbierto ? "visible" : "")" @onclick="CerrarMenuMovil"></div>
+    }
+
+    <header class="ag-header">
+        <div class="ag-header-izq">
+            @if (!EsInicio)
+            {
+                <button class="ag-icono-btn" @onclick="ToggleNavMenu" title="Mostrar u ocultar menú" aria-label="Mostrar u ocultar menú">
+                    <svg class="ag-ico"><use href="#ico-menu" /></svg>
+                </button>
+            }
+
+            <a href="/" class="ag-marca" aria-label="Ir al inicio de ASOAGRO">
+                <span class="ag-marca-icono"><svg class="ag-ico"><use href="#ico-brote" /></svg></span>
+                <span class="ag-marca-texto">
+                    <strong>ASOAGRO</strong>
+                    
+                </span>
+            </a>
+
+            @if (!EsInicio)
+            {
+                <div class="ag-titulo-pagina">
+                    <small>Panel de gestión</small>
+                    <strong>@TituloSeccion()</strong>
+                </div>
+            }
+        </div>
+
+        @if (EsInicio)
+        {
+            <nav class="ag-nav" aria-label="Navegación principal">
+                @foreach (var grupo in menu)
+                {
+                    <div class="ag-nav-item @(grupoAbierto == grupo.Titulo ? "abierto" : "")">
+                        <button class="ag-nav-btn" @onclick="() => AlternarGrupo(grupo.Titulo)" aria-expanded="@(grupoAbierto == grupo.Titulo ? "true" : "false")">
+                            @grupo.Titulo
+                            <svg class="ag-ico"><use href="#ico-flecha" /></svg>
+                        </button>
+                        <div class="ag-dd">
+                            <div class="ag-dd-grid">
+                                @foreach (var item in grupo.Items)
+                                {
+                                    <a href="@item.Ruta" class="ag-dd-link @(EsRutaActiva(item.Ruta) ? "activo" : "")" @onclick="CerrarTodo">
+                                        <span class="ag-dd-ico"><svg class="ag-ico"><use href="#ico-@item.Icono" /></svg></span>
+                                        <span>
+                                            <strong>@item.Texto</strong>
+                                            <small>@item.Descripcion</small>
+                                        </span>
+                                    </a>
+                                }
+                            </div>
+                            @if (grupo.Titulo == "Plataforma")
+                            {
+                                <div class="ag-dd-pie">
+                                    <span>¿Tu asociación está lista para las convocatorias?</span>
+                                    <a href="/consultar-asociados" @onclick="CerrarTodo">Revisar elegibilidad</a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </nav>
+        }
+
+        <div class="ag-header-der">
+            @if (EsInicio)
+            {
+                <button class="ag-icono-btn ag-solo-movil" @onclick="ToggleMenuNavMovil" aria-label="Abrir menú">
+                    <svg class="ag-ico"><use href="#ico-menu" /></svg>
+                </button>
+                <a href="/login" class="ag-entrar">
+                    <svg class="ag-ico"><use href="#ico-entrar" /></svg>
+                    <span class="ag-texto-entrar">Iniciar sesión</span>
+                </a>
+            }
+            else
+            {
+                <div class="ag-desplegable">
+                    <button class="ag-icono-btn" @onclick="ToggleNotificaciones" title="Centro de alertas" aria-label="Centro de alertas">
+                        <svg class="ag-ico"><use href="#ico-campana" /></svg>
+                        <span class="ag-contador">@todas.Count</span>
+                    </button>
+
+                    @if (mostrarNotificaciones)
+                    {
+                        <div class="ag-panel">
+                            <div class="ag-panel-cab">
+                                <div>
+                                    <strong>Alertas del sistema</strong>
+                                    <small>Vencimientos y registros recientes</small>
+                                </div>
+                                <span class="ag-pildora">@notificacionesFiltradas.Count activas</span>
+                            </div>
+                            <div class="ag-filtros">
+                                @foreach (var f in Filtros)
+                                {
+                                    <button class="ag-chip @(filtroActivo == f ? "activo" : "")" @onclick="() => FiltrarNotificaciones(f)">@f</button>
+                                }
+                            </div>
+                            <div class="ag-lista-notif">
+                                @if (!notificacionesFiltradas.Any())
+                                {
+                                    <p class="ag-vacio">No hay alertas en esta categoría.</p>
+                                }
+                                else
+                                {
+                                    @foreach (var n in notificacionesFiltradas)
+                                    {
+                                        <a href="@n.Enlace" class="ag-notif" @onclick="CerrarTodo">
+                                            <span class="ag-notif-ico @n.Tono"><svg class="ag-ico"><use href="#ico-@n.Icono" /></svg></span>
+                                            <span>
+                                                <span class="ag-notif-meta"><small>@n.Categoria</small><small>@n.Tiempo</small></span>
+                                                <strong>@n.Titulo</strong>
+                                                <em>@n.Descripcion</em>
+                                            </span>
+                                        </a>
+                                    }
+                                }
+                            </div>
+                            <div class="ag-panel-pie"><a href="/alertas-documentos" @onclick="CerrarTodo">Ver panel completo</a></div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </header>
+
+    @if (HayDesplegableAbierto)
+    {
+        <div class="ag-capa-cerrar" @onclick="CerrarTodo"></div>
+    }
+
+    @if (EsInicio)
+    {
+        <div class="ag-menu-movil @(menuNavMovilAbierto ? "abierto" : "")">
+            @foreach (var grupo in menu)
+            {
+                <p class="ag-menu-grupo">@grupo.Titulo</p>
+                @foreach (var item in grupo.Items)
+                {
+                    <a href="@item.Ruta" class="ag-menu-link" @onclick="CerrarTodo">
+                        <svg class="ag-ico"><use href="#ico-@item.Icono" /></svg>
+                        @item.Texto
+                    </a>
+                }
+            }
+            <a href="/login" class="ag-entrar ag-entrar-bloque" @onclick="CerrarTodo">Iniciar sesión</a>
         </div>
     }
 
-    <!-- Contenedor principal con fondo dinámico -->
-    <main class="@(IsHomePage() ? "w-100 ms-0" : "admin-panel-container")" 
-          style="@(IsHomePage() ? "" : "background-color: #f2f7f4; min-height: 100vh;")">
-        
-        <!-- Header -->
-       <header id="main-header" class="top-row px-4 py-1.8 d-flex justify-content-between align-items-center border-0 @(IsHomePage() ? "nav-transparent" : "nav-scrolled-admin")" 
-                style="position: fixed !important; top: 0 !important; left: 0 !important; width: 100% !important; min-height: 3.5rem; z-index: 1050;">
-            
-                <!-- Lado Izquierdo: Logo ASOAGRO en el Home -->
-            <div class="d-flex align-items-center">
-                @if (IsHomePage())
-                {
-                    <a href="/" class="text-decoration-none d-flex align-items-center" style="margin-left: 120px;">
-                        <span id="logo-asoagro">ASOAGRO</span>
-                    </a>
-                }
-                else
-                {
-                    <button class="btn btn-link p-2 text-decoration-none shadow-none d-flex align-items-center justify-content-center"
-                            @onclick="ToggleNavMenu"
-                            title="Ocultar / Mostrar Menú">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="3" y1="12" x2="21" y2="12"></line>
-                            <line x1="3" y1="6" x2="21" y2="6"></line>
-                            <line x1="3" y1="18" x2="21" y2="18"></line>
-                        </svg>
-                    </button>
-                }
-            </div>
-
-            <!-- Lado Derecho: Botón de Iniciar Sesión redondito, grandecito y elegante -->
-            <div class="d-flex align-items-center gap-3">
-                
-                @if (IsHomePage())
-                {
-                       <a href="/login" class="btn px-4 py-2 rounded-pill text-decoration-none shadow-sm hover-scale d-inline-flex align-items-center justify-content-center" 
-                          style="background-color: #5FC98F; border: 1px solid #5FC98F; margin-right: 120px; transition: all 0.2s ease;">
-                            <span style="font-family: 'Sora', system-ui, -apple-system, sans-serif !important; font-weight: 700 !important; color: #ffffff !important; font-size: 0.95rem;">
-                            Iniciar sesión
-                            </span>
-                            </a>
-                }
-                else
-                {
-                    <div class="position-relative">
-                        <button class="btn btn-link p-2 text-decoration-none position-relative shadow-none" 
-                                @onclick="ToggleNotificaciones" 
-                                title="Centro de Alertas Asoagro">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                            </svg>
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-white text-dark fw-bold shadow-sm" style="font-size: 0.68rem; padding: 0.3em 0.5em; margin-left: -6px; margin-top: 4px;">
-                                @notificacionesFiltradas.Count
-                            </span>
-                        </button>
-
-                        <!-- Ventana Flotante de Notificaciones -->
-                        @if (mostrarNotificaciones)
-                        {
-                            <div class="dropdown-panel-notifications shadow-lg border-0 rounded-4 position-absolute end-0 mt-3 bg-white" style="width: 380px; z-index: 1050;">
-                                <div class="p-3 bg-dark text-white rounded-top-4 d-flex justify-content-between align-items-center border-bottom border-secondary-subtle">
-                                    <div>
-                                        <h6 class="fw-bold mb-0 text-white d-flex align-items-center gap-2">Alertas del Sistema</h6>
-                                        <small class="text-muted" style="font-size: 0.75rem;">Centro de eventos y vencimientos</small>
-                                    </div>
-                                    <span class="badge bg-success text-white rounded-pill fw-bold px-2 py-1">@notificacionesFiltradas.Count Activas</span>
-                                </div>
-
-                                <div class="d-flex border-bottom bg-light px-3 py-2 gap-2">
-                                    <button class="btn btn-sm @(filtroActivo == "Todas" ? "btn-success fw-bold" : "btn-outline-secondary border-0") rounded-pill px-3 extra-small" @onclick='() => FiltrarNotificaciones("Todas")'>Todas</button>
-                                    <button class="btn btn-sm @(filtroActivo == "Documentos" ? "btn-success fw-bold" : "btn-outline-secondary border-0") rounded-pill px-3 extra-small" @onclick='() => FiltrarNotificaciones("Documentos")'>Documentos</button>
-                                    <button class="btn btn-sm @(filtroActivo == "Productores" ? "btn-success fw-bold" : "btn-outline-secondary border-0") rounded-pill px-3 extra-small" @onclick='() => FiltrarNotificaciones("Productores")'>Productores</button>
-                                </div>
-
-                                <div class="p-2 overflow-auto" style="max-height: 320px;">
-                                    @if (!notificacionesFiltradas.Any())
-                                    {
-                                        <div class="p-4 text-center text-muted small">No hay alertas disponibles.</div>
-                                    }
-                                    else
-                                    {
-                                        @foreach (var item in notificacionesFiltradas)
-                                        {
-                                            <a href="@item.Enlace" class="noti-card-item d-block p-3 mb-2 text-decoration-none rounded-3 border-start border-4 @item.BordeColor bg-white shadow-sm hover-card" @onclick="CerrarDropdowns">
-                                                <div class="d-flex w-100 justify-content-between align-items-center mb-1">
-                                                    <span class="badge @item.BadgeColor fw-bold extra-small">@item.Categoria</span>
-                                                    <small class="text-muted extra-small">@item.Tiempo</small>
-                                                </div>
-                                                <h6 class="mb-1 text-dark fw-bold small">@item.Titulo</h6>
-                                                <p class="mb-0 text-secondary extra-small text-truncate-2">@item.Descripcion</p>
-                                            </a>
-                                        }
-                                    }
-                                </div>
-                                <div class="p-2 bg-light text-center border-top rounded-bottom-4">
-                                    <a href="alertas-documentos" class="text-success text-decoration-none fw-bold extra-small" @onclick="CerrarDropdowns">Ver panel completo &rarr;</a>
-                                </div>
-                            </div>
-                        }
-                    </div>
-                }
-
-            </div>
-        </header>
-
-        <!-- Contenido dinámico -->
-        <article class="content px-4 pt-3 pb-5" @onclick="CerrarDropdowns" 
-                 style="@(IsHomePage() ? "" : "max-width: 1200px; margin: 0 auto; width: 100%;")">
+    <main class="ag-main">
+        <article class="@(EsInicio ? "ag-contenido-inicio" : "ag-contenido-admin")" @onclick="CerrarTodo">
             @Body
         </article>
+
+        @if (!EsInicio)
+        {
+            <footer class="ag-pie">
+                <div class="ag-pie-cont">
+                    <span>&copy; 2026 ASOAGRO. Federación de Asociaciones Agropecuarias (FAAUA)</span>
+                    <nav class="ag-pie-links">
+                        <a href="/alertas-documentos">Alertas</a>
+                        <a href="/historia/origenes">Acerca de</a>
+                        <a href="#">Ayuda</a>
+                    </nav>
+                </div>
+            </footer>
+        }
     </main>
 </div>
 
-<style>
-    /* Aplicar la tipografía Sora a todo el layout superior */
-    #main-header, #logo-asoagro {
-        font-family: 'Sora', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
-    }
-
-    .nav-scrolled-admin {
-        background-color: #0d2818 !important;
-        border-bottom: 1px solid rgba(201, 233, 121, 0.2);
-    }
-</style>
-
 @code {
-    private bool collapseNavMenu = false;
-    private bool mostrarNotificaciones = false;
+    private record ItemMenu(string Texto, string Descripcion, string Icono, string Ruta);
+    private record GrupoMenu(string Titulo, List<ItemMenu> Items);
+
+    private class Notificacion
+    {
+        public string Tipo { get; init; } = "";
+        public string Categoria { get; init; } = "";
+        public string Titulo { get; init; } = "";
+        public string Descripcion { get; init; } = "";
+        public string Tiempo { get; init; } = "";
+        public string Enlace { get; init; } = "";
+        public string Tono { get; init; } = "";
+        public string Icono { get; init; } = "";
+    }
+
+    private static readonly string[] Filtros = { "Todas", "Documentos", "Productores", "Trazabilidad" };
+
+    // Enlaces con "#" son de ejemplo: cámbialos por tus rutas reales.
+    private readonly List<GrupoMenu> menu = new()
+    {
+        new("Plataforma", new()
+        {
+            new("Registrar asociado", "Alta de productores y fincas en la red.", "usuario-mas", "/registrar-asociado"),
+            new("Consultar registros", "Busca y revisa asociados, predios y juntas.", "lista", "/consultar-asociados"),
+            new("Alertas y documentos", "Vencimientos de estatutos y certificados.", "alerta", "/alertas-documentos"),
+            new("Cumplimiento", "Obligaciones tributarias y asambleas al día.", "escudo", "#"),
+        }),
+        new("Nosotros", new()
+        {
+            new("Orígenes y misión", "Historia y propósito de la federación.", "brote", "/historia/origenes"),
+            new("Impacto y trazabilidad", "Cadenas productivas e inocuidad alimentaria.", "mapa", "/historia/impacto"),
+            new("Red de asociaciones", "Las asociaciones de base del Urabá.", "red", "#"),
+        }),
+        new("Recursos", new()
+        {
+            new("Preguntas frecuentes", "Respuestas rápidas sobre la plataforma.", "doc", "#"),
+            new("Guía de elegibilidad", "Requisitos para convocatorias de financiación.", "check", "/consultar-asociados"),
+            new("Contacto", "Escríbenos o llámanos a la federación.", "sobre", "#"),
+        }),
+    };
+
+    private readonly List<Notificacion> todas = new()
+    {
+        new() { Tipo = "Documentos", Categoria = "Urgente", Titulo = "Estatutos por vencer", Descripcion = "Los estatutos de la vereda El Tres vencen en 5 días.", Tiempo = "Hace 15 min", Enlace = "/alertas-documentos", Tono = "ag-tono-urgente", Icono = "alerta" },
+        new() { Tipo = "Productores", Categoria = "Registro", Titulo = "Nuevo asociado registrado", Descripcion = "Carlos Mendoza ingresó a la línea de plátano.", Tiempo = "Hace 1 hora", Enlace = "/consultar-asociados", Tono = "ag-tono-registro", Icono = "usuario-mas" },
+        new() { Tipo = "Trazabilidad", Categoria = "Predios", Titulo = "Predio pendiente de inspección", Descripcion = "Un lote de cacao requiere revisión de inocuidad.", Tiempo = "Hace 3 horas", Enlace = "/historia/impacto", Tono = "ag-tono-trazabilidad", Icono = "mapa" },
+    };
+
+    private List<Notificacion> notificacionesFiltradas = new();
+    private bool collapseNavMenu;
+    private bool menuMovilAbierto;
+    private bool menuNavMovilAbierto;
+    private bool mostrarNotificaciones;
+    private string? grupoAbierto;
     private string filtroActivo = "Todas";
 
-    private List<NotificacionItem> todasNotificaciones = new()
-    {
-        new NotificacionItem { Tipo = "Documentos", Categoria = "Urgente", Titulo = "Estatuto por Vencer", Descripcion = "Los Estatutos de la Vereda El Tres vencen en 5 días.", Tiempo = "Hace 15 min", Enlace = "alertas-documentos", BadgeColor = "bg-danger-subtle text-danger", BordeColor = "border-danger" },
-        new NotificacionItem { Tipo = "Productores", Categoria = "Registro", Titulo = "Nuevo Asociado Registrado", Descripcion = "Productor Carlos Mendoza ingresó a la línea de Plátano.", Tiempo = "Hace 1 hora", Enlace = "consultar-asociados", BadgeColor = "bg-success-subtle text-success", BordeColor = "border-success" }
-    };
-    private List<NotificacionItem> notificacionesFiltradas = new();
-
-    private class NotificacionItem
-    {
-        public string Categoria { get; set; } = "";
-        public string Titulo { get; set; } = "";
-        public string Descripcion { get; set; } = "";
-        public string Tiempo { get; set; } = "";
-        public string Enlace { get; set; } = "";
-        public string BadgeColor { get; set; } = "";
-        public string BordeColor { get; set; } = "";
-        public string Tipo { get; set; } = "";
-    }
+    private bool EsInicio => IsHomePage();
+    private bool HayDesplegableAbierto => mostrarNotificaciones || grupoAbierto is not null || menuNavMovilAbierto;
+    private string RutaActual => Navigation.ToBaseRelativePath(Navigation.Uri).Trim('/').ToLowerInvariant();
 
     protected override void OnInitialized()
     {
-        notificacionesFiltradas = todasNotificaciones;
+        notificacionesFiltradas = todas;
         Navigation.LocationChanged += EnCambioDeRuta;
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            await JS.InvokeVoidAsync("eval", @"
-                window.addEventListener('scroll', function() {
-                    const header = document.getElementById('main-header');
-                    const logo = document.getElementById('logo-asoagro');
-                    if (header) {
-                        if (window.location.pathname === '/' || window.location.pathname.toLowerCase() === '/home') {
-                            if (window.scrollY > 30) {
-                                header.classList.add('nav-scrolled');
-                                header.classList.remove('nav-transparent');
-                                if (logo) logo.style.color = '#000000'; // Se pone negro al hacer scroll
-                            } else {
-                                header.classList.remove('nav-scrolled');
-                                header.classList.add('nav-transparent');
-                                if (logo) logo.style.color = '#FFFFFF'; // Vuelve a blanco arriba
-                            }
-                        }
-                    }
-                });
-            ");
-        }
     }
 
     private bool IsHomePage()
     {
-        var relativePath = Navigation.ToBaseRelativePath(Navigation.Uri).TrimEnd('/');
-        return string.IsNullOrEmpty(relativePath) || 
-               relativePath.Equals("home", StringComparison.OrdinalIgnoreCase);
+        var ruta = Navigation.ToBaseRelativePath(Navigation.Uri).TrimEnd('/');
+        return string.IsNullOrEmpty(ruta) || ruta.Equals("home", StringComparison.OrdinalIgnoreCase);
     }
 
+    private bool EsRutaActiva(string ruta) => ruta != "#" && RutaActual == ruta.Trim('/').ToLowerInvariant();
+
+    private string TituloSeccion() => RutaActual switch
+    {
+        "registrar-asociado" => "Registrar asociado",
+        "consultar-asociados" => "Consultar registros",
+        "alertas-documentos" => "Alertas y documentos",
+        "historia/origenes" => "Orígenes y misión",
+        "historia/impacto" => "Impacto y trazabilidad",
+        _ => "Inicio del panel"
+    };
+
+    // Escritorio: oculta o muestra la barra lateral. Móvil: abre o cierra el cajón.
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+        menuMovilAbierto = !menuMovilAbierto;
+    }
+
+    private void CerrarMenuMovil() => menuMovilAbierto = false;
+
+    private void ToggleMenuNavMovil()
+    {
+        var abrir = !menuNavMovilAbierto;
+        CerrarTodo();
+        menuNavMovilAbierto = abrir;
+    }
+
+    private void AlternarGrupo(string titulo)
+    {
+        var abrir = grupoAbierto != titulo;
+        CerrarTodo();
+        if (abrir) grupoAbierto = titulo;
+    }
+
+    private void ToggleNotificaciones()
+    {
+        var abrir = !mostrarNotificaciones;
+        CerrarTodo();
+        mostrarNotificaciones = abrir;
+    }
+
+    private void CerrarTodo()
+    {
+        mostrarNotificaciones = false;
+        grupoAbierto = null;
+        menuNavMovilAbierto = false;
+    }
+
+    private void FiltrarNotificaciones(string filtro)
+    {
+        filtroActivo = filtro;
+        notificacionesFiltradas = filtro == "Todas" ? todas : todas.Where(n => n.Tipo == filtro).ToList();
     }
 
     private void EnCambioDeRuta(object? sender, LocationChangedEventArgs e)
     {
-        CerrarDropdowns();
+        CerrarTodo();
+        menuMovilAbierto = false;
         InvokeAsync(StateHasChanged);
     }
 
-    private void FiltrarNotificaciones(string tipo)
-    {
-        filtroActivo = tipo;
-        if (tipo == "Todas") notificacionesFiltradas = todasNotificaciones;
-        else notificacionesFiltradas = todasNotificaciones.Where(n => n.Tipo == tipo).ToList();
-    }
-
-    private void ToggleNotificaciones() { mostrarNotificaciones = !mostrarNotificaciones; }
-    private void CerrarDropdowns() { mostrarNotificaciones = false; }
-
-    public void Dispose() { Navigation.LocationChanged -= EnCambioDeRuta; }
+    public void Dispose() => Navigation.LocationChanged -= EnCambioDeRuta;
 }

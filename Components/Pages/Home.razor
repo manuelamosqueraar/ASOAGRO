@@ -1,8 +1,8 @@
 ﻿@page "/"
 @using Microsoft.JSInterop
 
-@inject IJSRuntime JS
-@inject NavigationManager Navigation
+@inject IJSRuntime JS 
+@inject NavigationManager Navigation 
 
 <PageTitle>Inicio - Asoagro</PageTitle>
 
@@ -100,17 +100,7 @@
     /* ---------- 5. Financiación ---------- */
     .ag-fin { background-color: var(--papel); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='220' viewBox='0 0 260 220'%3E%3Cg fill='none' stroke='%2317603a' stroke-opacity='.09' stroke-width='1.2'%3E%3Cpath d='M-10 44C40 14 90 76 140 46S220 12 270 40'/%3E%3Cpath d='M-10 118C40 88 90 150 140 120S220 86 270 114'/%3E%3Cpath d='M-10 192C40 162 90 224 140 194S220 160 270 188'/%3E%3C/g%3E%3C/svg%3E"); }
 
-    /* ---------- Pie ---------- */
-    .ag-pie { background: #051f10; color: #b5c4b8; border-top: 1px solid rgba(158, 235, 71, .15); }
-    .ag-pie h3, .ag-pie h5 { color: #fff; }
-    .ag-pie-texto { color: #b5c4b8 !important; }
-    .ag-pie-legal { color: #9bb09e !important; }
-    .ag-enlace-pie { color: #b5c4b8; text-decoration: none; transition: color .3s ease, padding-left .3s ease; }
-    .ag-enlace-pie:hover { color: #9eeb47; padding-left: 6px; }
-    .ag-ico { width: 16px; height: 16px; flex-shrink: 0; color: #9eeb47; }
-    .ag-social { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: #0b381d; border: 1px solid rgba(158, 235, 71, .25); color: #9eeb47; transition: all .3s ease; }
-    .ag-social:hover { background: #9eeb47; color: #051f10; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(158, 235, 71, .3); }
-    .ag-social svg { width: 18px; height: 18px; }
+  
 
     /* ---------- Revelado al hacer scroll (solo si el JavaScript está activo) ---------- */
     .ag-js [data-reveal] { opacity: 0; transform: translate3d(0, 46px, 0); transition: opacity .9s cubic-bezier(.2, .7, .2, 1) var(--d, 0s), transform .9s cubic-bezier(.2, .7, .2, 1) var(--d, 0s); }
@@ -383,59 +373,88 @@
         </div>
     </section>
 
-    <!-- ===== PIE ===== -->
-    <footer class="position-relative py-4 overflow-hidden ag-pie" style="width: 100%; margin-left: 0; margin-bottom: 0 !important;">
-        <div class="container py-2">
-            <div class="row g-4 justify-content-between align-items-start mb-4">
+   <footer class="ag-pie">
+    <div class="ag-pie-inner">
 
-                <div class="col-lg-3 text-start" data-reveal>
-                    <h3 class="fw-bold mb-3 ag-maname" style="font-size: 2.2rem; letter-spacing: -0.01em;">ASOAGRO</h3>
-                    <p class="small mb-3 ag-asap ag-pie-texto" style="font-size: .95rem; line-height: 1.6;">Software líder de gestión agrícola y gobernanza. Digitaliza tus asociaciones desde la administración y estatutos hasta el control de asociados y reportes oficiales.</p>
-                    <div class="d-flex flex-column gap-2 small ag-asap ag-pie-texto">
-                        <div class="d-flex align-items-center gap-2"><svg class="ag-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg><span>+57 300 123 4567</span></div>
-                        <div class="d-flex align-items-center gap-2"><svg class="ag-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" /><polyline points="22,6 12,13 2,6" /></svg><span>contacto@asoagro-uraba.org</span></div>
-                    </div>
+        <div class="ag-pie-grid">
+
+            <!-- Marca -->
+            <div class="ag-pie-col" data-reveal>
+                <div class="ag-pie-marca">
+                    <span class="ag-pie-marca-ico"><svg class="ag-ico"><use href="#ico-brote" /></svg></span>
+                    <strong>ASOAGRO</strong>
                 </div>
+                <p class="ag-pie-texto">Software de gestión agrícola y gobernanza. Digitaliza tus asociaciones: desde la administración y los estatutos hasta el control de asociados y los reportes oficiales.</p>
 
-                <div class="col-lg-2 text-start" data-reveal style="--d: .1s;">
-                    <h5 class="fw-bold mb-3 ag-maname" style="font-size: 1.3rem;">Plataforma</h5>
-                    <ul class="list-unstyled d-flex flex-column gap-2 ag-asap" style="font-size: .95rem;">
-                        <li><a href="/" class="ag-enlace-pie">Inicio</a></li>
-                        <li><a href="/historia/origenes" class="ag-enlace-pie">Orígenes y Misión</a></li>
-                        <li><a href="/historia/impacto" class="ag-enlace-pie">Trazabilidad</a></li>
-                        <li><a href="/alertas-documentos" class="ag-enlace-pie">Alertas Legales</a></li>
-                    </ul>
+                <div class="ag-pie-redes">
+                    <a href="https://facebook.com" target="_blank" rel="noopener" class="ag-social" aria-label="Facebook">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
+                    </a>
+                    <a href="https://instagram.com" target="_blank" rel="noopener" class="ag-social" aria-label="Instagram">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg>
+                    </a>
+                    <a href="https://whatsapp.com" target="_blank" rel="noopener" class="ag-social" aria-label="WhatsApp">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
+                    </a>
                 </div>
-
-                <div class="col-lg-3 text-start" data-reveal style="--d: .2s;">
-                    <h5 class="fw-bold mb-3 ag-maname" style="font-size: 1.3rem;">Módulos de Gestión</h5>
-                    <ul class="list-unstyled d-flex flex-column gap-2 ag-asap" style="font-size: .95rem;">
-                        <li><a href="#" class="ag-enlace-pie">Red de Asociaciones</a></li>
-                        <li><a href="#" class="ag-enlace-pie">Asambleas y Quórum</a></li>
-                        <li><a href="#" class="ag-enlace-pie">Obligaciones y Tributos</a></li>
-                        <li><a href="#" class="ag-enlace-pie">Inventario de Fincas</a></li>
-                        <li><a href="#" class="ag-enlace-pie">Auditoría y Transparencia</a></li>
-                    </ul>
-                </div>
-
-                <div class="col-lg-3 text-start" data-reveal style="--d: .3s;">
-                    <h5 class="fw-bold mb-3 ag-maname" style="font-size: 1.3rem;">Ubicación y Redes</h5>
-                    <p class="small mb-3 ag-asap ag-pie-texto" style="font-size: .95rem; line-height: 1.6;">Centro Regional Piedrasblancas, Urabá Antioqueño, Colombia.</p>
-                    <div class="d-flex align-items-center gap-3">
-                        <a href="https://facebook.com" target="_blank" rel="noopener" class="ag-social" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg></a>
-                        <a href="https://instagram.com" target="_blank" rel="noopener" class="ag-social" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg></a>
-                        <a href="https://whatsapp.com" target="_blank" rel="noopener" class="ag-social" aria-label="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg></a>
-                    </div>
-                </div>
-
             </div>
 
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center pt-3 mt-2 border-top border-success border-opacity-10 small ag-asap ag-pie-legal">
-                <span>&copy; 2026 ASOAGRO. Todos los derechos reservados.</span>
-                <span class="mt-2 mt-md-0">Desarrollado para la Federación de Asociaciones de Urabá.</span>
+            <!-- Plataforma -->
+            <div class="ag-pie-col" data-reveal style="--d: .1s;">
+                <h5 class="ag-pie-titulo">Plataforma</h5>
+                <ul class="ag-pie-lista">
+                    <li><a href="/" class="ag-enlace-pie">Inicio</a></li>
+                    <li><a href="/historia/origenes" class="ag-enlace-pie">Orígenes y misión</a></li>
+                    <li><a href="/historia/impacto" class="ag-enlace-pie">Trazabilidad</a></li>
+                    <li><a href="/alertas-documentos" class="ag-enlace-pie">Alertas legales</a></li>
+                </ul>
             </div>
+
+            <!-- Módulos -->
+            <div class="ag-pie-col" data-reveal style="--d: .2s;">
+                <h5 class="ag-pie-titulo">Módulos de gestión</h5>
+                <ul class="ag-pie-lista">
+                    <li><a href="#" class="ag-enlace-pie">Red de asociaciones</a></li>
+                    <li><a href="#" class="ag-enlace-pie">Asambleas y quórum</a></li>
+                    <li><a href="#" class="ag-enlace-pie">Obligaciones y tributos</a></li>
+                    <li><a href="#" class="ag-enlace-pie">Inventario de fincas</a></li>
+                    <li><a href="#" class="ag-enlace-pie">Auditoría y transparencia</a></li>
+                </ul>
+            </div>
+
+            <!-- Contacto -->
+            <div class="ag-pie-col" data-reveal style="--d: .3s;">
+                <h5 class="ag-pie-titulo">Contacto</h5>
+                <ul class="ag-pie-contacto">
+                    <li>
+                        <span class="ag-pie-contacto-ico">
+                            <svg class="ag-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                        </span>
+                        <span>+57 300 123 4567</span>
+                    </li>
+                    <li>
+                        <span class="ag-pie-contacto-ico"><svg class="ag-ico"><use href="#ico-sobre" /></svg></span>
+                        <span>contacto@asoagro-uraba.org</span>
+                    </li>
+                    <li>
+                        <span class="ag-pie-contacto-ico">
+                            <svg class="ag-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                        </span>
+                        <span>Centro Regional Piedrasblancas, Urabá Antioqueño, Colombia</span>
+                    </li>
+                </ul>
+            </div>
+
         </div>
-    </footer>
+
+        <!-- Barra legal -->
+        <div class="ag-pie-legal">
+            <span>&copy; 2026 ASOAGRO. Todos los derechos reservados.</span>
+            <span>Desarrollado para la Federación de Asociaciones de Urabá.</span>
+        </div>
+
+    </div>
+</footer>
 </div>
 
 @code {

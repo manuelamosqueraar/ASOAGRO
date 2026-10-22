@@ -1,244 +1,260 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
+@inject IJSRuntime JS
 
-<div class="sidebar-container d-flex flex-column h-100">
-    
-    <!-- CABECERA DEL MENÚ --> 
-    <div class="top-row ps-3 navbar navbar-dark flex-shrink-0">
-        <div class="container-fluid">  
-            <a class="navbar-brand fw-bold" href="">ASOAGRO</a>
+<div class="nm">
+
+    <!-- Cabecera: no repite la marca del encabezado -->
+    <div class="nm-cabecera">
+        <span class="nm-cabecera-ico"><svg class="nm-ico"><use href="#ico-brote" /></svg></span>
+        <div class="nm-cabecera-texto">
+            <small>Federación FAAUA</small>
+            <strong>Urabá · Antioquia</strong>
         </div>
     </div>
- 
-  
-    <!-- SECCIÓN DESPLAZABLE DE ENLACES --> 
-    <div class="nav-scrollable flex-grow-1"> 
-        <nav class="flex-column"> 
-             
-           
 
-            <!-- SECCIÓN ASOCIADOS (Director) - Desplegable -->
-            <AuthorizeView Roles="Director">
-                <Authorized>
-                    <div class="nav-section px-3 d-flex justify-content-between align-items-center" @onclick="ToggleAsociados" style="cursor: pointer;">
-                        <span>Asociados</span>
-                        <i class="bi @(expandirAsociados ? "bi-chevron-down" : "bi-chevron-right") fs-7"></i>
-                    </div>
-
-                    @if (expandirAsociados)
-                    {
-                        <div class="submenu-container animate-fade-in">
-                            <div class="nav-item px-3 mb-2">
-                                <NavLink class="nav-link" href="registrar-asociado">
-                                    <span class="nav-dot" aria-hidden="true"></span> Registrar Asociado
-                                </NavLink>
-                            </div>
-
-                            <div class="nav-item px-3 mb-2">
-                                <NavLink class="nav-link" href="consultar-asociados">
-                                    <span class="nav-dot" aria-hidden="true"></span> Consultar Asociados
-                                </NavLink>
-                            </div>
-
-                            <div class="nav-item px-3 mb-2">
-                                <NavLink class="nav-link" href="editar-asociado">
-                                    <span class="nav-dot" aria-hidden="true"></span> Editar Asociado
-                                </NavLink>
-                            </div>
-                        </div>
-                    }
-                </Authorized>
-            </AuthorizeView>
-
-            <!-- SECCIÓN DOCUMENTOS (Tesorero y Presidente) - Desplegable -->
-            <AuthorizeView Roles="Tesorero, Presidente">
-                <Authorized>
-                    <div class="nav-section px-3 d-flex justify-content-between align-items-center mt-3" @onclick="ToggleDocumentos" style="cursor: pointer;">
-                        <span>Documentos</span>
-                        <i class="bi @(expandirDocumentos ? "bi-chevron-down" : "bi-chevron-right") fs-7"></i>
-                    </div>
-                </Authorized>
-            </AuthorizeView>
-
-            <!-- Módulos específicos de Tesorero -->
-            <AuthorizeView Roles="Tesorero">
-                <Authorized>
-                    @if (expandirDocumentos)
-                    {
-                        <div class="submenu-container animate-fade-in">
-                            <div class="nav-item px-3 mb-2">
-                                <NavLink class="nav-link" href="registrar-documentos">
-                                    <span class="nav-dot" aria-hidden="true"></span> Registrar Documentos
-                                </NavLink>
-                            </div>
-
-                            <div class="nav-item px-3 mb-2">
-                                <NavLink class="nav-link" href="consultar-estado-documentos">
-                                    <span class="nav-dot" aria-hidden="true"></span> Estado de Documentación
-                                </NavLink>
-                            </div>
-
-                            <div class="nav-item px-3 mb-2">
-                                <NavLink class="nav-link" href="alertas-documentos">
-                                    <span class="nav-dot" aria-hidden="true"></span> Alertas de Vencimiento
-                                </NavLink>
-                            </div>
-                        </div>
-                    }
-                </Authorized>
-            </AuthorizeView>
-
-            <!-- Módulos específicos de Presidente -->
-            <AuthorizeView Roles="Presidente">
-                <Authorized>
-                    @if (expandirDocumentos)
-                    {
-                        <div class="submenu-container animate-fade-in">
-                            <div class="nav-item px-3 mb-2">
-                                <NavLink class="nav-link" href="subir-actas-estatutos">
-                                    <span class="nav-dot" aria-hidden="true"></span> Actas e Histórico
-                                </NavLink>
-                            </div>
-                        </div>
-                    }
-                </Authorized>
-            </AuthorizeView>
-
-        </nav>
-    </div>
-
-    <!-- TARJETA DE PERFIL INFERIOR -->
     <AuthorizeView>
         <Authorized>
-            <div class="sidebar-footer p-3 position-relative border-top border-success-subtle bg-opacity-10" style="background-color: rgba(0,0,0,0.25);">
-                
+
+            <!-- Módulos -->
+            <div class="nm-scroll">
+                <nav class="nm-nav" aria-label="Módulos del panel">
+
+                    <!-- ASOCIADOS (Director) -->
+                    @if (context.User.IsInRole("Director"))
+                    {
+                        <section class="nm-grupo @(expandirAsociados ? "abierto" : "")">
+                            <button type="button" class="nm-grupo-btn" @onclick="ToggleAsociados" aria-expanded="@(expandirAsociados ? "true" : "false")">
+                                <span class="nm-grupo-ico"><svg class="nm-ico"><use href="#ico-usuario" /></svg></span>
+                                <span class="nm-grupo-texto">
+                                    <strong>Asociados</strong>
+                                    <small>Productores y fincas</small>
+                                </span>
+                                <svg class="nm-ico nm-chevron"><use href="#ico-flecha" /></svg>
+                            </button>
+
+                            <div class="nm-sub">
+                                <div class="nm-sub-inner">
+                                    <NavLink class="nm-link" href="registrar-asociado">
+                                        <svg class="nm-ico"><use href="#ico-usuario-mas" /></svg>
+                                        <span>Registrar asociado</span>
+                                    </NavLink>
+                                    <NavLink class="nm-link" href="consultar-asociados">
+                                        <svg class="nm-ico"><use href="#ico-lista" /></svg>
+                                        <span>Consultar asociados</span>
+                                    </NavLink>
+                                    <NavLink class="nm-link" href="editar-asociado">
+                                        <svg class="nm-ico"><use href="#ico-ajustes" /></svg>
+                                        <span>Editar asociado</span>
+                                    </NavLink>
+                                </div>
+                            </div>
+                        </section>
+                    }
+
+                    <!-- DOCUMENTOS (Tesorero y Presidente) -->
+                    @if (context.User.IsInRole("Tesorero") || context.User.IsInRole("Presidente"))
+                    {
+                        <section class="nm-grupo nm-grupo-trigo @(expandirDocumentos ? "abierto" : "")">
+                            <button type="button" class="nm-grupo-btn" @onclick="ToggleDocumentos" aria-expanded="@(expandirDocumentos ? "true" : "false")">
+                                <span class="nm-grupo-ico"><svg class="nm-ico"><use href="#ico-doc" /></svg></span>
+                                <span class="nm-grupo-texto">
+                                    <strong>Documentos</strong>
+                                    <small>Estatutos, actas y vencimientos</small>
+                                </span>
+                                <svg class="nm-ico nm-chevron"><use href="#ico-flecha" /></svg>
+                            </button>
+
+                            <div class="nm-sub">
+                                <div class="nm-sub-inner">
+
+                                    @if (context.User.IsInRole("Tesorero"))
+                                    {
+                                        <NavLink class="nm-link" href="registrar-documentos">
+                                            <svg class="nm-ico"><use href="#ico-doc" /></svg>
+                                            <span>Registrar documentos</span>
+                                        </NavLink>
+                                        <NavLink class="nm-link" href="consultar-estado-documentos">
+                                            <svg class="nm-ico"><use href="#ico-check" /></svg>
+                                            <span>Estado de documentación</span>
+                                        </NavLink>
+                                        <NavLink class="nm-link" href="alertas-documentos">
+                                            <svg class="nm-ico"><use href="#ico-alerta" /></svg>
+                                            <span>Alertas de vencimiento</span>
+                                        </NavLink>
+                                    }
+
+                                    @if (context.User.IsInRole("Presidente"))
+                                    {
+                                        <NavLink class="nm-link" href="subir-actas-estatutos">
+                                            <svg class="nm-ico"><use href="#ico-red" /></svg>
+                                            <span>Actas e histórico</span>
+                                        </NavLink>
+                                    }
+
+                                </div>
+                            </div>
+                        </section>
+                    }
+
+                </nav>
+            </div>
+
+            <!-- PERFIL INFERIOR -->
+            <div class="nm-pie">
+
                 @if (mostrarMenuInferior)
                 {
-                    <div class="user-popup-menu shadow-lg rounded-4 p-2 bg-white text-dark border animate-fade-up">
-                        <div class="p-3 bg-light rounded-3 border-bottom text-center mb-2">
-                            <div class="user-avatar bg-success text-white fw-bold rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center shadow-sm" style="width: 44px; height: 44px; font-size: 1rem;">
-                                MM
-                            </div>
-                            <span class="fw-bold d-block text-dark small">Manuela Andrea Mosquera</span>
-                            <small class="text-muted extra-small">directora@asoagro-faaua.org</small>
-                            <div class="mt-2">
-                                <span class="badge bg-success text-white rounded-pill px-2 py-1" style="font-size: 0.68rem;">Dirección Ejecutiva</span>
+                    <div class="nm-popup">
+                        <div class="nm-popup-cab">
+                            <span class="nm-avatar nm-avatar-grande">MM</span>
+                            <div>
+                                <strong>Manuela Andrea Mosquera</strong>
+                                <small>directora@asoagro-faaua.org</small>
                             </div>
                         </div>
 
-                        <div class="text-uppercase text-muted extra-small px-2 py-1 fw-bold">Mi Cuenta</div>
-                        <button type="button" class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-2 text-secondary hover-menu-item small" @onclick='() => AbrirModal("Perfil de Usuario")'>
-                            <i class="bi bi-person-gear text-success fs-6"></i>
-                            <div>
-                                <span class="d-block fw-semibold text-dark">Perfil de Usuario</span>
-                                <span class="extra-small text-muted" style="font-size: 0.7rem;">Editar datos e información</span>
-                            </div>
+                        <p class="nm-popup-titulo">Mi cuenta</p>
+                        <button type="button" class="nm-popup-item" @onclick='() => AbrirModal("Perfil de usuario")'>
+                            <span class="nm-popup-ico"><svg class="nm-ico"><use href="#ico-usuario" /></svg></span>
+                            <span>
+                                <strong>Perfil de usuario</strong>
+                                <small>Editar datos e información</small>
+                            </span>
                         </button>
-                        <button type="button" class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-2 text-secondary hover-menu-item small" @onclick='() => AbrirModal("Seguridad & Clave")'>
-                            <i class="bi bi-shield-lock-fill text-primary fs-6"></i>
-                            <div>
-                                <span class="d-block fw-semibold text-dark">Seguridad & Clave</span>
-                                <span class="extra-small text-muted" style="font-size: 0.7rem;">Verificación de acceso</span>
-                            </div>
-                        </button>
-
-                        <div class="dropdown-divider my-1"></div>
-
-                        <div class="text-uppercase text-muted extra-small px-2 py-1 fw-bold">Organización</div>
-                        <button type="button" class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-2 text-secondary hover-menu-item small" @onclick='() => AbrirModal("Asociación Base")'>
-                            <i class="bi bi-building-check text-warning fs-6"></i>
-                            <div>
-                                <span class="d-block fw-semibold text-dark">Asociación Base</span>
-                                <span class="extra-small text-muted" style="font-size: 0.7rem;">Asoagro • FAAUA</span>
-                            </div>
-                        </button>
-                        <button type="button" class="dropdown-item rounded-3 py-2 px-3 d-flex align-items-center gap-2 text-secondary hover-menu-item small" @onclick='() => AbrirModal("Soporte Técnico")'>
-                            <i class="bi bi-headset text-info fs-6"></i>
-                            <div>
-                                <span class="d-block fw-semibold text-dark">Soporte Técnico</span>
-                                <span class="extra-small text-muted" style="font-size: 0.7rem;">Asistencia plataforma</span>
-                            </div>
+                        <button type="button" class="nm-popup-item" @onclick='() => AbrirModal("Seguridad y clave")'>
+                            <span class="nm-popup-ico"><svg class="nm-ico"><use href="#ico-escudo" /></svg></span>
+                            <span>
+                                <strong>Seguridad y clave</strong>
+                                <small>Verificación de acceso</small>
+                            </span>
                         </button>
 
-                        <div class="dropdown-divider my-1"></div>
+                        <div class="nm-popup-sep"></div>
 
-                        <a href="/Auth/logout" class="dropdown-item rounded-3 py-2 px-3 text-danger fw-bold d-flex align-items-center gap-2 bg-danger-subtle small hover-logout">
-                            <i class="bi bi-box-arrow-right fs-6"></i>
-                            <span>Cerrar Sesión</span>
+                        <p class="nm-popup-titulo">Organización</p>
+                        <button type="button" class="nm-popup-item" @onclick='() => AbrirModal("Asociación base")'>
+                            <span class="nm-popup-ico"><svg class="nm-ico"><use href="#ico-red" /></svg></span>
+                            <span>
+                                <strong>Asociación base</strong>
+                                <small>Asoagro · FAAUA</small>
+                            </span>
+                        </button>
+                        <button type="button" class="nm-popup-item" @onclick='() => AbrirModal("Soporte técnico")'>
+                            <span class="nm-popup-ico"><svg class="nm-ico"><use href="#ico-sobre" /></svg></span>
+                            <span>
+                                <strong>Soporte técnico</strong>
+                                <small>Asistencia de la plataforma</small>
+                            </span>
+                        </button>
+
+                        <div class="nm-popup-sep"></div>
+
+                        <a href="/Auth/logout" class="nm-popup-item peligro">
+                            <span class="nm-popup-ico"><svg class="nm-ico"><use href="#ico-salir" /></svg></span>
+                            <span><strong>Cerrar sesión</strong></span>
                         </a>
                     </div>
                 }
 
-                <button class="user-badge-card btn w-100 d-flex align-items-center justify-content-between p-2 rounded-3 text-start border-0 text-white" 
-                        @onclick="ToggleMenuInferior" 
-                        style="background: rgba(255, 255, 255, 0.08); transition: background 0.2s ease;">
-                    <div class="d-flex align-items-center gap-2 overflow-hidden">
-                        <div class="user-avatar-mini bg-success text-white fw-bold rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 36px; height: 36px; font-size: 0.85rem;">
-                            MM
-                        </div>
-                        <div class="overflow-hidden lh-1">
-                            <span class="fw-bold d-block text-white small text-truncate mb-1">Manuela Mosquera</span>
-                            <span class="extra-small" style="color: #c9e979; font-size: 0.7rem;">Dirección Ejecutiva</span>
-                        </div>
-                    </div>
-                    <i class="bi bi-three-dots-vertical text-white-50 fs-6"></i>
+                <button type="button" class="nm-perfil" @onclick="ToggleMenuInferior" aria-expanded="@(mostrarMenuInferior ? "true" : "false")">
+                    <span class="nm-avatar">MM</span>
+                    <span class="nm-perfil-texto">
+                        <strong>Manuela Mosquera</strong>
+                        <small>Dirección Ejecutiva</small>
+                    </span>
+                    <svg class="nm-ico nm-chevron @(mostrarMenuInferior ? "abierto" : "")"><use href="#ico-flecha" /></svg>
                 </button>
             </div>
+
         </Authorized>
     </AuthorizeView>
 
 </div>
 
-<!-- MODAL FLOTANTE -->
-@if (modalActivo != null)
-{
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.55); z-index: 2000;">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 rounded-4 shadow-lg">
-                <div class="modal-header bg-success text-white rounded-top-4">
-                    <h5 class="modal-title fw-bold"><i class="bi bi-info-circle me-2"></i>@modalActivo</h5>
-                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModal"></button>
-                </div>
-                <div class="modal-body p-4">
-                    @if (modalActivo == "Perfil de Usuario")
-                    {
-                        <p class="text-secondary small mb-3">Actualiza tu información personal y datos de contacto:</p>
-                        <div class="mb-3"><label class="form-label fw-bold small">Nombre Completo</label><input type="text" class="form-control rounded-3" value="Manuela Andrea Mosquera Martinez" /></div>
-                        <div class="mb-3"><label class="form-label fw-bold small">Correo Electrónico Institucional</label><input type="email" class="form-control rounded-3" value="directora@asoagro-faaua.org" /></div>
-                    }
-                    else if (modalActivo == "Seguridad & Clave")
-                    {
-                        <div class="alert alert-success small"><i class="bi bi-shield-check me-2"></i>Autenticación gestionada vía Google OAuth 2.0.</div>
-                        <p class="small text-muted mb-2">Tu acceso está vinculado de forma segura con tu cuenta institucional.</p>
-                    }
-                    else if (modalActivo == "Asociación Base")
-                    {
-                        <h6 class="fw-bold text-success">Asoagro</h6>
-                        <p class="small text-secondary">Asociación de base agropecuaria adscrita a la Federación de Asociaciones Agropecuarias del Urabá Antioqueño (FAAUA).</p>
-                    }
-                    else if (modalActivo == "Soporte Técnico")
-                    {
-                        <p class="small text-secondary mb-3">¿Presentas inconvenientes técnicos con la plataforma?</p>
-                        <div class="p-3 bg-light rounded-3 text-center border"><i class="bi bi-envelope-check text-success fs-3 d-block mb-1"></i><span class="fw-bold small d-block text-dark">soporte@faaua.org</span></div>
-                    }
-                </div>
-                <div class="modal-footer border-top-0">
-                    <button type="button" class="btn btn-success rounded-pill px-4" @onclick="CerrarModal">Guardar Cambios</button>
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" @onclick="CerrarModal">Cerrar</button>
-                </div>
+<!-- MODAL: <dialog> se muestra en la capa superior, fuera de la barra lateral -->
+<dialog id="nm-dialogo" class="nm-dialogo" aria-labelledby="nm-dialogo-titulo">
+    @if (modalActivo != null)
+    {
+        <div class="nm-dialogo-caja">
+            <div class="nm-dialogo-cab">
+                <strong id="nm-dialogo-titulo">@modalActivo</strong>
+                <button type="button" class="nm-dialogo-cerrar" @onclick="CerrarModal" aria-label="Cerrar">&times;</button>
             </div>
-        </div> 
-    </div>
-}
+
+            <div class="nm-dialogo-cuerpo">
+                @if (modalActivo == "Perfil de usuario")
+                {
+                    <p class="nm-texto-suave">Actualiza tu información personal y datos de contacto.</p>
+                    <div class="nm-campo">
+                        <label for="nm-nombre">Nombre completo</label>
+                        <input id="nm-nombre" type="text" value="Manuela Andrea Mosquera Martinez" />
+                    </div>
+                    <div class="nm-campo">
+                        <label for="nm-correo">Correo institucional</label>
+                        <input id="nm-correo" type="email" value="directora@asoagro-faaua.org" />
+                    </div>
+                }
+                else if (modalActivo == "Seguridad y clave")
+                {
+                    <div class="nm-aviso">
+                        <svg class="nm-ico"><use href="#ico-escudo" /></svg>
+                        <span>Autenticación gestionada vía Google OAuth 2.0.</span>
+                    </div>
+                    <p class="nm-texto-suave">Tu acceso está vinculado de forma segura con tu cuenta institucional.</p>
+                }
+                else if (modalActivo == "Asociación base")
+                {
+                    <h4 class="nm-subtitulo">Asoagro</h4>
+                    <p class="nm-texto-suave">Asociación de base agropecuaria adscrita a la Federación de Asociaciones Agropecuarias del Urabá Antioqueño (FAAUA).</p>
+                }
+                else if (modalActivo == "Soporte técnico")
+                {
+                    <p class="nm-texto-suave">¿Presentas inconvenientes técnicos con la plataforma?</p>
+                    <div class="nm-soporte">
+                        <svg class="nm-ico"><use href="#ico-sobre" /></svg>
+                        <strong>soporte@faaua.org</strong>
+                    </div>
+                }
+            </div>
+
+            <div class="nm-dialogo-pie">
+                <button type="button" class="nm-btn nm-btn-secundario" @onclick="CerrarModal">Cerrar</button>
+                <button type="button" class="nm-btn nm-btn-primario" @onclick="CerrarModal">Guardar cambios</button>
+            </div>
+        </div>
+    }
+</dialog>
 
 @code {
     private bool expandirAsociados = true;
     private bool expandirDocumentos = true;
-    private bool mostrarMenuInferior = false;
-    private string? modalActivo = null;
+    private bool mostrarMenuInferior;
+    private string? modalActivo;
+    private bool abrirDialogo;
 
     private void ToggleAsociados() => expandirAsociados = !expandirAsociados;
     private void ToggleDocumentos() => expandirDocumentos = !expandirDocumentos;
     private void ToggleMenuInferior() => mostrarMenuInferior = !mostrarMenuInferior;
-    private void AbrirModal(string nombre) { mostrarMenuInferior = false; modalActivo = nombre; }
-    private void CerrarModal() => modalActivo = null;
+ 
+    private void AbrirModal(string nombre)
+    {
+        mostrarMenuInferior = false;
+        modalActivo = nombre;
+        abrirDialogo = true;
+    }
+
+    private async Task CerrarModal()
+    {
+        modalActivo = null;
+        await JS.InvokeVoidAsync("eval", "document.getElementById('nm-dialogo')?.close()");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (abrirDialogo)
+        {
+            abrirDialogo = false;
+            await JS.InvokeVoidAsync("eval", "document.getElementById('nm-dialogo')?.showModal()");
+        }
+    }
 }
