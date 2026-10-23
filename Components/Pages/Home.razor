@@ -66,105 +66,6 @@
 .ag-cta:hover { color: #0b2e1c; background: #fff; border-color: #fff; transform: translateY(-3px); box-shadow: 0 18px 34px -14px rgba(0, 0, 0, .5); }
 .ag-cta:focus-visible { outline: 3px solid #b9e77a; outline-offset: 4px; }
 
-/* ---------- 2. GOBERNANZA ---------- */
-.gob {
-    --bosque: #0b2e1c; --pino: #17603a; --hoja: #2e9a5b; --brote: #b9e77a; --trigo: #e8c56b;
-    --texto: #2e3d31; --gris: #5c7063;
-    position: relative;
-    isolation: isolate;
-    overflow: clip;
-    box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    min-height: 100vh;
-    min-height: 100svh;
-    padding: calc(var(--ag-h, 4.25rem) + clamp(2.25rem, 6vh, 3.75rem)) 0 clamp(2rem, 5vh, 3.5rem);
-    background-color: #eef5e7;
-}
-.gob::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 3; background: linear-gradient(90deg, var(--pino), var(--hoja) 55%, var(--trigo)); }
-.gob-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
-.gob-ico { width: 20px; height: 20px; flex-shrink: 0; overflow: visible; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
-/* Fondo: fotografía de cultivos suavizada con los tonos de la marca */
-.gob-fondo { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
-.gob .gob-fondo-foto { position: absolute; top: -8%; bottom: -8%; left: 0; right: 0; width: auto; height: auto; background-size: cover; background-position: center 60%; background-repeat: no-repeat; background-attachment: scroll; opacity: .3; filter: saturate(.7) contrast(.95); }
-.gob-fondo-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(246, 250, 241, .96) 0%, rgba(241, 247, 236, .86) 42%, rgba(232, 243, 225, .95) 100%); box-shadow: inset 0 0 140px rgba(11, 46, 28, .06); }
-.gob-fondo-luz { position: absolute; inset: 0; background: radial-gradient(45% 38% at 92% 0%, rgba(232, 197, 107, .2), transparent 70%), radial-gradient(40% 36% at 0% 100%, rgba(46, 154, 91, .14), transparent 70%); }
-
-/* Contenido: el título queda arriba y el carrusel centrado debajo */
-.gob-contenido { position: relative; z-index: 2; flex: 1 0 auto; display: flex; flex-direction: column; width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 3rem); }
-.gob-cab { margin-bottom: clamp(1.25rem, 3.5vh, 2.25rem); text-align: center; }
-.gob-titulo { margin: 0 0 clamp(.5rem, 1.2vh, .9rem); font-size: clamp(1.75rem, 1.1rem + 2.2vh, 2.75rem); line-height: 1.1; letter-spacing: -.01em; color: var(--bosque); }
-.gob-subtitulo { max-width: 860px; margin: 0 auto; font-size: clamp(.95rem, .8rem + .35vh, 1.1rem); line-height: 1.5; color: #2d4735; }
-.gob-zona { position: relative; width: 100%; margin: auto 0; }
-
-/* Carrusel */
-.gob-carrusel { display: flex; gap: 1.5rem; padding: .75rem .5rem 1.6rem; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; }
-.gob-carrusel::-webkit-scrollbar { display: none; }
-.gob-slide { display: flex; flex: 0 0 88%; max-width: 1050px; margin: 0 auto; scroll-snap-align: center; }
-
-/* Tarjeta: foto a la izquierda, texto a la derecha */
-.gob-tarjeta { position: relative; flex: 1; display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(1rem, 2vw, 1.75rem); padding: clamp(.8rem, 1.6vh, 1.25rem); overflow: hidden; border-radius: 26px; background: linear-gradient(180deg, #fff 0%, #fbfdf7 100%); border: 1px solid rgba(23, 96, 58, .12); box-shadow: 0 2px 6px rgba(11, 46, 28, .05), 0 22px 40px -28px rgba(11, 46, 28, .55); transition: transform .5s cubic-bezier(.2, .7, .2, 1), box-shadow .5s ease; }
-.gob-tarjeta::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--acento, var(--hoja)), var(--brote)); }
-.gob-tarjeta:hover { transform: translateY(-6px); box-shadow: 0 4px 10px rgba(11, 46, 28, .06), 0 32px 52px -28px rgba(11, 46, 28, .6); }
-.gob-foto { position: relative; height: clamp(180px, 32vh, 320px); border-radius: 20px; overflow: hidden; }
-.gob-foto img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .9s ease; }
-.gob-foto::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11, 46, 28, 0) 45%, rgba(11, 46, 28, .5) 100%); }
-.gob-tarjeta:hover .gob-foto img { transform: scale(1.06); }
-.gob-sello { position: absolute; top: 12px; right: 12px; z-index: 1; width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: var(--acento, var(--hoja)); color: var(--icono, #fff); border: 3px solid #fff; box-shadow: 0 10px 20px -10px rgba(0, 0, 0, .55); transition: transform .5s cubic-bezier(.2, .7, .2, 1); }
-.gob-sello .gob-ico { width: 20px; height: 20px; }
-.gob-tarjeta:hover .gob-sello { transform: rotate(-8deg) scale(1.06); }
-.gob-cuerpo { min-width: 0; display: flex; flex-direction: column; text-align: start; }
-.gob-pastilla { align-self: flex-start; margin-bottom: .6rem; padding: 5px 13px; border-radius: 999px; background: #e6f2dc; color: var(--pino); font-size: .8rem; font-weight: 600; }
-.gob-titulo-tarjeta { margin: 0 0 .55rem; font-size: clamp(1.25rem, 1rem + .9vh, 1.6rem); line-height: 1.15; color: var(--bosque); }
-.gob-titulo-tarjeta::after { content: ""; display: block; width: 52px; height: 4px; margin-top: .6rem; border-radius: 4px; background: linear-gradient(90deg, var(--acento, var(--hoja)), var(--brote)); transition: width .5s ease; }
-.gob-tarjeta:hover .gob-titulo-tarjeta::after { width: 110px; }
-.gob-texto { margin: 0 0 .9rem; font-size: clamp(.9rem, .8rem + .3vh, 1rem); line-height: 1.55; color: var(--texto); }
-.gob-pie { margin-top: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem .75rem; padding-top: .7rem; border-top: 1px dashed rgba(23, 96, 58, .22); font-size: .85rem; color: var(--gris); }
-.gob-rol { display: inline-flex; align-items: center; gap: 7px; min-width: 0; font-style: italic; }
-.gob-rol .gob-ico { width: 15px; height: 15px; color: var(--hoja); }
-.gob-area { font-weight: 600; color: var(--pino); white-space: nowrap; }
-
-/* Controles: anterior · progreso · siguiente, en una sola fila */
-.gob-controles { display: flex; align-items: center; justify-content: center; gap: clamp(.9rem, 2vw, 1.4rem); margin-top: clamp(.5rem, 1.4vh, 1rem); }
-.gob-progreso { flex: 0 1 300px; width: 100%; max-width: 300px; height: 4px; border-radius: 4px; background: rgba(23, 96, 58, .14); overflow: hidden; }
-.gob-progreso span { display: block; width: 100%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--hoja), var(--brote)); transform-origin: left center; transform: scaleX(.2); }
-.gob-flecha { width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center; padding: 0; border: 1px solid rgba(23, 96, 58, .18); border-radius: 50%; background: #fff; color: var(--pino); box-shadow: 0 10px 22px -12px rgba(11, 46, 28, .55); cursor: pointer; transition: background-color .3s ease, color .3s ease, transform .3s ease, box-shadow .3s ease; }
-.gob-flecha .gob-ico { width: 18px; height: 18px; }
-.gob-flecha:hover { background: var(--pino); color: #fff; transform: translateY(-2px); box-shadow: 0 16px 28px -14px rgba(23, 96, 58, .8); }
-.gob-flecha:focus-visible { outline: 3px solid var(--brote); outline-offset: 3px; }
-
-/* Móvil: las tarjetas se apilan */
-@@media (max-width: 767.98px) {
-    .gob { padding-top: calc(var(--ag-h, 4.25rem) + 2rem); }
-    .gob-titulo { font-size: clamp(1.6rem, 6.5vw, 2.2rem); }
-    .gob-tarjeta { grid-template-columns: 1fr; }
-    .gob-foto { height: clamp(150px, 24vh, 220px); }
-    .gob-carrusel { gap: 1rem; }
-}
-
-/* Animaciones ligadas al scroll (Chrome y Edge modernos) */
-@@supports (animation-timeline: view()) {
-    .gob-zona { timeline-scope: --gob-pista; }
-    .gob-carrusel { scroll-timeline: --gob-pista inline; }
-    .gob-progreso span { animation: gob-llena linear both; animation-timeline: --gob-pista; }
-    .gob-rev { animation: gob-sube linear both; animation-timeline: view(); animation-range: entry 0% entry 45%; }
-    .gob-rev-2 { animation-range: entry 10% entry 55%; }
-    .gob-rev-3 { animation-range: entry 20% entry 65%; }
-    .gob-slide { animation: gob-entra linear both; animation-timeline: view(inline); animation-range: entry 0% entry 60%; }
-    .gob .gob-fondo-foto { animation: gob-deriva linear both; animation-timeline: view(); }
-}
-@@keyframes gob-sube { from { opacity: 0; transform: translate3d(0, 48px, 0); } to { opacity: 1; transform: none; } }
-@@keyframes gob-entra { from { opacity: .1; transform: translate3d(80px, 0, 0) scale(.95); } to { opacity: 1; transform: none; } }
-@@keyframes gob-llena { from { transform: scaleX(.2); } to { transform: scaleX(1); } }
-@@keyframes gob-deriva { from { transform: translate3d(0, -4%, 0); } to { transform: translate3d(0, 4%, 0); } }
-
-@@media (prefers-reduced-motion: reduce) {
-    .gob-rev, .gob-slide, .gob-progreso span, .gob .gob-fondo-foto { animation: none !important; }
-    .gob-tarjeta, .gob-sello, .gob-foto img, .gob-flecha { transition: none !important; }
-}
-
 
  /* ---------- 3. ARTICULACIÓN ---------- */
 .art {
@@ -372,9 +273,11 @@
 
     <div class="gob-contenido">
         <div class="gob-cab gob-rev">
-            <h2 class="ag-maname gob-titulo">Control Oportuno de Obligaciones y Estatutos</h2>
-            <p class="ag-asap gob-subtitulo">Pilares fundamentales para mantener la elegibilidad y el crecimiento estructurado de las asociaciones.</p>
-        </div>
+    <span class="gob-etiqueta ag-inter">Gobernanza y cumplimiento</span>
+    <h2 class="ag-maname gob-titulo">Control oportuno de obligaciones y estatutos</h2>
+    <p class="ag-asap gob-subtitulo">Pilares fundamentales para mantener la elegibilidad y el crecimiento estructurado de las asociaciones.</p>
+    <p class="ag-asap gob-introduccion">Cada asociación de base enfrenta plazos legales, obligaciones fiscales y requisitos de gobierno interno que, si no se atienden a tiempo, pueden poner en riesgo su participación en convocatorias. Esta plataforma centraliza esos controles para que la directiva tenga siempre a la vista qué está al día, qué está por vencer y qué requiere acción.</p>
+</div>
 
         <div class="gob-zona gob-rev gob-rev-2">
             <div id="carruselGobernanza" class="gob-carrusel">

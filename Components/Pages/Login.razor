@@ -8,8 +8,6 @@
 <PageTitle>Asoagro: iniciar sesión</PageTitle>
 
 <style>
-    @@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600;700&display=swap');
-
     /* ---------- Tokens y base ---------- */
     .ag-login {
         --bosque: #0b2e1c;   /* fondo de la marca */
@@ -21,17 +19,33 @@
         --tinta: #10261a;
         --gris: #5c7063;
         --borde: #cfddc9;
-        display: flex;
-        flex-direction: column;
-        min-height: 105vh;
+
+        /* Ocupa toda la ventana: ignora los márgenes que ponga el layout */
+        position: fixed;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 500;
+        overflow-x: hidden;
+        overflow-y: auto;
         background: var(--papel);
         color: var(--tinta);
-        font-family: 'Instrument Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-        -webkit-font-smoothing: antialiased; 
+        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        -webkit-font-smoothing: antialiased;
     }
     .ag-login *, .ag-login *::before, .ag-login *::after { box-sizing: border-box; }
     .ag-login svg { flex-shrink: 0; }
     .ag-login :is(a, button, input[type="checkbox"]):focus-visible { outline: 3px solid var(--hoja); outline-offset: 3px; }
+    .ag-shell { display: flex; flex-direction: column; min-height: 100%; }
+
+    /* ---------- Tipografía: Maname (títulos), Asap Sharp (texto), Inter (interfaz) ---------- */
+    .ag-login h1, .ag-login h2, .ag-login .ag-logo strong { font-family: 'Maname', Georgia, serif !important; }
+    .ag-login p, .ag-login ul, .ag-login .ag-logo small { font-family: 'Asap Sharp', system-ui, sans-serif !important; }
+    .ag-login label, .ag-login a, .ag-login button, .ag-login input, .ag-login .ag-error,
+    .ag-login .ag-pie-movil, .ag-login .ag-brand-pie, .ag-login .ag-separador, .ag-login .ag-mapa-texto text {
+        font-family: 'Inter', system-ui, sans-serif !important;
+    }
 
     /* ---------- Panel de marca ---------- */
     .ag-brand {
@@ -48,10 +62,10 @@
     .ag-logo { display: flex; align-items: center; gap: 14px; }
     .ag-logo-marca { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 14px; background: var(--brote); color: var(--bosque); }
     .ag-logo-marca svg { width: 26px; height: 26px; }
-    .ag-logo strong { display: block; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 1.4rem; font-weight: 800; letter-spacing: .02em; line-height: 1; }
+    .ag-logo strong { display: block; font-size: 1.4rem; font-weight: 700; letter-spacing: .02em; line-height: 1; }
     .ag-logo small { display: block; margin-top: 5px; font-size: .78rem; color: rgba(242, 247, 236, .7); }
     .ag-titulo { margin-top: 36px; }
-    .ag-titulo h1 { margin: 0; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 2.2rem; font-weight: 800; line-height: 1.02; letter-spacing: -.03em; }
+    .ag-titulo h1 { margin: 0; font-size: 2.2rem; font-weight: 700; line-height: 1.02; letter-spacing: -.01em; }
     .ag-texto-escritorio { display: none; max-width: 30rem; margin: 18px 0 0; font-size: 1.02rem; line-height: 1.65; color: rgba(242, 247, 236, .75); }
     .ag-mapa-bloque { margin-top: auto; padding: 28px 0 26px; }
     .ag-mapa { display: block; width: 100%; height: 190px; }
@@ -79,7 +93,7 @@
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='220' viewBox='0 0 260 220'%3E%3Cg fill='none' stroke='%2317603a' stroke-opacity='.09' stroke-width='1.2'%3E%3Cpath d='M-10 44C40 14 90 76 140 46S220 12 270 40'/%3E%3Cpath d='M-10 118C40 88 90 150 140 120S220 86 270 114'/%3E%3Cpath d='M-10 192C40 162 90 224 140 194S220 160 270 188'/%3E%3C/g%3E%3C/svg%3E");
     }
     .ag-caja { width: 100%; max-width: 400px; }
-    .ag-caja h2 { margin: 0 0 8px; font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-size: 2.1rem; font-weight: 700; line-height: 1.1; letter-spacing: -.025em; }
+    .ag-caja h2 { margin: 0 0 8px; font-size: 2.1rem; font-weight: 700; line-height: 1.1; letter-spacing: -.01em; }
     .ag-caja-sub { margin: 0 0 30px; font-size: .98rem; line-height: 1.55; color: var(--gris); }
     .ag-campo { margin-bottom: 18px; }
     .ag-etiqueta { display: block; margin-bottom: 8px; font-size: .86rem; font-weight: 600; }
@@ -125,15 +139,15 @@
 
     /* ---------- Escritorio ---------- */
     @@media (min-width: 992px) {
-        .ag-login { flex-direction: row; }
-        .ag-brand { flex: 1.12; min-height: 100vh; padding: 52px 56px 0; border-radius: 0; }
+        .ag-shell { flex-direction: row; }
+        .ag-brand { flex: 1.12; padding: 52px 56px 0; border-radius: 0; }
         .ag-titulo h1 { font-size: clamp(2.6rem, 3.6vw, 3.5rem); }
         .ag-texto-escritorio { display: block; }
         .ag-mapa-bloque { padding-top: 44px; }
         .ag-mapa { height: auto; aspect-ratio: 600 / 340; }
         .ag-mapa-texto { display: inline; }
         .ag-brand-pie { display: block; margin: 0 -56px; padding: 18px 56px 22px; border-top: 1px solid rgba(185, 231, 122, .12); font-size: .78rem; color: rgba(242, 247, 236, .55); }
-        .ag-form-lado { min-height: 100vh; padding: 56px 48px; }
+        .ag-form-lado { padding: 56px 48px; }
         .ag-pie-movil { display: none; }
     }
 
@@ -145,194 +159,197 @@
 </style>
 
 <div class="ag-login">
+    <div class="ag-shell">
 
-    <!-- ===== Panel de marca: mapa de lotes con ruta de trazabilidad ===== -->
-    <aside class="ag-brand">
-        <div class="ag-brand-cuerpo">
-            <header class="ag-logo">
-                <span class="ag-logo-marca">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                        <path d="M12 22v-9" />
-                        <path d="M12 13C12 7.5 7.5 4 2 4c0 5.5 3.5 10 10 10z" />
-                        <path d="M12 13c0-5.5 4.5-9 10-9 0 5.5-3.5 10-10 10z" />
+        <!-- ===== Panel de marca: mapa de lotes con ruta de trazabilidad ===== -->
+        <aside class="ag-brand">
+            <div class="ag-brand-cuerpo">
+                <header class="ag-logo">
+                    <span class="ag-logo-marca">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M12 22v-9" />
+                            <path d="M12 13C12 7.5 7.5 4 2 4c0 5.5 3.5 10 10 10z" />
+                            <path d="M12 13c0-5.5 4.5-9 10-9 0 5.5-3.5 10-10 10z" />
+                        </svg>
+                    </span>
+                    <span>
+                        <strong>ASOAGRO</strong>
+                        <small>Federación de Asociaciones Agropecuarias</small>
+                    </span>
+                </header>
+
+                <div class="ag-titulo">
+                    <h1>Gobernanza y trazabilidad agrícola</h1>
+                    <p class="ag-texto-escritorio">Conectamos el esfuerzo del productor rural con los estándares más altos de gestión asociativa, comercial e inocuidad en el Urabá antioqueño.</p>
+                </div>
+
+                <div class="ag-mapa-bloque">
+                    <svg class="ag-mapa" viewBox="0 0 600 340" role="img" aria-label="Mapa ilustrativo de los lotes de la finca con su ruta de trazabilidad">
+                        <defs>
+                            <pattern id="ag-cultivo" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(28)">
+                                <rect width="9" height="9" fill="#2e9a5b" />
+                                <rect width="3" height="9" fill="#b9e77a" fill-opacity=".38" />
+                            </pattern>
+                            <symbol id="ag-vaca" viewBox="0 0 40 28">
+                                <rect x="3" y="6" width="26" height="13" rx="5" />
+                                <rect x="24" y="2" width="11" height="11" rx="4" />
+                                <rect x="6" y="17" width="3.6" height="10" rx="1.4" />
+                                <rect x="11" y="17" width="3.6" height="10" rx="1.4" />
+                                <rect x="21" y="17" width="3.6" height="10" rx="1.4" />
+                                <rect x="26" y="17" width="3.6" height="10" rx="1.4" />
+                                <path d="M3 9Q0 12 2 18" fill="none" stroke="currentColor" stroke-width="1.3" />
+                            </symbol>
+                        </defs>
+
+                        <!-- Lotes -->
+                        <g stroke="#0b2e1c" stroke-width="4" stroke-linejoin="round">
+                            <polygon class="ag-lote" style="--d: .05s" points="30,44 236,30 252,152 42,170" fill="url(#ag-cultivo)" />
+                            <polygon class="ag-lote" style="--d: .15s" points="248,30 414,50 400,154 252,152" fill="#b9e77a" fill-opacity=".3" />
+                            <polygon class="ag-lote" style="--d: .25s" points="410,50 574,66 568,172 396,154" fill="#17603a" />
+                            <polygon class="ag-lote" style="--d: .35s" points="42,170 252,152 268,304 58,318" fill="url(#ag-cultivo)" />
+                            <polygon class="ag-lote" style="--d: .45s" points="252,152 400,154 388,304 268,304" fill="url(#ag-cultivo)" />
+                            <polygon class="ag-lote" style="--d: .55s" points="400,154 568,172 552,318 388,304" fill="#b9e77a" fill-opacity=".3" />
+                        </g>
+
+                        <!-- Etiquetas de lote -->
+                        <g class="ag-mapa-texto">
+                            <text x="54" y="62" fill="#0b2e1c" font-size="13" font-weight="700">Lote 01</text>
+                            <text x="54" y="78" fill="#0b2e1c" font-size="12" font-weight="500">Cacao</text>
+                            <text x="266" y="66" fill="#f2f7ec" font-size="13" font-weight="700">Lote 02</text>
+                            <text x="266" y="82" fill="#f2f7ec" font-size="12" font-weight="500">Ganadería</text>
+                            <text x="432" y="80" fill="#f2f7ec" font-size="13" font-weight="700">Lote 03</text>
+                            <text x="432" y="96" fill="#f2f7ec" font-size="12" font-weight="500">Inocuidad</text>
+                            <text x="60" y="196" fill="#0b2e1c" font-size="13" font-weight="700">Lote 04</text>
+                            <text x="60" y="212" fill="#0b2e1c" font-size="12" font-weight="500">Plátano</text>
+                            <text x="276" y="178" fill="#0b2e1c" font-size="13" font-weight="700">Lote 05</text>
+                            <text x="276" y="194" fill="#0b2e1c" font-size="12" font-weight="500">Maíz</text>
+                            <text x="404" y="190" fill="#f2f7ec" font-size="13" font-weight="700">Lote 06</text>
+                            <text x="404" y="206" fill="#f2f7ec" font-size="12" font-weight="500">Ganadería</text>
+                        </g>
+
+                        <!-- Granero -->
+                        <g class="ag-lote" style="--d: .6s">
+                            <path d="M352 70l11-10 13 10z" fill="#e8c56b" />
+                            <rect x="354" y="70" width="22" height="13" fill="#e8c56b" />
+                            <rect x="362" y="75" width="6" height="8" fill="#0b2e1c" />
+                        </g>
+
+                        <!-- Ganado -->
+                        <use class="ag-lote" style="--d: .65s" href="#ag-vaca" x="418" y="252" width="34" height="24" fill="#0b2e1c" color="#0b2e1c" />
+                        <use class="ag-lote" style="--d: .7s" href="#ag-vaca" x="486" y="270" width="30" height="21" fill="#0b2e1c" color="#0b2e1c" />
+
+                        <!-- Ruta de trazabilidad -->
+                        <polyline points="140,100 330,98 490,112 470,236 328,228 156,240" fill="none" stroke="#e8c56b" stroke-width="2.4" stroke-dasharray="6 6" stroke-linecap="round" stroke-linejoin="round" />
+                        <g fill="#0b2e1c" stroke="#e8c56b" stroke-width="2.5">
+                            <circle class="ag-nodo" style="--d: .7s" cx="140" cy="100" r="6" />
+                            <circle class="ag-nodo" style="--d: .8s" cx="330" cy="98" r="6" />
+                            <circle class="ag-nodo" style="--d: .9s" cx="490" cy="112" r="6" />
+                            <circle class="ag-nodo" style="--d: 1s" cx="470" cy="236" r="6" />
+                            <circle class="ag-nodo" style="--d: 1.1s" cx="328" cy="228" r="6" />
+                        </g>
+                        <circle class="ag-nodo-fin" style="--d: 1.2s" cx="156" cy="240" r="9" fill="#e8c56b" stroke="#0b2e1c" stroke-width="3" />
+
+                        <!-- Norte -->
+                        <g transform="translate(558 24)" fill="none" stroke="#f2f7ec" stroke-opacity=".45" stroke-width="1.4">
+                            <circle r="12" />
+                            <path d="M0 -8 4 3 0 1 -4 3Z" fill="#f2f7ec" fill-opacity=".9" stroke="none" />
+                        </g>
                     </svg>
-                </span>
-                <span>
-                    <strong>ASOAGRO</strong>
-                    <small>Federación de Asociaciones Agropecuarias</small>
-                </span>
-            </header>
 
-            <div class="ag-titulo">
-                <h1>Gobernanza y trazabilidad agrícola</h1>
-                <p class="ag-texto-escritorio">Conectamos el esfuerzo del productor rural con los estándares más altos de gestión asociativa, comercial e inocuidad en el Urabá antioqueño.</p>
-            </div>
-
-            <div class="ag-mapa-bloque">
-                <svg class="ag-mapa" viewBox="0 0 600 340" role="img" aria-label="Mapa ilustrativo de los lotes de la finca con su ruta de trazabilidad">
-                    <defs>
-                        <pattern id="ag-cultivo" width="9" height="9" patternUnits="userSpaceOnUse" patternTransform="rotate(28)">
-                            <rect width="9" height="9" fill="#2e9a5b" />
-                            <rect width="3" height="9" fill="#b9e77a" fill-opacity=".38" />
-                        </pattern>
-                        <symbol id="ag-vaca" viewBox="0 0 40 28">
-                            <rect x="3" y="6" width="26" height="13" rx="5" />
-                            <rect x="24" y="2" width="11" height="11" rx="4" />
-                            <rect x="6" y="17" width="3.6" height="10" rx="1.4" />
-                            <rect x="11" y="17" width="3.6" height="10" rx="1.4" />
-                            <rect x="21" y="17" width="3.6" height="10" rx="1.4" />
-                            <rect x="26" y="17" width="3.6" height="10" rx="1.4" />
-                            <path d="M3 9Q0 12 2 18" fill="none" stroke="currentColor" stroke-width="1.3" />
-                        </symbol>
-                    </defs>
-
-                    <!-- Lotes -->
-                    <g stroke="#0b2e1c" stroke-width="4" stroke-linejoin="round">
-                        <polygon class="ag-lote" style="--d: .05s" points="30,44 236,30 252,152 42,170" fill="url(#ag-cultivo)" />
-                        <polygon class="ag-lote" style="--d: .15s" points="248,30 414,50 400,154 252,152" fill="#b9e77a" fill-opacity=".3" />
-                        <polygon class="ag-lote" style="--d: .25s" points="410,50 574,66 568,172 396,154" fill="#17603a" />
-                        <polygon class="ag-lote" style="--d: .35s" points="42,170 252,152 268,304 58,318" fill="url(#ag-cultivo)" />
-                        <polygon class="ag-lote" style="--d: .45s" points="252,152 400,154 388,304 268,304" fill="url(#ag-cultivo)" />
-                        <polygon class="ag-lote" style="--d: .55s" points="400,154 568,172 552,318 388,304" fill="#b9e77a" fill-opacity=".3" />
-                    </g>
-
-                    <!-- Etiquetas de lote -->
-                    <g class="ag-mapa-texto" font-family="Instrument Sans, sans-serif">
-                        <text x="54" y="62" fill="#0b2e1c" font-size="13" font-weight="700">Lote 01</text>
-                        <text x="54" y="78" fill="#0b2e1c" font-size="12" font-weight="500">Cacao</text>
-                        <text x="266" y="66" fill="#f2f7ec" font-size="13" font-weight="700">Lote 02</text>
-                        <text x="266" y="82" fill="#f2f7ec" font-size="12" font-weight="500">Ganadería</text>
-                        <text x="432" y="80" fill="#f2f7ec" font-size="13" font-weight="700">Lote 03</text>
-                        <text x="432" y="96" fill="#f2f7ec" font-size="12" font-weight="500">Inocuidad</text>
-                        <text x="60" y="196" fill="#0b2e1c" font-size="13" font-weight="700">Lote 04</text>
-                        <text x="60" y="212" fill="#0b2e1c" font-size="12" font-weight="500">Plátano</text>
-                        <text x="276" y="178" fill="#0b2e1c" font-size="13" font-weight="700">Lote 05</text>
-                        <text x="276" y="194" fill="#0b2e1c" font-size="12" font-weight="500">Maíz</text>
-                        <text x="404" y="190" fill="#f2f7ec" font-size="13" font-weight="700">Lote 06</text>
-                        <text x="404" y="206" fill="#f2f7ec" font-size="12" font-weight="500">Ganadería</text>
-                    </g>
-
-                    <!-- Granero -->
-                    <g class="ag-lote" style="--d: .6s">
-                        <path d="M352 70l11-10 13 10z" fill="#e8c56b" />
-                        <rect x="354" y="70" width="22" height="13" fill="#e8c56b" />
-                        <rect x="362" y="75" width="6" height="8" fill="#0b2e1c" />
-                    </g>
-
-                    <!-- Ganado -->
-                    <use class="ag-lote" style="--d: .65s" href="#ag-vaca" x="418" y="252" width="34" height="24" fill="#0b2e1c" color="#0b2e1c" />
-                    <use class="ag-lote" style="--d: .7s" href="#ag-vaca" x="486" y="270" width="30" height="21" fill="#0b2e1c" color="#0b2e1c" />
-
-                    <!-- Ruta de trazabilidad -->
-                    <polyline points="140,100 330,98 490,112 470,236 328,228 156,240" fill="none" stroke="#e8c56b" stroke-width="2.4" stroke-dasharray="6 6" stroke-linecap="round" stroke-linejoin="round" />
-                    <g fill="#0b2e1c" stroke="#e8c56b" stroke-width="2.5">
-                        <circle class="ag-nodo" style="--d: .7s" cx="140" cy="100" r="6" />
-                        <circle class="ag-nodo" style="--d: .8s" cx="330" cy="98" r="6" />
-                        <circle class="ag-nodo" style="--d: .9s" cx="490" cy="112" r="6" />
-                        <circle class="ag-nodo" style="--d: 1s" cx="470" cy="236" r="6" />
-                        <circle class="ag-nodo" style="--d: 1.1s" cx="328" cy="228" r="6" />
-                    </g>
-                    <circle class="ag-nodo-fin" style="--d: 1.2s" cx="156" cy="240" r="9" fill="#e8c56b" stroke="#0b2e1c" stroke-width="3" />
-
-                    <!-- Norte -->
-                    <g transform="translate(558 24)" fill="none" stroke="#f2f7ec" stroke-opacity=".45" stroke-width="1.4">
-                        <circle r="12" />
-                        <path d="M0 -8 4 3 0 1 -4 3Z" fill="#f2f7ec" fill-opacity=".9" stroke="none" />
-                    </g>
-                </svg>
-
-                <ul class="ag-leyenda">
-                    <li><span class="ag-sw ag-sw-cultivo"></span>Cultivos</li>
-                    <li><span class="ag-sw ag-sw-ganado"></span>Ganadería</li>
-                    <li><span class="ag-sw ag-sw-inocuidad"></span>Inocuidad</li>
-                    <li><span class="ag-sw ag-sw-ruta"></span>Ruta de trazabilidad</li>
-                </ul>
-            </div>
-        </div>
-
-        <footer class="ag-brand-pie">&copy; 2026 Federación de Asociaciones Agropecuarias (FAAUA)</footer>
-    </aside>
-
-    <!-- ===== Formulario ===== -->
-    <main class="ag-form-lado">
-        <section class="ag-caja">
-            <h2>Inicia sesión</h2>
-            <p class="ag-caja-sub">Usa tu correo o usuario para administrar tu asociación.</p>
-
-            <EditForm Model="@loginModel" OnValidSubmit="ManejarLogin">
-                <DataAnnotationsValidator />
-
-                <div class="ag-campo">
-                    <label class="ag-etiqueta" for="usuario">Correo o usuario</label>
-                    <div class="ag-entrada">
-                        <svg class="ag-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <circle cx="12" cy="8" r="4" />
-                            <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
-                        </svg>
-                        <InputText id="usuario" class="ag-input" placeholder="ej. usuario@asoagro.org" autocomplete="username" @bind-Value="loginModel.Usuario" />
-                    </div>
-                    <ValidationMessage For="@(() => loginModel.Usuario)" class="ag-error" />
+                    <ul class="ag-leyenda">
+                        <li><span class="ag-sw ag-sw-cultivo"></span>Cultivos</li>
+                        <li><span class="ag-sw ag-sw-ganado"></span>Ganadería</li>
+                        <li><span class="ag-sw ag-sw-inocuidad"></span>Inocuidad</li>
+                        <li><span class="ag-sw ag-sw-ruta"></span>Ruta de trazabilidad</li>
+                    </ul>
                 </div>
+            </div>
 
-                <div class="ag-campo">
-                    <div class="ag-etiqueta-fila">
-                        <label class="ag-etiqueta" for="password">Contraseña</label>
-                        <a href="/recuperar" class="ag-enlace">¿Olvidaste tu contraseña?</a>
-                    </div>
-                    <div class="ag-entrada">
-                        <svg class="ag-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                            <rect x="4" y="11" width="16" height="10" rx="2.5" />
-                            <path d="M8 11V8a4 4 0 0 1 8 0v3" />
-                        </svg>
-                        <InputText id="password" type="@(_verPassword ? "text" : "password")" class="ag-input ag-input-clave" placeholder="••••••••" autocomplete="current-password" @bind-Value="loginModel.Password" />
-                        <button type="button" class="ag-ojo" @onclick="AlternarPassword" aria-label="@(_verPassword ? "Ocultar contraseña" : "Mostrar contraseña")">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" />
-                                <circle cx="12" cy="12" r="3" />
+            <footer class="ag-brand-pie">&copy; 2026 Federación de Asociaciones Agropecuarias (FAAUA)</footer>
+        </aside>
+
+        <!-- ===== Formulario ===== -->
+        <main class="ag-form-lado">
+            <section class="ag-caja">
+                <h2>Inicia sesión</h2>
+                <p class="ag-caja-sub">Usa tu correo o usuario para administrar tu asociación.</p>
+
+                <EditForm Model="@loginModel" OnValidSubmit="ManejarLogin">
+                    <DataAnnotationsValidator />
+
+                    <div class="ag-campo">
+                        <label class="ag-etiqueta" for="usuario">Correo o usuario</label>
+                        <div class="ag-entrada">
+                            <svg class="ag-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="8" r="4" />
+                                <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
                             </svg>
-                        </button>
+                            <InputText id="usuario" class="ag-input" placeholder="ej. usuario@asoagro.org" autocomplete="username" @bind-Value="loginModel.Usuario" />
+                        </div>
+                        <ValidationMessage For="@(() => loginModel.Usuario)" class="ag-error" />
                     </div>
-                    <ValidationMessage For="@(() => loginModel.Password)" class="ag-error" />
+
+                    <div class="ag-campo">
+                        <div class="ag-etiqueta-fila">
+                            <label class="ag-etiqueta" for="password">Contraseña</label>
+                            <a href="/recuperar" class="ag-enlace">¿Olvidaste tu contraseña?</a>
+                        </div>
+                        <div class="ag-entrada">
+                            <svg class="ag-icono" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <rect x="4" y="11" width="16" height="10" rx="2.5" />
+                                <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                            </svg>
+                            <InputText id="password" type="@(_verPassword ? "text" : "password")" class="ag-input ag-input-clave" placeholder="••••••••" autocomplete="current-password" @bind-Value="loginModel.Password" />
+                            <button type="button" class="ag-ojo" @onclick="AlternarPassword" aria-label="@(_verPassword ? "Ocultar contraseña" : "Mostrar contraseña")">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                        <ValidationMessage For="@(() => loginModel.Password)" class="ag-error" />
+                    </div>
+
+                    <label class="ag-check">
+                        <InputCheckbox @bind-Value="loginModel.Recordarme" />
+                        Recordar este dispositivo
+                    </label>
+
+                    <button type="submit" class="ag-btn ag-btn-principal" disabled="@_cargando">
+                        @if (_cargando)
+                        {
+                            <span class="ag-spinner" aria-hidden="true"></span>
+                            <span>Ingresando…</span>
+                        }
+                        else
+                        {
+                            <span>Ingresar a la plataforma</span>
+                        }
+                    </button>
+                </EditForm>
+
+                <div class="ag-separador"><span>o continúa con</span></div>
+
+                <a href="/Auth/login-google" class="ag-btn ag-btn-google">
+                    <svg viewBox="0 0 48 48" aria-hidden="true">
+                        <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" />
+                        <path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z" />
+                        <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
+                        <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z" />
+                    </svg>
+                    <span>Continuar con Google</span>
+                </a>
+
+                <div class="ag-registro">
+                    <p>¿Tu asociación aún no tiene usuario?</p>
+                    <a href="/registro" class="ag-btn ag-btn-secundario">Registrar mi asociación</a>
                 </div>
+            </section>
 
-                <label class="ag-check">
-                    <InputCheckbox @bind-Value="loginModel.Recordarme" />
-                    Recordar este dispositivo
-                </label>
+            <p class="ag-pie-movil">&copy; 2026 Federación de Asociaciones Agropecuarias (FAAUA)</p>
+        </main>
 
-                <button type="submit" class="ag-btn ag-btn-principal" disabled="@_cargando">
-                    @if (_cargando)
-                    {
-                        <span class="ag-spinner" aria-hidden="true"></span>
-                        <span>Ingresando…</span>
-                    }
-                    else
-                    {
-                        <span>Ingresar a la plataforma</span>
-                    }
-                </button>
-            </EditForm>
-
-            <div class="ag-separador"><span>o continúa con</span></div>
-
-            <a href="/Auth/login-google" class="ag-btn ag-btn-google">
-                <svg viewBox="0 0 48 48" aria-hidden="true">
-                    <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" />
-                    <path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z" />
-                    <path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238A11.91 11.91 0 0 1 24 36c-5.202 0-9.619-3.317-11.283-7.946l-6.522 5.025C9.505 39.556 16.227 44 24 44z" />
-                    <path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002l6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917z" />
-                </svg>
-                <span>Continuar con Google institucional</span>
-            </a>
-
-            <div class="ag-registro">
-                <p>¿Tu asociación aún no tiene usuario?</p>
-                <a href="/registro" class="ag-btn ag-btn-secundario">Registrar mi asociación</a>
-            </div>
-        </section>
-
-        <p class="ag-pie-movil">&copy; 2026 Federación de Asociaciones Agropecuarias (FAAUA)</p>
-    </main>
+    </div>
 </div>
 
 @code {
@@ -352,7 +369,7 @@
             await Task.CompletedTask;
         }
         finally
-        { 
+        {
             _cargando = false;
         }
     }

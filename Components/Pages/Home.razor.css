@@ -684,3 +684,152 @@ article.content {
         justify-content: center;
     }
 }
+/* ---------- 2. GOBERNANZA ---------- */
+.gob {
+    --bosque: #0b2e1c; --pino: #17603a; --hoja: #2e9a5b; --brote: #b9e77a; --trigo: #e8c56b;
+    --texto: #2e3d31; --gris: #5c7063;
+    position: relative;
+    isolation: isolate;
+    overflow: clip;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: calc(var(--ag-h, 4.25rem) + clamp(1rem, 2.5vh, 1.75rem)) 0 clamp(1.25rem, 3vh, 2rem);
+    background-color: #eef5e7;
+}
+.gob::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 3; background: linear-gradient(90deg, var(--pino), var(--hoja) 55%, var(--trigo)); }
+.gob-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+.gob-ico { width: 20px; height: 20px; flex-shrink: 0; overflow: visible; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Fondo: fotografía de cultivos suavizada con los tonos de la marca */
+.gob-fondo { position: absolute; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.gob .gob-fondo-foto { position: absolute; top: -8%; bottom: -8%; left: 0; right: 0; width: auto; height: auto; background-size: cover; background-position: center 60%; background-repeat: no-repeat; background-attachment: scroll; opacity: .3; filter: saturate(.7) contrast(.95); }
+.gob-fondo-velo { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(246, 250, 241, .96) 0%, rgba(241, 247, 236, .86) 42%, rgba(232, 243, 225, .95) 100%); box-shadow: inset 0 0 140px rgba(11, 46, 28, .06); }
+.gob-fondo-luz { position: absolute; inset: 0; background: radial-gradient(45% 38% at 92% 0%, rgba(232, 197, 107, .2), transparent 70%), radial-gradient(40% 36% at 0% 100%, rgba(46, 154, 91, .14), transparent 70%); }
+
+/* Contenido: el bloque empieza arriba, sin centrarse verticalmente */
+.gob-contenido { position: relative; z-index: 2; flex: 1 0 auto; display: flex; flex-direction: column; justify-content: flex-start; width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 clamp(1rem, 4vw, 3rem); }
+
+/* Cabecera: subida unos 2 cm respecto a la posición anterior */
+.gob-cab {
+    margin-top: -2cm;
+    margin-bottom: clamp(.9rem, 2vh, 1.5rem);
+    text-align: center;
+}
+
+.gob-etiqueta {
+    display: inline-block;
+    margin-bottom: .75rem;
+    padding: 4px 13px;
+    border-radius: 999px;
+    background: rgba(185, 231, 122, .3);
+    border: 1px solid rgba(23, 96, 58, .15);
+    color: var(--pino);
+    font-family: var(--ag-ui, 'Inter', system-ui, sans-serif);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+}
+
+.gob-titulo {
+    margin: 0 0 1.4rem;
+    font-family: var(--ag-titulo, 'Maname', serif);
+    font-size: clamp(2.1rem, 1.3rem + 2vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -.01em;
+    color: var(--bosque);
+}
+
+/* Subtítulo y párrafo: mismo tamaño, color e interlineado */
+.gob-subtitulo,
+.gob-introduccion {
+    max-width: 860px;
+    margin: 0 auto .5rem;
+    font-family: var(--ag-texto, 'Asap Sharp', system-ui, sans-serif);
+    font-size: clamp(.95rem, .85rem + .3vw, 1.1rem);
+    line-height: 1.5;
+    color: #2d4735;
+}
+
+.gob-introduccion { margin-bottom: 0; }
+
+.gob-zona { position: relative; width: 100%; margin: 0; }
+
+/* Carrusel */
+.gob-carrusel { display: flex; gap: 1.5rem; padding: .5rem .5rem 1rem; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; -ms-overflow-style: none; }
+.gob-carrusel::-webkit-scrollbar { display: none; }
+.gob-slide { display: flex; flex: 0 0 88%; max-width: 1050px; margin: 0 auto; scroll-snap-align: center; }
+
+/* Tarjeta: foto a la izquierda, texto a la derecha */
+.gob-tarjeta { position: relative; flex: 1; display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: clamp(1rem, 2vw, 1.75rem); padding: clamp(.75rem, 1.4vh, 1.1rem); overflow: hidden; border-radius: 26px; background: linear-gradient(180deg, #fff 0%, #fbfdf7 100%); border: 1px solid rgba(23, 96, 58, .12); box-shadow: 0 2px 6px rgba(11, 46, 28, .05), 0 22px 40px -28px rgba(11, 46, 28, .55); transition: transform .5s cubic-bezier(.2, .7, .2, 1), box-shadow .5s ease; }
+.gob-tarjeta::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, var(--acento, var(--hoja)), var(--brote)); }
+.gob-tarjeta:hover { transform: translateY(-6px); box-shadow: 0 4px 10px rgba(11, 46, 28, .06), 0 32px 52px -28px rgba(11, 46, 28, .6); }
+.gob-foto { position: relative; height: clamp(150px, 26vh, 260px); border-radius: 20px; overflow: hidden; }
+.gob-foto img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .9s ease; }
+.gob-foto::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11, 46, 28, 0) 45%, rgba(11, 46, 28, .5) 100%); }
+.gob-tarjeta:hover .gob-foto img { transform: scale(1.06); }
+.gob-sello { position: absolute; top: 12px; right: 12px; z-index: 1; width: 46px; height: 46px; display: grid; place-items: center; border-radius: 50%; background: var(--acento, var(--hoja)); color: var(--icono, #fff); border: 3px solid #fff; box-shadow: 0 10px 20px -10px rgba(0, 0, 0, .55); transition: transform .5s cubic-bezier(.2, .7, .2, 1); }
+.gob-sello .gob-ico { width: 20px; height: 20px; }
+.gob-tarjeta:hover .gob-sello { transform: rotate(-8deg) scale(1.06); }
+.gob-cuerpo { min-width: 0; display: flex; flex-direction: column; text-align: start; }
+.gob-pastilla { align-self: flex-start; margin-bottom: .5rem; padding: 4px 12px; border-radius: 999px; background: #e6f2dc; color: var(--pino); font-size: .78rem; font-weight: 600; }
+.gob-titulo-tarjeta { margin: 0 0 .45rem; font-size: clamp(1.15rem, .95rem + .7vh, 1.5rem); line-height: 1.15; color: var(--bosque); }
+.gob-titulo-tarjeta::after { content: ""; display: block; width: 52px; height: 4px; margin-top: .5rem; border-radius: 4px; background: linear-gradient(90deg, var(--acento, var(--hoja)), var(--brote)); transition: width .5s ease; }
+.gob-tarjeta:hover .gob-titulo-tarjeta::after { width: 110px; }
+.gob-texto { margin: 0 0 .75rem; font-size: clamp(.86rem, .8rem + .2vh, .98rem); line-height: 1.5; color: var(--texto); }
+.gob-pie { margin-top: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .4rem .75rem; padding-top: .6rem; border-top: 1px dashed rgba(23, 96, 58, .22); font-size: .85rem; color: var(--gris); }
+.gob-rol { display: inline-flex; align-items: center; gap: 7px; min-width: 0; font-style: italic; }
+.gob-rol .gob-ico { width: 15px; height: 15px; color: var(--hoja); }
+.gob-area { font-weight: 600; color: var(--pino); white-space: nowrap; }
+
+/* Controles: anterior · progreso · siguiente, en una sola fila */
+.gob-controles { display: flex; align-items: center; justify-content: center; gap: clamp(.9rem, 2vw, 1.4rem); margin-top: clamp(.4rem, 1vh, .75rem); }
+.gob-progreso { flex: 0 1 300px; width: 100%; max-width: 300px; height: 4px; border-radius: 4px; background: rgba(23, 96, 58, .14); overflow: hidden; }
+.gob-progreso span { display: block; width: 100%; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--hoja), var(--brote)); transform-origin: left center; transform: scaleX(.2); }
+.gob-flecha { width: 44px; height: 44px; flex: 0 0 44px; display: grid; place-items: center; padding: 0; border: 1px solid rgba(23, 96, 58, .18); border-radius: 50%; background: #fff; color: var(--pino); box-shadow: 0 10px 22px -12px rgba(11, 46, 28, .55); cursor: pointer; transition: background-color .3s ease, color .3s ease, transform .3s ease, box-shadow .3s ease; }
+.gob-flecha .gob-ico { width: 18px; height: 18px; }
+.gob-flecha:hover { background: var(--pino); color: #fff; transform: translateY(-2px); box-shadow: 0 16px 28px -14px rgba(23, 96, 58, .8); }
+.gob-flecha:focus-visible { outline: 3px solid var(--brote); outline-offset: 3px; }
+
+/* Pantallas bajas: se reduce un poco más para que todo quepa */
+@media (max-height: 760px) and (min-width: 768px) {
+    .gob-foto { height: clamp(120px, 22vh, 200px); }
+    .gob-tarjeta { padding: .6rem; }
+    .gob-cab { margin-bottom: .7rem; }
+}
+
+/* Móvil: las tarjetas se apilan */
+@media (max-width: 767.98px) {
+    .gob { padding-top: calc(var(--ag-h, 4.25rem) + 1.5rem); min-height: auto; }
+    .gob-cab { margin-top: 0; }
+    .gob-titulo { font-size: clamp(1.7rem, 7vw, 2.2rem); }
+    .gob-tarjeta { grid-template-columns: 1fr; }
+    .gob-foto { height: clamp(140px, 24vh, 200px); }
+    .gob-carrusel { gap: 1rem; }
+}
+
+/* Animaciones ligadas al scroll (Chrome y Edge modernos) */
+@supports (animation-timeline: view()) {
+    .gob-zona { timeline-scope: --gob-pista; }
+    .gob-carrusel { scroll-timeline: --gob-pista inline; }
+    .gob-progreso span { animation: gob-llena linear both; animation-timeline: --gob-pista; }
+    .gob-rev { animation: gob-sube linear both; animation-timeline: view(); animation-range: entry 0% entry 45%; }
+    .gob-rev-2 { animation-range: entry 10% entry 55%; }
+    .gob-rev-3 { animation-range: entry 20% entry 65%; }
+    .gob-slide { animation: gob-entra linear both; animation-timeline: view(inline); animation-range: entry 0% entry 60%; }
+    .gob .gob-fondo-foto { animation: gob-deriva linear both; animation-timeline: view(); }
+}
+@keyframes gob-sube { from { opacity: 0; transform: translate3d(0, 48px, 0); } to { opacity: 1; transform: none; } }
+@keyframes gob-entra { from { opacity: .1; transform: translate3d(80px, 0, 0) scale(.95); } to { opacity: 1; transform: none; } }
+@keyframes gob-llena { from { transform: scaleX(.2); } to { transform: scaleX(1); } }
+@keyframes gob-deriva { from { transform: translate3d(0, -4%, 0); } to { transform: translate3d(0, 4%, 0); } }
+
+@media (prefers-reduced-motion: reduce) {
+    .gob-rev, .gob-slide, .gob-progreso span, .gob .gob-fondo-foto { animation: none !important; }
+    .gob-tarjeta, .gob-sello, .gob-foto img, .gob-flecha { transition: none !important; }
+}

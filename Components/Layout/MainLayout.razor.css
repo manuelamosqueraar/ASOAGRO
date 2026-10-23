@@ -140,9 +140,11 @@
 
 .ag-marca-texto strong {
     font-family: var(--ag-titulo);
-    font-size: 1.25rem;
+    font-size: clamp(1.5rem, 1.25rem + .7vw, 2.2rem);
     font-weight: 700;
     letter-spacing: .08em;
+    line-height: 1;
+    transform: translateY(-.2em);
 }
 
 .ag-marca-texto small {
@@ -316,36 +318,38 @@
     background: transparent;
 }
 
-/* ---------- Botón de iniciar sesión ---------- */
+/* ---------- Botón de iniciar sesión: contorno blanco ---------- */
 .ag-entrar {
     display: inline-flex;
     align-items: center;
     gap: .6rem;
     padding: .7rem 1.5rem;
-    border: 1px solid rgba(255, 255, 255, .35);
+    border: 1px solid #ffffff;
     border-radius: .9rem;
-    background: linear-gradient(135deg, var(--ag-brote) 0%, #9ed65e 100%);
-    color: var(--ag-bosque);
+    background: transparent;
+    color: #ffffff;
     font-family: var(--ag-ui);
     font-size: .95rem;
     font-weight: 700;
     letter-spacing: .02em;
     text-decoration: none;
-    box-shadow: 0 8px 18px -10px rgba(185, 231, 122, .9), inset 0 1px 0 rgba(255, 255, 255, .45);
-    transition: transform .2s ease, box-shadow .2s ease;
+    box-shadow: none;
+    transition: background-color .3s ease, color .3s ease, border-color .3s ease;
 }
 
 .ag-entrar .ag-ico {
     width: 18px;
     height: 18px;
-    color: var(--ag-bosque);
-    stroke: var(--ag-bosque);
+    color: #ffffff;
+    stroke: #ffffff;
     stroke-width: 2.2;
+    transition: color .3s ease, stroke .3s ease;
 }
 
 .ag-entrar:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 12px 22px -10px rgba(185, 231, 122, 1), inset 0 1px 0 rgba(255, 255, 255, .5);
+    background-color: rgba(255, 255, 255, .12);
+    color: #ffffff;
+    border-color: #ffffff;
 }
 
 .ag-entrar-bloque {
