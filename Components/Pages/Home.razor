@@ -29,7 +29,7 @@
     .ag-btn-pino { background: var(--pino); color: var(--papel); border: 1.5px solid var(--pino); transition: all .3s ease; }
     .ag-btn-pino:hover { background: var(--bosque); border-color: var(--bosque); color: var(--papel); transform: translateY(-3px); }
 
-/* ---------- 1. Hero: ocupa exactamente la pantalla y todo se ve ---------- */
+/* ---------- 1. Hero con video de fondo ---------- */
 .ag-hero {
     position: relative;
     display: flex;
@@ -42,16 +42,29 @@
     margin: 0;
     padding: calc(var(--ag-h, 4.25rem) + 1.5rem) 1.25rem clamp(2.5rem, 7vh, 4.5rem);
     overflow: hidden;
+    background-color: #051f10;
 }
 .ag-capa { position: absolute; top: -15%; bottom: -15%; left: 0; right: 0; z-index: 0; will-change: transform; }
 .ag-capa .parallax-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
 .ag-velo { position: absolute; inset: 0; z-index: 1; background: radial-gradient(60% 50% at 85% 12%, rgba(185, 231, 122, .22), transparent 70%), linear-gradient(180deg, rgba(5, 31, 16, .55), rgba(5, 31, 16, .85) 85%, #051f10); }
 .ag-velo-oscuro { background: linear-gradient(180deg, rgba(5, 31, 16, .78), rgba(5, 31, 16, .88)); }
+
+/* Video con sus colores naturales, sin tinte */
+.ag-hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; filter: brightness(1.05) contrast(1.04) saturate(.92); }
+
+/* Sombra solo en el centro para que el texto se lea. El verde queda en los bordes */
+.ag-hero-velo {
+    background:
+        radial-gradient(70% 55% at 50% 50%, rgba(0, 0, 0, .42) 0%, rgba(0, 0, 0, .18) 65%, transparent 100%),
+        linear-gradient(180deg, rgba(11, 46, 28, .7) 0%, rgba(11, 46, 28, 0) 18%),
+        linear-gradient(180deg, rgba(11, 46, 28, 0) 80%, rgba(11, 46, 28, .8) 100%);
+}
+
 .ag-hero-txt { position: relative; z-index: 2; width: 100%; will-change: transform; }
 .ag-entra { animation: ag-entra 1s cubic-bezier(.2, .7, .2, 1) both; animation-delay: var(--d, 0s); }
 @@keyframes ag-entra { from { opacity: 0; transform: translate3d(0, 28px, 0); } to { opacity: 1; transform: none; } }
 
-/* Botón único: rectangular, con esquinas suavemente redondeadas */
+/* Botón único */
 .ag-cta {
     border-radius: 12px !important;
     font-weight: 700;
@@ -225,18 +238,28 @@
     .ag-js .ag-visible .ag-brote-linea:nth-child(2) { transition-delay: .5s; }
     .ag-js .ag-visible .ag-brote-linea:nth-child(3) { transition-delay: .8s; }
 
-   
+    /* Asistente en la esquina inferior derecha del hero.
+       El hero empieza debajo del encabezado (4.25rem), así que se le suma esa altura
+       para que el botón quede dentro de la pantalla al entrar a la página. */
+    .ag-hero .asist {
+        position: absolute;
+        z-index: 5;
+        bottom: calc(var(--ag-h, 4.25rem) + clamp(16px, 2.5vw, 28px));
+    }
 </style>
- 
+
 <div class="ag-home">
     <div class="ag-progreso" data-progreso></div>
+
 
 <!-- ===== 1. HERO ===== -->
 <section class="hero-section hero-image position-relative text-white text-center ag-hero">
     <div class="ag-capa" data-parallax="0.4">
-        <div class="parallax-bg img-hero-1"></div>
+        <video class="ag-hero-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+            <source src="/videos/hero-asoagro.mp4" type="video/mp4" />
+        </video>
     </div>
-    <div class="ag-velo"></div>
+    <div class="ag-velo ag-hero-velo"></div>
 
     <div class="container px-3 ag-hero-txt" data-parallax="-0.1" data-desvanece>
         <p class="fw-bold mb-3 text-uppercase ag-entra ag-inter ag-sombra" style="--d: .2s; font-size: 1.25rem; letter-spacing: .12em; color: #e8c56b;">SISTEMA DE GESTIÓN Y GOBERNANZA</p>
@@ -246,6 +269,8 @@
             <button class="btn btn-lg px-5 py-3 ag-cta ag-inter" @onclick='() => NavegarA("registrar-asociado")'>Pruebe ASOAGRO gratis</button>
         </div>
     </div>
+
+    <ChatAsistente />
 </section>
 
 <!-- ===== 2. GOBERNANZA ===== -->
@@ -272,11 +297,11 @@
     </div>
 
     <div class="gob-contenido">
-        <div class="gob-cab gob-rev">
+    <div class="gob-cab gob-rev">
     <span class="gob-etiqueta ag-inter">Gobernanza y cumplimiento</span>
     <h2 class="ag-maname gob-titulo">Control oportuno de obligaciones y estatutos</h2>
-    <p class="ag-asap gob-subtitulo">Pilares fundamentales para mantener la elegibilidad y el crecimiento estructurado de las asociaciones.</p>
-    <p class="ag-asap gob-introduccion">Cada asociación de base enfrenta plazos legales, obligaciones fiscales y requisitos de gobierno interno que, si no se atienden a tiempo, pueden poner en riesgo su participación en convocatorias. Esta plataforma centraliza esos controles para que la directiva tenga siempre a la vista qué está al día, qué está por vencer y qué requiere acción.</p>
+    <p class="ag-asap gob-subtitulo">Pilares para mantener la elegibilidad y el crecimiento de las asociaciones.</p>
+    <p class="ag-asap gob-introduccion">Plazos legales, obligaciones fiscales y requisitos de gobierno que, sin atención oportuna, ponen en riesgo las convocatorias. La plataforma los centraliza para que cada directiva sepa qué está al día y qué requiere acción.</p>
 </div>
 
         <div class="gob-zona gob-rev gob-rev-2">
