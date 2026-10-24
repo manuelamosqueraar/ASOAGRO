@@ -1,8 +1,8 @@
 ﻿@page "/"
 @using Microsoft.JSInterop
 
-@inject IJSRuntime JS 
-@inject NavigationManager Navigation 
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
 
 <PageTitle>Inicio - Asoagro</PageTitle>
 
@@ -29,206 +29,205 @@
     .ag-btn-pino { background: var(--pino); color: var(--papel); border: 1.5px solid var(--pino); transition: all .3s ease; }
     .ag-btn-pino:hover { background: var(--bosque); border-color: var(--bosque); color: var(--papel); transform: translateY(-3px); }
 
-/* ---------- 1. Hero con video de fondo ---------- */
-.ag-hero {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-sizing: border-box;
-    width: 100%;
-    min-height: 100vh;
-    min-height: 100svh;
-    margin: 0;
-    padding: calc(var(--ag-h, 4.25rem) + 1.5rem) 1.25rem clamp(2.5rem, 7vh, 4.5rem);
-    overflow: hidden;
-    background-color: #051f10;
-}
-.ag-capa { position: absolute; top: -15%; bottom: -15%; left: 0; right: 0; z-index: 0; will-change: transform; }
-.ag-capa .parallax-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
-.ag-velo { position: absolute; inset: 0; z-index: 1; background: radial-gradient(60% 50% at 85% 12%, rgba(185, 231, 122, .22), transparent 70%), linear-gradient(180deg, rgba(5, 31, 16, .55), rgba(5, 31, 16, .85) 85%, #051f10); }
-.ag-velo-oscuro { background: linear-gradient(180deg, rgba(5, 31, 16, .78), rgba(5, 31, 16, .88)); }
+    /* ---------- 1. Hero con video de fondo ---------- */
+    .ag-hero {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 100vh;
+        min-height: 100svh;
+        margin: 0;
+        padding: calc(var(--ag-h, 4.25rem) + 1.5rem) 1.25rem clamp(2.5rem, 7vh, 4.5rem);
+        overflow: hidden;
+        background-color: #051f10;
+    }
+    .ag-capa { position: absolute; top: -15%; bottom: -15%; left: 0; right: 0; z-index: 0; will-change: transform; }
+    .ag-capa .parallax-bg { position: absolute; inset: 0; background-size: cover; background-position: center; }
+    .ag-velo { position: absolute; inset: 0; z-index: 1; background: radial-gradient(60% 50% at 85% 12%, rgba(185, 231, 122, .22), transparent 70%), linear-gradient(180deg, rgba(5, 31, 16, .55), rgba(5, 31, 16, .85) 85%, #051f10); }
+    .ag-velo-oscuro { background: linear-gradient(180deg, rgba(5, 31, 16, .78), rgba(5, 31, 16, .88)); }
 
-/* Video con sus colores naturales, sin tinte */
-.ag-hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; filter: brightness(1.05) contrast(1.04) saturate(.92); }
+    /* Video con sus colores naturales, sin tinte */
+    .ag-hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; filter: brightness(1.05) contrast(1.04) saturate(.92); }
 
-/* Sombra solo en el centro para que el texto se lea. El verde queda en los bordes */
-.ag-hero-velo {
-    background:
-        radial-gradient(70% 55% at 50% 50%, rgba(0, 0, 0, .42) 0%, rgba(0, 0, 0, .18) 65%, transparent 100%),
-        linear-gradient(180deg, rgba(11, 46, 28, .7) 0%, rgba(11, 46, 28, 0) 18%),
-        linear-gradient(180deg, rgba(11, 46, 28, 0) 80%, rgba(11, 46, 28, .8) 100%);
-}
+    /* Sombra solo en el centro para que el texto se lea. El verde queda en los bordes */
+    .ag-hero-velo {
+        background:
+            radial-gradient(70% 55% at 50% 50%, rgba(0, 0, 0, .42) 0%, rgba(0, 0, 0, .18) 65%, transparent 100%),
+            linear-gradient(180deg, rgba(11, 46, 28, .7) 0%, rgba(11, 46, 28, 0) 18%),
+            linear-gradient(180deg, rgba(11, 46, 28, 0) 80%, rgba(11, 46, 28, .8) 100%);
+    }
 
-.ag-hero-txt { position: relative; z-index: 2; width: 100%; will-change: transform; }
-.ag-entra { animation: ag-entra 1s cubic-bezier(.2, .7, .2, 1) both; animation-delay: var(--d, 0s); }
-@@keyframes ag-entra { from { opacity: 0; transform: translate3d(0, 28px, 0); } to { opacity: 1; transform: none; } }
+    .ag-hero-txt { position: relative; z-index: 2; width: 100%; will-change: transform; }
+    .ag-entra { animation: ag-entra 1s cubic-bezier(.2, .7, .2, 1) both; animation-delay: var(--d, 0s); }
+    @@keyframes ag-entra { from { opacity: 0; transform: translate3d(0, 28px, 0); } to { opacity: 1; transform: none; } }
 
-/* Botón único */
-.ag-cta {
-    border-radius: 12px !important;
-    font-weight: 700;
-    color: #fff;
-    background: rgba(242, 247, 236, .08);
-    border: 2px solid rgba(242, 247, 236, .85);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 14px 30px -16px rgba(0, 0, 0, .6);
-    transition: transform .3s ease, background-color .3s ease, color .3s ease, box-shadow .3s ease;
-}
-.ag-cta:hover { color: #0b2e1c; background: #fff; border-color: #fff; transform: translateY(-3px); box-shadow: 0 18px 34px -14px rgba(0, 0, 0, .5); }
-.ag-cta:focus-visible { outline: 3px solid #b9e77a; outline-offset: 4px; }
+    /* Botón único */
+    .ag-cta {
+        border-radius: 12px !important;
+        font-weight: 700;
+        color: #fff;
+        background: rgba(242, 247, 236, .08);
+        border: 2px solid rgba(242, 247, 236, .85);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        box-shadow: 0 14px 30px -16px rgba(0, 0, 0, .6);
+        transition: transform .3s ease, background-color .3s ease, color .3s ease, box-shadow .3s ease;
+    }
+    .ag-cta:hover { color: #0b2e1c; background: #fff; border-color: #fff; transform: translateY(-3px); box-shadow: 0 18px 34px -14px rgba(0, 0, 0, .5); }
+    .ag-cta:focus-visible { outline: 3px solid #b9e77a; outline-offset: 4px; }
 
+    /* ---------- 3. ARTICULACIÓN ---------- */
+    .art {
+        --bosque: #0b2e1c; --pino: #17603a; --hoja: #2e9a5b; --brote: #b9e77a; --trigo: #e8c56b;
+        --texto: #2e3d31; --tinta: #10261a; --gris: #66786b;
+        position: relative;
+        isolation: isolate;
+        overflow: clip;
+        box-sizing: border-box;
+        display: flex;
+        align-items: center;
+        width: 100%;
+        min-height: 100vh;
+        min-height: 100svh;
+        padding: calc(var(--ag-h, 4.25rem) + clamp(.75rem, 2.5vh, 2rem)) 0 clamp(.75rem, 2.5vh, 2rem);
+        background:
+            radial-gradient(55% 50% at 0% 0%, rgba(232, 197, 107, .16), transparent 70%),
+            radial-gradient(50% 46% at 100% 100%, rgba(185, 231, 122, .26), transparent 72%),
+            linear-gradient(180deg, #fbf8ee 0%, #f3f3e3 100%);
+    }
+    .art::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='220' viewBox='0 0 260 220'%3E%3Cg fill='none' stroke='%2317603a' stroke-opacity='.07' stroke-width='1.2'%3E%3Cpath d='M-10 44C40 14 90 76 140 46S220 12 270 40'/%3E%3Cpath d='M-10 118C40 88 90 150 140 120S220 86 270 114'/%3E%3Cpath d='M-10 192C40 162 90 224 140 194S220 160 270 188'/%3E%3C/g%3E%3C/svg%3E"); }
+    .art *, .art *::before, .art *::after { box-sizing: border-box; }
+    .art-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 
- /* ---------- 3. ARTICULACIÓN ---------- */
-.art {
-    --bosque: #0b2e1c; --pino: #17603a; --hoja: #2e9a5b; --brote: #b9e77a; --trigo: #e8c56b;
-    --texto: #2e3d31; --tinta: #10261a; --gris: #66786b;
-    position: relative;
-    isolation: isolate;
-    overflow: clip;
-    box-sizing: border-box;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    min-height: 100vh;
-    min-height: 100svh;
-    padding: calc(var(--ag-h, 4.25rem) + clamp(.75rem, 2.5vh, 2rem)) 0 clamp(.75rem, 2.5vh, 2rem);
-    background:
-        radial-gradient(55% 50% at 0% 0%, rgba(232, 197, 107, .16), transparent 70%),
-        radial-gradient(50% 46% at 100% 100%, rgba(185, 231, 122, .26), transparent 72%),
-        linear-gradient(180deg, #fbf8ee 0%, #f3f3e3 100%);
-}
-.art::before { content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='220' viewBox='0 0 260 220'%3E%3Cg fill='none' stroke='%2317603a' stroke-opacity='.07' stroke-width='1.2'%3E%3Cpath d='M-10 44C40 14 90 76 140 46S220 12 270 40'/%3E%3Cpath d='M-10 118C40 88 90 150 140 120S220 86 270 114'/%3E%3Cpath d='M-10 192C40 162 90 224 140 194S220 160 270 188'/%3E%3C/g%3E%3C/svg%3E"); }
-.art *, .art *::before, .art *::after { box-sizing: border-box; }
-.art-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+    /* Tipografía de toda la sección: con prioridad, para que ningún estilo global la reemplace */
+    .art h2, .art h3 { font-family: 'Maname', Georgia, serif !important; }
+    .art p, .art li, .art dd { font-family: 'Asap Sharp', system-ui, sans-serif !important; }
+    .art .art-ui, .art .art-eyebrow, .art dt, .art button, .art .art-pildora, .art .art-num, .art .art-estado, .art .art-sello-txt { font-family: 'Inter', system-ui, sans-serif !important; }
 
-/* Tipografía de toda la sección: con prioridad, para que ningún estilo global la reemplace */
-.art h2, .art h3 { font-family: 'Maname', Georgia, serif !important; }
-.art p, .art li, .art dd { font-family: 'Asap Sharp', system-ui, sans-serif !important; }
-.art .art-ui, .art .art-eyebrow, .art dt, .art button, .art .art-pildora, .art .art-num, .art .art-estado, .art .art-sello-txt { font-family: 'Inter', system-ui, sans-serif !important; }
+    /* Contenedor y rejilla */
+    .art-contenido { position: relative; z-index: 1; width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 clamp(1.25rem, 4vw, 3rem); }
+    .art-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1.75rem, 4vh, 2.75rem); align-items: center; }
+    .art-texto, .art-visual { min-width: 0; }
 
-/* Contenedor y rejilla */
-.art-contenido { position: relative; z-index: 1; width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 clamp(1.25rem, 4vw, 3rem); }
-.art-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(1.75rem, 4vh, 2.75rem); align-items: center; }
-.art-texto, .art-visual { min-width: 0; }
+    /* Visual: el escenario se escala con la altura de la pantalla, así siempre cabe */
+    .art-visual { display: flex; justify-content: center; align-items: center; container-type: inline-size; }
+    .art-stage {
+        --u: min(calc(100cqi / 600), calc(82svh / 680));
+        position: relative;
+        overflow: hidden;
+        width: calc(600 * var(--u));
+        height: calc(680 * var(--u));
+        border: 1px solid rgba(23, 96, 58, .08);
+        border-radius: calc(28 * var(--u));
+        background: radial-gradient(70% 55% at 22% 14%, rgba(255, 255, 255, .7), transparent 70%), linear-gradient(170deg, #f0ede2 0%, #e7e3d3 100%);
+        box-shadow: 0 calc(30 * var(--u)) calc(60 * var(--u)) calc(-40 * var(--u)) rgba(11, 46, 28, .45);
+    }
+    .art-ruta-svg, .art-puntos { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+    .art-ruta-svg { z-index: 1; }
+    .art-puntos { z-index: 3; }
+    .art-ruta { fill: none; stroke: var(--hoja); stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 9 10; animation: art-flujo 2.6s linear infinite; }
+    .art-punto { fill: var(--pino); stroke: #fff; stroke-width: 3; }
+    .art-halo { fill: none; stroke: var(--hoja); stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: art-pulso 2.8s ease-out infinite; }
+    .art-halo-2 { animation-delay: .9s; }
+    .art-halo-3 { animation-delay: 1.8s; }
+    .art-halo-4 { animation-delay: .45s; }
 
-/* Visual: el escenario se escala con la altura de la pantalla, así siempre cabe */
-.art-visual { display: flex; justify-content: center; align-items: center; container-type: inline-size; }
-.art-stage {
-    --u: min(calc(100cqi / 600), calc(82svh / 680));
-    position: relative;
-    overflow: hidden;
-    width: calc(600 * var(--u));
-    height: calc(680 * var(--u));
-    border: 1px solid rgba(23, 96, 58, .08);
-    border-radius: calc(28 * var(--u));
-    background: radial-gradient(70% 55% at 22% 14%, rgba(255, 255, 255, .7), transparent 70%), linear-gradient(170deg, #f0ede2 0%, #e7e3d3 100%);
-    box-shadow: 0 calc(30 * var(--u)) calc(60 * var(--u)) calc(-40 * var(--u)) rgba(11, 46, 28, .45);
-}
-.art-ruta-svg, .art-puntos { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
-.art-ruta-svg { z-index: 1; }
-.art-puntos { z-index: 3; }
-.art-ruta { fill: none; stroke: var(--hoja); stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 9 10; animation: art-flujo 2.6s linear infinite; }
-.art-punto { fill: var(--pino); stroke: #fff; stroke-width: 3; }
-.art-halo { fill: none; stroke: var(--hoja); stroke-width: 2; transform-box: fill-box; transform-origin: center; animation: art-pulso 2.8s ease-out infinite; }
-.art-halo-2 { animation-delay: .9s; }
-.art-halo-3 { animation-delay: 1.8s; }
-.art-halo-4 { animation-delay: .45s; }
+    /* Tarjetas: posiciones y medidas en la misma escala del escenario */
+    .art-card {
+        position: absolute;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: calc(11 * var(--u)) calc(16 * var(--u));
+        background: #fff;
+        border: 1px solid rgba(23, 96, 58, .1);
+        border-radius: calc(12 * var(--u));
+        box-shadow: 0 calc(8 * var(--u)) calc(20 * var(--u)) calc(-10 * var(--u)) rgba(11, 46, 28, .35), 0 1px 2px rgba(11, 46, 28, .06);
+    }
+    .art-c1 { left: calc(60 * var(--u)); top: calc(64 * var(--u)); width: calc(456 * var(--u)); height: calc(104 * var(--u)); }
+    .art-c2 { left: calc(60 * var(--u)); top: calc(214 * var(--u)); width: calc(456 * var(--u)); height: calc(112 * var(--u)); flex-direction: row; align-items: center; justify-content: flex-start; gap: calc(14 * var(--u)); padding-top: calc(10 * var(--u)); padding-bottom: calc(10 * var(--u)); }
+    .art-c3 { left: calc(76 * var(--u)); top: calc(370 * var(--u)); width: calc(456 * var(--u)); height: calc(104 * var(--u)); flex-direction: row; align-items: center; justify-content: flex-start; gap: calc(14 * var(--u)); padding-top: calc(8 * var(--u)); padding-bottom: calc(8 * var(--u)); }
+    .art-c4 { left: calc(76 * var(--u)); top: calc(508 * var(--u)); width: calc(456 * var(--u)); height: calc(124 * var(--u)); }
 
-/* Tarjetas: posiciones y medidas en la misma escala del escenario */
-.art-card {
-    position: absolute;
-    z-index: 2;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: calc(11 * var(--u)) calc(16 * var(--u));
-    background: #fff;
-    border: 1px solid rgba(23, 96, 58, .1);
-    border-radius: calc(12 * var(--u));
-    box-shadow: 0 calc(8 * var(--u)) calc(20 * var(--u)) calc(-10 * var(--u)) rgba(11, 46, 28, .35), 0 1px 2px rgba(11, 46, 28, .06);
-}
-.art-c1 { left: calc(60 * var(--u)); top: calc(64 * var(--u)); width: calc(456 * var(--u)); height: calc(104 * var(--u)); }
-.art-c2 { left: calc(60 * var(--u)); top: calc(214 * var(--u)); width: calc(456 * var(--u)); height: calc(112 * var(--u)); flex-direction: row; align-items: center; justify-content: flex-start; gap: calc(14 * var(--u)); padding-top: calc(10 * var(--u)); padding-bottom: calc(10 * var(--u)); }
-.art-c3 { left: calc(76 * var(--u)); top: calc(370 * var(--u)); width: calc(456 * var(--u)); height: calc(104 * var(--u)); flex-direction: row; align-items: center; justify-content: flex-start; gap: calc(14 * var(--u)); padding-top: calc(8 * var(--u)); padding-bottom: calc(8 * var(--u)); }
-.art-c4 { left: calc(76 * var(--u)); top: calc(508 * var(--u)); width: calc(456 * var(--u)); height: calc(124 * var(--u)); }
+    .art-cab { display: flex; align-items: center; justify-content: space-between; gap: calc(8 * var(--u)); min-width: 0; }
+    .art-card-titulo { margin: 0; min-width: 0; overflow: hidden; font-size: calc(15 * var(--u)); font-weight: 700; line-height: 1.2; color: var(--bosque); white-space: nowrap; text-overflow: ellipsis; }
+    .art-pildora { flex: 0 0 auto; display: inline-flex; align-items: center; gap: calc(5 * var(--u)); padding: calc(3 * var(--u)) calc(9 * var(--u)); border-radius: 999px; background: #e6f2dc; color: var(--pino); font-size: calc(10 * var(--u)); font-weight: 600; line-height: 1; white-space: nowrap; }
+    .art-pildora::before { content: ""; width: calc(6 * var(--u)); height: calc(6 * var(--u)); border-radius: 50%; background: currentColor; }
+    .art-pildora-ok { background: #e3f3d6; color: #1f6b3b; }
+    .art-pildora-ok::before { background: var(--hoja); }
+    .art-pildora-alerta { background: #f8efd2; color: #8a6412; }
+    .art-pildora-alerta::before { background: var(--trigo); }
 
-.art-cab { display: flex; align-items: center; justify-content: space-between; gap: calc(8 * var(--u)); min-width: 0; }
-.art-card-titulo { margin: 0; min-width: 0; overflow: hidden; font-size: calc(15 * var(--u)); font-weight: 700; line-height: 1.2; color: var(--bosque); white-space: nowrap; text-overflow: ellipsis; }
-.art-pildora { flex: 0 0 auto; display: inline-flex; align-items: center; gap: calc(5 * var(--u)); padding: calc(3 * var(--u)) calc(9 * var(--u)); border-radius: 999px; background: #e6f2dc; color: var(--pino); font-size: calc(10 * var(--u)); font-weight: 600; line-height: 1; white-space: nowrap; }
-.art-pildora::before { content: ""; width: calc(6 * var(--u)); height: calc(6 * var(--u)); border-radius: 50%; background: currentColor; }
-.art-pildora-ok { background: #e3f3d6; color: #1f6b3b; }
-.art-pildora-ok::before { background: var(--hoja); }
-.art-pildora-alerta { background: #f8efd2; color: #8a6412; }
-.art-pildora-alerta::before { background: var(--trigo); }
+    .art-datos { display: grid; gap: calc(3 * var(--u)); margin: calc(6 * var(--u)) 0 0; }
+    .art-datos > div { display: flex; align-items: center; justify-content: space-between; gap: calc(10 * var(--u)); min-width: 0; }
+    .art-datos dt { font-size: calc(10.5 * var(--u)); font-weight: 600; color: var(--gris); white-space: nowrap; }
+    .art-datos dd { margin: 0; font-size: calc(12 * var(--u)); line-height: 1.2; color: var(--tinta); text-align: right; }
+    .art-bloque { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: calc(6 * var(--u)); }
+    .art-bloque .art-datos { margin: 0; }
 
-.art-datos { display: grid; gap: calc(3 * var(--u)); margin: calc(6 * var(--u)) 0 0; }
-.art-datos > div { display: flex; align-items: center; justify-content: space-between; gap: calc(10 * var(--u)); min-width: 0; }
-.art-datos dt { font-size: calc(10.5 * var(--u)); font-weight: 600; color: var(--gris); white-space: nowrap; }
-.art-datos dd { margin: 0; font-size: calc(12 * var(--u)); line-height: 1.2; color: var(--tinta); text-align: right; }
-.art-bloque { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: calc(6 * var(--u)); }
-.art-bloque .art-datos { margin: 0; }
+    .art-thumb { display: block; flex: 0 0 auto; width: calc(120 * var(--u)); height: calc(84 * var(--u)); overflow: hidden; border-radius: calc(8 * var(--u)); }
+    .art-pasos { display: grid; gap: calc(4 * var(--u)); margin: 0; padding: 0; list-style: none; }
+    .art-pasos li { display: flex; align-items: center; gap: calc(8 * var(--u)); font-size: calc(11.5 * var(--u)); line-height: 1.2; color: var(--tinta); }
+    .art-num { flex: 0 0 auto; width: calc(15 * var(--u)); height: calc(15 * var(--u)); display: grid; place-items: center; border-radius: 50%; background: var(--pino); color: #fff; font-size: calc(9 * var(--u)); font-weight: 700; line-height: 1; }
 
-.art-thumb { display: block; flex: 0 0 auto; width: calc(120 * var(--u)); height: calc(84 * var(--u)); overflow: hidden; border-radius: calc(8 * var(--u)); }
-.art-pasos { display: grid; gap: calc(4 * var(--u)); margin: 0; padding: 0; list-style: none; }
-.art-pasos li { display: flex; align-items: center; gap: calc(8 * var(--u)); font-size: calc(11.5 * var(--u)); line-height: 1.2; color: var(--tinta); }
-.art-num { flex: 0 0 auto; width: calc(15 * var(--u)); height: calc(15 * var(--u)); display: grid; place-items: center; border-radius: 50%; background: var(--pino); color: #fff; font-size: calc(9 * var(--u)); font-weight: 700; line-height: 1; }
+    .art-sellos { display: flex; align-items: flex-start; gap: calc(20 * var(--u)); margin-top: calc(8 * var(--u)); }
+    .art-sello-item { display: grid; justify-items: center; gap: calc(4 * var(--u)); }
+    .art-sello { width: calc(30 * var(--u)); height: calc(30 * var(--u)); display: grid; place-items: center; border: calc(2 * var(--u)) solid var(--hoja); border-radius: 50%; background: #f3faef; color: var(--pino); }
+    .art-sello svg { width: 52%; height: 52%; }
+    .art-sello-txt { font-size: calc(9.5 * var(--u)); font-weight: 600; color: var(--gris); }
+    .art-estado { margin-top: auto; display: flex; align-items: center; gap: calc(7 * var(--u)); padding: calc(5 * var(--u)) calc(10 * var(--u)); border-radius: calc(8 * var(--u)); background: #e3f3d6; color: #1f6b3b; font-size: calc(10 * var(--u)); font-weight: 500; line-height: 1.3; }
+    .art-estado svg { width: calc(12 * var(--u)); height: calc(12 * var(--u)); flex: 0 0 auto; }
+    .art-sello svg, .art-estado svg, .art-marca svg { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
 
-.art-sellos { display: flex; align-items: flex-start; gap: calc(20 * var(--u)); margin-top: calc(8 * var(--u)); }
-.art-sello-item { display: grid; justify-items: center; gap: calc(4 * var(--u)); }
-.art-sello { width: calc(30 * var(--u)); height: calc(30 * var(--u)); display: grid; place-items: center; border: calc(2 * var(--u)) solid var(--hoja); border-radius: 50%; background: #f3faef; color: var(--pino); }
-.art-sello svg { width: 52%; height: 52%; }
-.art-sello-txt { font-size: calc(9.5 * var(--u)); font-weight: 600; color: var(--gris); }
-.art-estado { margin-top: auto; display: flex; align-items: center; gap: calc(7 * var(--u)); padding: calc(5 * var(--u)) calc(10 * var(--u)); border-radius: calc(8 * var(--u)); background: #e3f3d6; color: #1f6b3b; font-size: calc(10 * var(--u)); font-weight: 500; line-height: 1.3; }
-.art-estado svg { width: calc(12 * var(--u)); height: calc(12 * var(--u)); flex: 0 0 auto; }
-.art-sello svg, .art-estado svg, .art-marca svg { fill: none; stroke: currentColor; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+    /* Texto */
+    .art-eyebrow { margin: 0 0 clamp(.5rem, 1.2vh, .85rem); font-size: clamp(.95rem, 1.9vh, 1.1rem); font-weight: 600; letter-spacing: .01em; color: #2f7d48; }
+    .art-titulo { margin: 0 0 clamp(.75rem, 1.8vh, 1.1rem); font-size: clamp(1.9rem, 4.4vh, 3.1rem); font-weight: 700; line-height: 1.1; letter-spacing: -.01em; color: var(--bosque); }
+    .art-lead { max-width: 36rem; margin: 0 0 clamp(1rem, 2.4vh, 1.5rem); font-size: clamp(.95rem, 1.6vh, 1.12rem); line-height: 1.6; color: var(--texto); }
+    .art-lista { display: grid; gap: clamp(.6rem, 1.4vh, .9rem); margin: 0 0 clamp(1.25rem, 3vh, 2rem); padding: 0; list-style: none; }
+    .art-lista li { display: flex; align-items: flex-start; gap: 12px; font-size: clamp(.9rem, 1.45vh, 1.02rem); line-height: 1.5; color: var(--tinta); }
+    .art-marca { flex: 0 0 26px; width: 26px; height: 26px; margin-top: 1px; display: grid; place-items: center; border-radius: 50%; background: var(--pino); color: var(--brote); box-shadow: 0 6px 14px -8px rgba(23, 96, 58, .8); }
+    .art-marca svg { width: 13px; height: 13px; }
+    .art-boton { display: inline-flex; align-items: center; justify-content: center; min-height: clamp(44px, 6.2vh, 52px); padding: 0 clamp(1.5rem, 2.6vw, 2rem); border: 0; border-radius: 8px; background: var(--pino); color: #fff; font-size: clamp(.95rem, 1.5vh, 1.02rem); font-weight: 600; letter-spacing: .01em; cursor: pointer; box-shadow: 0 16px 28px -18px rgba(11, 46, 28, .9); transition: background-color .3s ease, transform .3s ease, box-shadow .3s ease; }
+    .art-boton:hover { background: var(--bosque); transform: translateY(-2px); box-shadow: 0 20px 32px -18px rgba(11, 46, 28, .95); }
+    .art-boton:focus-visible { outline: 3px solid var(--brote); outline-offset: 3px; }
 
-/* Texto */
-.art-eyebrow { margin: 0 0 clamp(.5rem, 1.2vh, .85rem); font-size: clamp(.95rem, 1.9vh, 1.1rem); font-weight: 600; letter-spacing: .01em; color: #2f7d48; }
-.art-titulo { margin: 0 0 clamp(.75rem, 1.8vh, 1.1rem); font-size: clamp(1.9rem, 4.4vh, 3.1rem); font-weight: 700; line-height: 1.1; letter-spacing: -.01em; color: var(--bosque); }
-.art-lead { max-width: 36rem; margin: 0 0 clamp(1rem, 2.4vh, 1.5rem); font-size: clamp(.95rem, 1.6vh, 1.12rem); line-height: 1.6; color: var(--texto); }
-.art-lista { display: grid; gap: clamp(.6rem, 1.4vh, .9rem); margin: 0 0 clamp(1.25rem, 3vh, 2rem); padding: 0; list-style: none; }
-.art-lista li { display: flex; align-items: flex-start; gap: 12px; font-size: clamp(.9rem, 1.45vh, 1.02rem); line-height: 1.5; color: var(--tinta); }
-.art-marca { flex: 0 0 26px; width: 26px; height: 26px; margin-top: 1px; display: grid; place-items: center; border-radius: 50%; background: var(--pino); color: var(--brote); box-shadow: 0 6px 14px -8px rgba(23, 96, 58, .8); }
-.art-marca svg { width: 13px; height: 13px; }
-.art-boton { display: inline-flex; align-items: center; justify-content: center; min-height: clamp(44px, 6.2vh, 52px); padding: 0 clamp(1.5rem, 2.6vw, 2rem); border: 0; border-radius: 8px; background: var(--pino); color: #fff; font-size: clamp(.95rem, 1.5vh, 1.02rem); font-weight: 600; letter-spacing: .01em; cursor: pointer; box-shadow: 0 16px 28px -18px rgba(11, 46, 28, .9); transition: background-color .3s ease, transform .3s ease, box-shadow .3s ease; }
-.art-boton:hover { background: var(--bosque); transform: translateY(-2px); box-shadow: 0 20px 32px -18px rgba(11, 46, 28, .95); }
-.art-boton:focus-visible { outline: 3px solid var(--brote); outline-offset: 3px; }
+    /* Responsive */
+    @@media (min-width: 992px) {
+        .art-grid { grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); gap: clamp(2.5rem, 4.5vw, 4.5rem); }
+    }
+    @@media (max-width: 991.98px) {
+        .art-stage { --u: min(calc(100cqi / 600), calc(60svh / 680)); }
+    }
+    @@media (max-width: 767.98px) {
+        .art-visual { display: none; }
+        .art-titulo { font-size: 2rem; }
+    }
 
-/* Responsive */
-@@media (min-width: 992px) {
-    .art-grid { grid-template-columns: minmax(0, 1.12fr) minmax(0, .88fr); gap: clamp(2.5rem, 4.5vw, 4.5rem); }
-}
-@@media (max-width: 991.98px) {
-    .art-stage { --u: min(calc(100cqi / 600), calc(60svh / 680)); }
-}
-@@media (max-width: 767.98px) {
-    .art-visual { display: none; }
-    .art-titulo { font-size: 2rem; }
-}
+    /* Animaciones al hacer scroll */
+    @@keyframes art-flujo { to { stroke-dashoffset: -19; } }
+    @@keyframes art-pulso { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(3.2); opacity: 0; } }
+    @@keyframes art-sube { from { opacity: 0; transform: translate3d(0, 36px, 0); } to { opacity: 1; transform: none; } }
+    @@keyframes art-entra { from { opacity: 0; transform: translate3d(36px, 10px, 0) scale(.97); } to { opacity: 1; transform: none; } }
 
-/* Animaciones al hacer scroll */
-@@keyframes art-flujo { to { stroke-dashoffset: -19; } }
-@@keyframes art-pulso { 0% { transform: scale(1); opacity: .9; } 100% { transform: scale(3.2); opacity: 0; } }
-@@keyframes art-sube { from { opacity: 0; transform: translate3d(0, 36px, 0); } to { opacity: 1; transform: none; } }
-@@keyframes art-entra { from { opacity: 0; transform: translate3d(36px, 10px, 0) scale(.97); } to { opacity: 1; transform: none; } }
-
-@@supports (animation-timeline: view()) {
-    .art-rev { animation: art-sube linear both; animation-timeline: view(); }
-    .art-carta { animation: art-entra linear both; animation-timeline: view(); }
-    .art-r1 { animation-range: entry 0% entry 40%; }
-    .art-r2 { animation-range: entry 6% entry 46%; }
-    .art-r3 { animation-range: entry 12% entry 52%; }
-    .art-r4 { animation-range: entry 18% entry 58%; }
-    .art-k1 { animation-range: entry 4% entry 42%; }
-    .art-k2 { animation-range: entry 12% entry 50%; }
-    .art-k3 { animation-range: entry 20% entry 58%; }
-    .art-k4 { animation-range: entry 28% entry 66%; }
-}
-@@media (prefers-reduced-motion: reduce) {
-    .art-rev, .art-carta, .art-ruta, .art-halo { animation: none !important; }
-}
+    @@supports (animation-timeline: view()) {
+        .art-rev { animation: art-sube linear both; animation-timeline: view(); }
+        .art-carta { animation: art-entra linear both; animation-timeline: view(); }
+        .art-r1 { animation-range: entry 0% entry 40%; }
+        .art-r2 { animation-range: entry 6% entry 46%; }
+        .art-r3 { animation-range: entry 12% entry 52%; }
+        .art-r4 { animation-range: entry 18% entry 58%; }
+        .art-k1 { animation-range: entry 4% entry 42%; }
+        .art-k2 { animation-range: entry 12% entry 50%; }
+        .art-k3 { animation-range: entry 20% entry 58%; }
+        .art-k4 { animation-range: entry 28% entry 66%; }
+    }
+    @@media (prefers-reduced-motion: reduce) {
+        .art-rev, .art-carta, .art-ruta, .art-halo { animation: none !important; }
+    }
 
     /* ---------- 4. Trazabilidad ---------- */
     .ag-brote { display: block; width: 72px; height: 72px; margin: 0 auto .75rem; }
@@ -251,286 +250,284 @@
 <div class="ag-home">
     <div class="ag-progreso" data-progreso></div>
 
-
-<!-- ===== 1. HERO ===== -->
-<section class="hero-section hero-image position-relative text-white text-center ag-hero">
-    <div class="ag-capa" data-parallax="0.4">
-        <video class="ag-hero-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
-            <source src="/videos/hero-asoagro.mp4" type="video/mp4" />
-        </video>
-    </div>
-    <div class="ag-velo ag-hero-velo"></div>
-
-    <div class="container px-3 ag-hero-txt" data-parallax="-0.1" data-desvanece>
-        <p class="fw-bold mb-3 text-uppercase ag-entra ag-inter ag-sombra" style="--d: .2s; font-size: 1.25rem; letter-spacing: .12em; color: #e8c56b;">SISTEMA DE GESTIÓN Y GOBERNANZA</p>
-        <h1 class="display-3 fw-bold mb-4 text-white ag-maname ag-entra ag-sombra" style="--d: .35s; letter-spacing: -0.01em;">La Plataforma Líder de Gestión y Gobernanza para el Agro del Urabá</h1>
-        <p class="lead mb-5 mx-auto text-light ag-asap ag-entra" style="--d: .55s; max-width: 800px; font-size: 1.35rem; opacity: .92;">Simplifica y articula cada aspecto de tus asociaciones de base, desde la administración, legalidad y gobernanza hasta la gestión de asociados y el acceso a financiamiento, todo centralizado en una sola plataforma integrada.</p>
-        <div class="d-flex justify-content-center ag-entra" style="--d: .75s;">
-            <button class="btn btn-lg px-5 py-3 ag-cta ag-inter" @onclick='() => NavegarA("registrar-asociado")'>Pruebe ASOAGRO gratis</button>
+    <!-- ===== 1. HERO ===== -->
+    <section class="hero-section hero-image position-relative text-white text-center ag-hero">
+        <div class="ag-capa" data-parallax="0.4">
+            <video class="ag-hero-video" autoplay muted loop playsinline preload="auto" aria-hidden="true">
+                <source src="/videos/hero-asoagro.mp4" type="video/mp4" />
+            </video>
         </div>
-    </div>
+        <div class="ag-velo ag-hero-velo"></div>
 
-    <ChatAsistente />
-</section>
-
-<!-- ===== 2. GOBERNANZA ===== -->
-<section id="gobernanza" class="gob">
-
-    <svg class="gob-sprite" aria-hidden="true" focusable="false">
-        <defs>
-            <symbol id="gob-calendario" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4" /></symbol>
-            <symbol id="gob-recibo" viewBox="0 0 24 24"><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 3 2V2l-3 2-3-2-3 2-3-2-3 2z" /><path d="M8 8h8M8 12h8M8 16h5" /></symbol>
-            <symbol id="gob-red" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5" /><circle cx="5" cy="18" r="2.5" /><circle cx="19" cy="18" r="2.5" /><path d="M12 7.5v4M12 11.5l-5 4M12 11.5l5 4" /></symbol>
-            <symbol id="gob-mapa" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" /><path d="M9 4v14M15 6v14" /></symbol>
-            <symbol id="gob-grafico" viewBox="0 0 24 24"><path d="M3 3v18h18" /><path d="M7 15l4-4 3 3 5-6" /></symbol>
-            <symbol id="gob-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></symbol>
-            <symbol id="gob-izq" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" /></symbol>
-            <symbol id="gob-der" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" /></symbol>
-        </defs>
-    </svg>
-
-    <!-- Fondo: fotografía de cultivos suavizada con la paleta de la marca -->
-    <div class="gob-fondo" aria-hidden="true">
-        <div class="gob-fondo-foto img-trazabilidad"></div>
-        <div class="gob-fondo-velo"></div>
-        <div class="gob-fondo-luz"></div>
-    </div>
-
-    <div class="gob-contenido">
-    <div class="gob-cab gob-rev">
-    <span class="gob-etiqueta ag-inter">Gobernanza y cumplimiento</span>
-    <h2 class="ag-maname gob-titulo">Control oportuno de obligaciones y estatutos</h2>
-    <p class="ag-asap gob-subtitulo">Pilares para mantener la elegibilidad y el crecimiento de las asociaciones.</p>
-    <p class="ag-asap gob-introduccion">Plazos legales, obligaciones fiscales y requisitos de gobierno que, sin atención oportuna, ponen en riesgo las convocatorias. La plataforma los centraliza para que cada directiva sepa qué está al día y qué requiere acción.</p>
-</div>
-
-        <div class="gob-zona gob-rev gob-rev-2">
-            <div id="carruselGobernanza" class="gob-carrusel">
-
-                <div class="gob-slide" style="--acento: #2e9a5b; --icono: #ffffff;">
-                    <article class="gob-tarjeta">
-                        <div class="gob-foto">
-                            <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=900&q=80" alt="Asambleas" />
-                            <span class="gob-sello"><svg class="gob-ico"><use href="#gob-calendario" /></svg></span>
-                        </div>
-                        <div class="gob-cuerpo">
-                            <span class="gob-pastilla ag-inter">Componente Estatutario</span>
-                            <h3 class="gob-titulo-tarjeta ag-maname">Asambleas al Día</h3>
-                            <p class="gob-texto ag-asap">Seguimiento automatizado y oportuno de las fechas límite para la renovación de juntas directivas, actas estatutarias y verificación de quórum legal requerido en cada asociación de base.</p>
-                            <div class="gob-pie ag-inter">
-                                <span class="gob-rol"><svg class="gob-ico"><use href="#gob-usuario" /></svg>Dirección Ejecutiva y Secretaría</span>
-                                <span class="gob-area">FAAUA</span>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-
-                <div class="gob-slide" style="--acento: #e8c56b; --icono: #0b2e1c;">
-                    <article class="gob-tarjeta">
-                        <div class="gob-foto">
-                            <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=900&q=80" alt="Obligaciones Tributarias" />
-                            <span class="gob-sello"><svg class="gob-ico"><use href="#gob-recibo" /></svg></span>
-                        </div>
-                        <div class="gob-cuerpo">
-                            <span class="gob-pastilla ag-inter">Componente Fiscal</span>
-                            <h3 class="gob-titulo-tarjeta ag-maname">Obligaciones Tributarias</h3>
-                            <p class="gob-texto ag-asap">Control preventivo de requisitos fiscales, declaraciones y presentación de informes para evitar sanciones o la pérdida de beneficios gremiales clave en las convocatorias.</p>
-                            <div class="gob-pie ag-inter">
-                                <span class="gob-rol"><svg class="gob-ico"><use href="#gob-usuario" /></svg>Área Financiera y Tesorería</span>
-                                <span class="gob-area">Urabá Antioqueño</span>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-
-                <div class="gob-slide" style="--acento: #17603a; --icono: #ffffff;">
-                    <article class="gob-tarjeta">
-                        <div class="gob-foto">
-                            <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=900&q=80" alt="Gobernanza Interna" />
-                            <span class="gob-sello"><svg class="gob-ico"><use href="#gob-red" /></svg></span>
-                        </div>
-                        <div class="gob-cuerpo">
-                            <span class="gob-pastilla ag-inter">Red de Asociaciones</span>
-                            <h3 class="gob-titulo-tarjeta ag-maname">Gobernanza Interna</h3>
-                            <p class="gob-texto ag-asap">Articulación directa y fluida entre la directiva central de la FAAUA y las juntas locales que administran las 37 asociaciones de base de la región.</p>
-                            <div class="gob-pie ag-inter">
-                                <span class="gob-rol"><svg class="gob-ico"><use href="#gob-usuario" /></svg>Coordinación Gremial</span>
-                                <span class="gob-area">FAAUA</span>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-
-                <div class="gob-slide" style="--acento: #b9e77a; --icono: #0b2e1c;">
-                    <article class="gob-tarjeta">
-                        <div class="gob-foto">
-                            <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=900&q=80" alt="Gestión de Activos" />
-                            <span class="gob-sello"><svg class="gob-ico"><use href="#gob-mapa" /></svg></span>
-                        </div>
-                        <div class="gob-cuerpo">
-                            <span class="gob-pastilla ag-inter">Inventario Regional</span>
-                            <h3 class="gob-titulo-tarjeta ag-maname">Gestión de Activos y Fincas</h3>
-                            <p class="gob-texto ag-asap">Registro detallado de predios, maquinaria, infraestructura productiva e insumos adjudicados a cada asociación para garantizar transparencia y control de recursos.</p>
-                            <div class="gob-pie ag-inter">
-                                <span class="gob-rol"><svg class="gob-ico"><use href="#gob-usuario" /></svg>Logística y Operaciones</span>
-                                <span class="gob-area">FAAUA</span>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-
-                <div class="gob-slide" style="--acento: #0b2e1c; --icono: #ffffff;">
-                    <article class="gob-tarjeta">
-                        <div class="gob-foto">
-                            <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=900&q=80" alt="Auditoría y Reportes" />
-                            <span class="gob-sello"><svg class="gob-ico"><use href="#gob-grafico" /></svg></span>
-                        </div>
-                        <div class="gob-cuerpo">
-                            <span class="gob-pastilla ag-inter">Transparencia</span>
-                            <h3 class="gob-titulo-tarjeta ag-maname">Auditoría y Reportes</h3>
-                            <p class="gob-texto ag-asap">Generación automática de informes de gestión transparentes y tableros de control listos para ser presentados ante entidades de control, aliados estratégicos y cooperantes.</p>
-                            <div class="gob-pie ag-inter">
-                                <span class="gob-rol"><svg class="gob-ico"><use href="#gob-usuario" /></svg>Dirección de Proyectos</span>
-                                <span class="gob-area">Urabá</span>
-                            </div>
-                        </div>
-                    </article>
-                </div>
-
-            </div>
-
-            <div class="gob-controles gob-rev gob-rev-3">
-                <button type="button" class="gob-flecha" aria-label="Pilar anterior" onclick="const c = this.closest('.gob-zona').querySelector('.gob-carrusel'); c.scrollBy({ left: -c.clientWidth * 0.9, behavior: 'smooth' });"><svg class="gob-ico"><use href="#gob-izq" /></svg></button>
-                <div class="gob-progreso" aria-hidden="true"><span></span></div>
-                <button type="button" class="gob-flecha" aria-label="Pilar siguiente" onclick="const c = this.closest('.gob-zona').querySelector('.gob-carrusel'); c.scrollBy({ left: c.clientWidth * 0.9, behavior: 'smooth' });"><svg class="gob-ico"><use href="#gob-der" /></svg></button>
+        <div class="container px-3 ag-hero-txt" data-parallax="-0.1" data-desvanece>
+            <p class="fw-bold mb-3 text-uppercase ag-entra ag-inter ag-sombra" style="--d: .2s; font-size: 1.25rem; letter-spacing: .12em; color: #e8c56b;">SISTEMA DE GESTIÓN Y GOBERNANZA</p>
+            <h1 class="display-3 fw-bold mb-4 text-white ag-maname ag-entra ag-sombra" style="--d: .35s; letter-spacing: -0.01em;">La Plataforma Líder de Gestión y Gobernanza para el Agro del Urabá</h1>
+            <p class="lead mb-5 mx-auto text-light ag-asap ag-entra" style="--d: .55s; max-width: 800px; font-size: 1.35rem; opacity: .92;">Simplifica y articula cada aspecto de tus asociaciones de base, desde la administración, legalidad y gobernanza hasta la gestión de asociados y el acceso a financiamiento, todo centralizado en una sola plataforma integrada.</p>
+            <div class="d-flex justify-content-center ag-entra" style="--d: .75s;">
+                <button class="btn btn-lg px-5 py-3 ag-cta ag-inter" @onclick='() => NavegarA("registrar-asociado")'>Pruebe ASOAGRO gratis</button>
             </div>
         </div>
-    </div>
-</section>
 
+        <ChatAsistente />
+    </section>
 
-<!-- ===== 3. ARTICULACIÓN ===== -->
-<section class="art">
+    <!-- ===== 2. GOBERNANZA ===== -->
+    <section id="gobernanza" class="gob">
 
-    <svg class="art-sprite" aria-hidden="true" focusable="false">
-        <defs>
-            <symbol id="art-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" /></symbol>
-        </defs>
-    </svg>
+        <svg class="gob-sprite" aria-hidden="true" focusable="false">
+            <defs>
+                <symbol id="gob-calendario" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18M9 16l2 2 4-4" /></symbol>
+                <symbol id="gob-recibo" viewBox="0 0 24 24"><path d="M4 2v20l3-2 3 2 3-2 3 2 3-2 3 2V2l-3 2-3-2-3 2-3-2-3 2z" /><path d="M8 8h8M8 12h8M8 16h5" /></symbol>
+                <symbol id="gob-red" viewBox="0 0 24 24"><circle cx="12" cy="5" r="2.5" /><circle cx="5" cy="18" r="2.5" /><circle cx="19" cy="18" r="2.5" /><path d="M12 7.5v4M12 11.5l-5 4M12 11.5l5 4" /></symbol>
+                <symbol id="gob-mapa" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" /><path d="M9 4v14M15 6v14" /></symbol>
+                <symbol id="gob-grafico" viewBox="0 0 24 24"><path d="M3 3v18h18" /><path d="M7 15l4-4 3 3 5-6" /></symbol>
+                <symbol id="gob-usuario" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></symbol>
+                <symbol id="gob-izq" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6" /></symbol>
+                <symbol id="gob-der" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6" /></symbol>
+            </defs>
+        </svg>
 
-    <div class="art-contenido">
-        <div class="art-grid">
+        <!-- Fondo: fotografía de cultivos suavizada con la paleta de la marca -->
+        <div class="gob-fondo" aria-hidden="true">
+            <div class="gob-fondo-foto img-trazabilidad"></div>
+            <div class="gob-fondo-velo"></div>
+            <div class="gob-fondo-luz"></div>
+        </div>
 
-            <div class="art-visual art-rev art-r1">
-                <div class="art-stage" role="img" aria-label="Directorio federado: registro del asociado, finca y predio, juntas directivas y cumplimiento normativo, unidos por una ruta de trazabilidad">
+        <div class="gob-contenido">
+            <div class="gob-cab gob-rev">
+                <span class="gob-etiqueta ag-inter">Gobernanza y cumplimiento</span>
+                <h2 class="ag-maname gob-titulo">Control oportuno de obligaciones y estatutos</h2>
+                <p class="ag-asap gob-subtitulo">Pilares para mantener la elegibilidad y el crecimiento de las asociaciones.</p>
+                <p class="ag-asap gob-introduccion">Plazos legales, obligaciones fiscales y requisitos de gobierno que, sin atención oportuna, ponen en riesgo las convocatorias. La plataforma los centraliza para que cada directiva sepa qué está al día y qué requiere acción.</p>
+            </div>
 
-                    <svg class="art-ruta-svg" viewBox="0 0 600 680" aria-hidden="true" focusable="false">
-                        <path class="art-ruta" d="M470 64C506 24 588 36 574 120S552 236 536 262C548 302 520 348 476 348L150 348C138 348 132 356 130 370C130 412 130 452 130 491L430 491C466 491 486 498 494 508" />
-                    </svg>
+            <div class="gob-zona gob-rev gob-rev-2">
+                <div id="carruselGobernanza" class="gob-carrusel">
 
-                    <article class="art-card art-c1 art-carta art-k1">
-                        <header class="art-cab">
-                            <h3 class="art-card-titulo">Registro del asociado</h3>
-                            <span class="art-pildora art-pildora-ok">Verificado</span>
-                        </header>
-                        <dl class="art-datos">
-                            <div><dt>Asociación</dt><dd>Vereda El Tres</dd></div>
-                            <div><dt>Línea productiva</dt><dd>Plátano y cacao</dd></div>
-                            <div><dt>Documento</dt><dd>Cédula verificada</dd></div>
-                        </dl>
-                    </article>
+                    <div class="gob-slide" style="--acento: #2e9a5b; --icono: #ffffff;">
+                        <article class="gob-tarjeta">
+                            <div class="gob-foto">
+                                <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=900&q=80" alt="Asambleas" />
+                                <span class="gob-sello"><svg class="gob-ico"><use href="#gob-calendario" /></svg></span>
+                            </div>
+                            <div class="gob-cuerpo">
+                                <span class="gob-pastilla ag-inter">Componente Estatutario</span>
+                                <h3 class="gob-titulo-tarjeta ag-maname">Asambleas al Día</h3>
+                                <p class="gob-texto ag-asap">Seguimiento automatizado y oportuno de las fechas límite para la renovación de juntas directivas, actas estatutarias y verificación de quórum legal requerido en cada asociación de base.</p>
+                                <div class="gob-pie ag-inter">
+                                    <span class="gob-rol"><svg class="gob-ico"><use href="#gob-usuario" /></svg>Dirección Ejecutiva y Secretaría</span>
+                                    <span class="gob-area">FAAUA</span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
 
-                    <article class="art-card art-c2 art-carta art-k2">
-                        <svg class="art-thumb" viewBox="0 0 120 84" aria-hidden="true" focusable="false">
-                            <rect width="120" height="84" fill="#eef4e7" />
-                            <polygon points="6,8 58,6 62,40 8,42" fill="#2e9a5b" />
-                            <polygon points="66,6 114,8 112,42 62,40" fill="#17603a" />
-                            <polygon points="8,46 62,44 64,78 10,80" fill="#b9e77a" fill-opacity=".75" />
-                            <polygon points="66,46 112,44 110,78 64,80" fill="#e8c56b" fill-opacity=".85" />
-                            <path d="M30 26C44 34 60 34 88 60" fill="none" stroke="#fff" stroke-width="1.6" stroke-dasharray="3 3" />
-                            <circle cx="30" cy="26" r="4" fill="#fff" stroke="#0b2e1c" stroke-width="2" />
-                            <circle cx="88" cy="60" r="4" fill="#fff" stroke="#0b2e1c" stroke-width="2" />
+                    <div class="gob-slide" style="--acento: #e8c56b; --icono: #0b2e1c;">
+                        <article class="gob-tarjeta">
+                            <div class="gob-foto">
+                                <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=900&q=80" alt="Obligaciones Tributarias" />
+                                <span class="gob-sello"><svg class="gob-ico"><use href="#gob-recibo" /></svg></span>
+                            </div>
+                            <div class="gob-cuerpo">
+                                <span class="gob-pastilla ag-inter">Componente Fiscal</span>
+                                <h3 class="gob-titulo-tarjeta ag-maname">Obligaciones Tributarias</h3>
+                                <p class="gob-texto ag-asap">Control preventivo de requisitos fiscales, declaraciones y presentación de informes para evitar sanciones o la pérdida de beneficios gremiales clave en las convocatorias.</p>
+                                <div class="gob-pie ag-inter">
+                                    <span class="gob-rol"><svg class="gob-ico"><use href="#gob-usuario" /></svg>Área Financiera y Tesorería</span>
+                                    <span class="gob-area">Urabá Antioqueño</span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="gob-slide" style="--acento: #17603a; --icono: #ffffff;">
+                        <article class="gob-tarjeta">
+                            <div class="gob-foto">
+                                <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=900&q=80" alt="Gobernanza Interna" />
+                                <span class="gob-sello"><svg class="gob-ico"><use href="#gob-red" /></svg></span>
+                            </div>
+                            <div class="gob-cuerpo">
+                                <span class="gob-pastilla ag-inter">Red de Asociaciones</span>
+                                <h3 class="gob-titulo-tarjeta ag-maname">Gobernanza Interna</h3>
+                                <p class="gob-texto ag-asap">Articulación directa y fluida entre la directiva central de la FAAUA y las juntas locales que administran las 37 asociaciones de base de la región.</p>
+                                <div class="gob-pie ag-inter">
+                                    <span class="gob-rol"><svg class="gob-ico"><use href="#gob-usuario" /></svg>Coordinación Gremial</span>
+                                    <span class="gob-area">FAAUA</span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="gob-slide" style="--acento: #b9e77a; --icono: #0b2e1c;">
+                        <article class="gob-tarjeta">
+                            <div class="gob-foto">
+                                <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&w=900&q=80" alt="Gestión de Activos" />
+                                <span class="gob-sello"><svg class="gob-ico"><use href="#gob-mapa" /></svg></span>
+                            </div>
+                            <div class="gob-cuerpo">
+                                <span class="gob-pastilla ag-inter">Inventario Regional</span>
+                                <h3 class="gob-titulo-tarjeta ag-maname">Gestión de Activos y Fincas</h3>
+                                <p class="gob-texto ag-asap">Registro detallado de predios, maquinaria, infraestructura productiva e insumos adjudicados a cada asociación para garantizar transparencia y control de recursos.</p>
+                                <div class="gob-pie ag-inter">
+                                    <span class="gob-rol"><svg class="gob-ico"><use href="#gob-usuario" /></svg>Logística y Operaciones</span>
+                                    <span class="gob-area">FAAUA</span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                    <div class="gob-slide" style="--acento: #0b2e1c; --icono: #ffffff;">
+                        <article class="gob-tarjeta">
+                            <div class="gob-foto">
+                                <img src="https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=900&q=80" alt="Auditoría y Reportes" />
+                                <span class="gob-sello"><svg class="gob-ico"><use href="#gob-grafico" /></svg></span>
+                            </div>
+                            <div class="gob-cuerpo">
+                                <span class="gob-pastilla ag-inter">Transparencia</span>
+                                <h3 class="gob-titulo-tarjeta ag-maname">Auditoría y Reportes</h3>
+                                <p class="gob-texto ag-asap">Generación automática de informes de gestión transparentes y tableros de control listos para ser presentados ante entidades de control, aliados estratégicos y cooperantes.</p>
+                                <div class="gob-pie ag-inter">
+                                    <span class="gob-rol"><svg class="gob-ico"><use href="#gob-usuario" /></svg>Dirección de Proyectos</span>
+                                    <span class="gob-area">Urabá</span>
+                                </div>
+                            </div>
+                        </article>
+                    </div>
+
+                </div>
+
+                <div class="gob-controles gob-rev gob-rev-3">
+                    <button type="button" class="gob-flecha" aria-label="Pilar anterior" onclick="const c = this.closest('.gob-zona').querySelector('.gob-carrusel'); c.scrollBy({ left: -c.clientWidth * 0.9, behavior: 'smooth' });"><svg class="gob-ico"><use href="#gob-izq" /></svg></button>
+                    <div class="gob-progreso" aria-hidden="true"><span></span></div>
+                    <button type="button" class="gob-flecha" aria-label="Pilar siguiente" onclick="const c = this.closest('.gob-zona').querySelector('.gob-carrusel'); c.scrollBy({ left: c.clientWidth * 0.9, behavior: 'smooth' });"><svg class="gob-ico"><use href="#gob-der" /></svg></button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== 3. ARTICULACIÓN ===== -->
+    <section class="art">
+
+        <svg class="art-sprite" aria-hidden="true" focusable="false">
+            <defs>
+                <symbol id="art-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" /></symbol>
+            </defs>
+        </svg>
+
+        <div class="art-contenido">
+            <div class="art-grid">
+
+                <div class="art-visual art-rev art-r1">
+                    <div class="art-stage" role="img" aria-label="Directorio federado: registro del asociado, finca y predio, juntas directivas y cumplimiento normativo, unidos por una ruta de trazabilidad">
+
+                        <svg class="art-ruta-svg" viewBox="0 0 600 680" aria-hidden="true" focusable="false">
+                            <path class="art-ruta" d="M470 64C506 24 588 36 574 120S552 236 536 262C548 302 520 348 476 348L150 348C138 348 132 356 130 370C130 412 130 452 130 491L430 491C466 491 486 498 494 508" />
                         </svg>
-                        <div class="art-bloque">
-                            <header class="art-cab">
-                                <h3 class="art-card-titulo">Finca y predio</h3>
-                                <span class="art-pildora">Trazable</span>
-                            </header>
-                            <ol class="art-pasos">
-                                <li><span class="art-num">1</span>Finca La Esperanza</li>
-                                <li><span class="art-num">2</span>Asociación Vereda El Tres</li>
-                                <li><span class="art-num">3</span>Federación FAAUA</li>
-                            </ol>
-                        </div>
-                    </article>
 
-                    <article class="art-card art-c3 art-carta art-k3">
-                        <svg class="art-thumb" viewBox="0 0 120 84" aria-hidden="true" focusable="false">
-                            <rect width="120" height="84" fill="#eef4e7" />
-                            <rect x="8" y="8" width="36" height="26" rx="5" fill="#d6e8c8" />
-                            <rect x="74" y="62" width="38" height="16" rx="5" fill="#d6e8c8" />
-                            <path d="M20 66C40 40 62 76 92 56" fill="none" stroke="#2e9a5b" stroke-width="2.4" stroke-linecap="round" />
-                            <circle cx="20" cy="66" r="4" fill="#17603a" />
-                            <path d="M92 56C84 46 80 38 80 32A12 12 0 0 1 104 32C104 38 100 46 92 56Z" fill="#e8c56b" stroke="#0b2e1c" stroke-width="1.6" />
-                            <circle cx="92" cy="32" r="3.5" fill="#0b2e1c" />
-                        </svg>
-                        <div class="art-bloque">
+                        <article class="art-card art-c1 art-carta art-k1">
                             <header class="art-cab">
-                                <h3 class="art-card-titulo">Juntas directivas</h3>
+                                <h3 class="art-card-titulo">Registro del asociado</h3>
+                                <span class="art-pildora art-pildora-ok">Verificado</span>
                             </header>
                             <dl class="art-datos">
-                                <div><dt>Presidencia</dt><dd><span class="art-pildora art-pildora-ok">Vigente</span></dd></div>
-                                <div><dt>Secretaría</dt><dd><span class="art-pildora art-pildora-alerta">Por renovar</span></dd></div>
-                                <div><dt>Próxima asamblea</dt><dd>5 de noviembre de 2026</dd></div>
+                                <div><dt>Asociación</dt><dd>Vereda El Tres</dd></div>
+                                <div><dt>Línea productiva</dt><dd>Plátano y cacao</dd></div>
+                                <div><dt>Documento</dt><dd>Cédula verificada</dd></div>
                             </dl>
-                        </div>
-                    </article>
+                        </article>
 
-                    <article class="art-card art-c4 art-carta art-k4">
-                        <header class="art-cab">
-                            <h3 class="art-card-titulo">Cumplimiento normativo</h3>
-                        </header>
-                        <div class="art-sellos">
-                            <div class="art-sello-item"><span class="art-sello"><svg viewBox="0 0 24 24"><use href="#art-check" /></svg></span><small class="art-sello-txt">Estatutos</small></div>
-                            <div class="art-sello-item"><span class="art-sello"><svg viewBox="0 0 24 24"><use href="#art-check" /></svg></span><small class="art-sello-txt">Asambleas</small></div>
-                            <div class="art-sello-item"><span class="art-sello"><svg viewBox="0 0 24 24"><use href="#art-check" /></svg></span><small class="art-sello-txt">Tributario</small></div>
-                        </div>
-                        <div class="art-estado">
-                            <svg viewBox="0 0 24 24"><use href="#art-check" /></svg>
-                            Última verificación: 30 de septiembre de 2026, sin observaciones
-                        </div>
-                    </article>
+                        <article class="art-card art-c2 art-carta art-k2">
+                            <svg class="art-thumb" viewBox="0 0 120 84" aria-hidden="true" focusable="false">
+                                <rect width="120" height="84" fill="#eef4e7" />
+                                <polygon points="6,8 58,6 62,40 8,42" fill="#2e9a5b" />
+                                <polygon points="66,6 114,8 112,42 62,40" fill="#17603a" />
+                                <polygon points="8,46 62,44 64,78 10,80" fill="#b9e77a" fill-opacity=".75" />
+                                <polygon points="66,46 112,44 110,78 64,80" fill="#e8c56b" fill-opacity=".85" />
+                                <path d="M30 26C44 34 60 34 88 60" fill="none" stroke="#fff" stroke-width="1.6" stroke-dasharray="3 3" />
+                                <circle cx="30" cy="26" r="4" fill="#fff" stroke="#0b2e1c" stroke-width="2" />
+                                <circle cx="88" cy="60" r="4" fill="#fff" stroke="#0b2e1c" stroke-width="2" />
+                            </svg>
+                            <div class="art-bloque">
+                                <header class="art-cab">
+                                    <h3 class="art-card-titulo">Finca y predio</h3>
+                                    <span class="art-pildora">Trazable</span>
+                                </header>
+                                <ol class="art-pasos">
+                                    <li><span class="art-num">1</span>Finca La Esperanza</li>
+                                    <li><span class="art-num">2</span>Asociación Vereda El Tres</li>
+                                    <li><span class="art-num">3</span>Federación FAAUA</li>
+                                </ol>
+                            </div>
+                        </article>
 
-                    <svg class="art-puntos" viewBox="0 0 600 680" aria-hidden="true" focusable="false">
-                        <circle class="art-halo" cx="470" cy="64" r="6" />
-                        <circle class="art-halo art-halo-2" cx="536" cy="262" r="6" />
-                        <circle class="art-halo art-halo-3" cx="130" cy="370" r="6" />
-                        <circle class="art-halo art-halo-4" cx="494" cy="508" r="6" />
-                        <circle class="art-punto" cx="470" cy="64" r="6" />
-                        <circle class="art-punto" cx="536" cy="262" r="6" />
-                        <circle class="art-punto" cx="130" cy="370" r="6" />
-                        <circle class="art-punto" cx="494" cy="508" r="6" />
-                    </svg>
+                        <article class="art-card art-c3 art-carta art-k3">
+                            <svg class="art-thumb" viewBox="0 0 120 84" aria-hidden="true" focusable="false">
+                                <rect width="120" height="84" fill="#eef4e7" />
+                                <rect x="8" y="8" width="36" height="26" rx="5" fill="#d6e8c8" />
+                                <rect x="74" y="62" width="38" height="16" rx="5" fill="#d6e8c8" />
+                                <path d="M20 66C40 40 62 76 92 56" fill="none" stroke="#2e9a5b" stroke-width="2.4" stroke-linecap="round" />
+                                <circle cx="20" cy="66" r="4" fill="#17603a" />
+                                <path d="M92 56C84 46 80 38 80 32A12 12 0 0 1 104 32C104 38 100 46 92 56Z" fill="#e8c56b" stroke="#0b2e1c" stroke-width="1.6" />
+                                <circle cx="92" cy="32" r="3.5" fill="#0b2e1c" />
+                            </svg>
+                            <div class="art-bloque">
+                                <header class="art-cab">
+                                    <h3 class="art-card-titulo">Juntas directivas</h3>
+                                </header>
+                                <dl class="art-datos">
+                                    <div><dt>Presidencia</dt><dd><span class="art-pildora art-pildora-ok">Vigente</span></dd></div>
+                                    <div><dt>Secretaría</dt><dd><span class="art-pildora art-pildora-alerta">Por renovar</span></dd></div>
+                                    <div><dt>Próxima asamblea</dt><dd>5 de noviembre de 2026</dd></div>
+                                </dl>
+                            </div>
+                        </article>
+
+                        <article class="art-card art-c4 art-carta art-k4">
+                            <header class="art-cab">
+                                <h3 class="art-card-titulo">Cumplimiento normativo</h3>
+                            </header>
+                            <div class="art-sellos">
+                                <div class="art-sello-item"><span class="art-sello"><svg viewBox="0 0 24 24"><use href="#art-check" /></svg></span><small class="art-sello-txt">Estatutos</small></div>
+                                <div class="art-sello-item"><span class="art-sello"><svg viewBox="0 0 24 24"><use href="#art-check" /></svg></span><small class="art-sello-txt">Asambleas</small></div>
+                                <div class="art-sello-item"><span class="art-sello"><svg viewBox="0 0 24 24"><use href="#art-check" /></svg></span><small class="art-sello-txt">Tributario</small></div>
+                            </div>
+                            <div class="art-estado">
+                                <svg viewBox="0 0 24 24"><use href="#art-check" /></svg>
+                                Última verificación: 30 de septiembre de 2026, sin observaciones
+                            </div>
+                        </article>
+
+                        <svg class="art-puntos" viewBox="0 0 600 680" aria-hidden="true" focusable="false">
+                            <circle class="art-halo" cx="470" cy="64" r="6" />
+                            <circle class="art-halo art-halo-2" cx="536" cy="262" r="6" />
+                            <circle class="art-halo art-halo-3" cx="130" cy="370" r="6" />
+                            <circle class="art-halo art-halo-4" cx="494" cy="508" r="6" />
+                            <circle class="art-punto" cx="470" cy="64" r="6" />
+                            <circle class="art-punto" cx="536" cy="262" r="6" />
+                            <circle class="art-punto" cx="130" cy="370" r="6" />
+                            <circle class="art-punto" cx="494" cy="508" r="6" />
+                        </svg>
+                    </div>
                 </div>
-            </div>
 
-            <div class="art-texto">
-                <p class="art-eyebrow art-ui art-rev art-r1">Articulación interasociativa</p>
-                <h2 class="art-titulo art-rev art-r2">Gestión Unificada de las Asociaciones de Base</h2>
-                <p class="art-lead art-rev art-r3">Resolvemos la desarticulación administrativa conectando los registros de productores, fincas y juntas directivas en un único directorio federado y confiable para toda la subregión.</p>
-                <ul class="art-lista art-rev art-r3">
-                    <li><span class="art-marca"><svg viewBox="0 0 24 24"><use href="#art-check" /></svg></span>Centralizamos la información crítica de cada organización gremial.</li>
-                    <li><span class="art-marca"><svg viewBox="0 0 24 24"><use href="#art-check" /></svg></span>Facilitamos el seguimiento a normativas vigentes en cada asociación.</li>
-                    <li><span class="art-marca"><svg viewBox="0 0 24 24"><use href="#art-check" /></svg></span>Optimizamos recursos operativos y garantizamos transparencia ante entidades aliadas y cooperantes.</li>
-                </ul>
-                <div class="art-rev art-r4">
-                    <button type="button" class="art-boton" @onclick='() => NavegarA("historia/origenes")'>Conocer Orígenes</button>
+                <div class="art-texto">
+                    <p class="art-eyebrow art-ui art-rev art-r1">Articulación interasociativa</p>
+                    <h2 class="art-titulo art-rev art-r2">Gestión Unificada de las Asociaciones de Base</h2>
+                    <p class="art-lead art-rev art-r3">Resolvemos la desarticulación administrativa conectando los registros de productores, fincas y juntas directivas en un único directorio federado y confiable para toda la subregión.</p>
+                    <ul class="art-lista art-rev art-r3">
+                        <li><span class="art-marca"><svg viewBox="0 0 24 24"><use href="#art-check" /></svg></span>Centralizamos la información crítica de cada organización gremial.</li>
+                        <li><span class="art-marca"><svg viewBox="0 0 24 24"><use href="#art-check" /></svg></span>Facilitamos el seguimiento a normativas vigentes en cada asociación.</li>
+                        <li><span class="art-marca"><svg viewBox="0 0 24 24"><use href="#art-check" /></svg></span>Optimizamos recursos operativos y garantizamos transparencia ante entidades aliadas y cooperantes.</li>
+                    </ul>
+                    <div class="art-rev art-r4">
+                        <button type="button" class="art-boton" @onclick='() => NavegarA("historia/origenes")'>Conocer Orígenes</button>
+                    </div>
                 </div>
-            </div>
 
+            </div>
         </div>
-    </div>
-</section>
+    </section>
 
     <!-- ===== 4. TRAZABILIDAD ===== -->
     <section class="hero-section hero-image position-relative d-flex align-items-center justify-content-center text-white text-center"
@@ -557,140 +554,139 @@
         </div>
     </section>
 
- <!-- ===== 5. FINANCIACIÓN ===== -->
-<section class="ag-fin" id="financiacion">
-    <div class="ag-fin-inner">
+    <!-- ===== 5. FINANCIACIÓN ===== -->
+    <section class="ag-fin" id="financiacion">
+        <div class="ag-fin-inner">
 
-        <div class="ag-fin-texto">
-            <span class="ag-fin-insignia" data-reveal>Núcleo estratégico</span>
+            <div class="ag-fin-texto">
+                <span class="ag-fin-insignia" data-reveal>Núcleo estratégico</span>
 
-            <h2 class="ag-fin-titulo" data-reveal style="--d: .1s;">
-                Acceso oportuno a fuentes de financiación
-            </h2>
+                <h2 class="ag-fin-titulo" data-reveal style="--d: .1s;">
+                    Acceso oportuno a fuentes de financiación
+                </h2>
 
-            <p class="ag-fin-descripcion" data-reveal style="--d: .2s;">
-                Evitamos que las asociaciones pierdan oportunidades de recursos externos por falta de registros listos o documentación desactualizada en convocatorias.
-            </p>
+                <p class="ag-fin-descripcion" data-reveal style="--d: .2s;">
+                    Evitamos que las asociaciones pierdan oportunidades de recursos externos por falta de registros listos o documentación desactualizada en convocatorias.
+                </p>
 
-            <div data-reveal style="--d: .3s;">
-                <button type="button" class="ag-fin-btn" @onclick='() => NavegarA("consultar-asociados")'>
-                    Revisar elegibilidad
-                    <svg class="ag-fin-flecha" aria-hidden="true"><use href="#ico-flecha" /></svg>
-                </button>
+                <div data-reveal style="--d: .3s;">
+                    <button type="button" class="ag-fin-btn" @onclick='() => NavegarA("consultar-asociados")'>
+                        Revisar elegibilidad
+                        <svg class="ag-fin-flecha" aria-hidden="true"><use href="#ico-flecha" /></svg>
+                    </button>
+                </div>
             </div>
+
+            <ul class="ag-fin-pilares" data-reveal="der" style="--d: .2s;">
+                <li class="ag-fin-pilar">
+                    <span class="ag-fin-pilar-ico"><svg aria-hidden="true"><use href="#ico-check" /></svg></span>
+                    <div>
+                        <h3>Registros listos</h3>
+                        <p>Expedientes completos antes de cada convocatoria.</p>
+                    </div>
+                </li>
+                <li class="ag-fin-pilar">
+                    <span class="ag-fin-pilar-ico"><svg aria-hidden="true"><use href="#ico-doc" /></svg></span>
+                    <div>
+                        <h3>Documentación al día</h3>
+                        <p>Estatutos, certificados y actas siempre vigentes.</p>
+                    </div>
+                </li>
+                <li class="ag-fin-pilar">
+                    <span class="ag-fin-pilar-ico"><svg aria-hidden="true"><use href="#ico-alerta" /></svg></span>
+                    <div>
+                        <h3>Sin oportunidades perdidas</h3>
+                        <p>Alertas a tiempo sobre plazos y vencimientos.</p>
+                    </div>
+                </li>
+            </ul>
+
         </div>
-
-        <ul class="ag-fin-pilares" data-reveal="der" style="--d: .2s;">
-            <li class="ag-fin-pilar">
-                <span class="ag-fin-pilar-ico"><svg aria-hidden="true"><use href="#ico-check" /></svg></span>
-                <div>
-                    <h3>Registros listos</h3>
-                    <p>Expedientes completos antes de cada convocatoria.</p>
-                </div>
-            </li>
-            <li class="ag-fin-pilar">
-                <span class="ag-fin-pilar-ico"><svg aria-hidden="true"><use href="#ico-doc" /></svg></span>
-                <div>
-                    <h3>Documentación al día</h3>
-                    <p>Estatutos, certificados y actas siempre vigentes.</p>
-                </div>
-            </li>
-            <li class="ag-fin-pilar">
-                <span class="ag-fin-pilar-ico"><svg aria-hidden="true"><use href="#ico-alerta" /></svg></span>
-                <div>
-                    <h3>Sin oportunidades perdidas</h3>
-                    <p>Alertas a tiempo sobre plazos y vencimientos.</p>
-                </div>
-            </li>
-        </ul>
-
-    </div>
-</section>
+    </section>
 
     <!-- ===== 6. FOOTER ===== -->
+    <footer class="ag-pie">
+        <div class="ag-pie-inner">
 
-   <footer class="ag-pie">
-    <div class="ag-pie-inner">
+            <div class="ag-pie-grid">
 
-        <div class="ag-pie-grid">
+                <!-- Marca -->
+                <div class="ag-pie-col" data-reveal>
+                    <div class="ag-pie-marca">
+                        <span class="ag-pie-marca-ico"><svg class="ag-ico"><use href="#ico-brote" /></svg></span>
+                        <strong>ASOAGRO</strong>
+                    </div>
+                    <p class="ag-pie-texto">Software de gestión agrícola y gobernanza. Digitaliza tus asociaciones: desde la administración y los estatutos hasta el control de asociados y los reportes oficiales.</p>
 
-            <!-- Marca -->
-            <div class="ag-pie-col" data-reveal>
-                <div class="ag-pie-marca">
-                    <span class="ag-pie-marca-ico"><svg class="ag-ico"><use href="#ico-brote" /></svg></span>
-                    <strong>ASOAGRO</strong>
+                    <div class="ag-pie-redes">
+                        <a href="https://facebook.com" target="_blank" rel="noopener" class="ag-social" aria-label="Facebook">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
+                        </a>
+                        <a href="https://instagram.com" target="_blank" rel="noopener" class="ag-social" aria-label="Instagram">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg>
+                        </a>
+                        <a href="https://whatsapp.com" target="_blank" rel="noopener" class="ag-social" aria-label="WhatsApp">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
+                        </a>
+                    </div>
                 </div>
-                <p class="ag-pie-texto">Software de gestión agrícola y gobernanza. Digitaliza tus asociaciones: desde la administración y los estatutos hasta el control de asociados y los reportes oficiales.</p>
 
-                <div class="ag-pie-redes">
-                    <a href="https://facebook.com" target="_blank" rel="noopener" class="ag-social" aria-label="Facebook">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" /></svg>
-                    </a>
-                    <a href="https://instagram.com" target="_blank" rel="noopener" class="ag-social" aria-label="Instagram">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg>
-                    </a>
-                    <a href="https://whatsapp.com" target="_blank" rel="noopener" class="ag-social" aria-label="WhatsApp">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" /></svg>
-                    </a>
+                <!-- Plataforma -->
+                <div class="ag-pie-col" data-reveal style="--d: .1s;">
+                    <h5 class="ag-pie-titulo">Plataforma</h5>
+                    <ul class="ag-pie-lista">
+                        <li><a href="/" class="ag-enlace-pie">Inicio</a></li>
+                        <li><a href="/historia/origenes" class="ag-enlace-pie">Orígenes y misión</a></li>
+                        <li><a href="/historia/impacto" class="ag-enlace-pie">Trazabilidad</a></li>
+                        <li><a href="/alertas-documentos" class="ag-enlace-pie">Alertas legales</a></li>
+                    </ul>
                 </div>
+
+                <!-- Módulos -->
+                <div class="ag-pie-col" data-reveal style="--d: .2s;">
+                    <h5 class="ag-pie-titulo">Módulos de gestión</h5>
+                    <ul class="ag-pie-lista">
+                        <li><a href="#" class="ag-enlace-pie">Red de asociaciones</a></li>
+                        <li><a href="#" class="ag-enlace-pie">Asambleas y quórum</a></li>
+                        <li><a href="#" class="ag-enlace-pie">Obligaciones y tributos</a></li>
+                        <li><a href="#" class="ag-enlace-pie">Inventario de fincas</a></li>
+                        <li><a href="#" class="ag-enlace-pie">Auditoría y transparencia</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contacto -->
+                <div class="ag-pie-col" data-reveal style="--d: .3s;">
+                    <h5 class="ag-pie-titulo">Contacto</h5>
+                    <ul class="ag-pie-contacto">
+                        <li>
+                            <span class="ag-pie-contacto-ico">
+                                <svg class="ag-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                            </span>
+                            <span>+57 300 123 4567</span>
+                        </li>
+                        <li>
+                            <span class="ag-pie-contacto-ico"><svg class="ag-ico"><use href="#ico-sobre" /></svg></span>
+                            <span>contacto@asoagro-uraba.org</span>
+                        </li>
+                        <li>
+                            <span class="ag-pie-contacto-ico">
+                                <svg class="ag-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+                            </span>
+                            <span>Centro Regional Piedrasblancas, Urabá Antioqueño, Colombia</span>
+                        </li>
+                    </ul>
+                </div>
+
             </div>
 
-            <!-- Plataforma -->
-            <div class="ag-pie-col" data-reveal style="--d: .1s;">
-                <h5 class="ag-pie-titulo">Plataforma</h5>
-                <ul class="ag-pie-lista">
-                    <li><a href="/" class="ag-enlace-pie">Inicio</a></li>
-                    <li><a href="/historia/origenes" class="ag-enlace-pie">Orígenes y misión</a></li>
-                    <li><a href="/historia/impacto" class="ag-enlace-pie">Trazabilidad</a></li>
-                    <li><a href="/alertas-documentos" class="ag-enlace-pie">Alertas legales</a></li>
-                </ul>
-            </div>
-
-            <!-- Módulos -->
-            <div class="ag-pie-col" data-reveal style="--d: .2s;">
-                <h5 class="ag-pie-titulo">Módulos de gestión</h5>
-                <ul class="ag-pie-lista">
-                    <li><a href="#" class="ag-enlace-pie">Red de asociaciones</a></li>
-                    <li><a href="#" class="ag-enlace-pie">Asambleas y quórum</a></li>
-                    <li><a href="#" class="ag-enlace-pie">Obligaciones y tributos</a></li>
-                    <li><a href="#" class="ag-enlace-pie">Inventario de fincas</a></li>
-                    <li><a href="#" class="ag-enlace-pie">Auditoría y transparencia</a></li>
-                </ul>
-            </div>
-
-            <!-- Contacto -->
-            <div class="ag-pie-col" data-reveal style="--d: .3s;">
-                <h5 class="ag-pie-titulo">Contacto</h5>
-                <ul class="ag-pie-contacto">
-                    <li>
-                        <span class="ag-pie-contacto-ico">
-                            <svg class="ag-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
-                        </span>
-                        <span>+57 300 123 4567</span>
-                    </li>
-                    <li>
-                        <span class="ag-pie-contacto-ico"><svg class="ag-ico"><use href="#ico-sobre" /></svg></span>
-                        <span>contacto@asoagro-uraba.org</span>
-                    </li>
-                    <li>
-                        <span class="ag-pie-contacto-ico">
-                            <svg class="ag-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
-                        </span>
-                        <span>Centro Regional Piedrasblancas, Urabá Antioqueño, Colombia</span>
-                    </li>
-                </ul>
+            <!-- Barra legal -->
+            <div class="ag-pie-legal">
+                <span>&copy; 2026 ASOAGRO. Todos los derechos reservados.</span>
+                <span>Desarrollado para la Federación de Asociaciones de Urabá.</span>
             </div>
 
         </div>
-
-        <!-- Barra legal -->
-        <div class="ag-pie-legal">
-            <span>&copy; 2026 ASOAGRO. Todos los derechos reservados.</span>
-            <span>Desarrollado para la Federación de Asociaciones de Urabá.</span>
-        </div>
-
-    </div>
-</footer>
+    </footer>
 </div>
 
 @code {
@@ -705,12 +701,10 @@
             await _modulo.InvokeVoidAsync("iniciar");
         }
         catch (JSException)
-        { 
+        {
             // Si el script no carga, la página se ve completa, solo sin animaciones.
         }
     }
-
-    
 
     private void NavegarA(string ruta) => Navigation.NavigateTo(ruta);
 }

@@ -47,7 +47,7 @@
                 <span class="ag-marca-icono"><svg class="ag-ico"><use href="#ico-brote" /></svg></span>
                 <span class="ag-marca-texto">
                     <strong>ASOAGRO</strong>
-                    
+
                 </span>
             </a>
 
@@ -102,6 +102,7 @@
                 <button class="ag-icono-btn ag-solo-movil" @onclick="ToggleMenuNavMovil" aria-label="Abrir menú">
                     <svg class="ag-ico"><use href="#ico-menu" /></svg>
                 </button>
+                <IdiomaSelector />
                 <a href="/login" class="ag-entrar">
                     <svg class="ag-ico"><use href="#ico-entrar" /></svg>
                     <span class="ag-texto-entrar">Iniciar sesión</span>
@@ -109,6 +110,7 @@
             }
             else
             {
+                <IdiomaSelector />
                 <div class="ag-desplegable">
                     <button class="ag-icono-btn" @onclick="ToggleNotificaciones" title="Centro de alertas" aria-label="Centro de alertas">
                         <svg class="ag-ico"><use href="#ico-campana" /></svg>
