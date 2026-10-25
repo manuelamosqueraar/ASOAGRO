@@ -272,10 +272,13 @@
         Navigation.LocationChanged += EnCambioDeRuta;
     }
 
+    // Páginas con encabezado público y sin barra lateral. Para sumar otra, agrégala a esta lista.
+        private static readonly string[] RutasPublicas = { "home", "historia/origenes", "historia/impacto" };
+
     private bool IsHomePage()
     {
-        var ruta = Navigation.ToBaseRelativePath(Navigation.Uri).TrimEnd('/');
-        return string.IsNullOrEmpty(ruta) || ruta.Equals("home", StringComparison.OrdinalIgnoreCase);
+        var ruta = Navigation.ToBaseRelativePath(Navigation.Uri).Trim('/').ToLowerInvariant();
+        return string.IsNullOrEmpty(ruta) || RutasPublicas.Contains(ruta);
     }
 
     private bool EsRutaActiva(string ruta) => ruta != "#" && RutaActual == ruta.Trim('/').ToLowerInvariant();

@@ -1,26 +1,183 @@
 @page "/historia/origenes"
+@inject NavigationManager Navigation
 
-<PageTitle>Nuestros Orígenes - Asoagro</PageTitle>
+<PageTitle>Nuestros orígenes · Asoagro</PageTitle>
 
-<div class="container py-5">
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="" class="text-success text-decoration-none fw-semibold">Inicio</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Nuestros Orígenes</li>
-        </ol>
-    </nav>
+<div class="hist">
 
-    <div class="card border-0 shadow-sm rounded-4 p-5 bg-white">
-        <span class="badge bg-success-subtle text-success fw-bold px-3 py-1 rounded-pill mb-3 align-self-start">Legado Institucional</span>
-        <h1 class="fw-bold text-dark mb-4">Nuestros Orígenes en el Urabá Antioqueño</h1>
-        <p class="text-secondary lead mb-4">
-            Asoagro nació como respuesta a la necesidad urgente de centralizar y digitalizar la información administrativa de las asociaciones de base de la región.
-        </p>
-        <p class="text-secondary mb-4">
-            Históricamente, muchas organizaciones del sector agropecuario perdían oportunidades críticas de financiación y convocatorias nacionales debido a la desarticulación en el manejo de sus padrones de productores y actas estatutarias. Con la integración bajo los lineamientos de la FAAUA, hoy consolidamos una plataforma robusta que garantiza trazabilidad, gobernanza y sostenibilidad.
-        </p>
-        <div class="mt-4">
-            <a href="" class="btn btn-success rounded-pill px-4 fw-bold">&larr; Volver al Inicio</a>
+    <svg class="hist-sprite" aria-hidden="true" focusable="false">
+        <defs>
+            <symbol id="hist-brote" viewBox="0 0 24 24"><path d="M12 22v-9" /><path d="M12 13C12 7.5 7.5 4 2 4c0 5.5 3.5 10 10 10z" /><path d="M12 13c0-5.5 4.5-9 10-9 0 5.5-3.5 10-10 10z" /></symbol>
+            <symbol id="hist-flecha" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></symbol>
+            <symbol id="hist-flecha-izq" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></symbol>
+            <symbol id="hist-reloj" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></symbol>
+            <symbol id="hist-check" viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7" /></symbol>
+            <symbol id="hist-mapa" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" /><path d="M9 4v14M15 6v14" /></symbol>
+            <symbol id="hist-escudo" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z" /><path d="M9 12l2 2 4-4" /></symbol>
+            <symbol id="hist-hoja" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" /><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" /></symbol>
+        </defs>
+    </svg>
+
+    <!-- ===== Cabecera ===== -->
+    <section class="hist-hero">
+        <div class="hist-hero-foto" aria-hidden="true"></div>
+        <div class="hist-hero-velo" aria-hidden="true"></div>
+
+        <div class="hist-contenedor hist-hero-txt">
+            <nav class="hist-migas hist-entra" style="--d: .1s;" aria-label="Ruta de navegación">
+                <ol>
+                    <li><a href="/">Inicio</a></li>
+                    <li aria-current="page">Nuestros orígenes</li>
+                </ol>
+            </nav>
+
+            <span class="hist-insignia hist-entra" style="--d: .2s;">Legado institucional</span>
+            <h1 class="hist-titulo hist-entra" style="--d: .35s;">Nuestros orígenes en el Urabá Antioqueño</h1>
+            <p class="hist-lead hist-entra" style="--d: .55s;">Asoagro nació como respuesta a la necesidad urgente de centralizar y digitalizar la información administrativa de las asociaciones de base de la región.</p>
         </div>
-    </div>
-</div>
+    </section>
+
+    <!-- ===== El punto de partida ===== -->
+    <section class="hist-seccion hist-intro">
+        <div class="hist-contenedor hist-dos">
+            <div class="hist-texto hist-rev">
+                <p class="hist-eyebrow">El punto de partida</p>
+                <h2 class="hist-h2">Por qué nació Asoagro</h2>
+                <p class="hist-parrafo">Históricamente, muchas organizaciones del sector agropecuario perdían oportunidades críticas de financiación y convocatorias nacionales debido a la desarticulación en el manejo de sus padrones de productores y actas estatutarias. Con la integración bajo los lineamientos de la FAAUA, hoy consolidamos una plataforma robusta que garantiza trazabilidad, gobernanza y sostenibilidad.</p>
+            </div>
+
+            <div class="hist-visual hist-rev hist-rev-2">
+                <div class="hist-foto-marco">
+                    <img class="hist-foto" src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1100&q=80" alt="Reunión de trabajo de una asociación agropecuaria" loading="lazy" />
+                </div>
+
+                <div class="hist-comparacion">
+                    <div class="hist-caso">
+                        <span class="hist-caso-ico"><svg class="hist-ico"><use href="#hist-reloj" /></svg></span>
+                        <div>
+                            <strong>Antes</strong>
+                            <p>Padrones y actas dispersos, y oportunidades de financiación que se perdían por falta de documentos listos.</p>
+                        </div>
+                    </div>
+                    <div class="hist-caso hist-caso-hoy">
+                        <span class="hist-caso-ico"><svg class="hist-ico"><use href="#hist-check" /></svg></span>
+                        <div>
+                            <strong>Hoy</strong>
+                            <p>Una plataforma integrada que centraliza la información de cada asociación y la mantiene lista para cada convocatoria.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== Recorrido ===== -->
+    <section class="hist-seccion">
+        <div class="hist-contenedor">
+            <header class="hist-cabecera hist-rev">
+                <p class="hist-eyebrow">Nuestro recorrido</p>
+                <h2 class="hist-h2">De la necesidad a la plataforma</h2>
+            </header>
+
+            <ol class="hist-pasos">
+                <li class="hist-paso hist-paso-conector hist-rev">
+                    <span class="hist-paso-num">01</span>
+                    <div>
+                        <h3>La necesidad</h3>
+                        <p>Centralizar y digitalizar la información administrativa de las asociaciones de base de la región.</p>
+                    </div>
+                </li>
+                <li class="hist-paso hist-paso-conector hist-rev hist-rev-2">
+                    <span class="hist-paso-num">02</span>
+                    <div>
+                        <h3>La integración</h3>
+                        <p>Una red de asociaciones que se articula bajo los lineamientos de la FAAUA.</p>
+                    </div>
+                </li>
+                <li class="hist-paso hist-rev hist-rev-3">
+                    <span class="hist-paso-num">03</span>
+                    <div>
+                        <h3>La plataforma</h3>
+                        <p>Una herramienta robusta que garantiza trazabilidad, gobernanza y sostenibilidad.</p>
+                    </div>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- ===== Pilares ===== -->
+    <section class="hist-seccion hist-oscura">
+        <div class="hist-contenedor">
+            <header class="hist-cabecera hist-rev">
+                <p class="hist-eyebrow hist-eyebrow-clara">Lo que nos sostiene</p>
+                <h2 class="hist-h2 hist-h2-clara">Tres pilares en cada decisión</h2>
+                <p class="hist-subtitulo">Trazabilidad, gobernanza y sostenibilidad son el criterio con el que pensamos cada parte de la plataforma.</p>
+            </header>
+
+            <div class="hist-pilares">
+                <article class="hist-pilar hist-rev">
+                    <span class="hist-pilar-ico"><svg class="hist-ico"><use href="#hist-mapa" /></svg></span>
+                    <h3>Trazabilidad</h3>
+                    <p>Seguimiento claro de los padrones de productores y de la información de cada finca, para que nada se pierda en el camino.</p>
+                </article>
+                <article class="hist-pilar hist-rev hist-rev-2">
+                    <span class="hist-pilar-ico"><svg class="hist-ico"><use href="#hist-escudo" /></svg></span>
+                    <h3>Gobernanza</h3>
+                    <p>Actas estatutarias y procesos internos ordenados, para que cada asociación llegue a sus convocatorias con los documentos listos.</p>
+                </article>
+                <article class="hist-pilar hist-rev hist-rev-3">
+                    <span class="hist-pilar-ico"><svg class="hist-ico"><use href="#hist-hoja" /></svg></span>
+                    <h3>Sostenibilidad</h3>
+                    <p>Una base sólida para que las asociaciones crezcan, accedan a financiación y se mantengan en el tiempo.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+   
+    <!-- ===== Cierre ===== -->
+    <section class="hist-seccion hist-cierre">
+        <svg class="hist-cierre-marca" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <use href="#hist-brote" />
+        </svg>
+
+        <div class="hist-contenedor">
+            <div class="hist-cierre-txt hist-rev">
+                <div class="hist-cierre-ruta" aria-hidden="true">
+                    <span class="hist-cierre-punto"></span>
+                    <span class="hist-cierre-trazo"></span>
+                    <span class="hist-cierre-punto"></span>
+                </div>
+                <p class="hist-eyebrow">Haz parte de la red</p>
+                <h2 class="hist-cierre-titulo">Registra tu asociación y ten tu información <span class="hist-resalte">lista</span></h2>
+                <p class="hist-cierre-texto">Centraliza tus padrones, actas y documentos en un solo lugar, listos para cada convocatoria.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== Pie de página ===== -->
+    <footer class="hist-pie">
+        <div class="hist-contenedor">
+            <div class="hist-pie-fila">
+                <div class="hist-pie-marca">
+                    <span class="hist-pie-ico"><svg class="hist-ico"><use href="#hist-brote" /></svg></span>
+                    <div>
+                        <strong>ASOAGRO</strong>
+                        <small>Federación de Asociaciones Agropecuarias (FAAUA)</small>
+                    </div>
+                </div>
+                <nav class="hist-pie-links" aria-label="Enlaces del pie">
+                    <a href="/">Inicio</a>
+                    <a href="/historia/impacto">Impacto y trazabilidad</a>
+                    <a href="/alertas-documentos">Alertas legales</a>
+                </nav>
+            </div>
+            <p class="hist-pie-legal">&copy; 2026 ASOAGRO. Todos los derechos reservados. Desarrollado para la Federación de Asociaciones de Urabá.</p>
+        </div>
+    </footer>
+
+</div> 
+
+@code {
+    private void NavegarA(string ruta) => Navigation.NavigateTo(ruta);
+}

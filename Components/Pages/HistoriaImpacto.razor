@@ -1,32 +1,204 @@
 @page "/historia/impacto"
+@inject NavigationManager Navigation
 
-<PageTitle>Impacto Agrícola - Asoagro</PageTitle>
+<PageTitle>Impacto agrícola · Asoagro</PageTitle>
 
-<div class="container py-5">
-    <!-- Breadcrumb de navegación -->
-    <nav aria-label="breadcrumb" class="mb-4">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="" class="text-success text-decoration-none fw-semibold">Inicio</a></li>
-            <li class="breadcrumb-item active" aria-current="page">Impacto Agrícola</li>
-        </ol>
-    </nav>
+<div class="imp">
 
-    <div class="card border-0 shadow-sm rounded-4 p-5 bg-white">
-        <span class="badge bg-success-subtle text-success fw-bold px-3 py-1 rounded-pill mb-3 align-self-start">Módulo Estratégico</span>
-        <h1 class="fw-bold text-dark mb-4">Impacto Agrícola y Trazabilidad Comercial</h1>
-        <p class="text-secondary lead mb-4">
-            Gestión inteligente y control riguroso de las principales líneas productivas del Urabá Antioqueño.
-        </p>
-        <p class="text-secondary mb-3">
-            Asoagro permite supervisar de manera unificada los predios dedicados a la producción de <strong>plátano, banano, cacao y ganadería</strong>. A través de módulos estructurados, la plataforma facilita:
-        </p>
-        <ul class="text-secondary mb-4 ps-3 d-flex flex-column gap-2">
-            <li><strong>Control de Buenas Prácticas Agrícolas (BPA):</strong> Seguimiento al cumplimiento de normativas de inocuidad y sostenibilidad ambiental.</li>
-            <li><strong>Padrones de Productores Dinámicos:</strong> Cruce de datos por cédulas y veredas para responder con agilidad a convocatorias y programas de fomento agroindustrial.</li>
-            <li><strong>Anticipación de Vencimientos:</strong> Alertas automatizadas sobre el estado de la documentación legal y comercial de cada productor y finca.</li>
-        </ul>
-        <div class="mt-4">
-            <a href="" class="btn btn-success rounded-pill px-4 fw-bold">&larr; Volver al Inicio</a>
+    <svg class="imp-sprite" aria-hidden="true" focusable="false">
+        <defs>
+            <symbol id="imp-brote" viewBox="0 0 24 24"><path d="M12 22v-9" /><path d="M12 13C12 7.5 7.5 4 2 4c0 5.5 3.5 10 10 10z" /><path d="M12 13c0-5.5 4.5-9 10-9 0 5.5-3.5 10-10 10z" /></symbol>
+            <symbol id="imp-hoja" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" /><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" /></symbol>
+            <symbol id="imp-racimo" viewBox="0 0 24 24"><path d="M12 3v4" /><circle cx="8" cy="12" r="2.5" /><circle cx="12" cy="13.5" r="2.5" /><circle cx="16" cy="12" r="2.5" /><circle cx="10" cy="17.5" r="2.5" /><circle cx="14" cy="17.5" r="2.5" /></symbol>
+            <symbol id="imp-fruto" viewBox="0 0 24 24"><path d="M12 3c3.2 2.4 5 5.8 5 9.2C17 16.4 14.8 20 12 20s-5-3.6-5-7.8C7 8.8 8.8 5.4 12 3z" /><path d="M12 3v17" /></symbol>
+            <symbol id="imp-granero" viewBox="0 0 24 24"><path d="M3 10l9-6 9 6" /><path d="M5 10v11h14V10" /><path d="M10 21v-5h4v5" /></symbol>
+            <symbol id="imp-escudo" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z" /><path d="M9 12l2 2 4-4" /></symbol>
+            <symbol id="imp-lista" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01" /></symbol>
+            <symbol id="imp-alerta" viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01" /></symbol>
+            <symbol id="imp-mapa" viewBox="0 0 24 24"><path d="M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z" /><path d="M9 4v14M15 6v14" /></symbol>
+            <symbol id="imp-check" viewBox="0 0 24 24"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1M22 4L12 14l-3-3" /></symbol>
+            <symbol id="imp-flecha" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></symbol>
+            <symbol id="imp-flecha-izq" viewBox="0 0 24 24"><path d="M19 12H5M11 18l-6-6 6-6" /></symbol>
+        </defs>
+    </svg>
+
+    <!-- ===== Cabecera ===== -->
+    <section class="imp-hero">
+        <div class="imp-hero-foto" aria-hidden="true"></div>
+        <div class="imp-hero-velo" aria-hidden="true"></div>
+
+        <div class="imp-contenedor imp-hero-txt">
+            <nav class="imp-migas imp-entra" style="--d: .1s;" aria-label="Ruta de navegación">
+                <ol>
+                    <li><a href="/">Inicio</a></li>
+                    <li aria-current="page">Impacto y trazabilidad</li>
+                </ol>
+            </nav>
+
+            <span class="imp-insignia imp-entra" style="--d: .2s;">Módulo estratégico</span>
+            <h1 class="imp-titulo imp-entra" style="--d: .35s;">Impacto agrícola y trazabilidad comercial</h1>
+            <p class="imp-lead imp-entra" style="--d: .55s;">Gestión inteligente y control riguroso de las principales líneas productivas del Urabá Antioqueño.</p>
         </div>
-    </div>
+    </section>
+
+    <!-- ===== Líneas productivas ===== -->
+    <section class="imp-seccion">
+        <div class="imp-contenedor">
+            <header class="imp-cabecera imp-rev">
+                <p class="imp-eyebrow">Líneas productivas</p>
+                <h2 class="imp-h2">Supervisión unificada de cada predio</h2>
+                <p class="imp-parrafo">Asoagro permite supervisar de manera unificada los predios dedicados a la producción de plátano, banano, cacao y ganadería.</p>
+            </header>
+
+            <ul class="imp-lineas">
+                <li class="imp-linea imp-rev">
+                    <span class="imp-linea-ico"><svg class="imp-ico"><use href="#imp-hoja" /></svg></span>
+                    <strong>Plátano</strong>
+                    <small>Cultivo</small>
+                </li>
+                <li class="imp-linea imp-rev imp-rev-2">
+                    <span class="imp-linea-ico"><svg class="imp-ico"><use href="#imp-racimo" /></svg></span>
+                    <strong>Banano</strong>
+                    <small>Cultivo</small>
+                </li>
+                <li class="imp-linea imp-rev imp-rev-3">
+                    <span class="imp-linea-ico"><svg class="imp-ico"><use href="#imp-fruto" /></svg></span>
+                    <strong>Cacao</strong>
+                    <small>Cultivo</small>
+                </li>
+                <li class="imp-linea imp-rev imp-rev-3">
+                    <span class="imp-linea-ico"><svg class="imp-ico"><use href="#imp-granero" /></svg></span>
+                    <strong>Ganadería</strong>
+                    <small>Pecuario</small>
+                </li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- ===== Módulos ===== -->
+    <section class="imp-seccion imp-claro">
+        <div class="imp-contenedor">
+            <header class="imp-cabecera imp-rev">
+                <p class="imp-eyebrow">Módulos</p>
+                <h2 class="imp-h2">Un control riguroso, módulo por módulo</h2>
+                <p class="imp-parrafo">A través de módulos estructurados, la plataforma facilita:</p>
+            </header>
+
+            <div class="imp-modulos">
+                <article class="imp-modulo imp-rev">
+                    <span class="imp-modulo-num" aria-hidden="true">01</span>
+                    <span class="imp-modulo-ico"><svg class="imp-ico"><use href="#imp-escudo" /></svg></span>
+                    <h3>Control de buenas prácticas agrícolas (BPA)</h3>
+                    <p>Seguimiento al cumplimiento de normativas de inocuidad y sostenibilidad ambiental.</p>
+                </article>
+
+                <article class="imp-modulo imp-rev imp-rev-2">
+                    <span class="imp-modulo-num" aria-hidden="true">02</span>
+                    <span class="imp-modulo-ico"><svg class="imp-ico"><use href="#imp-lista" /></svg></span>
+                    <h3>Padrones de productores dinámicos</h3>
+                    <p>Cruce de datos por cédulas y veredas para responder con agilidad a convocatorias y programas de fomento agroindustrial.</p>
+                </article>
+
+                <article class="imp-modulo imp-rev imp-rev-3">
+                    <span class="imp-modulo-num" aria-hidden="true">03</span>
+                    <span class="imp-modulo-ico"><svg class="imp-ico"><use href="#imp-alerta" /></svg></span>
+                    <h3>Anticipación de vencimientos</h3>
+                    <p>Alertas automatizadas sobre el estado de la documentación legal y comercial de cada productor y finca.</p>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== Ruta de trazabilidad ===== -->
+    <section class="imp-seccion imp-oscura">
+        <div class="imp-contenedor">
+            <header class="imp-cabecera imp-rev">
+                <p class="imp-eyebrow imp-eyebrow-clara">Ruta de trazabilidad</p>
+                <h2 class="imp-h2 imp-h2-clara">De la finca a la convocatoria</h2>
+                <p class="imp-subtitulo">Cada paso deja su registro, para que la información esté lista cuando la necesites.</p>
+            </header>
+
+            <ol class="imp-ruta">
+                <li class="imp-paso imp-rev">
+                    <span class="imp-paso-ico"><svg class="imp-ico"><use href="#imp-mapa" /></svg></span>
+                    <span class="imp-paso-num">01</span>
+                    <h3>Predio y productor</h3>
+                    <p>Registro de cada finca y de su padrón de productores.</p>
+                </li>
+                <li class="imp-paso imp-rev imp-rev-2">
+                    <span class="imp-paso-ico"><svg class="imp-ico"><use href="#imp-escudo" /></svg></span>
+                    <span class="imp-paso-num">02</span>
+                    <h3>Buenas prácticas</h3>
+                    <p>Seguimiento a la inocuidad y a la sostenibilidad ambiental.</p>
+                </li>
+                <li class="imp-paso imp-rev imp-rev-3">
+                    <span class="imp-paso-ico"><svg class="imp-ico"><use href="#imp-alerta" /></svg></span>
+                    <span class="imp-paso-num">03</span>
+                    <h3>Documentación</h3>
+                    <p>Vencimientos y documentos legales siempre a la vista.</p>
+                </li>
+                <li class="imp-paso imp-rev imp-rev-3">
+                    <span class="imp-paso-ico"><svg class="imp-ico"><use href="#imp-check" /></svg></span>
+                    <span class="imp-paso-num">04</span>
+                    <h3>Convocatorias</h3>
+                    <p>Información lista para responder a convocatorias y programas de fomento.</p>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <!-- ===== Banda con fotografía ===== -->
+    <section class="imp-banda">
+        <div class="imp-banda-foto" aria-hidden="true"></div>
+        <div class="imp-banda-velo" aria-hidden="true"></div>
+        <div class="imp-contenedor imp-banda-txt imp-rev">
+            <p class="imp-banda-cita">Cada predio, cada cédula y cada vereda, en un solo lugar.</p>
+        </div>
+    </section>
+
+    <!-- ===== Cierre ===== -->
+    <section class="imp-seccion imp-cierre">
+        <svg class="imp-cierre-marca" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <use href="#imp-brote" />
+        </svg>
+
+        <div class="imp-contenedor">
+            <div class="imp-cierre-txt imp-rev">
+                <div class="imp-cierre-ruta" aria-hidden="true">
+                    <span class="imp-cierre-punto"></span>
+                    <span class="imp-cierre-trazo"></span>
+                    <span class="imp-cierre-punto"></span>
+                </div>
+                <p class="imp-eyebrow">Haz parte de la red</p>
+                <h2 class="imp-cierre-titulo">Pon <span class="imp-resalte">al día</span> la trazabilidad de tu asociación</h2>
+                <p class="imp-cierre-texto">Consulta los registros de tus productores y fincas, y mantén la documentación lista para cada convocatoria.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== Pie de página ===== -->
+    <footer class="imp-pie">
+        <div class="imp-contenedor">
+            <div class="imp-pie-fila">
+                <div class="imp-pie-marca">
+                    <span class="imp-pie-ico"><svg class="imp-ico"><use href="#imp-brote" /></svg></span>
+                    <div>
+                        <strong>ASOAGRO</strong>
+                        <small>Federación de Asociaciones Agropecuarias (FAAUA)</small>
+                    </div>
+                </div>
+                <nav class="imp-pie-links" aria-label="Enlaces del pie">
+                    <a href="/">Inicio</a>
+                    <a href="/historia/origenes">Orígenes y misión</a>
+                    <a href="/alertas-documentos">Alertas legales</a>
+                </nav>
+            </div>
+            <p class="imp-pie-legal">&copy; 2026 ASOAGRO. Todos los derechos reservados. Desarrollado para la Federación de Asociaciones de Urabá.</p>
+        </div>
+    </footer>
+
 </div>
+
+@code {
+    private void NavegarA(string ruta) => Navigation.NavigateTo(ruta);
+}

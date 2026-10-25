@@ -490,199 +490,305 @@ article.content {
     }
 }
 
-/* ---------- 5. Financiación ---------- */
-.ag-fin {
+/* ---------- 5. FINANCIACIÓN (fondo claro, tipografía del proyecto) ---------- */
+.fin {
+    --bosque: #0b2e1c;
+    --pino: #17603a;
+    --hoja: #2e9a5b;
+    --brote: #b9e77a;
+    --trigo: #e8c56b;
+    --texto: #2e3d31;
+    --tinta: #10261a;
+    --gris: #5c7063;
     position: relative;
-    overflow: hidden;
+    isolation: isolate;
+    overflow: clip;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
     width: 100%;
-    padding: 6.5rem clamp(1.25rem, 5vw, 4rem);
-    color: #f2f7ec;
-    font-family: var(--ag-ui, 'Inter', system-ui, sans-serif);
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: calc(var(--ag-h, 4.25rem) + clamp(2rem, 6vh, 3.5rem)) 0 clamp(2.5rem, 7vh, 4rem);
+    color: var(--tinta);
     background:
-        radial-gradient(circle at 92% 8%, rgba(232, 197, 107, .2), transparent 26rem),
-        radial-gradient(circle at 0% 100%, rgba(185, 231, 122, .12), transparent 24rem),
-        linear-gradient(135deg, #0b2e1c 0%, #17603a 100%);
+        radial-gradient(45% 55% at 100% 0%, rgba(185, 231, 122, .24), transparent 70%),
+        radial-gradient(40% 50% at 0% 100%, rgba(232, 197, 107, .16), transparent 70%),
+        linear-gradient(180deg, #f8fbf3 0%, #eef6e6 100%);
 }
 
-/* Franja trigo inferior, igual que en el resto del sitio */
-.ag-fin::after {
+.fin *,
+.fin *::before,
+.fin *::after { box-sizing: border-box; }
+
+/* Textura de curvas de nivel, igual que en las demás secciones */
+.fin::before {
     content: "";
     position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='220' viewBox='0 0 260 220'%3E%3Cg fill='none' stroke='%2317603a' stroke-opacity='.07' stroke-width='1.2'%3E%3Cpath d='M-10 44C40 14 90 76 140 46S220 12 270 40'/%3E%3Cpath d='M-10 118C40 88 90 150 140 120S220 86 270 114'/%3E%3Cpath d='M-10 192C40 162 90 224 140 194S220 160 270 188'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* Franja superior en degradado, como en la sección de gobernanza */
+.fin::after {
+    content: "";
+    position: absolute;
+    top: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    height: 2px;
-    background: linear-gradient(90deg, transparent, #e8c56b, transparent);
-    opacity: .7;
-    pointer-events: none;
+    height: 3px;
+    background: linear-gradient(90deg, var(--pino), var(--hoja) 55%, var(--trigo));
 }
 
-.ag-fin-inner {
+.fin-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+.fin-contenido {
     position: relative;
     z-index: 1;
-    max-width: 1200px;
+    width: 100%;
+    max-width: 1180px;
     margin: 0 auto;
+    padding: 0 clamp(1.25rem, 4vw, 3rem);
+}
+
+.fin-grid {
     display: grid;
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr);
-    gap: 4rem;
+    grid-template-columns: minmax(0, 1fr);
+    gap: clamp(2.25rem, 5vh, 3rem);
     align-items: center;
 }
 
-.ag-fin-insignia {
-    display: inline-block;
-    margin-bottom: 1.25rem;
-    padding: .4rem .95rem;
-    border-radius: 999px;
-    background: rgba(185, 231, 122, .14);
-    border: 1px solid rgba(185, 231, 122, .3);
-    color: #b9e77a;
-    font-size: .72rem;
-    font-weight: 700;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-}
+/* Tipografía del proyecto: Maname en títulos, Asap Sharp en textos, Inter en interfaz */
+.fin h2,
+.fin h3 { font-family: 'Maname', Georgia, serif !important; }
+.fin p { font-family: 'Asap Sharp', system-ui, sans-serif !important; }
+.fin .fin-insignia,
+.fin .fin-boton,
+.fin .fin-pilar-num { font-family: 'Inter', system-ui, sans-serif !important; }
 
-.ag-fin-titulo {
-    margin: 0 0 1.25rem;
-    font-family: var(--ag-titulo, 'Maname', serif);
-    font-size: clamp(2rem, 4vw, 3.1rem);
-    font-weight: 700;
-    line-height: 1.12;
-    color: #ffffff;
-}
-
-.ag-fin-descripcion {
-    max-width: 620px;
-    margin: 0 0 2.25rem;
-    font-size: 1.08rem;
-    line-height: 1.7;
-    color: rgba(242, 247, 236, .8);
-}
-
-.ag-fin-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: .6rem;
-    padding: 1rem 1.9rem;
-    border: 0;
-    border-radius: 999px;
-    background: #b9e77a;
-    color: #0b2e1c;
-    font-family: var(--ag-ui, 'Inter', sans-serif);
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 14px 28px -14px rgba(185, 231, 122, .9);
-    transition: transform .25s ease, box-shadow .25s ease, background-color .25s ease;
-}
-
-.ag-fin-btn:hover {
-    transform: translateY(-2px);
-    background: #c9ec92;
-    box-shadow: 0 18px 32px -14px rgba(185, 231, 122, 1);
-}
-
-.ag-fin-btn:focus-visible {
-    outline: 2px solid #ffffff;
-    outline-offset: 3px;
-}
-
-.ag-fin-flecha {
+.fin-ico {
     width: 18px;
     height: 18px;
-    transform: rotate(-90deg);
+    flex-shrink: 0;
+    overflow: visible;
     fill: none;
     stroke: currentColor;
-    stroke-width: 2.4;
+    stroke-width: 2.2;
     stroke-linecap: round;
     stroke-linejoin: round;
 }
 
-/* Pilares */
-.ag-fin-pilares {
+/* Columna de texto */
+.fin-texto { min-width: 0; }
+
+.fin-insignia {
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding: .42rem 1rem;
+    border: 1px solid rgba(23, 96, 58, .18);
+    border-radius: 999px;
+    background: rgba(185, 231, 122, .3);
+    color: var(--pino);
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+}
+
+.fin-titulo {
+    margin: 0 0 1.3rem;
+    font-size: clamp(2.1rem, 1.3rem + 2.4vw, 3.4rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -.01em;
+    color: var(--bosque);
+    text-wrap: balance;
+}
+
+.fin-resalte {
+    padding: 0 .06em;
+    background: linear-gradient(transparent 62%, rgba(185, 231, 122, .6) 62%, rgba(185, 231, 122, .6) 92%, transparent 92%);
+}
+
+.fin-descripcion {
+    max-width: 34rem;
+    margin: 0 0 2.25rem;
+    font-size: clamp(1.02rem, .97rem + .3vw, 1.2rem);
+    line-height: 1.7;
+    color: var(--texto);
+}
+
+/* Botón cuadrado con esquinas suavemente redondeadas */
+.fin-boton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .65rem;
+    min-height: 54px;
+    padding: 0 1.75rem;
+    border: 0;
+    border-radius: 10px;
+    background: var(--pino);
+    color: #fff;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: .01em;
+    cursor: pointer;
+    box-shadow: 0 16px 28px -18px rgba(11, 46, 28, .9);
+    transition: background-color .3s ease, translate .3s ease, box-shadow .3s ease;
+}
+
+.fin-boton:hover {
+    background: var(--bosque);
+    translate: 0 -2px;
+    box-shadow: 0 20px 32px -18px rgba(11, 46, 28, .95);
+}
+
+.fin-boton:focus-visible { outline: 3px solid var(--hoja); outline-offset: 3px; }
+
+/* Pilares: tarjetas blancas unidas por una línea punteada */
+.fin-pilares {
+    position: relative;
     display: grid;
-    gap: 1rem;
+    gap: 1.1rem;
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-.ag-fin-pilar {
+.fin-pilares::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: calc(1.4rem + 26px);
+    width: 2px;
+    background: repeating-linear-gradient(180deg, var(--trigo) 0 8px, transparent 8px 14px);
+}
+
+.fin-pilar {
+    position: relative;
     display: flex;
     align-items: flex-start;
-    gap: 1rem;
-    padding: 1.3rem 1.5rem;
-    border-radius: 1.25rem;
-    background: rgba(255, 255, 255, .07);
-    border: 1px solid rgba(185, 231, 122, .2);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: background-color .25s ease, transform .25s ease, border-color .25s ease;
+    gap: 1.1rem;
+    padding: 1.25rem 1.4rem;
+    border-radius: 18px;
+    background: #fff;
+    border: 1px solid rgba(23, 96, 58, .1);
+    box-shadow: 0 2px 6px rgba(11, 46, 28, .05), 0 22px 40px -30px rgba(11, 46, 28, .55);
+    transition: translate .4s cubic-bezier(.2, .7, .2, 1), border-color .4s ease, box-shadow .4s ease;
 }
 
-.ag-fin-pilar:hover {
-    background: rgba(255, 255, 255, .11);
-    border-color: rgba(185, 231, 122, .4);
-    transform: translateX(4px);
+.fin-pilar:hover {
+    translate: 6px 0;
+    border-color: rgba(46, 154, 91, .45);
+    box-shadow: 0 4px 10px rgba(11, 46, 28, .06), 0 28px 48px -30px rgba(11, 46, 28, .6);
 }
 
-.ag-fin-pilar-ico {
-    width: 2.8rem;
-    height: 2.8rem;
-    flex-shrink: 0;
+.fin-pilar-ico {
     display: grid;
     place-items: center;
-    border-radius: .95rem;
-    background: rgba(185, 231, 122, .16);
-    color: #b9e77a;
+    flex: 0 0 52px;
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #e6f2dc, #d2ebbd);
+    color: var(--pino);
+    transition: background-color .4s ease, color .4s ease;
 }
 
-.ag-fin-pilar-ico svg,
-.ag-fin-btn svg {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
-    stroke-linejoin: round;
+.fin-pilar:hover .fin-pilar-ico {
+    background: var(--pino);
+    color: var(--brote);
 }
 
-.ag-fin-pilar-ico svg {
-    width: 20px;
-    height: 20px;
+.fin-pilar-ico .fin-ico { width: 24px; height: 24px; }
+
+.fin-pilar-txt {
+    min-width: 0;
+    flex: 1 1 auto;
+    padding-right: 2.2rem;
 }
 
-.ag-fin-pilar h3 {
-    margin: 0 0 .3rem;
-    font-family: var(--ag-titulo, 'Maname', serif);
-    font-size: 1.1rem;
+.fin-pilar h3 {
+    margin: 0 0 .35rem;
+    font-size: clamp(1.2rem, 1.05rem + .5vw, 1.4rem);
     font-weight: 700;
-    color: #ffffff;
+    line-height: 1.15;
+    color: var(--bosque);
 }
 
-.ag-fin-pilar p {
+.fin-pilar p {
     margin: 0;
-    font-size: .92rem;
+    font-size: 1rem;
     line-height: 1.55;
-    color: rgba(242, 247, 236, .75);
+    color: var(--texto);
 }
 
-/* ---------- Responsive ---------- */
-@media (max-width: 900px) {
-    .ag-fin {
-        padding: 5rem 1.25rem;
-    }
+.fin-pilar-num {
+    position: absolute;
+    top: 1rem;
+    right: 1.25rem;
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .14em;
+    color: rgba(23, 96, 58, .45);
+}
 
-    .ag-fin-inner {
-        grid-template-columns: 1fr;
-        gap: 2.5rem;
+/* Responsive */
+@media (min-width: 992px) {
+    .fin-grid {
+        grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+        gap: clamp(3rem, 6vw, 5rem);
     }
 }
 
 @media (max-width: 575.98px) {
-    .ag-fin-btn {
-        width: 100%;
-        justify-content: center;
+    .fin-pilares::before { left: calc(1.1rem + 24px); }
+    .fin-pilar { padding: 1.1rem; }
+    .fin-pilar-ico { flex-basis: 48px; width: 48px; height: 48px; }
+    .fin-pilar-ico .fin-ico { width: 22px; height: 22px; }
+}
+
+/* Animaciones al hacer scroll (Chrome y Edge 115 o superior) */
+@keyframes fin-sube {
+    from { opacity: 0; transform: translate3d(0, 36px, 0); }
+    to { opacity: 1; transform: none; }
+}
+
+@keyframes fin-linea {
+    from { transform: scaleY(0); }
+    to { transform: scaleY(1); }
+}
+
+@supports (animation-timeline: view()) {
+    .fin-rev {
+        animation: fin-sube linear both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 40%;
     }
+    .fin-r2 { animation-range: entry 8% entry 48%; }
+    .fin-r3 { animation-range: entry 16% entry 56%; }
+    .fin-r4 { animation-range: entry 24% entry 64%; }
+
+    .fin-pilares::before {
+        transform-origin: top center;
+        animation: fin-linea linear both;
+        animation-timeline: view();
+        animation-range: entry 10% cover 50%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fin-rev,
+    .fin-pilares::before { animation: none !important; }
+
+    .fin-pilar,
+    .fin-pilar-ico,
+    .fin-boton { transition: none !important; }
 }
 /* ---------- 2. GOBERNANZA ---------- */
 .gob {

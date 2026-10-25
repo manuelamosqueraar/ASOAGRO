@@ -177,7 +177,7 @@
     .art-sellos { display: flex; align-items: flex-start; gap: calc(20 * var(--u)); margin-top: calc(8 * var(--u)); }
     .art-sello-item { display: grid; justify-items: center; gap: calc(4 * var(--u)); }
     .art-sello { width: calc(30 * var(--u)); height: calc(30 * var(--u)); display: grid; place-items: center; border: calc(2 * var(--u)) solid var(--hoja); border-radius: 50%; background: #f3faef; color: var(--pino); }
-    .art-sello svg { width: 52%; height: 52%; }
+    .art-sello svg { width: 52%; height: 52%; } 
     .art-sello-txt { font-size: calc(9.5 * var(--u)); font-weight: 600; color: var(--gris); }
     .art-estado { margin-top: auto; display: flex; align-items: center; gap: calc(7 * var(--u)); padding: calc(5 * var(--u)) calc(10 * var(--u)); border-radius: calc(8 * var(--u)); background: #e3f3d6; color: #1f6b3b; font-size: calc(10 * var(--u)); font-weight: 500; line-height: 1.3; }
     .art-estado svg { width: calc(12 * var(--u)); height: calc(12 * var(--u)); flex: 0 0 auto; }
@@ -264,7 +264,7 @@
             <h1 class="display-3 fw-bold mb-4 text-white ag-maname ag-entra ag-sombra" style="--d: .35s; letter-spacing: -0.01em;">La Plataforma Líder de Gestión y Gobernanza para el Agro del Urabá</h1>
             <p class="lead mb-5 mx-auto text-light ag-asap ag-entra" style="--d: .55s; max-width: 800px; font-size: 1.35rem; opacity: .92;">Simplifica y articula cada aspecto de tus asociaciones de base, desde la administración, legalidad y gobernanza hasta la gestión de asociados y el acceso a financiamiento, todo centralizado en una sola plataforma integrada.</p>
             <div class="d-flex justify-content-center ag-entra" style="--d: .75s;">
-                <button class="btn btn-lg px-5 py-3 ag-cta ag-inter" @onclick='() => NavegarA("registrar-asociado")'>Pruebe ASOAGRO gratis</button>
+                <button class="btn btn-lg px-5 py-3 ag-cta ag-inter" @onclick='() => NavegarA("registrar-asociado")'>Pruebe ASOAGRO</button>
             </div>
         </div>
 
@@ -554,55 +554,61 @@
         </div>
     </section>
 
-    <!-- ===== 5. FINANCIACIÓN ===== -->
-    <section class="ag-fin" id="financiacion">
-        <div class="ag-fin-inner">
+<!-- ===== 5. FINANCIACIÓN ===== -->
+<section class="fin" id="financiacion">
 
-            <div class="ag-fin-texto">
-                <span class="ag-fin-insignia" data-reveal>Núcleo estratégico</span>
+    <svg class="fin-sprite" aria-hidden="true" focusable="false">
+        <defs>
+            <symbol id="fin-carpeta" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M8 13l2.5 2.5L16 10" /></symbol>
+            <symbol id="fin-doc" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><path d="M14 3v6h6M8 13h8M8 17h5" /></symbol>
+            <symbol id="fin-reloj" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></symbol>
+            <symbol id="fin-flecha" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></symbol>
+        </defs>
+    </svg>
 
-                <h2 class="ag-fin-titulo" data-reveal style="--d: .1s;">
-                    Acceso oportuno a fuentes de financiación
-                </h2>
+    <div class="fin-contenido">
+        <div class="fin-grid">
 
-                <p class="ag-fin-descripcion" data-reveal style="--d: .2s;">
-                    Evitamos que las asociaciones pierdan oportunidades de recursos externos por falta de registros listos o documentación desactualizada en convocatorias.
-                </p>
-
-                <div data-reveal style="--d: .3s;">
-                    <button type="button" class="ag-fin-btn" @onclick='() => NavegarA("consultar-asociados")'>
-                        Revisar elegibilidad
-                        <svg class="ag-fin-flecha" aria-hidden="true"><use href="#ico-flecha" /></svg>
-                    </button>
-                </div>
+            <div class="fin-texto fin-rev">
+                <span class="fin-insignia">Núcleo estratégico</span>
+                <h2 class="fin-titulo">Acceso oportuno a <span class="fin-resalte">fuentes de financiación</span></h2>
+                <p class="fin-descripcion">Evitamos que las asociaciones pierdan oportunidades de recursos externos por falta de registros listos o documentación desactualizada en convocatorias.</p>
+                <button type="button" class="fin-boton" @onclick='() => NavegarA("consultar-asociados")'>
+                    Revisar elegibilidad
+                    <svg class="fin-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#fin-flecha" /></svg>
+                </button>
             </div>
 
-            <ul class="ag-fin-pilares" data-reveal="der" style="--d: .2s;">
-                <li class="ag-fin-pilar">
-                    <span class="ag-fin-pilar-ico"><svg aria-hidden="true"><use href="#ico-check" /></svg></span>
-                    <div>
+            <ol class="fin-pilares">
+                <li class="fin-pilar fin-rev fin-r2">
+                    <span class="fin-pilar-ico"><svg class="fin-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#fin-carpeta" /></svg></span>
+                    <div class="fin-pilar-txt">
                         <h3>Registros listos</h3>
                         <p>Expedientes completos antes de cada convocatoria.</p>
                     </div>
+                    <span class="fin-pilar-num" aria-hidden="true">01</span>
                 </li>
-                <li class="ag-fin-pilar">
-                    <span class="ag-fin-pilar-ico"><svg aria-hidden="true"><use href="#ico-doc" /></svg></span>
-                    <div>
+                <li class="fin-pilar fin-rev fin-r3">
+                    <span class="fin-pilar-ico"><svg class="fin-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#fin-doc" /></svg></span>
+                    <div class="fin-pilar-txt">
                         <h3>Documentación al día</h3>
                         <p>Estatutos, certificados y actas siempre vigentes.</p>
                     </div>
+                    <span class="fin-pilar-num" aria-hidden="true">02</span>
                 </li>
-                <li class="ag-fin-pilar">
-                    <span class="ag-fin-pilar-ico"><svg aria-hidden="true"><use href="#ico-alerta" /></svg></span>
-                    <div>
+                <li class="fin-pilar fin-rev fin-r4">
+                    <span class="fin-pilar-ico"><svg class="fin-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#fin-reloj" /></svg></span>
+                    <div class="fin-pilar-txt">
                         <h3>Sin oportunidades perdidas</h3>
                         <p>Alertas a tiempo sobre plazos y vencimientos.</p>
                     </div>
+                    <span class="fin-pilar-num" aria-hidden="true">03</span>
                 </li>
-            </ul>
+            </ol>
 
         </div>
-    </section>
+    </div>
+</section>
 
     <!-- ===== 6. FOOTER ===== -->
     <footer class="ag-pie">
