@@ -1,8 +1,37 @@
 /* ==========================================================================
-   Nuestros orígenes (historiaorigenes.razor)
-   Tipografía: Maname (títulos), Asap Sharp (texto), Inter (interfaz y botones)
+   Nuestros orígenes · HistoriaOrigenes.razor
    ========================================================================== */
 
+/* ---------- Tipografía igual que el inicio (con prioridad) ---------- */
+/* Títulos: Maname · Textos: Asap Sharp · Etiquetas, botones y navegación: Inter */
+.hist h1,
+.hist h2,
+.hist h3,
+.hist .hist-pie-marca strong {
+    font-family: 'Maname', sans-serif !important;
+    font-weight: 700 !important;
+}
+
+.hist p,
+.hist li,
+.hist dd,
+.hist .hist-pie-marca small,
+.hist .hist-pie-legal,
+.hist .hist-pie-links a {
+    font-family: 'Asap Sharp', sans-serif !important;
+}
+
+.hist .hist-eyebrow,
+.hist .hist-insignia,
+.hist .hist-migas,
+.hist .hist-migas li,
+.hist .hist-migas a,
+.hist .hist-paso-num,
+.hist .hist-caso strong {
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* ---------- Base ---------- */
 .hist {
     --bosque: #0b2e1c;
     --pino: #17603a;
@@ -13,12 +42,10 @@
     --tinta: #10261a;
     --texto: #2e3d31;
     --gris: #5c7063;
-    --titulo: 'Maname', Georgia, serif;
-    --cuerpo: 'Asap Sharp', system-ui, sans-serif;
-    --ui: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --gap: clamp(1.5rem, 3vw, 2.5rem);
     width: 100%;
     overflow: clip;
-    font-family: var(--cuerpo);
+    font-family: 'Asap Sharp', sans-serif;
     color: var(--tinta);
 }
 
@@ -26,8 +53,7 @@
 .hist *::before,
 .hist *::after { box-sizing: border-box; }
 
-.hist a:focus-visible,
-.hist button:focus-visible { outline: 3px solid var(--brote); outline-offset: 3px; }
+.hist a:focus-visible { outline: 3px solid var(--brote); outline-offset: 3px; }
 
 .hist-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 
@@ -99,7 +125,6 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    font-family: var(--ui);
     font-size: .85rem;
     color: rgba(242, 247, 236, .72);
 }
@@ -116,7 +141,6 @@
     border-radius: 999px;
     background: rgba(232, 197, 107, .12);
     color: var(--trigo);
-    font-family: var(--ui);
     font-size: .72rem;
     font-weight: 700;
     letter-spacing: .14em;
@@ -126,7 +150,6 @@
 .hist-titulo {
     max-width: 15ch;
     margin: 0 0 1.4rem;
-    font-family: var(--titulo);
     font-size: clamp(2.5rem, 1.4rem + 4.4vw, 5rem);
     font-weight: 700;
     line-height: 1.02;
@@ -138,7 +161,6 @@
 .hist-lead {
     max-width: 44rem;
     margin: 0;
-    font-family: var(--cuerpo);
     font-size: clamp(1.08rem, 1rem + .45vw, 1.32rem);
     line-height: 1.65;
     color: rgba(242, 247, 236, .9);
@@ -146,38 +168,42 @@
 
 /* ---------- Tipografía común de las secciones ---------- */
 .hist-eyebrow {
-    margin: 0 0 .75rem;
-    font-family: var(--ui);
+    margin: 0 0 .85rem;
     font-size: .8rem;
     font-weight: 700;
     letter-spacing: .14em;
     text-transform: uppercase;
     color: #2f7d48;
 }
-.hist-eyebrow-clara { color: var(--brote); }
+.hist .hist-eyebrow-clara { color: var(--brote); }
 
 .hist-h2 {
-    margin: 0 0 1.1rem;
-    font-family: var(--titulo);
+    margin: 0 0 1.25rem;
     font-size: clamp(2rem, 1.3rem + 2.2vw, 3.2rem);
     font-weight: 700;
     line-height: 1.1;
     letter-spacing: -.01em;
     color: var(--bosque);
+    text-wrap: balance;
 }
-.hist-h2-clara { color: #fff; }
+.hist-h2::after {
+    content: "";
+    display: block;
+    width: 56px;
+    height: 3px;
+    margin-top: 1.1rem;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--hoja), var(--brote));
+}
+.hist .hist-h2-clara { color: #fff; }
+.hist .hist-h2-clara::after { background: linear-gradient(90deg, var(--brote), var(--trigo)); }
 
 .hist-parrafo {
     margin: 0 0 1.1rem;
-    font-family: var(--cuerpo);
     font-size: clamp(1rem, .95rem + .25vw, 1.15rem);
     line-height: 1.7;
     color: var(--texto);
 }
-.hist-parrafo-clara { color: rgba(242, 247, 236, .85); }
-
-.hist-cabecera { max-width: 46rem; margin: 0 auto 3.25rem; text-align: center; }
-.hist-cabecera .hist-h2 { margin-bottom: 0; }
 
 /* ---------- Intro con foto y comparación ---------- */
 .hist-intro { background: linear-gradient(180deg, #fbf8ee 0%, #f3f3e3 100%); }
@@ -232,7 +258,6 @@
 .hist-caso strong {
     display: block;
     margin-bottom: .3rem;
-    font-family: var(--ui);
     font-size: .72rem;
     font-weight: 700;
     letter-spacing: .14em;
@@ -241,7 +266,6 @@
 }
 .hist-caso p {
     margin: 0;
-    font-family: var(--cuerpo);
     font-size: .98rem;
     line-height: 1.55;
     color: var(--texto);
@@ -261,17 +285,31 @@
 .hist-caso-hoy p { color: rgba(242, 247, 236, .94); }
 .hist-caso-hoy .hist-caso-ico { background: rgba(185, 231, 122, .16); color: var(--brote); }
 
-/* ---------- Recorrido en tres pasos ---------- */
+/* ---------- Recorrido: centrado, con la línea uniendo los números ---------- */
+.hist-cabecera {
+    max-width: 46rem;
+    margin: 0 auto clamp(2.5rem, 6vh, 3.5rem);
+    text-align: center;
+}
+.hist-cabecera .hist-h2 { margin-bottom: 0; }
+.hist-cabecera .hist-h2::after { margin-left: auto; margin-right: auto; }
+
 .hist-pasos {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: clamp(1.5rem, 3vw, 2.5rem);
+    gap: var(--gap);
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
-.hist-paso { position: relative; }
+.hist-paso {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
 
 .hist-paso-num {
     position: relative;
@@ -284,7 +322,6 @@
     border-radius: 50%;
     background: var(--pino);
     color: var(--brote);
-    font-family: var(--ui);
     font-size: .95rem;
     font-weight: 700;
     letter-spacing: .04em;
@@ -293,7 +330,6 @@
 
 .hist-paso h3 {
     margin: 0 0 .6rem;
-    font-family: var(--titulo);
     font-size: clamp(1.35rem, 1.1rem + .6vw, 1.6rem);
     font-weight: 700;
     line-height: 1.15;
@@ -301,19 +337,20 @@
 }
 
 .hist-paso p {
+    max-width: 22rem;
     margin: 0;
-    font-family: var(--cuerpo);
     font-size: 1rem;
     line-height: 1.62;
     color: var(--texto);
 }
 
-.hist-paso-conector::before {
+/* Línea punteada desde el centro de cada número hasta el siguiente */
+.hist-paso:not(:last-child)::before {
     content: "";
     position: absolute;
     top: 25px;
-    left: 66px;
-    right: -1.5rem;
+    left: calc(50% + 26px);
+    width: calc(100% + var(--gap) - 52px);
     height: 2px;
     background: repeating-linear-gradient(90deg, var(--trigo) 0 10px, transparent 10px 18px);
 }
@@ -340,8 +377,7 @@
 
 .hist-subtitulo {
     max-width: 40rem;
-    margin: 1.1rem auto 0;
-    font-family: var(--cuerpo);
+    margin: 1.25rem auto 0;
     font-size: clamp(1.02rem, .97rem + .3vw, 1.18rem);
     line-height: 1.65;
     color: rgba(242, 247, 236, .8);
@@ -351,7 +387,7 @@
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: clamp(1rem, 2.4vw, 1.6rem);
-    margin-top: 3.25rem;
+    margin-top: clamp(2.5rem, 6vh, 3.25rem);
 }
 
 .hist-pilar {
@@ -382,8 +418,7 @@
 
 .hist-pilar h3 {
     margin: 0 0 .7rem;
-    font-family: var(--titulo);
-    font-size: 1.6rem;
+    font-size: 1.55rem;
     font-weight: 700;
     line-height: 1.15;
     color: #fff;
@@ -391,13 +426,12 @@
 
 .hist-pilar p {
     margin: 0;
-    font-family: var(--cuerpo);
     font-size: 1rem;
     line-height: 1.65;
     color: rgba(242, 247, 236, .8);
 }
 
-/* ---------- Cierre (texto, sin caja) ---------- */
+/* ---------- Cierre (solo texto) ---------- */
 .hist-cierre {
     overflow: clip;
     text-align: center;
@@ -455,7 +489,6 @@
 
 .hist-cierre-titulo {
     margin: 0 0 1.2rem;
-    font-family: var(--titulo);
     font-size: clamp(2rem, 1.3rem + 2.2vw, 3.3rem);
     font-weight: 700;
     line-height: 1.12;
@@ -472,7 +505,6 @@
 .hist-cierre-texto {
     max-width: 36rem;
     margin: 0 auto;
-    font-family: var(--cuerpo);
     font-size: clamp(1.05rem, 1rem + .3vw, 1.2rem);
     line-height: 1.7;
     color: var(--texto);
@@ -509,7 +541,6 @@
 
 .hist-pie-marca strong {
     display: block;
-    font-family: var(--titulo);
     font-size: 1.35rem;
     font-weight: 700;
     letter-spacing: .08em;
@@ -518,14 +549,12 @@
 .hist-pie-marca small {
     display: block;
     margin-top: .2rem;
-    font-family: var(--cuerpo);
     font-size: .86rem;
     color: #9bb09e;
 }
 
 .hist-pie-links { display: flex; flex-wrap: wrap; gap: .7rem 1.75rem; }
 .hist-pie-links a {
-    font-family: var(--ui);
     font-size: .92rem;
     font-weight: 600;
     color: #b5c4b8;
@@ -538,47 +567,13 @@
     margin: 2rem 0 0;
     padding-top: 1.2rem;
     border-top: 1px solid rgba(185, 231, 122, .12);
-    font-family: var(--ui);
     font-size: .82rem;
     color: #8fa596;
 }
 
-/* ---------- Animación de entrada (funciona en todos los navegadores) ---------- */
+/* ---------- Animaciones ---------- */
 .hist-entra { animation: hist-entra 1s cubic-bezier(.2, .7, .2, 1) both; animation-delay: var(--d, 0s); }
 
-/* ---------- Responsive ---------- */
-@media (min-width: 992px) {
-    .hist-dos { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
-}
-
-@media (max-width: 991.98px) {
-    .hist-pilares { grid-template-columns: minmax(0, 1fr); }
-    .hist-cierre-caja { grid-template-columns: minmax(0, 1fr); }
-    .hist-acciones { justify-content: flex-start; }
-}
-
-@media (max-width: 767.98px) {
-    .hist-hero { min-height: auto; padding-top: 2.5rem; }
-    .hist-titulo { max-width: none; }
-    .hist-foto { height: 240px; }
-    .hist-comparacion { margin: -2.5rem 0 0; }
-    .hist-pasos { grid-template-columns: minmax(0, 1fr); gap: 2.25rem; }
-    .hist-paso { display: grid; grid-template-columns: 52px minmax(0, 1fr); column-gap: 1.1rem; align-items: start; }
-    .hist-paso-num { margin-bottom: 0; }
-    .hist-paso-conector::before {
-        top: 62px;
-        bottom: -2.25rem;
-        left: 25px;
-        right: auto;
-        width: 2px;
-        height: auto;
-        background: repeating-linear-gradient(180deg, var(--trigo) 0 10px, transparent 10px 18px);
-    }
-    .hist-acciones { flex-direction: column; align-items: stretch; }
-    .hist-pie-fila { flex-direction: column; align-items: flex-start; }
-}
-
-/* ---------- Scroll: revelado de bloques y paralaje del fondo ---------- */
 @keyframes hist-entra {
     from { opacity: 0; transform: translate3d(0, 26px, 0); }
     to { opacity: 1; transform: none; }
@@ -609,12 +604,85 @@
     }
 }
 
+/* ---------- Responsive ---------- */
+@media (min-width: 992px) {
+    .hist-dos { grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr); }
+}
+
+@media (max-width: 991.98px) {
+    .hist-pilares { grid-template-columns: minmax(0, 1fr); }
+}
+
+@media (max-width: 767.98px) {
+    .hist-hero { min-height: auto; padding-top: 2.5rem; }
+    .hist-titulo { max-width: none; }
+    .hist-foto { height: 240px; }
+    .hist-comparacion { margin: -2.5rem 0 0; }
+
+    /* El recorrido pasa a vertical: número a la izquierda, texto a la derecha */
+    .hist-pasos { grid-template-columns: minmax(0, 1fr); gap: 2.25rem; }
+    .hist-paso {
+        display: grid;
+        grid-template-columns: 52px minmax(0, 1fr);
+        column-gap: 1.1rem;
+        align-items: start;
+        text-align: left;
+    }
+    .hist-paso-num { grid-row: 1 / span 2; align-self: start; margin-bottom: 0; }
+    .hist-paso h3 { grid-column: 2; grid-row: 1; margin-top: .35rem; }
+    .hist-paso p { grid-column: 2; grid-row: 2; max-width: none; }
+    .hist-paso:not(:last-child)::before {
+        top: 52px;
+        left: 25px;
+        width: 2px;
+        height: calc(100% + var(--gap) - 52px);
+        background: repeating-linear-gradient(180deg, var(--trigo) 0 10px, transparent 10px 18px);
+    }
+
+    .hist-cierre-ruta { margin-bottom: 1.3rem; }
+    .hist-pie-fila { flex-direction: column; align-items: flex-start; }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .hist-entra,
     .hist-rev,
     .hist-hero-foto { animation: none !important; }
 
     .hist-pilar,
-    .hist-boton-principal,
-    .hist-boton-secundario { transition: none !important; }
+    .hist-migas a,
+    .hist-pie-links a { transition: none !important; }
+}
+
+
+/* ---------- Tipografía igual que el inicio (con prioridad) ---------- */
+.imp h1,
+.imp h2,
+.imp h3,
+.imp .imp-banda-cita,
+.imp .imp-linea strong,
+.imp .imp-pie-marca strong {
+    font-family: 'Maname', sans-serif !important;
+    font-weight: 700 !important;
+}
+
+.imp p,
+.imp li,
+.imp dd,
+.imp .imp-pie-marca small,
+.imp .imp-pie-legal,
+.imp .imp-pie-links a {
+    font-family: 'Asap Sharp', sans-serif !important;
+}
+
+.imp .imp-eyebrow,
+.imp .imp-insignia,
+.imp .imp-migas,
+.imp .imp-migas li,
+.imp .imp-migas a,
+.imp .imp-linea small,
+.imp .imp-paso-num,
+.imp .imp-modulo-num,
+.imp .imp-boton-principal,
+.imp .imp-boton-secundario {
+    font-family: 'Inter', sans-serif !important;
 }

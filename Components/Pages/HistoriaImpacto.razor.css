@@ -1,8 +1,39 @@
 /* ==========================================================================
-   Impacto agrícola y trazabilidad (HistoriaImpacto.razor)
-   Tipografía: Maname (títulos), Asap Sharp (texto), Inter (interfaz y botones)
+   Impacto agrícola y trazabilidad · HistoriaImpacto.razor
+   Maname: títulos y cifras · Asap Sharp: textos · Inter: etiquetas, pasos y menú
    ========================================================================== */
 
+/* ---------- Tipografía igual que el inicio (con prioridad) ---------- */
+.imp h1,
+.imp h2,
+.imp h3,
+.imp .imp-banda-cita,
+.imp .imp-modulo-num,
+.imp .imp-linea strong,
+.imp .imp-pie-marca strong {
+    font-family: 'Maname', sans-serif !important;
+    font-weight: 700 !important;
+}
+
+.imp p,
+.imp li,
+.imp .imp-pie-marca small {
+    font-family: 'Asap Sharp', sans-serif !important;
+}
+
+.imp .imp-eyebrow,
+.imp .imp-insignia,
+.imp .imp-migas,
+.imp .imp-migas li,
+.imp .imp-migas a,
+.imp .imp-linea small,
+.imp .imp-paso-num,
+.imp .imp-pie-links a,
+.imp .imp-pie-legal {
+    font-family: 'Inter', sans-serif !important;
+}
+
+/* ---------- Base ---------- */
 .imp {
     --bosque: #0b2e1c;
     --pino: #17603a;
@@ -13,12 +44,10 @@
     --tinta: #10261a;
     --texto: #2e3d31;
     --gris: #5c7063;
-    --titulo: 'Maname', Georgia, serif;
-    --cuerpo: 'Asap Sharp', system-ui, sans-serif;
-    --ui: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --gap: clamp(1.5rem, 3vw, 2.5rem);
     width: 100%;
     overflow: clip;
-    font-family: var(--cuerpo);
+    font-family: 'Asap Sharp', sans-serif;
     color: var(--tinta);
 }
 
@@ -26,8 +55,7 @@
 .imp *::before,
 .imp *::after { box-sizing: border-box; }
 
-.imp a:focus-visible,
-.imp button:focus-visible { outline: 3px solid var(--brote); outline-offset: 3px; }
+.imp a:focus-visible { outline: 3px solid var(--brote); outline-offset: 3px; }
 
 .imp-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 
@@ -99,7 +127,6 @@
     margin: 0;
     padding: 0;
     list-style: none;
-    font-family: var(--ui);
     font-size: .85rem;
     color: rgba(242, 247, 236, .72);
 }
@@ -116,7 +143,6 @@
     border-radius: 999px;
     background: rgba(232, 197, 107, .12);
     color: var(--trigo);
-    font-family: var(--ui);
     font-size: .72rem;
     font-weight: 700;
     letter-spacing: .14em;
@@ -126,7 +152,6 @@
 .imp-titulo {
     max-width: 16ch;
     margin: 0 0 1.4rem;
-    font-family: var(--titulo);
     font-size: clamp(2.5rem, 1.4rem + 4.4vw, 5rem);
     font-weight: 700;
     line-height: 1.02;
@@ -138,57 +163,66 @@
 .imp-lead {
     max-width: 44rem;
     margin: 0;
-    font-family: var(--cuerpo);
     font-size: clamp(1.08rem, 1rem + .45vw, 1.32rem);
     line-height: 1.65;
     color: rgba(242, 247, 236, .9);
 }
 
-/* ---------- Tipografía común ---------- */
+/* ---------- Títulos y textos comunes ---------- */
 .imp-eyebrow {
-    margin: 0 0 .75rem;
-    font-family: var(--ui);
+    margin: 0 0 .85rem;
     font-size: .8rem;
     font-weight: 700;
     letter-spacing: .14em;
     text-transform: uppercase;
     color: #2f7d48;
 }
-.imp-eyebrow-clara { color: var(--brote); }
+.imp .imp-eyebrow-clara { color: var(--brote); }
 
 .imp-h2 {
-    margin: 0 0 1.1rem;
-    font-family: var(--titulo);
+    margin: 0 0 1.25rem;
     font-size: clamp(2rem, 1.3rem + 2.2vw, 3.2rem);
     font-weight: 700;
     line-height: 1.1;
     letter-spacing: -.01em;
     color: var(--bosque);
+    text-wrap: balance;
 }
-.imp-h2-clara { color: #fff; }
+.imp-h2::after {
+    content: "";
+    display: block;
+    width: 56px;
+    height: 3px;
+    margin-top: 1.1rem;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--hoja), var(--brote));
+}
+.imp .imp-h2-clara { color: #fff; }
+.imp .imp-h2-clara::after { background: linear-gradient(90deg, var(--brote), var(--trigo)); }
 
 .imp-parrafo {
-    max-width: 42rem;
     margin: 0 0 1.1rem;
-    font-family: var(--cuerpo);
     font-size: clamp(1rem, .95rem + .25vw, 1.15rem);
     line-height: 1.7;
     color: var(--texto);
 }
-.imp-parrafo-clara { color: rgba(242, 247, 236, .85); }
 
 .imp-subtitulo {
     max-width: 40rem;
-    margin: 1.1rem auto 0;
-    font-family: var(--cuerpo);
+    margin: 1.25rem auto 0;
     font-size: clamp(1.02rem, .97rem + .3vw, 1.18rem);
     line-height: 1.65;
     color: rgba(242, 247, 236, .8);
 }
 
-.imp-cabecera { max-width: 46rem; margin: 0 auto 3.25rem; text-align: center; }
+.imp-cabecera {
+    max-width: 46rem;
+    margin: 0 auto clamp(2.5rem, 6vh, 3.5rem);
+    text-align: center;
+}
 .imp-cabecera .imp-h2 { margin-bottom: 0; }
-.imp-cabecera .imp-parrafo { margin: 1.1rem auto 0; }
+.imp-cabecera .imp-h2::after { margin-left: auto; margin-right: auto; }
+.imp-cabecera .imp-parrafo { margin: 1.25rem auto 0; }
 
 /* ---------- Líneas productivas ---------- */
 .imp-lineas {
@@ -204,8 +238,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: .35rem;
-    padding: 2rem 1.25rem 1.75rem;
+    gap: .4rem;
+    padding: 2.1rem 1.25rem 1.85rem;
     text-align: center;
     border-radius: 24px;
     background: #fff;
@@ -231,7 +265,6 @@
 .imp-linea-ico .imp-ico { width: 26px; height: 26px; }
 
 .imp-linea strong {
-    font-family: var(--titulo);
     font-size: 1.45rem;
     font-weight: 700;
     line-height: 1.1;
@@ -239,7 +272,6 @@
 }
 
 .imp-linea small {
-    font-family: var(--ui);
     font-size: .72rem;
     font-weight: 700;
     letter-spacing: .12em;
@@ -284,7 +316,6 @@
     position: absolute;
     top: 1.4rem;
     right: 1.75rem;
-    font-family: var(--titulo);
     font-size: 2.6rem;
     font-weight: 700;
     line-height: 1;
@@ -307,7 +338,6 @@
 .imp-modulo h3 {
     margin: 0 0 .7rem;
     padding-right: 2.5rem;
-    font-family: var(--titulo);
     font-size: 1.5rem;
     font-weight: 700;
     line-height: 1.15;
@@ -316,7 +346,6 @@
 
 .imp-modulo p {
     margin: 0;
-    font-family: var(--cuerpo);
     font-size: 1rem;
     line-height: 1.65;
     color: var(--texto);
@@ -344,25 +373,12 @@
 }
 
 .imp-ruta {
-    position: relative;
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: clamp(1rem, 2.4vw, 1.6rem);
-    margin: 3.5rem 0 0;
+    gap: var(--gap);
+    margin: clamp(3rem, 7vh, 4rem) 0 0;
     padding: 0;
     list-style: none;
-}
-
-/* Línea punteada que une los cuatro pasos */
-.imp-ruta::before {
-    content: "";
-    position: absolute;
-    top: 33px;
-    left: 12.5%;
-    right: 12.5%;
-    height: 2px;
-    background: repeating-linear-gradient(90deg, var(--trigo) 0 10px, transparent 10px 18px);
-    transform-origin: left center;
 }
 
 .imp-paso {
@@ -371,7 +387,6 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding: 0 .35rem;
 }
 
 .imp-paso-ico {
@@ -390,8 +405,7 @@
 .imp-paso-ico .imp-ico { width: 26px; height: 26px; }
 
 .imp-paso-num {
-    margin-bottom: .4rem;
-    font-family: var(--ui);
+    margin-bottom: .45rem;
     font-size: .78rem;
     font-weight: 700;
     letter-spacing: .14em;
@@ -399,20 +413,31 @@
 }
 
 .imp-paso h3 {
-    margin: 0 0 .55rem;
-    font-family: var(--titulo);
-    font-size: 1.4rem;
+    margin: 0 0 .6rem;
+    font-size: clamp(1.3rem, 1.1rem + .4vw, 1.5rem);
     font-weight: 700;
     line-height: 1.15;
     color: #fff;
 }
 
 .imp-paso p {
+    max-width: 15.5rem;
     margin: 0;
-    font-family: var(--cuerpo);
     font-size: .98rem;
     line-height: 1.62;
     color: rgba(242, 247, 236, .8);
+}
+
+/* Trazo punteado que une cada ícono con el siguiente */
+.imp-paso:not(:last-child)::before {
+    content: "";
+    position: absolute;
+    top: 33px;
+    left: calc(50% + 34px);
+    width: calc(100% + var(--gap) - 68px);
+    height: 2px;
+    background: linear-gradient(90deg, var(--trigo) 0 10px, transparent 10px) 0 0 / 18px 2px repeat-x;
+    animation: imp-fluye 1.6s linear infinite;
 }
 
 /* ---------- Banda con fotografía ---------- */
@@ -455,7 +480,6 @@
 .imp-banda-cita {
     max-width: 24ch;
     margin: 0;
-    font-family: var(--titulo);
     font-size: clamp(2.2rem, 1.2rem + 3.4vw, 4.2rem);
     font-weight: 700;
     line-height: 1.08;
@@ -464,7 +488,7 @@
     text-wrap: balance;
 }
 
-/* ---------- Cierre (texto, sin caja) ---------- */
+/* ---------- Cierre (solo texto) ---------- */
 .imp-cierre {
     overflow: clip;
     text-align: center;
@@ -522,7 +546,6 @@
 
 .imp-cierre-titulo {
     margin: 0 0 1.2rem;
-    font-family: var(--titulo);
     font-size: clamp(2rem, 1.3rem + 2.2vw, 3.3rem);
     font-weight: 700;
     line-height: 1.12;
@@ -539,7 +562,6 @@
 .imp-cierre-texto {
     max-width: 36rem;
     margin: 0 auto;
-    font-family: var(--cuerpo);
     font-size: clamp(1.05rem, 1rem + .3vw, 1.2rem);
     line-height: 1.7;
     color: var(--texto);
@@ -576,7 +598,6 @@
 
 .imp-pie-marca strong {
     display: block;
-    font-family: var(--titulo);
     font-size: 1.35rem;
     font-weight: 700;
     letter-spacing: .08em;
@@ -586,14 +607,12 @@
 .imp-pie-marca small {
     display: block;
     margin-top: .2rem;
-    font-family: var(--cuerpo);
     font-size: .86rem;
     color: #9bb09e;
 }
 
 .imp-pie-links { display: flex; flex-wrap: wrap; gap: .7rem 1.75rem; }
 .imp-pie-links a {
-    font-family: var(--ui);
     font-size: .92rem;
     font-weight: 600;
     color: #b5c4b8;
@@ -606,12 +625,11 @@
     margin: 2rem 0 0;
     padding-top: 1.2rem;
     border-top: 1px solid rgba(185, 231, 122, .12);
-    font-family: var(--ui);
     font-size: .82rem;
     color: #8fa596;
 }
 
-/* ---------- Animaciones de entrada y de scroll ---------- */
+/* ---------- Animaciones ---------- */
 .imp-entra { animation: imp-entra 1s cubic-bezier(.2, .7, .2, 1) both; animation-delay: var(--d, 0s); }
 
 @keyframes imp-entra {
@@ -624,19 +642,19 @@
     to { opacity: 1; transform: none; }
 }
 
-@keyframes imp-linea {
-    from { transform: scaleX(0); }
-    to { transform: scaleX(1); }
-}
-
-@keyframes imp-linea-v {
-    from { transform: scaleY(0); }
-    to { transform: scaleY(1); }
-}
-
 @keyframes imp-paralaje {
     from { transform: translate3d(0, -5%, 0); }
     to { transform: translate3d(0, 5%, 0); }
+}
+
+@keyframes imp-fluye {
+    from { background-position: 0 0; }
+    to { background-position: 18px 0; }
+}
+
+@keyframes imp-fluye-v {
+    from { background-position: 0 0; }
+    to { background-position: 0 18px; }
 }
 
 @supports (animation-timeline: view()) {
@@ -647,12 +665,6 @@
     }
     .imp-rev-2 { animation-range: entry 6% entry 44%; }
     .imp-rev-3 { animation-range: entry 12% entry 50%; }
-
-    .imp-ruta::before {
-        animation: imp-linea linear both;
-        animation-timeline: view();
-        animation-range: entry 10% cover 55%;
-    }
 
     .imp-hero-foto,
     .imp-banda-foto {
@@ -665,18 +677,9 @@
 @media (max-width: 991.98px) {
     .imp-lineas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .imp-modulos { grid-template-columns: minmax(0, 1fr); }
+
+    /* La ruta pasa a vertical: ícono a la izquierda y texto a la derecha */
     .imp-ruta { grid-template-columns: minmax(0, 1fr); gap: 2.25rem; }
-    .imp-cierre-caja { grid-template-columns: minmax(0, 1fr); }
-    .imp-acciones { justify-content: flex-start; }
-}
-
-@media (max-width: 767.98px) {
-    .imp-hero { min-height: auto; padding-top: 2.5rem; }
-    .imp-titulo { max-width: none; }
-    .imp-linea { padding: 1.5rem 1rem; }
-    .imp-banda { min-height: 300px; }
-
-    /* La ruta pasa a vertical */
     .imp-paso {
         display: grid;
         grid-template-columns: 68px minmax(0, 1fr);
@@ -684,36 +687,39 @@
         align-items: start;
         text-align: left;
     }
-    .imp-paso-ico { grid-row: 1 / span 3; margin-bottom: 0; }
-    .imp-paso-num,
-    .imp-paso h3,
-    .imp-paso p { grid-column: 2; }
+    .imp-paso-ico { grid-row: 1 / span 3; margin: 0; }
+    .imp-paso-num { grid-column: 2; grid-row: 1; margin: .4rem 0 .35rem; }
+    .imp-paso h3 { grid-column: 2; grid-row: 2; margin: 0 0 .5rem; }
+    .imp-paso p { grid-column: 2; grid-row: 3; max-width: none; }
 
-    .imp-ruta::before {
-        top: 34px;
-        bottom: 34px;
+    .imp-paso:not(:last-child)::before {
+        top: 76px;
+        bottom: calc(8px - 2.25rem);
         left: 33px;
-        right: auto;
         width: 2px;
         height: auto;
-        background: repeating-linear-gradient(180deg, var(--trigo) 0 10px, transparent 10px 18px);
-        transform-origin: top center;
-        animation-name: imp-linea-v;
+        background: linear-gradient(180deg, var(--trigo) 0 10px, transparent 10px) 0 0 / 2px 18px repeat-y;
+        animation-name: imp-fluye-v;
     }
+}
 
-    .imp-acciones { flex-direction: column; align-items: stretch; }
+@media (max-width: 767.98px) {
+    .imp-hero { min-height: auto; padding-top: 2.5rem; }
+    .imp-titulo { max-width: none; }
+    .imp-linea { padding: 1.5rem 1rem; }
+    .imp-banda { min-height: 300px; }
     .imp-pie-fila { flex-direction: column; align-items: flex-start; }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .imp-entra,
     .imp-rev,
-    .imp-ruta::before,
     .imp-hero-foto,
-    .imp-banda-foto { animation: none !important; }
+    .imp-banda-foto,
+    .imp-paso:not(:last-child)::before { animation: none !important; }
 
     .imp-linea,
     .imp-modulo,
-    .imp-boton-principal,
-    .imp-boton-secundario { transition: none !important; }
+    .imp-migas a,
+    .imp-pie-links a { transition: none !important; }
 }

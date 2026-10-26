@@ -127,16 +127,16 @@
 </div>
 
 <style>
-    .asist {
-        --bosque: #0b2e1c; --pino: #17603a; --hoja: #2e9a5b; --brote: #b9e77a; --trigo: #e8c56b;
-        --papel: #f2f7ec; --tinta: #10261a; --gris: #5c7063; --borde: #cfddc9;
-        position: fixed;
-        right: clamp(16px, 2.5vw, 28px);
-        bottom: clamp(16px, 2.5vw, 28px);
-        z-index: 1300;
-        font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
-        color: var(--tinta);
-    }
+   .asist {
+    --bosque: #0b2e1c; --pino: #17603a; --hoja: #2e9a5b; --brote: #b9e77a; --trigo: #e8c56b;
+    --papel: #f2f7ec; --tinta: #10261a; --gris: #5c7063; --borde: #cfddc9;
+    position: fixed !important;
+    right: clamp(16px, 2.5vw, 28px);
+    bottom: clamp(16px, 2.5vw, 28px);
+    z-index: 1300;
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    color: var(--tinta);
+}
     .asist *, .asist *::before, .asist *::after { box-sizing: border-box; }
     .asist :is(button, input):focus-visible { outline: 3px solid var(--hoja); outline-offset: 2px; }
     .asist-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }

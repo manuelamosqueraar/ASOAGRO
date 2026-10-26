@@ -1,4 +1,5 @@
 ﻿@inherits LayoutComponentBase
+@using Asoagro.Components.Pages
 @inject NavigationManager Navigation
 @implements IDisposable
 
@@ -47,7 +48,6 @@
                 <span class="ag-marca-icono"><svg class="ag-ico"><use href="#ico-brote" /></svg></span>
                 <span class="ag-marca-texto">
                     <strong>ASOAGRO</strong>
-
                 </span>
             </a>
 
@@ -205,6 +205,11 @@
     </main>
 </div>
 
+@if (EsInicio)
+{
+    <ChatAsistente />
+}
+
 @code {
     private record ItemMenu(string Texto, string Descripcion, string Icono, string Ruta);
     private record GrupoMenu(string Titulo, List<ItemMenu> Items);
@@ -245,7 +250,7 @@
             new("Guía de elegibilidad", "Requisitos para convocatorias de financiación.", "check", "/consultar-asociados"),
             new("Contacto", "Escríbenos o llámanos a la federación.", "sobre", "#"),
         }),
-    };
+    }; 
 
     private readonly List<Notificacion> todas = new()
     {
@@ -273,7 +278,7 @@
     }
 
     // Páginas con encabezado público y sin barra lateral. Para sumar otra, agrégala a esta lista.
-        private static readonly string[] RutasPublicas = { "home", "historia/origenes", "historia/impacto" };
+    private static readonly string[] RutasPublicas = { "home", "historia/origenes", "historia/impacto" };
 
     private bool IsHomePage()
     {
