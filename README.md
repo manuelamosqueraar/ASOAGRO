@@ -13,6 +13,16 @@ dotnet run --launch-profile https
 Asegúrate de que la consola muestre la confirmación del servidor escuchando en el puerto HTTPS:
 Now listening on: https://localhost:7136
 
+### Configurar credenciales
+Las credenciales no se guardan en `appsettings.json`. Antes de iniciar la aplicación, configura las variables de entorno necesarias. En PowerShell, por ejemplo:
+
+```powershell
+$env:Authentication__Google__ClientSecret = "<client-secret-de-Google>"
+$env:ASOAGRO_SUPABASE_CONNECTION = "<cadena-de-conexion-de-Supabase>"
+dotnet run --launch-profile https
+```
+
+Usa valores reales únicamente en variables de entorno o en un gestor de secretos; no los agregues al repositorio.
 
 ### 2. Autenticación y Acceso por Roles
 En la página https://localhost:7136/login, haz clic en el botón "Iniciar sesión con Google".

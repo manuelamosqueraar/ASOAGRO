@@ -7,3 +7,12 @@ obj/
 .vs/
 
 *.log
+.env
+.env.*
+!.env.example
+
+# Skills / Agent folders
+.agents/
+.agent/
+skills/
+skills-lock.json

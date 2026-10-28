@@ -34,7 +34,12 @@ namespace Asoagro.Controllers
             // Redirección inteligente según el rol del equipo
             if (!string.IsNullOrEmpty(rolUsuario))
             {
-                if (rolUsuario == "Director" || rolUsuario == "Presidente" || rolUsuario == "Tesorero")
+                if (rolUsuario == "Tesorero")
+                {
+                    return LocalRedirect("/registrar-documentos");
+                }
+
+                if (rolUsuario == "Director" || rolUsuario == "Presidente")
                 {
                     // Los mandamos directo al panel principal de gestión donde SÍ sale el menú lateral completo
                     return LocalRedirect("/consultar-asociados");
