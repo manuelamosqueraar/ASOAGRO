@@ -45,7 +45,7 @@ builder.Services.AddAuthentication(options =>
             {
                 identity.AddClaim(new Claim(ClaimTypes.Role, "Director"));
             }
-            else if (email == "juan.padillamo@amigo.edu.co")
+            else if (email == "karenargumedo157@gmail.com")
             {
                 identity.AddClaim(new Claim(ClaimTypes.Role, "Presidente"));
             }
@@ -118,7 +118,7 @@ static string? NormalizarConexionSupabase(string? raw)
             Username = Uri.UnescapeDataString(userInfo[0]),
             Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
             SslMode = SslMode.Require
-        };
+        }; 
         return connBuilder.ConnectionString;
     }
 
