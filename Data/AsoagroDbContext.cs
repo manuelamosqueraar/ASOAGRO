@@ -1,10 +1,22 @@
 using Asoagro.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Asoagro.Data;
 
 public class AsoagroDbContext : DbContext
 {
+    // Hectáreas: en C# son decimal y en Supabase son double precision.
+    // El convertidor traduce entre los dos tipos sin cambiar la base de datos.
+    private static readonly ValueConverter<decimal?, double?> HectareasConverter = new(
+        valor => valor.HasValue ? (double?)Convert.ToDouble(valor.Value) : null,
+        valor => valor.HasValue ? (decimal?)Convert.ToDecimal(valor.Value) : null);
+
+    // Es víctima: en C# es bool y en Supabase es texto "Si" / "No".
+    private static readonly ValueConverter<bool, string> EsVictimaConverter = new(
+        valor => valor ? "Si" : "No",
+        valor => string.Equals(valor, "Si", StringComparison.OrdinalIgnoreCase));
+
     public AsoagroDbContext(DbContextOptions<AsoagroDbContext> options)
         : base(options)
     {
@@ -77,7 +89,8 @@ public class AsoagroDbContext : DbContext
 
             entity.Property(a => a.HectareasPredio)
                 .HasColumnName("hectareas_predio")
-                .HasDefaultValue(0d);
+                .HasColumnType("double precision")
+                .HasConversion(HectareasConverter);
 
             entity.Property(a => a.CultivoPrincipal)
                 .HasColumnName("cultivo_principal")
@@ -90,8 +103,8 @@ public class AsoagroDbContext : DbContext
 
             entity.Property(a => a.EsVictima)
                 .HasColumnName("es_victima")
-                .HasMaxLength(10)
-                .HasDefaultValue("No");
+                .HasColumnType("varchar(10)")
+                .HasConversion(EsVictimaConverter);
 
             entity.Property(a => a.EstadoMembresia)
                 .HasColumnName("estado_membresia")
@@ -226,4 +239,3 @@ public class AsoagroDbContext : DbContext
         });
     }
 }
-

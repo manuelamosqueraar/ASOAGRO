@@ -24,6 +24,15 @@ dotnet run --launch-profile https
 
 Usa valores reales únicamente en variables de entorno o en un gestor de secretos; no los agregues al repositorio.
 
+En desarrollo, si no configuras `ASOAGRO_SUPABASE_CONNECTION`, el sistema usa datos temporales en memoria: no se guardan en Supabase y se pierden al reiniciar. En producción, la aplicación no inicia sin una cadena de conexión para evitar guardar datos en el lugar equivocado.
+
+### Problemas de conexión con Supabase
+
+- Si aparece `Host desconocido` o `Name or service not known`, la aplicación no pudo resolver el servidor por DNS. Todavía no llegó a validar la contraseña ni a consultar tablas. Prueba otra red o desactiva temporalmente la VPN si aplica; también puedes configurar el DNS de tu adaptador de red con `1.1.1.1` o `8.8.8.8`, ejecutar `ipconfig /flushdns` y reiniciar la aplicación.
+- Si tu red no permite conexiones IPv6, usa la cadena **Session pooler** que ofrece el panel de Supabase (Database > Connect) en lugar de la conexión directa. Copia la cadena completa del panel y configúrala como variable de entorno; no la compartas ni la subas al repositorio.
+- Cuando DNS y red funcionen, un error de autenticación indica que la contraseña no coincide. Un error que nombre una tabla o columna sí puede indicar que falta aplicar el esquema de `Database/supabase_schema.sql` desde el SQL Editor de Supabase.
+- La clave OAuth de Google también debe configurarse como `Authentication__Google__ClientSecret`; sin ella, la API funciona pero el inicio de sesión con Google queda deshabilitado.
+
 ### 2. Autenticación y Acceso por Roles
 En la página https://localhost:7136/login, haz clic en el botón "Iniciar sesión con Google".
 

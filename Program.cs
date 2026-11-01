@@ -16,52 +16,71 @@ using Npgsql;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Configuración de Autenticación con Cookies y Google OAuth
+var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
+var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+var googleAuthenticationConfigured =
+    !string.IsNullOrWhiteSpace(googleClientId) &&
+    !string.IsNullOrWhiteSpace(googleClientSecret);
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = GoogleDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = googleAuthenticationConfigured
+        ? GoogleDefaults.AuthenticationScheme
+        : CookieAuthenticationDefaults.AuthenticationScheme;
 })
 .AddCookie(options =>
 {
     options.LoginPath = "/login";
     options.AccessDeniedPath = "/access-denied";
-})
-.AddGoogle(options =>
-{
-    // Obtiene las credenciales configuradas en appsettings.json
-    options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
-    options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
-
-    // Asignación de roles dinámica basada en el correo que inicia sesión
-    options.Events.OnCreatingTicket = context =>
-    {
-        var email = context.Identity?.FindFirst(ClaimTypes.Email)?.Value?.ToLower() ?? "";
-        var identity = (ClaimsIdentity?)context.Identity;
-
-        if (identity != null)
-        {
-            // ===== REEMPLAZA ESTOS CORREOS CON LOS DE TU EQUIPO =====
-            if (email == "manuela.mosqueraar@amigo.edu.co")
-            {
-                identity.AddClaim(new Claim(ClaimTypes.Role, "Director"));
-            }
-            else if (email == "karenargumedo157@gmail.com")
-            {
-                identity.AddClaim(new Claim(ClaimTypes.Role, "Presidente"));
-            }
-            else if (email == "karen.argumedoco@amigo.edu.co")
-            {
-                identity.AddClaim(new Claim(ClaimTypes.Role, "Tesorero"));
-            }
-            else if (email == "manumosque743@gmail.com")
-            {
-                identity.AddClaim(new Claim(ClaimTypes.Role, "Invitado"));
-            }
-        }
-
-        return Task.CompletedTask;
-    };
 });
+
+if (googleAuthenticationConfigured)
+{
+    builder.Services.AddAuthentication()
+        .AddGoogle(options =>
+        {
+            options.ClientId = googleClientId!;
+            options.ClientSecret = googleClientSecret!;
+
+            // Asignación de roles dinámica basada en el correo que inicia sesión
+            options.Events.OnCreatingTicket = context =>
+            {
+                var email = context.Identity?.FindFirst(ClaimTypes.Email)?.Value?.ToLower() ?? "";
+                var identity = (ClaimsIdentity?)context.Identity;
+
+                if (identity != null)
+                {
+                    // ===== REEMPLAZA ESTOS CORREOS CON LOS DE TU EQUIPO =====
+                    if (email == "manuela.mosqueraar@amigo.edu.co")
+                    {
+                        identity.AddClaim(new Claim(ClaimTypes.Role, "Director"));
+                    }
+                    else if (email == "karenargumedo157@gmail.com")
+                    {
+                        identity.AddClaim(new Claim(ClaimTypes.Role, "Presidente"));
+                    }
+                    else if (email == "karen.argumedoco@amigo.edu.co")
+                    {
+                        identity.AddClaim(new Claim(ClaimTypes.Role, "Tesorero"));
+                    }
+                    else if (email == "manumosque743@gmail.com")
+                    {
+                        identity.AddClaim(new Claim(ClaimTypes.Role, "Invitado"));
+                    }
+                }
+
+                return Task.CompletedTask;
+            };
+
+            options.Events.OnRemoteFailure = context =>
+            {
+                context.HandleResponse();
+                context.Response.Redirect("/login?error=google_oauth");
+                return Task.CompletedTask;
+            };
+        });
+}
 
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
@@ -100,7 +119,9 @@ static string? NormalizarConexionSupabase(string? raw)
     var s = raw.Trim().Trim('"', '\'');
     if (s.Contains("<TU_CADENA_DE_CONEXION>", StringComparison.OrdinalIgnoreCase) ||
         s.Contains("<TU_USUARIO>", StringComparison.OrdinalIgnoreCase) ||
-        s.Contains("[Asociaciones_aso]", StringComparison.OrdinalIgnoreCase))
+        s.Contains("[Asociaciones_aso]", StringComparison.OrdinalIgnoreCase) ||
+        s.Contains("YOUR-PASSWORD", StringComparison.OrdinalIgnoreCase) ||
+        s.Contains("<TU_CONTRASENA>", StringComparison.OrdinalIgnoreCase))
     {
         return null;
     }
@@ -158,6 +179,24 @@ builder.Services.AddSingleton<NotificacionService>();
 // Revisa los vencimientos de documentos cada hora y crea los avisos
 builder.Services.AddHostedService<AlertasVencimientoWorker>();
 var app = builder.Build();
+
+if (string.IsNullOrWhiteSpace(supabaseConnection))
+{
+    if (!app.Environment.IsDevelopment())
+    {
+        throw new InvalidOperationException(
+            "Falta configurar ASOAGRO_SUPABASE_CONNECTION. La aplicación no puede iniciar en producción usando datos en memoria.");
+    }
+
+    app.Logger.LogWarning(
+        "No hay una conexión válida a Supabase configurada. La aplicación usará datos en memoria, que se perderán al reiniciar.");
+}
+
+if (!googleAuthenticationConfigured)
+{
+    app.Logger.LogWarning(
+        "Google OAuth no está configurado. El inicio de sesión con Google estará deshabilitado.");
+}
 
 if (!app.Environment.IsDevelopment())
 {

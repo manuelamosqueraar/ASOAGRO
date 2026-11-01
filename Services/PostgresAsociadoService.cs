@@ -36,15 +36,15 @@ public class PostgresAsociadoService : IAsociadoService
         asociado.NombreCompleto = asociado.NombreCompleto.Trim();
         asociado.FincaVereda = asociado.FincaVereda.Trim();
         asociado.CultivoPrincipal = asociado.CultivoPrincipal.Trim();
-        asociado.Telefono = asociado.Telefono.Trim();
-        asociado.Correo = asociado.Correo.Trim();
+        asociado.Telefono = asociado.Telefono?.Trim();
+        asociado.Correo = asociado.Correo?.Trim();
         asociado.NombrePredio = string.IsNullOrWhiteSpace(asociado.NombrePredio)
             ? asociado.FincaVereda
             : asociado.NombrePredio.Trim();
         asociado.VeredaSector = string.IsNullOrWhiteSpace(asociado.VeredaSector)
             ? asociado.FincaVereda
             : asociado.VeredaSector.Trim();
-        asociado.Municipio = asociado.Municipio.Trim();
+        asociado.Municipio = asociado.Municipio?.Trim();
 
         if (context.Asociados.Any(a => a.Cedula == asociado.Cedula))
         {
@@ -72,4 +72,3 @@ public class PostgresAsociadoService : IAsociadoService
         };
     }
 }
-

@@ -274,6 +274,13 @@
                 <h2>Inicia sesión</h2>
                 <p class="ag-caja-sub">Usa tu correo o usuario para administrar tu asociación.</p>
 
+                @if (Error == "google_oauth")
+                {
+                    <p class="ag-error" role="alert">
+                        Google rechazó la configuración de inicio de sesión. Verifica que el Client Secret vigente corresponda al Client ID de esta aplicación.
+                    </p>
+                }
+
                 <EditForm Model="@loginModel" OnValidSubmit="ManejarLogin">
                     <DataAnnotationsValidator />
 
@@ -356,6 +363,9 @@
     private LoginModel loginModel = new();
     private bool _verPassword;
     private bool _cargando;
+
+    [SupplyParameterFromQuery(Name = "error")]
+    private string? Error { get; set; }
 
     private void AlternarPassword() => _verPassword = !_verPassword;
 

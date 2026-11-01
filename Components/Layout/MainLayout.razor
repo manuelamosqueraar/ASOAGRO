@@ -138,7 +138,7 @@
 
             <IdiomaSelector />
 
-            @if (autenticado)
+            @if (!EsInicio && autenticado)
             {
                 <div class="ag-desplegable">
                     <button type="button" class="ag-icono-btn" @onclick="ToggleNotificaciones" title="Centro de alertas" aria-label="Centro de alertas">
@@ -204,7 +204,7 @@
                     }
                 </div>
             }
-            else
+            else if (EsInicio || !autenticado)
             {
                 <a href="/login" class="ag-entrar">
                     <svg class="ag-ico"><use href="#ico-entrar" /></svg>

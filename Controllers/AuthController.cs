@@ -9,9 +9,23 @@ namespace Asoagro.Controllers
     [Route("[controller]")]
     public class AuthController : Controller
     {
+        private readonly IConfiguration configuration;
+
+        public AuthController(IConfiguration configuration)
+        {
+            this.configuration = configuration;
+        }
+
         [HttpGet("login-google")]
         public IActionResult LoginGoogle([FromQuery] string returnUrl = "/")
         {
+            if (string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientSecret"]))
+            {
+                return Problem(
+                    "Google OAuth no está configurado. Define Authentication__Google__ClientSecret como variable de entorno.",
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
+            }
+
             var properties = new AuthenticationProperties
             {
                 RedirectUri = Url.Action("GoogleCallback", "Auth", new { returnUrl })
