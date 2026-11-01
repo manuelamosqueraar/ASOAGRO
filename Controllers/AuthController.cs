@@ -53,15 +53,17 @@ namespace Asoagro.Controllers
                     return LocalRedirect("/registrar-documentos");
                 }
 
-                if (rolUsuario == "Director" || rolUsuario == "Presidente")
+                if (rolUsuario == "Director")
                 {
-                    // Los mandamos directo al panel principal de gestión donde SÍ sale el menú lateral completo
                     return LocalRedirect("/consultar-asociados");
                 }
-                else if (rolUsuario == "Invitado")
+                if (rolUsuario == "Presidente")
                 {
-                    // Si es invitado, lo podemos mandar a una vista general o donde prefieras
-                    return LocalRedirect("/consultar-asociados");
+                    return LocalRedirect("/subir-actas-estatutos");
+                }
+                if (rolUsuario == "Invitado")
+                {
+                    return LocalRedirect("/");
                 }
             }
 
