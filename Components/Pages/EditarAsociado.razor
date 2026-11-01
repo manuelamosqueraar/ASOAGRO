@@ -4,13 +4,17 @@
 @rendermode InteractiveServer
 @using Asoagro.Services
 @using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
 @inject AsociadoService AsociadoService
+@inject NotificacionService Notificaciones
+@inject AuthenticationStateProvider AuthProvider
 
-<PageTitle>Actualización de datos</PageTitle> 
- 
+<PageTitle>Actualización de datos</PageTitle>
+
 <div class="ea">
- 
-    <!-- ENCABEZADO --> 
+
+    <!-- ENCABEZADO -->
     <section class="ea-hero">
         <div class="ea-hero-texto">
             <div class="ea-etiquetas">
@@ -349,6 +353,9 @@
     private string mensajeExito = string.Empty;
     private string mensajeError = string.Empty;
 
+    // Cédula del expediente que ya está cargado en el formulario
+    private string? _cedulaCargada;
+
     // Solo se consideran expedientes completos (pasos 1, 2 y 3 terminados)
     private List<AsociadoModel> ProductoresCompletos => AsociadoService.ObtenerAsociados()
         .Where(a => !string.IsNullOrWhiteSpace(a.NombreCompleto)
@@ -395,6 +402,11 @@
 
     protected override void OnParametersSet()
     {
+        // Solo carga el expediente cuando cambia la cédula de la ruta. Si la pantalla se vuelve
+        // a dibujar (por ejemplo, al llegar un aviso), no se borra lo que se está editando.
+        if (_cedulaCargada == Cedula) return;
+        _cedulaCargada = Cedula;
+
         mensajeExito = string.Empty;
         mensajeError = string.Empty;
 
@@ -414,7 +426,7 @@
 
     private void AlternarBPA() => asociado.TieneBPA = !asociado.TieneBPA;
 
-    private void GuardarCambios()
+    private async Task GuardarCambios()
     {
         var lista = AsociadoService.ObtenerAsociados();
         var index = lista.FindIndex(a => a.Cedula == asociado.Cedula);
@@ -427,7 +439,31 @@
 
         // Se guarda una copia, no el objeto del formulario
         lista[index] = Copiar(asociado);
+
+        // Avisa en tiempo real a todas las pantallas conectadas
+        var autor = await NombreAutorAsync();
+        Notificaciones.Publicar(new Asoagro.Models.Notificacion
+        {
+            Titulo = "Expediente actualizado",
+            Descripcion = $"{asociado.NombreCompleto} · {asociado.NombrePredio}. Modificado por {autor}.",
+            Etiqueta = "Edición",
+            Enlace = $"/editar-asociado/{asociado.Cedula}",
+            Icono = "ajustes",
+            Categoria = Asoagro.Models.CategoriaNotificacion.Productores,
+            Nivel = Asoagro.Models.NivelNotificacion.Informativa, 
+            RolesEnlace = new[] { "Director" }
+        });
+
         mensajeExito = $"El expediente de {asociado.NombreCompleto} se actualizó correctamente.";
+    }
+
+    // Nombre de quien hace el cambio, para mostrarlo en el aviso
+    private async Task<string> NombreAutorAsync()
+    {
+        var estado = await AuthProvider.GetAuthenticationStateAsync();
+        return estado.User.Identity?.Name
+            ?? estado.User.FindFirst(ClaimTypes.Email)?.Value
+            ?? "un usuario";
     }
 
     private static AsociadoModel Copiar(AsociadoModel origen) => new()

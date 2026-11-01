@@ -1,7 +1,39 @@
 ﻿@inherits LayoutComponentBase
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
 @using Asoagro.Components.Pages
+@using Asoagro.Models
+@using Asoagro.Services
 @inject NavigationManager Navigation
+@inject AuthenticationStateProvider AuthProvider
+@inject NotificacionService Notificaciones
 @implements IDisposable
+
+<style>
+    /* Avisos en tiempo real: campana, panel y aviso emergente */
+    .ag-nv-punto { flex: 0 0 8px; width: 8px; height: 8px; align-self: center; border-radius: 50%; background: #2e9a5b; box-shadow: 0 0 0 3px rgba(46, 154, 91, .18); }
+    .ag-notif.ag-nv-leida { opacity: .6; }
+    .ag-notif:not([href]) { cursor: default; }
+    .ag-nv-pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+    .ag-nv-marcar { padding: 0; border: 0; background: transparent; color: #17603a; font-family: 'Inter', system-ui, sans-serif; font-size: .84rem; font-weight: 600; cursor: pointer; }
+    .ag-nv-marcar:hover:not(:disabled) { text-decoration: underline; text-underline-offset: 3px; }
+    .ag-nv-marcar:disabled { color: #9aaa9f; cursor: default; }
+    .ag-nv-aviso { position: fixed; top: calc(var(--ag-h, 4.25rem) + 12px); right: 16px; z-index: 1400; display: flex; align-items: flex-start; gap: 12px; width: min(360px, calc(100vw - 32px)); padding: 14px; background: #fff; border: 1px solid rgba(23, 96, 58, .12); border-radius: 16px; box-shadow: 0 22px 44px -22px rgba(11, 46, 28, .6); color: #10261a; animation: ag-nv-entra .35s cubic-bezier(.2, .7, .2, 1) both; }
+    .ag-nv-icono { flex: 0 0 40px; width: 40px; height: 40px; display: grid; place-items: center; border-radius: 12px; background: #e6f2dc; color: #17603a; }
+    .ag-nv-icono.urgente { background: #fbeeee; color: #b42318; }
+    .ag-nv-icono.advertencia { background: #f8efd2; color: #8a6412; }
+    .ag-nv-icono svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .ag-nv-texto { flex: 1; min-width: 0; display: grid; gap: 3px; }
+    .ag-nv-texto small { font-family: 'Inter', system-ui, sans-serif; font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #5c7063; }
+    .ag-nv-texto strong { font-family: 'Maname', Georgia, serif; font-size: 1.02rem; font-weight: 700; line-height: 1.2; color: #0b2e1c; }
+    .ag-nv-texto em { font-family: 'Asap Sharp', system-ui, sans-serif; font-style: normal; font-size: .9rem; line-height: 1.45; color: #2e3d31; }
+    .ag-nv-ver { justify-self: start; margin-top: 4px; font-family: 'Inter', system-ui, sans-serif; font-size: .84rem; font-weight: 600; color: #17603a; text-decoration: none; }
+    .ag-nv-ver:hover { text-decoration: underline; text-underline-offset: 3px; }
+    .ag-nv-cerrar { flex: 0 0 28px; width: 28px; height: 28px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #5c7063; font-size: 1.25rem; line-height: 1; cursor: pointer; }
+    .ag-nv-cerrar:hover { background: #f2f7ec; }
+    @@keyframes ag-nv-entra { from { opacity: 0; transform: translate3d(0, -10px, 0); } to { opacity: 1; transform: none; } }
+    @@media (prefers-reduced-motion: reduce) { .ag-nv-aviso { animation: none; } }
+</style>
 
 <svg class="ag-sprite" aria-hidden="true" focusable="false">
     <defs>
@@ -102,61 +134,82 @@
                 <button class="ag-icono-btn ag-solo-movil" @onclick="ToggleMenuNavMovil" aria-label="Abrir menú">
                     <svg class="ag-ico"><use href="#ico-menu" /></svg>
                 </button>
-                <IdiomaSelector />
-                <a href="/login" class="ag-entrar">
-                    <svg class="ag-ico"><use href="#ico-entrar" /></svg>
-                    <span class="ag-texto-entrar">Iniciar sesión</span>
-                </a>
             }
-            else
+
+            <IdiomaSelector />
+
+            @if (autenticado)
             {
-                <IdiomaSelector />
                 <div class="ag-desplegable">
-                    <button class="ag-icono-btn" @onclick="ToggleNotificaciones" title="Centro de alertas" aria-label="Centro de alertas">
+                    <button type="button" class="ag-icono-btn" @onclick="ToggleNotificaciones" title="Centro de alertas" aria-label="Centro de alertas">
                         <svg class="ag-ico"><use href="#ico-campana" /></svg>
-                        <span class="ag-contador">@todas.Count</span>
+                        @if (NoLeidas > 0)
+                        {
+                            <span class="ag-contador">@NoLeidas</span>
+                        }
                     </button>
 
                     @if (mostrarNotificaciones)
                     {
+                        var lista = NotificacionesVisibles;
+
                         <div class="ag-panel">
                             <div class="ag-panel-cab">
                                 <div>
                                     <strong>Alertas del sistema</strong>
-                                    <small>Vencimientos y registros recientes</small>
+                                    <small>Registros, cambios y vencimientos</small>
                                 </div>
-                                <span class="ag-pildora">@notificacionesFiltradas.Count activas</span>
+                                <span class="ag-pildora">@NoLeidas sin leer</span>
                             </div>
+
                             <div class="ag-filtros">
                                 @foreach (var f in Filtros)
                                 {
-                                    <button class="ag-chip @(filtroActivo == f ? "activo" : "")" @onclick="() => FiltrarNotificaciones(f)">@f</button>
+                                    <button type="button" class="ag-chip @(filtroActivo == f ? "activo" : "")" @onclick="() => FiltrarNotificaciones(f)">@f</button>
                                 }
                             </div>
+
                             <div class="ag-lista-notif">
-                                @if (!notificacionesFiltradas.Any())
+                                @if (lista.Count == 0)
                                 {
                                     <p class="ag-vacio">No hay alertas en esta categoría.</p>
                                 }
                                 else
                                 {
-                                    @foreach (var n in notificacionesFiltradas)
+                                    @foreach (var n in lista)
                                     {
-                                        <a href="@n.Enlace" class="ag-notif" @onclick="CerrarTodo">
-                                            <span class="ag-notif-ico @n.Tono"><svg class="ag-ico"><use href="#ico-@n.Icono" /></svg></span>
+                                        var leida = EstaLeida(n);
+
+                                        <a href="@(PuedeAbrir(n) ? n.Enlace : null)" class="ag-notif @(leida ? "ag-nv-leida" : "")" @onclick="() => AbrirNotificacion(n)">
+                                            <span class="ag-notif-ico @ObtenerTono(n)"><svg class="ag-ico"><use href="#ico-@n.Icono" /></svg></span>
                                             <span>
-                                                <span class="ag-notif-meta"><small>@n.Categoria</small><small>@n.Tiempo</small></span>
+                                                <span class="ag-notif-meta"><small>@n.Etiqueta</small><small>@TiempoTranscurrido(n.FechaCreacion)</small></span>
                                                 <strong>@n.Titulo</strong>
                                                 <em>@n.Descripcion</em>
                                             </span>
+                                            @if (!leida)
+                                            {
+                                                <span class="ag-nv-punto" title="Sin leer"></span>
+                                            }
                                         </a>
                                     }
                                 }
                             </div>
-                            <div class="ag-panel-pie"><a href="/alertas-documentos" @onclick="CerrarTodo">Ver panel completo</a></div>
+
+                            <div class="ag-panel-pie ag-nv-pie">
+                                <button type="button" class="ag-nv-marcar" @onclick="MarcarTodasComoLeidas" disabled="@(NoLeidas == 0)">Marcar todas como leídas</button>
+                                <a href="/alertas-documentos" @onclick="CerrarTodo">Ver panel completo</a>
+                            </div>
                         </div>
                     }
                 </div>
+            }
+            else
+            {
+                <a href="/login" class="ag-entrar">
+                    <svg class="ag-ico"><use href="#ico-entrar" /></svg>
+                    <span class="ag-texto-entrar">Iniciar sesión</span>
+                </a>
             }
         </div>
     </header>
@@ -180,7 +233,11 @@
                     </a>
                 }
             }
-            <a href="/login" class="ag-entrar ag-entrar-bloque" @onclick="CerrarTodo">Iniciar sesión</a>
+
+            @if (!autenticado)
+            {
+                <a href="/login" class="ag-entrar ag-entrar-bloque" @onclick="CerrarTodo">Iniciar sesión</a>
+            }
         </div>
     }
 
@@ -210,23 +267,30 @@
     <ChatAsistente />
 }
 
+@if (avisoEmergente is not null)
+{
+    var aviso = avisoEmergente;
+
+    <div class="ag-nv-aviso" role="status" aria-live="polite">
+        <span class="ag-nv-icono @ObtenerClaseNivel(aviso)"><svg class="ag-ico"><use href="#ico-@aviso.Icono" /></svg></span>
+        <div class="ag-nv-texto">
+            <small>@aviso.Etiqueta · @TiempoTranscurrido(aviso.FechaCreacion)</small>
+            <strong>@aviso.Titulo</strong>
+            <em>@aviso.Descripcion</em>
+            @if (PuedeAbrir(aviso))
+            {
+                <a href="@aviso.Enlace" class="ag-nv-ver" @onclick="CerrarAviso">Ver detalle</a>
+            }
+        </div>
+        <button type="button" class="ag-nv-cerrar" @onclick="CerrarAviso" aria-label="Cerrar aviso">&times;</button>
+    </div>
+}
+
 @code {
     private record ItemMenu(string Texto, string Descripcion, string Icono, string Ruta);
     private record GrupoMenu(string Titulo, List<ItemMenu> Items);
 
-    private class Notificacion
-    {
-        public string Tipo { get; init; } = "";
-        public string Categoria { get; init; } = "";
-        public string Titulo { get; init; } = "";
-        public string Descripcion { get; init; } = "";
-        public string Tiempo { get; init; } = "";
-        public string Enlace { get; init; } = "";
-        public string Tono { get; init; } = "";
-        public string Icono { get; init; } = "";
-    }
-
-    private static readonly string[] Filtros = { "Todas", "Documentos", "Productores", "Trazabilidad" };
+    private static readonly string[] Filtros = { "Todas", "Documentos", "Productores" };
 
     // Enlaces con "#" son de ejemplo: cámbialos por tus rutas reales.
     private readonly List<GrupoMenu> menu = new()
@@ -250,16 +314,11 @@
             new("Guía de elegibilidad", "Requisitos para convocatorias de financiación.", "check", "/consultar-asociados"),
             new("Contacto", "Escríbenos o llámanos a la federación.", "sobre", "#"),
         }),
-    }; 
-
-    private readonly List<Notificacion> todas = new()
-    {
-        new() { Tipo = "Documentos", Categoria = "Urgente", Titulo = "Estatutos por vencer", Descripcion = "Los estatutos de la vereda El Tres vencen en 5 días.", Tiempo = "Hace 15 min", Enlace = "/alertas-documentos", Tono = "ag-tono-urgente", Icono = "alerta" },
-        new() { Tipo = "Productores", Categoria = "Registro", Titulo = "Nuevo asociado registrado", Descripcion = "Carlos Mendoza ingresó a la línea de plátano.", Tiempo = "Hace 1 hora", Enlace = "/consultar-asociados", Tono = "ag-tono-registro", Icono = "usuario-mas" },
-        new() { Tipo = "Trazabilidad", Categoria = "Predios", Titulo = "Predio pendiente de inspección", Descripcion = "Un lote de cacao requiere revisión de inocuidad.", Tiempo = "Hace 3 horas", Enlace = "/historia/impacto", Tono = "ag-tono-trazabilidad", Icono = "mapa" },
     };
 
-    private List<Notificacion> notificacionesFiltradas = new();
+    // Páginas con encabezado público y sin barra lateral. Para sumar otra, agrégala a esta lista.
+    private static readonly string[] RutasPublicas = { "home", "historia/origenes", "historia/impacto" };
+
     private bool collapseNavMenu;
     private bool menuMovilAbierto;
     private bool menuNavMovilAbierto;
@@ -267,18 +326,95 @@
     private string? grupoAbierto;
     private string filtroActivo = "Todas";
 
+    // Usuario que inició sesión. Su correo identifica sus avisos leídos y sus roles filtran lo que ve.
+    private bool autenticado;
+    private string claveUsuario = string.Empty;
+    private List<string> roles = new();
+
+    // Aviso emergente que aparece cuando llega una notificación nueva
+    private Notificacion? avisoEmergente;
+    private bool _disposed;
+
     private bool EsInicio => IsHomePage();
     private bool HayDesplegableAbierto => mostrarNotificaciones || grupoAbierto is not null || menuNavMovilAbierto;
     private string RutaActual => Navigation.ToBaseRelativePath(Navigation.Uri).Trim('/').ToLowerInvariant();
 
-    protected override void OnInitialized()
+    // Se calculan en cada render, así siempre reflejan el estado actual del servicio
+    private int NoLeidas => autenticado ? Notificaciones.ContarNoLeidas(claveUsuario, roles) : 0;
+
+    private IReadOnlyList<Notificacion> NotificacionesVisibles => autenticado
+        ? Notificaciones.ObtenerVisiblesPara(roles).Where(CoincideFiltro).Take(30).ToList()
+        : new List<Notificacion>();
+
+    protected override async Task OnInitializedAsync()
     {
-        notificacionesFiltradas = todas;
         Navigation.LocationChanged += EnCambioDeRuta;
+        Notificaciones.NotificacionPublicada += EnNuevaNotificacion;
+        await CargarUsuarioAsync();
     }
 
-    // Páginas con encabezado público y sin barra lateral. Para sumar otra, agrégala a esta lista.
-    private static readonly string[] RutasPublicas = { "home", "historia/origenes", "historia/impacto" };
+    private async Task CargarUsuarioAsync()
+    {
+        var estado = await AuthProvider.GetAuthenticationStateAsync();
+        var usuario = estado.User;
+
+        autenticado = usuario.Identity?.IsAuthenticated == true;
+        if (!autenticado)
+        {
+            claveUsuario = string.Empty;
+            roles = new List<string>();
+            return;
+        }
+
+        // El correo identifica al usuario en los avisos leídos. El nombre es solo para mostrar.
+        claveUsuario = usuario.FindFirst(ClaimTypes.Email)?.Value
+            ?? usuario.Identity?.Name
+            ?? "usuario";
+
+        roles = usuario.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
+    }
+
+    // Llega cuando cualquier pantalla publica un aviso, incluida la de otro navegador.
+    // Se pasa a la conexión de esta pantalla para poder actualizar la interfaz.
+    private void EnNuevaNotificacion(Notificacion notificacion)
+    {
+        if (_disposed) return;
+
+        try
+        {
+            _ = InvokeAsync(() => MostrarAvisoAsync(notificacion));
+        }
+        catch (Exception)
+        {
+            // Si esta pantalla ya no está activa, no debe afectar a quien guardó el registro.
+        }
+    }
+
+    private async Task MostrarAvisoAsync(Notificacion notificacion)
+    {
+        if (_disposed || !autenticado) return;
+        if (!NotificacionService.EsVisible(notificacion, roles)) return;
+
+        avisoEmergente = notificacion;
+        StateHasChanged();
+
+        await Task.Delay(TimeSpan.FromSeconds(8));
+
+        if (!_disposed && avisoEmergente?.Id == notificacion.Id)
+        {
+            avisoEmergente = null;
+            StateHasChanged();
+        }
+    }
+
+    private void CerrarAviso() => avisoEmergente = null;
+
+    private void EnCambioDeRuta(object? sender, LocationChangedEventArgs e)
+    {
+        CerrarTodo();
+        menuMovilAbierto = false;
+        InvokeAsync(StateHasChanged);
+    }
 
     private bool IsHomePage()
     {
@@ -335,18 +471,60 @@
         menuNavMovilAbierto = false;
     }
 
-    private void FiltrarNotificaciones(string filtro)
-    {
-        filtroActivo = filtro;
-        notificacionesFiltradas = filtro == "Todas" ? todas : todas.Where(n => n.Tipo == filtro).ToList();
-    }
+    private void FiltrarNotificaciones(string filtro) => filtroActivo = filtro;
 
-    private void EnCambioDeRuta(object? sender, LocationChangedEventArgs e)
+    private bool CoincideFiltro(Notificacion notificacion) => filtroActivo switch
     {
+        "Documentos" => notificacion.Categoria == CategoriaNotificacion.Documentos,
+        "Productores" => notificacion.Categoria == CategoriaNotificacion.Productores,
+        _ => true
+    };
+
+    private bool EstaLeida(Notificacion notificacion) =>
+        autenticado && Notificaciones.EsLeida(claveUsuario, notificacion.Id);
+
+    // El aviso siempre se ve; el enlace solo aparece si este usuario puede abrir la página
+    private bool PuedeAbrir(Notificacion notificacion) =>
+        autenticado && NotificacionService.PuedeAbrirEnlace(notificacion, roles);
+
+    private void AbrirNotificacion(Notificacion notificacion)
+    {
+        if (autenticado) Notificaciones.MarcarComoLeida(claveUsuario, notificacion.Id);
         CerrarTodo();
-        menuMovilAbierto = false;
-        InvokeAsync(StateHasChanged);
     }
 
-    public void Dispose() => Navigation.LocationChanged -= EnCambioDeRuta;
+    private void MarcarTodasComoLeidas()
+    {
+        if (autenticado) Notificaciones.MarcarTodasComoLeidas(claveUsuario, roles);
+    }
+
+    private static string ObtenerTono(Notificacion notificacion) => notificacion.Nivel switch
+    {
+        NivelNotificacion.Urgente => "ag-tono-urgente",
+        NivelNotificacion.Advertencia => "ag-tono-trazabilidad",
+        _ => "ag-tono-registro"
+    };
+
+    private static string ObtenerClaseNivel(Notificacion notificacion) => notificacion.Nivel switch
+    {
+        NivelNotificacion.Urgente => "urgente",
+        NivelNotificacion.Advertencia => "advertencia",
+        _ => string.Empty
+    };
+
+    private static string TiempoTranscurrido(DateTime fecha)
+    {
+        var transcurrido = DateTime.Now - fecha;
+        if (transcurrido.TotalMinutes < 1) return "Ahora";
+        if (transcurrido.TotalMinutes < 60) return $"Hace {(int)transcurrido.TotalMinutes} min";
+        if (transcurrido.TotalHours < 24) return $"Hace {(int)transcurrido.TotalHours} h";
+        return fecha.ToString("dd/MM/yyyy");
+    }
+
+    public void Dispose()
+    {
+        _disposed = true;
+        Navigation.LocationChanged -= EnCambioDeRuta;
+        Notificaciones.NotificacionPublicada -= EnNuevaNotificacion;
+    }
 }

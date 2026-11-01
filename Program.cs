@@ -152,6 +152,11 @@ builder.Services.AddScoped(sp =>
     return new HttpClient { BaseAddress = new Uri(navigationManager.BaseUri) };
 });
 builder.Services.AddSingleton<AsociadoService>();
+// Avisos en tiempo real: una sola lista compartida por todas las pantallas conectadas
+builder.Services.AddSingleton<NotificacionService>();
+
+// Revisa los vencimientos de documentos cada hora y crea los avisos
+builder.Services.AddHostedService<AlertasVencimientoWorker>();
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

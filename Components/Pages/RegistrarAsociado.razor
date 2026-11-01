@@ -2,10 +2,14 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Director")]
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
 @using Asoagro.Services
 @inject AsociadoService AsociadoService
+@inject NotificacionService Notificaciones
+@inject AuthenticationStateProvider AuthProvider
 
-<div class="ra">
+<div class="ra"> 
 
     <!-- ENCABEZADO -->
     <section class="ra-hero">
@@ -436,6 +440,15 @@
         return $"{partes[0][0]}{partes[1][0]}".ToUpper();
     }
 
+    // Nombre de quien hace el registro, para mostrarlo en el aviso
+    private async Task<string> NombreAutorAsync()
+    {
+        var estado = await AuthProvider.GetAuthenticationStateAsync();
+        return estado.User.Identity?.Name
+            ?? estado.User.FindFirst(ClaimTypes.Email)?.Value
+            ?? "un usuario";
+    }
+
     private async Task ManejarEnvio()
     {
         mensajeExito = string.Empty;
@@ -470,6 +483,20 @@
                 EsVictima = asociado.EsVictima,
                 EstadoMembresia = asociado.EstadoMembresia,
                 FechaRegistro = DateTime.Now
+            });
+
+            // Avisa en tiempo real a todas las pantallas conectadas
+            var autor = await NombreAutorAsync();
+            Notificaciones.Publicar(new Asoagro.Models.Notificacion
+            {
+                Titulo = "Nuevo productor registrado",
+                Descripcion = $"{asociado.NombreCompleto} · {asociado.NombrePredio}, {asociado.VeredaSector}. Registrado por {autor}.",
+                Etiqueta = "Registro",
+                Enlace = "/consultar-asociados",
+                Icono = "usuario-mas",
+                Categoria = Asoagro.Models.CategoriaNotificacion.Productores, 
+                Nivel = Asoagro.Models.NivelNotificacion.Informativa,
+                RolesEnlace = new[] { "Director" }
             });
 
             mensajeExito = $"{asociado.NombreCompleto} quedó vinculado al padrón FAAUA.";
