@@ -146,7 +146,7 @@ Aplicación ASP.NET Core Blazor para la gestión inicial de asociados productore
 ## Requisitos
 
 - Git.
-- .NET SDK 10 o una versión compatible con el `TargetFramework` definido en `Asoagro.csproj`.
+- .NET SDK 11 Preview o una versión compatible con el `TargetFramework` definido en `Asoagro.csproj`.
 
 Verificar que .NET esté instalado:
 
