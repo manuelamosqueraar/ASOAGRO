@@ -56,7 +56,7 @@ if (googleAuthenticationConfigured)
                     {
                         identity.AddClaim(new Claim(ClaimTypes.Role, "Director"));
                     }
-                    else if (email == "manumosque743@gmail.com")
+                    else if (email == "juan.padillamo@amigo.edu.co")
                     {
                         identity.AddClaim(new Claim(ClaimTypes.Role, "Presidente"));
                     }
