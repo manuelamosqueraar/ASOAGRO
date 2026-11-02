@@ -14,15 +14,15 @@ Asegúrate de que la consola muestre la confirmación del servidor escuchando en
 Now listening on: https://localhost:7136
 
 ### Configurar credenciales
-Las credenciales no se guardan en `appsettings.json`. Antes de iniciar la aplicación, configura las variables de entorno necesarias. En PowerShell, por ejemplo:
+Las credenciales no se guardan en `appsettings.json` ni se comparten al actualizar el repositorio. **Cada desarrollador debe configurar sus secretos en su propio equipo.** La opción recomendada es User Secrets, que ya está habilitado para este proyecto:
 
 ```powershell
-$env:Authentication__Google__ClientSecret = "<client-secret-de-Google>"
-$env:ASOAGRO_SUPABASE_CONNECTION = "<cadena-de-conexion-de-Supabase>"
+dotnet user-secrets set "Authentication:Google:ClientSecret" "<client-secret-de-Google>"
+dotnet user-secrets set "ASOAGRO_SUPABASE_CONNECTION" "<cadena-de-conexion-de-Supabase>"
 dotnet run --launch-profile https
 ```
 
-Usa valores reales únicamente en variables de entorno o en un gestor de secretos; no los agregues al repositorio.
+La clave de Google debe obtenerse de forma segura de quien administra las credenciales OAuth. No la envíes por el repositorio ni la pegues en archivos compartidos. También puedes usar variables de entorno en vez de User Secrets si tu entorno de ejecución así lo requiere.
 
 En desarrollo, si no configuras `ASOAGRO_SUPABASE_CONNECTION`, el sistema usa datos temporales en memoria: no se guardan en Supabase y se pierden al reiniciar. En producción, la aplicación no inicia sin una cadena de conexión para evitar guardar datos en el lugar equivocado.
 

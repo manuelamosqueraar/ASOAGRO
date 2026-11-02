@@ -21,6 +21,19 @@
     color: var(--ra-tinta);
 }
 
+.ra :is(h1, h2, h3) {
+    font-family: 'Maname', Georgia, serif !important;
+    font-weight: 700 !important;
+}
+
+.ra p {
+    font-family: 'Asap Sharp', system-ui, sans-serif !important;
+}
+
+.ra :is(label, button, .ra-etiqueta, .ra-estado, .ra-hero-etiqueta, .ra-paso-titulo, .ra-paso-sub, .ra-carnet-sello) {
+    font-family: 'Inter', system-ui, sans-serif !important;
+}
+
 .ra-ico {
     width: 20px;
     height: 20px;
@@ -357,7 +370,7 @@
 
 .ra-seccion-texto h2 {
     margin: 0 0 .2rem;
-    font-family: var(--ag-titulo, 'Maname', serif);
+    font-family: 'Maname', Georgia, serif !important;
     font-size: 1.3rem;
     font-weight: 700;
     color: var(--ra-bosque);
@@ -425,13 +438,35 @@
     transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
 }
 
-.ra-input::placeholder { color: #9aa99c; }
+::deep .ra-input {
+    min-height: 3rem;
+    padding: .7rem .9rem;
+    border: 1px solid #cbd9c7;
+    border-radius: .75rem;
+    background: #fbfcf9;
+    color: var(--ra-tinta);
+    font-family: 'Inter', system-ui, sans-serif !important;
+    font-size: .95rem !important;
+    line-height: 1.4;
+    box-shadow: inset 0 1px 2px rgba(11, 46, 28, .04);
+    transition: border-color .2s ease, background-color .2s ease, box-shadow .2s ease;
+}
 
-.ra-input:focus {
+::deep .ra-input::placeholder { color: #849589; opacity: 1; }
+
+::deep .ra-input:focus {
     outline: none;
     background: #ffffff;
     border-color: var(--ra-hoja);
-    box-shadow: 0 0 0 4px rgba(46, 154, 91, .15);
+    box-shadow: 0 0 0 4px rgba(46, 154, 91, .14);
+}
+
+::deep .ra-input.invalid {
+    border-color: #b42318;
+}
+
+::deep .ra-input.invalid:focus {
+    box-shadow: 0 0 0 4px rgba(180, 35, 24, .12);
 }
 
 /* ---------- Línea productiva ---------- */
