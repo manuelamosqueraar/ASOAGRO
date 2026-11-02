@@ -1,0 +1,117 @@
+@page "/actas-estatutos"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Presidente")]
+@rendermode InteractiveServer
+@using Asoagro.Models
+@using Asoagro.Services
+@inject IDocumentoInstitucionalService DocumentoService
+
+<PageTitle>Panel de actas y documentos</PageTitle>
+
+<div class="ad">
+    <header class="ad-hero">
+        <div>
+            <span class="ad-eyebrow">FAAUA · Presidencia</span>
+            <h1>Centro de gestión documental</h1>
+            <p>Un espacio para registrar, consultar y dar seguimiento a las actas y documentos institucionales.</p>
+        </div>
+        <a class="ad-button ad-button-primary" href="/actas-estatutos/documentos">
+            <span aria-hidden="true">▤</span> Abrir repositorio
+        </a>
+    </header>
+
+    <section class="ad-summary" aria-label="Resumen documental">
+        <article class="ad-stat ad-stat-total">
+            <span class="ad-stat-icon">▤</span>
+            <div><small>Total de documentos</small><strong>@Documentos.Count</strong></div>
+            <span class="ad-stat-caption">En el repositorio</span>
+        </article>
+        <article class="ad-stat ad-stat-current">
+            <span class="ad-stat-icon ad-stat-green">✓</span>
+            <div><small>Vigentes</small><strong>@Contar(EstadosDocumento.Vigente)</strong></div>
+            <span class="ad-stat-caption">Activos</span>
+        </article>
+        <article class="ad-stat ad-stat-review">
+            <span class="ad-stat-icon ad-stat-amber">◷</span>
+            <div><small>En revisión</small><strong>@Contar(EstadosDocumento.EnRevision)</strong></div>
+            <span class="ad-stat-caption">Pendientes de validar</span>
+        </article>
+        <article class="ad-stat ad-stat-cancelled">
+            <span class="ad-stat-icon ad-stat-muted">↶</span>
+            <div><small>Anulados</small><strong>@Contar(EstadosDocumento.Anulado)</strong></div>
+            <span class="ad-stat-caption">Conservados en historial</span>
+        </article>
+    </section>
+
+    <section class="ad-workspace">
+        <div class="ad-main-column">
+            <div class="ad-section-heading">
+                <div><span class="ad-eyebrow">Actividad reciente</span><h2>Últimos documentos</h2></div>
+                <a href="/actas-estatutos/documentos">Ver repositorio <span aria-hidden="true">→</span></a>
+            </div>
+
+            @if (Recientes.Count > 0)
+            {
+                <div class="ad-recent-list">
+                    @foreach (var documento in Recientes)
+                    {
+                        <article class="ad-recent-item">
+                            <span class="ad-document-icon">▤</span>
+                            <div class="ad-recent-info">
+                                <strong>@documento.Titulo</strong>
+                                <span>@documento.Tipo · @documento.Fecha.ToString("dd/MM/yyyy")</span>
+                                <small>@(string.IsNullOrWhiteSpace(documento.NombreAsociado) ? "Documento institucional" : $"Asociado: {documento.NombreAsociado}")</small>
+                            </div>
+                            <span class="ad-status @ClaseEstado(documento.Estado)">@documento.Estado</span>
+                        </article>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="ad-empty">
+                    <span class="ad-empty-icon">▤</span>
+                    <strong>Aún no hay documentos</strong>
+                    <p>Registra el primer archivo para empezar a construir el repositorio.</p>
+                    <a class="ad-button ad-button-primary" href="/actas-estatutos/documentos">Abrir repositorio</a>
+                </div>
+            }
+        </div>
+
+        <aside class="ad-side-column">
+            <span class="ad-eyebrow">Accesos rápidos</span>
+            <h2>¿Qué necesitas hacer?</h2>
+            <a class="ad-action-card" href="/actas-estatutos/documentos">
+                <span class="ad-action-icon">⌕</span>
+                <span><strong>Buscar e inspeccionar</strong><small>Filtra, previsualiza y descarga documentos.</small></span>
+                <span class="ad-arrow">→</span>
+            </a>
+            <a class="ad-action-card" href="/actas-estatutos/historial">
+                <span class="ad-action-icon">◷</span>
+                <span><strong>Ver historial</strong><small>Consulta cambios, descargas y restauraciones.</small></span>
+                <span class="ad-arrow">→</span>
+            </a>
+            <div class="ad-note">
+                <strong>Sobre el almacenamiento</strong>
+                <p>En esta versión, los registros se mantienen en memoria y se borran al reiniciar la aplicación.</p>
+            </div>
+        </aside>
+    </section>
+</div>
+
+@code {
+    private IReadOnlyList<DocumentoInstitucional> Documentos => DocumentoService.ObtenerTodos();
+    private IReadOnlyList<DocumentoInstitucional> Recientes => Documentos
+        .OrderByDescending(documento => documento.FechaCreacion)
+        .Take(5)
+        .ToList();
+
+    private int Contar(string estado) => Documentos.Count(documento => documento.Estado == estado);
+
+    private static string ClaseEstado(string estado) => estado switch
+    {
+        EstadosDocumento.Vigente => "ad-status-current",
+        EstadosDocumento.EnRevision => "ad-status-review",
+        EstadosDocumento.Anulado or EstadosDocumento.Derogado => "ad-status-inactive",
+        _ => "ad-status-review"
+    };
+}

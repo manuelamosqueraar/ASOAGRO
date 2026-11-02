@@ -59,7 +59,7 @@ namespace Asoagro.Controllers
                 }
                 if (rolUsuario == "Presidente")
                 {
-                    return LocalRedirect("/subir-actas-estatutos");
+                    return LocalRedirect("/actas-estatutos");
                 }
                 if (rolUsuario == "Invitado")
                 {

@@ -85,9 +85,17 @@
 
                                     @if (context.User.IsInRole("Presidente"))
                                     {
-                                        <NavLink class="nm-link" href="subir-actas-estatutos">
-                                            <svg class="nm-ico"><use href="#ico-red" /></svg>
-                                            <span>Actas e histórico</span>
+                                        <NavLink class="nm-link" href="actas-estatutos">
+                                            <svg class="nm-ico"><use href="#ico-ajustes" /></svg>
+                                            <span>Panel documental</span>
+                                        </NavLink>
+                                        <NavLink class="nm-link" href="actas-estatutos/documentos">
+                                            <svg class="nm-ico"><use href="#ico-lista" /></svg>
+                                            <span>Repositorio de actas</span>
+                                        </NavLink>
+                                        <NavLink class="nm-link" href="actas-estatutos/historial">
+                                            <svg class="nm-ico"><use href="#ico-check" /></svg>
+                                            <span>Historial de actividad</span>
                                         </NavLink>
                                     }
 

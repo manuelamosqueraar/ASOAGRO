@@ -74,7 +74,15 @@ Módulos visibles:
 
 🏠 Inicio
 
-📄 Actas e Histórico
+📊 Centro de gestión documental (`/actas-estatutos`)
+
+📄 Repositorio de actas (`/actas-estatutos/documentos`)
+
+➕ Registrar documento (`/actas-estatutos/registrar`)
+
+🕘 Historial de actividad (`/actas-estatutos/historial`)
+
+El repositorio permite inspeccionar y descargar archivos, editar fichas y consultar el historial de cada documento. El historial global reúne registros, cambios, anulaciones, restauraciones y descargas.
 
 
 🛑 Notas de Desarrollo y Solución de Problemas

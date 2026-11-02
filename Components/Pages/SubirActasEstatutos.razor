@@ -1,333 +1,1421 @@
 @page "/subir-actas-estatutos"
+@page "/actas-estatutos/documentos"
+@page "/actas-estatutos/registrar"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Presidente")]
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Web
+@using Asoagro.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IDocumentoInstitucionalService DocumentoService
+@inject AsociadoService AsociadoDatosService
+@inject NotificacionService Notificaciones
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@implements IAsyncDisposable
 
-<PageTitle>Actas e Histórico Documental</PageTitle>
+<PageTitle>@(PestanaActiva == "formulario" ? "Registrar documento" : "Repositorio de actas")</PageTitle>
 
-<div class="container py-4">
-    <!-- Encabezado Principal -->
-    <div class="card border-0 bg-primary text-white shadow-sm mb-4 rounded-3">
-        <div class="card-body p-4 d-flex justify-content-between align-items-center">
-            <div>
-                <h3 class="fw-bold mb-1">
-                    <i class="bi bi-journal-bookmark-fill me-2"></i>Gestión de Actas e Histórico Documental
-                </h3>
-                <p class="mb-0 text-white-50">Consulta, filtra y almacena los documentos legales y actas de la asociación.</p>
-            </div>
-            <div class="d-none d-md-block fs-1 opacity-50">
-                <i class="bi bi-folder-symlink"></i>
-            </div>
-        </div>
-    </div>
+<div class="ai" @onkeydown="ManejarTeclaModal">
+    <svg class="ai-sprite" aria-hidden="true" focusable="false">
+        <defs>
+            <symbol id="ico-mas" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" /></symbol>
+            <symbol id="ico-flecha-derecha" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></symbol>
+            <symbol id="ico-buscar" viewBox="0 0 24 24"><circle cx="10.8" cy="10.8" r="7" /><path d="m16 16 5 5" /></symbol>
+            <symbol id="ico-limpiar" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8M3 3v5h5" /><path d="M12 7v5l3 2" /></symbol>
+            <symbol id="ico-calendario" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /></symbol>
+            <symbol id="ico-version" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h10" /><circle cx="18" cy="17" r="3" /></symbol>
+            <symbol id="ico-ojo" viewBox="0 0 24 24"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" /><circle cx="12" cy="12" r="3" /></symbol>
+            <symbol id="ico-descargar" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3" /></symbol>
+            <symbol id="ico-exportar" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 17v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3" /></symbol>
+            <symbol id="ico-cerrar" viewBox="0 0 24 24"><path d="m18 6-12 12M6 6l12 12" /></symbol>
+            <symbol id="ico-archivo" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6M8 13h8M8 17h8" /></symbol>
+            <symbol id="ico-pdf" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zM14 2v6h6" /><path d="M7 16h2a1.5 1.5 0 0 0 0-3H7v5M13 18v-5h1.5a2.5 2.5 0 0 1 0 5H13M18 18v-5h3M18 15h2" /></symbol>
+            <symbol id="ico-imagen" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="m21 15-5-5L5 21" /></symbol>
+            <symbol id="ico-restaurar" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 2.64-6.36L3 8M3 3v5h5" /><path d="M12 7v5l3 2" /></symbol>
+            <symbol id="ico-editar" viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L8 18l-4 1 1-4z" /></symbol>
+            <symbol id="ico-anular" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="m6 6 12 12" /></symbol>
+            <symbol id="ico-guardar" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2zM17 21v-8H7v8M7 3v5h8" /></symbol>
+        </defs>
+    </svg>
 
-    @if (!string.IsNullOrEmpty(mensajeExito))
+    @if (PestanaActiva == "lista")
     {
-        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 border-start border-4 border-success mb-4" role="alert">
-            <i class="bi bi-check-circle-fill me-2 text-success"></i>@mensajeExito
-            <button type="button" class="btn-close" @onclick="() => mensajeExito = null"></button>
+        <section class="ai-hero">
+            <div class="ai-hero-copy">
+                <div class="ai-tags">
+                    <a class="ai-tag ai-tag-link" href="/actas-estatutos">FAAUA · Centro documental</a>
+                    <span class="ai-tag ai-tag-soft"><svg class="ai-icon"><use href="#ico-escudo" /></svg>Acceso de Presidencia</span>
+                </div>
+                <h1>Repositorio de actas</h1>
+                <p>Busca, inspecciona, edita y conserva los documentos institucionales con trazabilidad de cambios y descargas.</p>
+            </div>
+            <div class="ai-hero-stats">
+                <span>Documentos registrados</span>
+                <strong>@Documentos.Count</strong>
+                <small>@Documentos.Count(d => d.Estado == EstadosDocumento.Vigente) vigentes · @Documentos.Count(d => d.Estado == EstadosDocumento.Anulado) anulados</small>
+            </div>
+        </section>
+    }
+    else
+    {
+        <header class="ai-form-route-heading">
+            <a href="/actas-estatutos">Centro documental</a>
+            <span aria-hidden="true">/</span>
+            <a href="/actas-estatutos/documentos">Repositorio</a>
+            <span aria-hidden="true">/</span>
+            <strong>@(Editando ? "Editar documento" : "Registrar documento")</strong>
+        </header>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(MensajeExito))
+    {
+        <div class="ai-alert ai-alert-success" role="status">
+            <svg class="ai-icon"><use href="#ico-check" /></svg>
+            <span>@MensajeExito</span>
+            <button type="button" class="ai-alert-close" @onclick="() => MensajeExito = null" aria-label="Cerrar">&times;</button>
         </div>
     }
 
-    <!-- Selector de Pestañas Interactivo -->
-    <div class="d-flex gap-2 mb-4 bg-light p-2 rounded-3 shadow-sm border">
-        <button type="button" class="btn fw-semibold @(pestanaActiva == "historico" ? "btn-primary text-white" : "btn-light text-dark")" @onclick='() => CambiarPestana("historico")'>
-            <i class="bi bi-clock-history me-2"></i>Histórico de Actas
-        </button>
-        <button type="button" class="btn fw-semibold @(pestanaActiva == "subir" ? "btn-primary text-white" : "btn-light text-dark")" @onclick='() => CambiarPestana("subir")'>
-            <i class="bi bi-cloud-arrow-up-fill me-2"></i>Registrar Nueva Acta
-        </button>
-    </div>
-
-    @if (pestanaActiva == "historico")
+    @if (!string.IsNullOrWhiteSpace(MensajeError))
     {
-        <!-- Buscador y Filtros -->
-        <div class="card border-0 shadow-sm mb-4 rounded-3">
-            <div class="card-body p-3">
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="input-group">
-                            <span class="input-group-text bg-white text-muted border-end-0"><i class="bi bi-search"></i></span>
-                            <input type="text" class="form-control border-start-0 ps-0" placeholder="Buscar por título, N° de acta o tema..." @bind="busqueda" @bind:event="oninput" />
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <select class="form-select" @bind="filtroTipo">
-                            <option value="">Todos los tipos de documento</option>
-                            <option value="Acta de Asamblea">Acta de Asamblea</option>
-                            <option value="Estatuto Actualizado">Estatuto Actualizado</option>
-                            <option value="Reglamento Interno">Reglamento Interno</option>
-                            <option value="Resolución Legal">Resolución Legal</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="button" class="btn btn-outline-secondary w-100 fw-semibold" @onclick="LimpiarFiltros">
-                            <i class="bi bi-arrow-counterclockwise me-1"></i>Limpiar
-                        </button>
-                    </div>
-                </div>
+        <div class="ai-alert ai-alert-error" role="alert">
+            <svg class="ai-icon"><use href="#ico-alerta" /></svg>
+            <span>@MensajeError</span>
+            <button type="button" class="ai-alert-close" @onclick="() => MensajeError = null" aria-label="Cerrar">&times;</button>
+        </div>
+    }
+
+    @if (PestanaActiva == "lista")
+    {
+        <div class="ai-repository-heading">
+            <div>
+                <span class="ai-eyebrow">Consulta y administración</span>
+                <h2>Documentos registrados</h2>
+                <p>Busca fichas existentes para inspeccionarlas, descargarlas o actualizar sus datos.</p>
             </div>
+            <button type="button" class="ai-btn ai-btn-primary" @onclick="IniciarNuevo">
+                <svg class="ai-icon"><use href="#ico-mas" /></svg>
+                Registrar nuevo
+            </button>
+        </div>
+        <div class="ai-storage-note">
+            <svg class="ai-icon"><use href="#ico-alerta" /></svg>
+            <span>Los documentos están guardados en memoria temporal en esta versión y se perderán al reiniciar la aplicación.</span>
         </div>
 
-        <!-- Tabla del Histórico -->
-        <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
-            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
-                <h6 class="fw-bold mb-0 text-dark">
-                    <i class="bi bi-files text-primary me-2"></i>Documentos Encontrados (@documentosFiltrados.Count())
-                </h6>
+        <section class="ai-panel ai-filters">
+            <label class="ai-search">
+                <svg class="ai-icon"><use href="#ico-buscar" /></svg>
+                <input aria-label="Buscar documentos" placeholder="Buscar por título, asociado, código o referencia…" @bind="Busqueda" @bind:event="oninput" />
+            </label>
+            <label class="ai-filter">
+                <span>Tipo</span>
+                <select @bind="FiltroTipo" aria-label="Filtrar por tipo">
+                    <option value="">Todos los tipos</option>
+                    @foreach (var tipo in TiposDocumento)
+                    {
+                        <option value="@tipo">@tipo</option>
+                    }
+                </select>
+            </label>
+            <label class="ai-filter">
+                <span>Estado</span>
+                <select @bind="FiltroEstado" aria-label="Filtrar por estado">
+                    <option value="">Todos los estados</option>
+                    @foreach (var estado in EstadosFiltro)
+                    {
+                        <option value="@estado">@estado</option>
+                    }
+                </select>
+            </label>
+            <button type="button" class="ai-btn ai-btn-light ai-clear" @onclick="LimpiarFiltros">
+                <svg class="ai-icon"><use href="#ico-limpiar" /></svg>
+                Limpiar
+            </button>
+        </section>
+
+        var documentosFiltrados = DocumentosFiltrados;
+        <section class="ai-list-section">
+            <div class="ai-section-heading">
+                <div>
+                    <h2>Resultados del repositorio</h2>
+                    <p>@documentosFiltrados.Count resultados · Usa los encabezados de columna para cambiar el orden.</p>
+                </div>
+                @if (documentosFiltrados.Count > 0)
+                {
+                    <button type="button" class="ai-btn ai-btn-light ai-export" @onclick="ExportarCsvAsync">
+                        <svg class="ai-icon"><use href="#ico-exportar" /></svg>
+                        Exportar resultados
+                    </button>
+                }
             </div>
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light text-uppercase small text-muted">
-                        <tr>
-                            <th class="ps-4">Documento / Título</th>
-                            <th>Tipo</th>
-                            <th>Fecha</th>
-                            <th>Descripción</th>
-                            <th>Archivo</th>
-                            <th class="text-end pe-4">Acción</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (documentosFiltrados.Any())
-                        {
-                            @foreach (var doc in documentosFiltrados)
+
+            @if (documentosFiltrados.Count > 0)
+            {
+                <div class="ai-table-wrap" role="region" aria-label="Resultados del repositorio" tabindex="0">
+                    <table class="ai-document-table">
+                        <thead>
+                            <tr>
+                                <th scope="col" aria-sort="@AriaOrden("titulo")">
+                                    <button type="button" class="ai-table-sort" @onclick='() => CambiarOrden("titulo")'>
+                                        Documento <span aria-hidden="true">@IndicadorOrden("titulo")</span>
+                                    </button>
+                                </th>
+                                <th scope="col" aria-sort="@AriaOrden("fecha")">
+                                    <button type="button" class="ai-table-sort" @onclick='() => CambiarOrden("fecha")'>
+                                        Fecha y versión <span aria-hidden="true">@IndicadorOrden("fecha")</span>
+                                    </button>
+                                </th>
+                                <th scope="col" aria-sort="@AriaOrden("estado")">
+                                    <button type="button" class="ai-table-sort" @onclick='() => CambiarOrden("estado")'>
+                                        Estado <span aria-hidden="true">@IndicadorOrden("estado")</span>
+                                    </button>
+                                </th>
+                                <th scope="col">Archivo</th>
+                                <th scope="col"><span class="ai-visually-hidden">Acciones</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var documento in documentosFiltrados)
                             {
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="fw-bold text-dark">@doc.Titulo</div>
+                                <tr class="ai-document-row @ClaseTarjeta(documento.Estado) @(DocumentoSeleccionado?.Id == documento.Id ? "selected" : "")">
+                                    <td class="ai-table-document">
+                                        <span class="ai-code">@documento.Codigo</span>
+                                        <strong>@documento.Titulo</strong>
+                                        <span class="ai-type">@documento.Tipo</span>
+                                        <span class="ai-associated">
+                                            <svg class="ai-icon"><use href="#ico-usuario" /></svg>
+                                            @(string.IsNullOrWhiteSpace(documento.NombreAsociado) ? "Documento institucional" : documento.NombreAsociado)
+                                        </span>
+                                        @if (!string.IsNullOrWhiteSpace(documento.Descripcion))
+                                        {
+                                            <small class="ai-table-description">@documento.Descripcion</small>
+                                        }
+                                    </td>
+                                    <td class="ai-table-date">
+                                        <span><svg class="ai-icon"><use href="#ico-calendario" /></svg>@documento.Fecha.ToString("dd MMM yyyy")</span>
+                                        <span><svg class="ai-icon"><use href="#ico-version" /></svg>Versión @documento.Version</span>
+                                        @if (documento.FechaVencimiento is DateTime fechaVencimiento)
+                                        {
+                                            <span class="ai-expiry"><svg class="ai-icon"><use href="#ico-calendario" /></svg>Vence @fechaVencimiento.ToString("dd MMM yyyy")</span>
+                                        }
                                     </td>
                                     <td>
-                                        <span class="badge @ObtenerBadgeColor(doc.Tipo) px-2 py-1 fw-semibold">
-                                            @doc.Tipo
-                                        </span>
+                                        <span class="ai-status @ClaseEstado(documento.Estado)">@documento.Estado</span>
                                     </td>
-                                    <td class="text-secondary fw-semibold">@doc.Fecha.ToString("dd MMM yyyy")</td>
-                                    <td><small class="text-muted d-block text-truncate" style="max-width: 250px;">@doc.Descripcion</small></td>
                                     <td>
-                                        <span class="badge bg-light text-danger border border-danger-subtle px-2 py-1">
-                                            <i class="bi bi-file-earmark-pdf me-1"></i>@doc.ArchivoNombre
-                                        </span>
+                                        <div class="ai-card-file">
+                                            @if (documento.Archivo is not null)
+                                            {
+                                                <svg class="ai-icon"><use href="@IconoArchivo(documento.Archivo.TipoMime)" /></svg>
+                                                <span title="@documento.Archivo.Nombre">@documento.Archivo.Nombre</span>
+                                                <small>@TamanoLegible(documento.Archivo.Tamano)</small>
+                                            }
+                                            else
+                                            {
+                                                <svg class="ai-icon"><use href="#ico-alerta" /></svg>
+                                                <span>Sin archivo adjunto</span>
+                                            }
+                                        </div>
                                     </td>
-                                    <td class="text-end pe-4">
-                                        <button type="button" class="btn btn-sm btn-outline-primary fw-semibold rounded-pill px-3" title="Descargar Documento">
-                                            <i class="bi bi-download me-1"></i>Descargar
-                                        </button>
+                                    <td>
+                                        <div class="ai-card-actions">
+                                            <button type="button" class="ai-btn ai-btn-light" @onclick="() => AbrirDetalleAsync(documento.Id)">
+                                                <svg class="ai-icon"><use href="#ico-ojo" /></svg>
+                                                Inspeccionar
+                                            </button>
+                                            @if (documento.Archivo is not null)
+                                            {
+                                                <button type="button" class="ai-icon-btn" title="Descargar archivo" aria-label="@($"Descargar {documento.Archivo.Nombre}")" @onclick="() => DescargarAsync(documento.Id)">
+                                                    <svg class="ai-icon"><use href="#ico-descargar" /></svg>
+                                                </button>
+                                            }
+                                        </div>
                                     </td>
                                 </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="ai-empty">
+                    <span class="ai-empty-icon"><svg class="ai-icon"><use href="#ico-lista" /></svg></span>
+                    <h3>@(Documentos.Count == 0 ? "Aún no hay documentos" : "No hay coincidencias")</h3>
+                    <p>@(Documentos.Count == 0 ? "Registra el primer documento institucional para iniciar el repositorio." : "Prueba con otros términos o filtros para encontrar el documento.")</p>
+                    @if (Documentos.Count == 0)
+                    {
+                        <button type="button" class="ai-btn ai-btn-primary" @onclick="IniciarNuevo">Registrar documento</button>
+                    }
+                    else
+                    {
+                        <button type="button" class="ai-btn ai-btn-light" @onclick="LimpiarFiltros">Limpiar filtros</button>
+                    }
+                </div>
+            }
+        </section>
+
+        @if (DocumentoSeleccionado is not null)
+        {
+            var documento = DocumentoSeleccionado;
+            <div class="ai-modal-backdrop" role="presentation" @onclick="CerrarDetalle">
+                <section class="ai-detail ai-detail-modal" role="dialog" aria-modal="true" aria-labelledby="ai-detail-title" @onclick:stopPropagation="true">
+                <header class="ai-detail-heading">
+                    <div>
+                        <span class="ai-eyebrow">Ficha de inspección · @documento.Codigo</span>
+                        <h2 id="ai-detail-title">@documento.Titulo</h2>
+                    </div>
+                    <button type="button" class="ai-icon-btn" @onclick="CerrarDetalle" @onclick:stopPropagation="true" aria-label="Cerrar ficha" title="Cerrar ficha">
+                        <svg class="ai-icon"><use href="#ico-cerrar" /></svg>
+                    </button>
+                </header>
+
+                <div class="ai-detail-body">
+                <div class="ai-detail-layout">
+                    <div class="ai-preview">
+                        <div class="ai-preview-heading">
+                            <div>
+                                <strong>Vista previa</strong>
+                                <small>@(documento.Archivo?.Nombre ?? "Este registro no tiene archivo adjunto")</small>
+                            </div>
+                            @if (documento.Archivo is not null)
+                            {
+                                <button type="button" class="ai-btn ai-btn-light" @onclick="VerificarArchivo">
+                                    <svg class="ai-icon"><use href="#ico-escudo" /></svg>
+                                    Verificar integridad
+                                </button>
+                            }
+                        </div>
+
+                        @if (documento.Archivo is not null && !string.IsNullOrWhiteSpace(VistaPreviaUrl))
+                        {
+                            @if (documento.Archivo.TipoMime == "application/pdf")
+                            {
+                                <iframe class="ai-preview-frame" src="@VistaPreviaUrl" title="@($"Vista previa de {documento.Archivo.Nombre}")"></iframe>
+                            }
+                            else
+                            {
+                                <img class="ai-preview-image" src="@VistaPreviaUrl" alt="@($"Vista previa de {documento.Archivo.Nombre}")" />
                             }
                         }
                         else
                         {
-                            <tr>
-                                <td colspan="6" class="text-center py-5">
-                                    <div class="text-muted">
-                                        <i class="bi bi-folder2-open display-4 d-block mb-2 text-secondary"></i>
-                                        <p class="fw-bold mb-1">No se encontraron actas ni documentos</p>
-                                        <small>Intenta cambiar el término de búsqueda o el filtro seleccionado.</small>
-                                    </div>
-                                </td>
-                            </tr>
+                            <div class="ai-preview-empty">
+                                <svg class="ai-icon"><use href="#ico-archivo" /></svg>
+                                <strong>Sin vista previa disponible</strong>
+                                <span>Adjunta un PDF o una imagen al editar este registro.</span>
+                            </div>
                         }
-                    </tbody>
-                </table>
+
+                        @if (!string.IsNullOrWhiteSpace(EstadoVerificacion))
+                        {
+                            <div class="ai-integrity @(ArchivoIntegro ? "integrity-ok" : "integrity-error")" role="status">
+                                <svg class="ai-icon"><use href="@(ArchivoIntegro ? "#ico-check" : "#ico-alerta")" /></svg>
+                                <span>@EstadoVerificacion</span>
+                            </div>
+                        }
+                    </div>
+
+                    <aside class="ai-facts">
+                        <span class="ai-eyebrow">Datos del documento</span>
+                        <dl>
+                            <div><dt>Tipo</dt><dd>@documento.Tipo</dd></div>
+                            <div><dt>Estado</dt><dd><span class="ai-status @ClaseEstado(documento.Estado)">@documento.Estado</span></dd></div>
+                            <div><dt>Fecha del documento</dt><dd>@documento.Fecha.ToString("dd/MM/yyyy")</dd></div>
+                            <div><dt>Fecha de vencimiento</dt><dd>@(documento.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "No aplica")</dd></div>
+                            <div><dt>Número de referencia</dt><dd>@(string.IsNullOrWhiteSpace(documento.NumeroReferencia) ? "—" : documento.NumeroReferencia)</dd></div>
+                            <div><dt>Asociado relacionado</dt><dd>@(string.IsNullOrWhiteSpace(documento.NombreAsociado) ? "Documento institucional / no aplica" : $"{documento.NombreAsociado} · CC {documento.CedulaAsociado}")</dd></div>
+                            <div><dt>Descripción</dt><dd>@(string.IsNullOrWhiteSpace(documento.Descripcion) ? "—" : documento.Descripcion)</dd></div>
+                            <div><dt>Versión del archivo</dt><dd>@documento.Version</dd></div>
+                            <div><dt>Última actualización</dt><dd>@documento.FechaActualizacion.ToString("dd/MM/yyyy HH:mm") · @documento.ActualizadoPor</dd></div>
+                        </dl>
+
+                        @if (documento.Archivo is not null)
+                        {
+                            <div class="ai-file-info">
+                                <span>Huella SHA-256</span>
+                                <code>@documento.Archivo.Sha256</code>
+                                <small>@TamanoLegible(documento.Archivo.Tamano) · @documento.Archivo.TipoMime</small>
+                            </div>
+                        }
+
+                        <div class="ai-detail-actions">
+                            @if (documento.Archivo is not null)
+                            {
+                                <button type="button" class="ai-btn ai-btn-primary" @onclick="() => DescargarAsync(documento.Id)">
+                                    <svg class="ai-icon"><use href="#ico-descargar" /></svg>
+                                    Descargar archivo
+                                </button>
+                            }
+                            @if (documento.Estado == EstadosDocumento.Anulado)
+                            {
+                                <button type="button" class="ai-btn ai-btn-success" @onclick="() => Restaurar(documento.Id)">
+                                    <svg class="ai-icon"><use href="#ico-restaurar" /></svg>
+                                    Restaurar registro
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" class="ai-btn ai-btn-light" @onclick="() => IniciarEdicion(documento.Id)">
+                                    <svg class="ai-icon"><use href="#ico-editar" /></svg>
+                                    Editar ficha
+                                </button>
+                                <button type="button" class="ai-btn ai-btn-danger-outline" @onclick="IniciarAnulacion">
+                                    <svg class="ai-icon"><use href="#ico-anular" /></svg>
+                                    Anular
+                                </button>
+                            }
+                        </div>
+
+                        @if (SolicitaMotivoAnulacion)
+                        {
+                            <div class="ai-cancel-box">
+                                <label for="ai-motivo">Motivo de anulación <span>*</span></label>
+                                <textarea id="ai-motivo" rows="3" maxlength="500" @bind="MotivoAnulacion" placeholder="Explica por qué se anula este registro…"></textarea>
+                                <small>La anulación se conserva en el historial y no elimina el archivo.</small>
+                                <div>
+                                    <button type="button" class="ai-btn ai-btn-light" @onclick="CancelarAnulacion">Cancelar</button>
+                                    <button type="button" class="ai-btn ai-btn-danger" @onclick="ConfirmarAnulacion">Confirmar anulación</button>
+                                </div>
+                            </div>
+                        }
+                    </aside>
+                </div>
+
+                <section class="ai-history">
+                    <div class="ai-history-heading">
+                        <div>
+                            <span class="ai-eyebrow">Trazabilidad</span>
+                            <h3>Historial de actividad</h3>
+                        </div>
+                        <span class="ai-history-count">@HistorialSeleccionado.Count eventos</span>
+                    </div>
+                    @if (HistorialSeleccionado.Count > 0)
+                    {
+                        <ol class="ai-timeline">
+                            @foreach (var entrada in HistorialSeleccionado)
+                            {
+                                <li>
+                                    <span class="ai-timeline-dot"></span>
+                                    <div class="ai-timeline-content">
+                                        <div><strong>@entrada.Accion</strong><time>@entrada.Fecha.ToString("dd/MM/yyyy HH:mm")</time></div>
+                                        <p>@entrada.Detalle</p>
+                                        <small>@entrada.Usuario</small>
+                                    </div>
+                                </li>
+                            }
+                        </ol>
+                    }
+                    else
+                    {
+                        <p class="ai-history-empty">Todavía no hay movimientos registrados para este documento.</p>
+                    }
+                </section>
+                </div>
+                </section>
             </div>
-        </div>
+        }
     }
     else
     {
-        <!-- Formulario de Carga y Registro de Documentos -->
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="card border-0 shadow-sm rounded-3">
-                    <div class="card-header bg-white border-bottom py-3">
-                        <h5 class="fw-bold mb-0 text-dark">
-                            <i class="bi bi-file-earmark-plus text-primary me-2"></i>Formulario de Registro de Nueva Acta
-                        </h5>
-                    </div>
-                    <div class="card-body p-4">
-                        <EditForm Model="nuevoDocumento" OnValidSubmit="GuardarDocumento">
-                            <DataAnnotationsValidator /> 
-
-                            <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold text-secondary">Tipo de Documento <span class="text-danger">*</span></label>
-                                    <InputSelect class="form-select shadow-none" @bind-Value="nuevoDocumento.Tipo">
-                                        <option value="">Seleccione el tipo...</option>
-                                        <option value="Acta de Asamblea">Acta de Asamblea</option>
-                                        <option value="Estatuto Actualizado">Estatuto Actualizado</option>
-                                        <option value="Reglamento Interno">Reglamento Interno</option>
-                                        <option value="Resolución Legal">Resolución Legal</option>
-                                    </InputSelect>
-                                    <ValidationMessage For="@(() => nuevoDocumento.Tipo)" class="text-danger small mt-1 d-block" />
-                                </div>
-
-                                <div class="col-md-6">
-                                    <label class="form-label fw-bold text-secondary">Fecha del Documento <span class="text-danger">*</span></label>
-                                    <InputDate class="form-control shadow-none" @bind-Value="nuevoDocumento.Fecha" />
-                                    <ValidationMessage For="@(() => nuevoDocumento.Fecha)" class="text-danger small mt-1 d-block" />
-                                </div>
-
-                                <div class="col-12">
-                                    <label class="form-label fw-bold text-secondary">Título / N° de Acta <span class="text-danger">*</span></label>
-                                    <InputText class="form-control shadow-none" placeholder="Ej: Acta N° 015 - Asamblea Ordinaria 2024" @bind-Value="nuevoDocumento.Titulo" />
-                                    <ValidationMessage For="@(() => nuevoDocumento.Titulo)" class="text-danger small mt-1 d-block" />
-                                </div>
-
-                                <div class="col-12">
-                                    <label class="form-label fw-bold text-secondary">Descripción o Resumen <span class="text-danger">*</span></label>
-                                    <InputTextArea class="form-control shadow-none" rows="3" placeholder="Puntos principales o acuerdos aprobados..." @bind-Value="nuevoDocumento.Descripcion" />
-                                    <ValidationMessage For="@(() => nuevoDocumento.Descripcion)" class="text-danger small mt-1 d-block" />
-                                </div>
-
-                                <div class="col-12">
-                                    <label class="form-label fw-bold text-secondary">Adjuntar Archivo Escaneado (PDF / Imagen) <span class="text-danger">*</span></label>
-                                    <div class="p-3 border border-2 border-dashed text-center rounded-3 bg-light">
-                                        <i class="bi bi-cloud-upload display-5 text-primary d-block mb-2"></i>
-                                        <InputFile class="form-control w-75 mx-auto mb-2" OnChange="CargarArchivo" accept=".pdf,.png,.jpg,.jpeg" />
-                                        <ValidationMessage For="@(() => nuevoDocumento.ArchivoNombre)" class="text-danger small mt-1 d-block" />
-                                        @if (!string.IsNullOrEmpty(nombreArchivoCargado))
-                                        {
-                                            <span class="badge bg-success px-3 py-2 mt-2 d-inline-block">
-                                                <i class="bi bi-check-circle me-1"></i>@nombreArchivoCargado
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <small class="text-muted d-block">Soporta formatos PDF, PNG, JPG (Máx. 10MB)</small>
-                                        }
-                                    </div>
-                                </div>
-
-                                <div class="col-12 text-end mt-4">
-                                    <button type="submit" class="btn btn-primary fw-bold px-4 py-2 rounded-pill shadow-sm">
-                                        <i class="bi bi-check-lg me-1"></i> Guardar en Histórico
-                                    </button>
-                                </div>
-                            </div>
-                        </EditForm>
-                    </div>
+        <section class="ai-form-shell">
+            <div class="ai-form-heading">
+                <div class="ai-form-heading-icon"><svg class="ai-icon"><use href="@(Editando ? "#ico-editar" : "#ico-mas")" /></svg></div>
+                <div>
+                    <span class="ai-eyebrow">@(Editando ? "Actualización de ficha" : "Nuevo registro")</span>
+                    <h2>@(Editando ? "Editar documento institucional" : "Registrar acta o documento")</h2>
+                    <p>@(Editando ? "Actualiza los datos o reemplaza el archivo. El cambio quedará en el historial." : "Completa la información y revisa el archivo antes de guardarlo.")</p>
                 </div>
             </div>
-        </div>
+
+            <EditForm Model="Formulario" OnValidSubmit="GuardarAsync" class="ai-form">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="ai-validation-summary" />
+                <nav class="ai-form-steps" aria-label="Pasos del formulario">
+                    <div class="ai-form-progress"><span style="width: @($"{(PasoFormulario - 1) * 50}%")"></span></div>
+                    @foreach (var paso in PasosFormulario)
+                    {
+                        <div class="ai-form-step @(PasoFormulario == paso.Numero ? "active" : PasoFormulario > paso.Numero ? "complete" : "")" aria-current="@(PasoFormulario == paso.Numero ? "step" : null)">
+                            <span>@(PasoFormulario > paso.Numero ? "✓" : paso.Numero.ToString())</span>
+                            <div><strong>@paso.Titulo</strong><small>@paso.Subtitulo</small></div>
+                        </div>
+                    }
+                </nav>
+
+                @if (PasoFormulario == 1)
+                {
+                    <section class="ai-form-step-panel" aria-labelledby="ai-step-title">
+                        <div class="ai-step-heading">
+                            <span>01</span>
+                            <div><h3 id="ai-step-title">Identificación del documento</h3><p>Indica qué se va a registrar y a quién corresponde.</p></div>
+                        </div>
+                        <div class="ai-form-grid">
+                            <div class="ai-field">
+                                <label for="ai-tipo">Tipo de documento <span>*</span></label>
+                                <InputSelect id="ai-tipo" class="ai-input" @bind-Value="Formulario.Tipo">
+                                    <option value="">Selecciona un tipo</option>
+                                    @foreach (var tipo in TiposDocumento)
+                                    {
+                                        <option value="@tipo">@tipo</option>
+                                    }
+                                </InputSelect>
+                                <ValidationMessage For="@(() => Formulario.Tipo)" />
+                            </div>
+                            <div class="ai-field">
+                                <label for="ai-estado">Estado</label>
+                                <InputSelect id="ai-estado" class="ai-input" @bind-Value="Formulario.Estado">
+                                    @foreach (var estado in EstadosEditables)
+                                    {
+                                        <option value="@estado">@estado</option>
+                                    }
+                                </InputSelect>
+                            </div>
+                            <div class="ai-field ai-field-wide">
+                                <label for="ai-titulo">Título del documento <span>*</span></label>
+                                <InputText id="ai-titulo" class="ai-input" @bind-Value="Formulario.Titulo" placeholder="Ej. Acta 015 · Asamblea ordinaria" />
+                                <ValidationMessage For="@(() => Formulario.Titulo)" />
+                            </div>
+                            <div class="ai-field ai-field-wide">
+                                <label for="ai-asociado">Asociado relacionado</label>
+                                <InputSelect id="ai-asociado" class="ai-input" @bind-Value="Formulario.CedulaAsociado" @bind-Value:after="ActualizarAsociadoSeleccionado">
+                                    <option value="">Institucional / no corresponde a una persona</option>
+                                    @if (!string.IsNullOrWhiteSpace(Formulario.CedulaAsociado) && !AsociadosDisponibles.Any(a => a.Cedula == Formulario.CedulaAsociado))
+                                    {
+                                        <option value="@Formulario.CedulaAsociado">@Formulario.NombreAsociado (registro no disponible)</option>
+                                    }
+                                    @foreach (var asociado in AsociadosDisponibles)
+                                    {
+                                        <option value="@asociado.Cedula">@asociado.NombreCompleto · CC @asociado.Cedula</option>
+                                    }
+                                </InputSelect>
+                                <small class="ai-field-help">Vincúlalo con una persona si el contenido del acta se refiere a ella. Estatutos y reglamentos pueden quedar como institucionales.</small>
+                            </div>
+                            <div class="ai-field ai-field-third">
+                                <label for="ai-fecha">Fecha del documento <span>*</span></label>
+                                <InputDate id="ai-fecha" class="ai-input" @bind-Value="Formulario.Fecha" />
+                                <ValidationMessage For="@(() => Formulario.Fecha)" />
+                            </div>
+                            <div class="ai-field ai-field-third">
+                                <label for="ai-referencia">Número o referencia</label>
+                                <InputText id="ai-referencia" class="ai-input" @bind-Value="Formulario.NumeroReferencia" placeholder="Ej. ACT-015-2025" />
+                                <ValidationMessage For="@(() => Formulario.NumeroReferencia)" />
+                            </div>
+                            <div class="ai-field ai-field-third">
+                                <label for="ai-vencimiento">Fecha de vencimiento <span class="ai-optional">(opcional)</span></label>
+                                <InputDate id="ai-vencimiento" class="ai-input" @bind-Value="Formulario.FechaVencimiento" />
+                                <small class="ai-field-help">Déjala vacía si este documento no vence. Si indicas una fecha, recibirás avisos antes y al vencerse.</small>
+                            </div>
+                        </div>
+                    </section>
+                }
+                else if (PasoFormulario == 2)
+                {
+                    <section class="ai-form-step-panel" aria-labelledby="ai-step-title">
+                        <div class="ai-step-heading">
+                            <span>02</span>
+                            <div><h3 id="ai-step-title">Descripción y archivo</h3><p>Resume el contenido y revisa el documento digital antes de guardarlo.</p></div>
+                        </div>
+                        <div class="ai-form-grid">
+                            <div class="ai-field ai-field-wide">
+                                <label for="ai-descripcion">Descripción o acuerdos principales</label>
+                                <InputTextArea id="ai-descripcion" class="ai-input ai-textarea" @bind-Value="Formulario.Descripcion" rows="4" placeholder="Resume los puntos importantes del documento…" />
+                                <ValidationMessage For="@(() => Formulario.Descripcion)" />
+                            </div>
+                            <div class="ai-field ai-field-wide">
+                                <label for="ai-archivo">Archivo digital <span>@(Editando ? "(opcional para reemplazar)" : "*")</span></label>
+                                <InputFile id="ai-archivo" class="ai-file-input" OnChange="SeleccionarArchivoAsync" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" />
+                                <small class="ai-field-help">PDF, PNG o JPG · máximo 10 MB. Selecciona un archivo para ver su vista previa.</small>
+                                <ValidationMessage For="@(() => Formulario.ArchivoNombre)" />
+                            </div>
+                        </div>
+
+                        @if (ArchivoPendiente is not null)
+                        {
+                            <div class="ai-selected-file">
+                                <div class="ai-selected-file-icon"><svg class="ai-icon"><use href="@IconoArchivo(ArchivoPendiente.TipoMime)" /></svg></div>
+                                <div class="ai-selected-file-info">
+                                    <strong>@ArchivoPendiente.Nombre</strong>
+                                    <small>@TamanoLegible(ArchivoPendiente.Tamano) · @ArchivoPendiente.TipoMime · SHA-256: @ArchivoPendiente.Sha256</small>
+                                </div>
+                                <button type="button" class="ai-btn ai-btn-light" @onclick="VerificarArchivoPendiente">
+                                    <svg class="ai-icon"><use href="#ico-escudo" /></svg>Verificar
+                                </button>
+                                <button type="button" class="ai-icon-btn" title="Quitar archivo seleccionado" aria-label="Quitar archivo seleccionado" @onclick="QuitarArchivoPendienteAsync">
+                                    <svg class="ai-icon"><use href="#ico-cerrar" /></svg>
+                                </button>
+                            </div>
+                        }
+                        else if (Editando && DocumentoSeleccionado?.Archivo is not null)
+                        {
+                            <div class="ai-current-file">
+                                <svg class="ai-icon"><use href="@IconoArchivo(DocumentoSeleccionado.Archivo.TipoMime)" /></svg>
+                                <span>Archivo actual: <strong>@DocumentoSeleccionado.Archivo.Nombre</strong> · versión @DocumentoSeleccionado.Version</span>
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(VistaPreviaUrl))
+                        {
+                            <div class="ai-form-preview">
+                                <div class="ai-preview-heading">
+                                    <div><strong>Vista previa del archivo</strong><small>@NombreArchivoVistaPrevia</small></div>
+                                    <button type="button" class="ai-icon-btn" title="Cerrar vista previa" aria-label="Cerrar vista previa" @onclick="LimpiarVistaPreviaAsync">
+                                        <svg class="ai-icon"><use href="#ico-cerrar" /></svg>
+                                    </button>
+                                </div>
+                                @if (MimeVistaPrevia == "application/pdf")
+                                {
+                                    <iframe class="ai-preview-frame ai-preview-form-frame" src="@VistaPreviaUrl" title="Vista previa del archivo seleccionado"></iframe>
+                                }
+                                else
+                                {
+                                    <img class="ai-preview-image ai-preview-form-image" src="@VistaPreviaUrl" alt="Vista previa del archivo seleccionado" />
+                                }
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(EstadoVerificacion))
+                        {
+                            <div class="ai-integrity @(ArchivoIntegro ? "integrity-ok" : "integrity-error")" role="status">
+                                <svg class="ai-icon"><use href="@(ArchivoIntegro ? "#ico-check" : "#ico-alerta")" /></svg>
+                                <span>@EstadoVerificacion</span>
+                            </div>
+                        }
+                    </section>
+                }
+                else
+                {
+                    <section class="ai-form-step-panel" aria-labelledby="ai-step-title">
+                        <div class="ai-step-heading">
+                            <span>03</span>
+                            <div><h3 id="ai-step-title">Revisión final</h3><p>Confirma los datos antes de guardar el documento.</p></div>
+                        </div>
+                        <dl class="ai-review-grid">
+                            <div><dt>Tipo y estado</dt><dd>@Formulario.Tipo · @Formulario.Estado</dd></div>
+                            <div><dt>Título</dt><dd>@(string.IsNullOrWhiteSpace(Formulario.Titulo) ? "Pendiente" : Formulario.Titulo)</dd></div>
+                            <div><dt>Asociado</dt><dd>@(string.IsNullOrWhiteSpace(Formulario.NombreAsociado) ? "Institucional / no corresponde" : $"{Formulario.NombreAsociado} · CC {Formulario.CedulaAsociado}")</dd></div>
+                            <div><dt>Fecha y referencia</dt><dd>@Formulario.Fecha.ToString("dd/MM/yyyy") · @(string.IsNullOrWhiteSpace(Formulario.NumeroReferencia) ? "Sin referencia" : Formulario.NumeroReferencia)</dd></div>
+                            <div><dt>Vencimiento</dt><dd>@(Formulario.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "No aplica")</dd></div>
+                            <div class="ai-review-wide"><dt>Descripción</dt><dd>@(string.IsNullOrWhiteSpace(Formulario.Descripcion) ? "Sin descripción adicional." : Formulario.Descripcion)</dd></div>
+                            <div class="ai-review-wide"><dt>Archivo</dt><dd>@(ArchivoPendiente?.Nombre ?? (Editando ? DocumentoSeleccionado?.Archivo?.Nombre ?? "Sin archivo" : "Sin archivo seleccionado"))</dd></div>
+                        </dl>
+                    </section>
+                }
+
+                <div class="ai-form-actions">
+                    <button type="button" class="ai-btn ai-btn-light ai-form-cancel" @onclick="CancelarFormulario">
+                        <svg class="ai-icon"><use href="#ico-cerrar" /></svg>
+                        Cancelar
+                    </button>
+                    <div class="ai-form-nav-actions">
+                        @if (PasoFormulario > 1)
+                        {
+                            <button type="button" class="ai-btn ai-btn-light" @onclick="PasoAnteriorFormulario">Anterior</button>
+                        }
+                        @if (PasoFormulario < 3)
+                        {
+                            <button type="button" class="ai-btn ai-btn-primary ai-form-continue" @onclick="SiguientePasoFormulario">
+                                Continuar
+                                <svg class="ai-icon"><use href="#ico-flecha-derecha" /></svg>
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="submit" class="ai-btn ai-btn-primary ai-form-continue" disabled="@Guardando">
+                                <svg class="ai-icon"><use href="@(Editando ? "#ico-guardar" : "#ico-check")" /></svg>
+                                @(Guardando ? "Guardando…" : Editando ? "Guardar cambios" : "Registrar documento")
+                            </button>
+                        }
+                    </div>
+                </div>
+            </EditForm>
+        </section>
     }
 </div>
 
 @code {
-    private string pestanaActiva = "historico";
-    private string? mensajeExito;
-    private string? nombreArchivoCargado;
-    private string busqueda = "";
-    private string filtroTipo = "";
-
-    private void CambiarPestana(string nuevaPestana)
+    private const long MaximoArchivoBytes = 10 * 1024 * 1024;
+    private static readonly string[] TiposDocumento =
     {
-        pestanaActiva = nuevaPestana;
-    }
-
-    private class DocumentoInstitucional
+        "Acta de Asamblea",
+        "Estatuto Actualizado",
+        "Reglamento Interno",
+        "Resolución Legal"
+    };
+    private static readonly string[] EstadosEditables =
     {
-        [Required(ErrorMessage = "Debe seleccionar el tipo de documento.")]
-        public string Tipo { get; set; } = "";
-
-        [Required(ErrorMessage = "El título o número de acta es obligatorio.")]
-        public string Titulo { get; set; } = "";
-
-        [Required(ErrorMessage = "La fecha del documento es obligatoria.")]
-        public DateTime Fecha { get; set; } = DateTime.Today;
-
-        [Required(ErrorMessage = "La descripción o resumen es obligatoria.")]
-        public string Descripcion { get; set; } = "";
-
-        [Required(ErrorMessage = "Debe adjuntar un archivo digitalizado.")]
-        public string ArchivoNombre { get; set; } = "";
-    }
-
-    private DocumentoInstitucional nuevoDocumento = new();
-
-    private List<DocumentoInstitucional> listaDocumentos = new()
+        EstadosDocumento.Vigente,
+        EstadosDocumento.EnRevision,
+        EstadosDocumento.Derogado
+    };
+    private static readonly string[] EstadosFiltro =
     {
-        new DocumentoInstitucional
-        {
-            Tipo = "Acta de Asamblea",
-            Titulo = "Acta N° 014 - Asamblea Ordinaria Anual 2024",
-            Fecha = new DateTime(2024, 2, 10),
-            Descripcion = "Aprobación de estados financieros y plan de inversión.",
-            ArchivoNombre = "Acta_014_2024.pdf"
-        },
-        new DocumentoInstitucional
-        {
-            Tipo = "Acta de Asamblea",
-            Titulo = "Acta N° 013 - Nombramiento Revisor Fiscal",
-            Fecha = new DateTime(2023, 11, 5),
-            Descripcion = "Elección del nuevo revisor fiscal para el periodo 2024.",
-            ArchivoNombre = "Acta_013_Revisor.pdf"
-        },
-        new DocumentoInstitucional
-        {
-            Tipo = "Estatuto Actualizado",
-            Titulo = "Estatutos Generales Asoagro 2023",
-            Fecha = new DateTime(2023, 3, 15),
-            Descripcion = "Reforma estatutaria aprobada en Asamblea Extraordinaria.",
-            ArchivoNombre = "Estatutos_2023.pdf"
-        },
-        new DocumentoInstitucional
-        {
-            Tipo = "Reglamento Interno",
-            Titulo = "Reglamento Interno de Uso de Maquinaria",
-            Fecha = new DateTime(2022, 8, 20),
-            Descripcion = "Normas y tarifas para el préstamo de herramientas.",
-            ArchivoNombre = "Reglamento_Maquinaria.pdf"
-        }
+        EstadosDocumento.Vigente,
+        EstadosDocumento.EnRevision,
+        EstadosDocumento.Derogado,
+        EstadosDocumento.Anulado
+    };
+    private static readonly (int Numero, string Titulo, string Subtitulo)[] PasosFormulario =
+    {
+        (1, "Identificación", "Datos principales"),
+        (2, "Archivo", "Descripción y vista previa"),
+        (3, "Confirmación", "Revisar antes de guardar")
     };
 
-    private IEnumerable<DocumentoInstitucional> documentosFiltrados =>
-        listaDocumentos.Where(d =>
-            (string.IsNullOrWhiteSpace(busqueda) || 
-             d.Titulo.Contains(busqueda, StringComparison.OrdinalIgnoreCase) || 
-             d.Descripcion.Contains(busqueda, StringComparison.OrdinalIgnoreCase)) &&
-            (string.IsNullOrWhiteSpace(filtroTipo) || d.Tipo == filtroTipo)
-        );
+    private string PestanaActiva = "lista";
+    private int PasoFormulario = 1;
+    private string Busqueda = string.Empty;
+    private string FiltroTipo = string.Empty;
+    private string FiltroEstado = string.Empty;
+    private string OrdenColumna = "fecha";
+    private bool OrdenAscendente;
+    private string? MensajeExito;
+    private string? MensajeError;
+    private string? VistaPreviaUrl;
+    private string? MimeVistaPrevia;
+    private string? NombreArchivoVistaPrevia;
+    private string? EstadoVerificacion;
+    private string UsuarioActual = "Presidencia";
+    private bool ArchivoIntegro;
+    private bool Guardando;
+    private bool Editando;
+    private bool SolicitaMotivoAnulacion;
+    private string MotivoAnulacion = string.Empty;
+    private Guid? IdEnEdicion;
+    private DocumentoInstitucional? DocumentoSeleccionado;
+    private ArchivoAdjunto? ArchivoPendiente;
+    private IReadOnlyList<EntradaAuditoria> HistorialSeleccionado = Array.Empty<EntradaAuditoria>();
+    private IJSObjectReference? ModuloJavaScript;
+    private FormularioDocumento Formulario = new();
+
+    private IReadOnlyList<DocumentoInstitucional> Documentos => DocumentoService.ObtenerTodos();
+    private IReadOnlyList<AsociadoModel> AsociadosDisponibles => AsociadoDatosService.ObtenerAsociados()
+        .Where(asociado => !string.IsNullOrWhiteSpace(asociado.NombreCompleto)
+            && !string.IsNullOrWhiteSpace(asociado.Cedula))
+        .OrderBy(asociado => asociado.NombreCompleto)
+        .ToList();
+
+    protected override async Task OnInitializedAsync()
+    {
+        UsuarioActual = await ObtenerUsuarioActualAsync();
+    }
+
+    protected override void OnParametersSet()
+    {
+        var ruta = Navigation.ToBaseRelativePath(Navigation.Uri).TrimEnd('/');
+        PestanaActiva = ruta.Equals("actas-estatutos/registrar", StringComparison.OrdinalIgnoreCase)
+            ? "formulario"
+            : "lista";
+    }
+
+    private IReadOnlyList<DocumentoInstitucional> DocumentosFiltrados
+    {
+        get
+        {
+            var filtrados = Documentos.Where(documento =>
+                (string.IsNullOrWhiteSpace(Busqueda)
+                    || Contiene(documento.Titulo, Busqueda)
+                    || Contiene(documento.Codigo, Busqueda)
+                    || Contiene(documento.NumeroReferencia, Busqueda)
+                    || Contiene(documento.Descripcion, Busqueda)
+                    || Contiene(documento.NombreAsociado, Busqueda)
+                    || Contiene(documento.CedulaAsociado, Busqueda)
+                    || (documento.Archivo is not null && Contiene(documento.Archivo.Nombre, Busqueda)))
+                && (string.IsNullOrWhiteSpace(FiltroTipo) || documento.Tipo == FiltroTipo)
+                && (string.IsNullOrWhiteSpace(FiltroEstado) || documento.Estado == FiltroEstado))
+                .ToList();
+
+            return (OrdenColumna, OrdenAscendente) switch
+            {
+                ("titulo", true) => filtrados.OrderBy(documento => documento.Titulo, StringComparer.CurrentCultureIgnoreCase).ToList(),
+                ("titulo", false) => filtrados.OrderByDescending(documento => documento.Titulo, StringComparer.CurrentCultureIgnoreCase).ToList(),
+                ("estado", true) => filtrados.OrderBy(documento => documento.Estado, StringComparer.CurrentCultureIgnoreCase).ThenBy(documento => documento.Titulo).ToList(),
+                ("estado", false) => filtrados.OrderByDescending(documento => documento.Estado, StringComparer.CurrentCultureIgnoreCase).ThenBy(documento => documento.Titulo).ToList(),
+                ("fecha", true) => filtrados.OrderBy(documento => documento.Fecha).ThenBy(documento => documento.Titulo).ToList(),
+                _ => filtrados.OrderByDescending(documento => documento.Fecha).ThenBy(documento => documento.Titulo).ToList()
+            };
+        }
+    }
+
+    private void CambiarOrden(string columna)
+    {
+        if (OrdenColumna == columna)
+        {
+            OrdenAscendente = !OrdenAscendente;
+            return;
+        }
+
+        OrdenColumna = columna;
+        OrdenAscendente = columna != "fecha";
+    }
+
+    private string AriaOrden(string columna) =>
+        OrdenColumna != columna ? "none" : OrdenAscendente ? "ascending" : "descending";
+
+    private string IndicadorOrden(string columna) =>
+        OrdenColumna != columna ? "↕" : OrdenAscendente ? "↑" : "↓";
+
+    private async Task IniciarNuevo()
+    {
+        await LimpiarVistaPreviaAsync();
+        DocumentoSeleccionado = null;
+        HistorialSeleccionado = Array.Empty<EntradaAuditoria>();
+        ArchivoPendiente = null;
+        IdEnEdicion = null;
+        Editando = false;
+        PestanaActiva = "formulario";
+        PasoFormulario = 1;
+        Formulario = new FormularioDocumento();
+        EstadoVerificacion = null;
+        MensajeError = null;
+        MensajeExito = null;
+        Navigation.NavigateTo("/actas-estatutos/registrar");
+    }
+
+    private async Task AbrirDetalleAsync(Guid id)
+    {
+        var documento = DocumentoService.ObtenerPorId(id);
+        if (documento is null)
+        {
+            MensajeError = "El documento ya no está disponible.";
+            return;
+        }
+
+        await LimpiarVistaPreviaAsync();
+        DocumentoSeleccionado = documento;
+        HistorialSeleccionado = DocumentoService.ObtenerHistorial(id);
+        SolicitaMotivoAnulacion = false;
+        MotivoAnulacion = string.Empty;
+        EstadoVerificacion = null;
+        PestanaActiva = "lista";
+        ModuloJavaScript ??= await JS.InvokeAsync<IJSObjectReference>("import", "/js/actas-archivos.js");
+        await ModuloJavaScript.InvokeVoidAsync("bloquearScroll", true);
+        if (documento.Archivo is not null)
+        {
+            await CrearVistaPreviaAsync(documento.Archivo);
+        }
+    }
+
+    private async Task IniciarEdicion(Guid id)
+    {
+        var documento = DocumentoService.ObtenerPorId(id);
+        if (documento is null)
+        {
+            MensajeError = "El documento ya no está disponible.";
+            return;
+        }
+
+        if (documento.Estado == EstadosDocumento.Anulado)
+        {
+            MensajeError = "Restaura el registro antes de editarlo.";
+            return;
+        }
+
+        DocumentoSeleccionado = documento;
+        IdEnEdicion = id;
+        Editando = true;
+        PestanaActiva = "formulario";
+        ArchivoPendiente = null;
+        Formulario = new FormularioDocumento
+        {
+            Titulo = documento.Titulo,
+            Tipo = documento.Tipo,
+            Estado = documento.Estado,
+            Fecha = documento.Fecha,
+            NumeroReferencia = documento.NumeroReferencia,
+            Descripcion = documento.Descripcion,
+            CedulaAsociado = documento.CedulaAsociado,
+            NombreAsociado = documento.NombreAsociado,
+            FechaVencimiento = documento.FechaVencimiento,
+            ArchivoNombre = documento.Archivo?.Nombre ?? "archivo-actual"
+        };
+        PasoFormulario = 1;
+        EstadoVerificacion = null;
+        MensajeError = null;
+        MensajeExito = null;
+        await LiberarScrollModalAsync();
+        Navigation.NavigateTo("/actas-estatutos/registrar");
+    }
+
+    private async Task SeleccionarArchivoAsync(InputFileChangeEventArgs args)
+    {
+        MensajeError = null;
+        EstadoVerificacion = null;
+        ArchivoPendiente = null;
+        Formulario.ArchivoNombre = Editando ? DocumentoSeleccionado?.Archivo?.Nombre ?? string.Empty : string.Empty;
+        await LimpiarVistaPreviaAsync();
+        var archivo = args.File;
+        var extension = Path.GetExtension(archivo.Name).ToLowerInvariant();
+        if (archivo.Size <= 0 || archivo.Size > MaximoArchivoBytes)
+        {
+            MensajeError = "El archivo está vacío o supera el límite de 10 MB.";
+            await RestaurarVistaPreviaDeFichaAsync();
+            return;
+        }
+
+        if (extension is not (".pdf" or ".png" or ".jpg" or ".jpeg"))
+        {
+            MensajeError = "Formato no permitido. Selecciona un archivo PDF, PNG o JPG.";
+            await RestaurarVistaPreviaDeFichaAsync();
+            return;
+        }
+
+        try
+        {
+            await using var stream = archivo.OpenReadStream(MaximoArchivoBytes);
+            using var buffer = new MemoryStream((int)archivo.Size);
+            await stream.CopyToAsync(buffer);
+            var contenido = buffer.ToArray();
+            var mime = ObtenerMime(extension);
+            if (!CoincideContenido(extension, contenido))
+            {
+                MensajeError = "El contenido no coincide con la extensión del archivo. Selecciona un PDF, PNG o JPG válido.";
+                await RestaurarVistaPreviaDeFichaAsync();
+                return;
+            }
+
+            ArchivoPendiente = ArchivoAdjunto.Crear(Path.GetFileName(archivo.Name), mime, contenido);
+            Formulario.ArchivoNombre = archivo.Name;
+            await CrearVistaPreviaAsync(ArchivoPendiente);
+        }
+        catch (IOException)
+        {
+            MensajeError = "No fue posible leer el archivo seleccionado. Intenta seleccionarlo de nuevo.";
+            await RestaurarVistaPreviaDeFichaAsync();
+        }
+        catch (InvalidOperationException)
+        {
+            MensajeError = "El archivo supera el límite de 10 MB.";
+            await RestaurarVistaPreviaDeFichaAsync();
+        }
+    }
+
+    private async Task RestaurarVistaPreviaDeFichaAsync()
+    {
+        if (Editando && DocumentoSeleccionado?.Archivo is not null)
+        {
+            await CrearVistaPreviaAsync(DocumentoSeleccionado.Archivo);
+        }
+    }
+
+    private async Task CrearVistaPreviaAsync(ArchivoAdjunto archivo)
+    {
+        await LimpiarVistaPreviaAsync();
+        ModuloJavaScript ??= await JS.InvokeAsync<IJSObjectReference>("import", "/js/actas-archivos.js");
+        using var contenido = new MemoryStream(archivo.Contenido, writable: false);
+        using var referencia = new DotNetStreamReference(contenido);
+        VistaPreviaUrl = await ModuloJavaScript.InvokeAsync<string>("crearVista", referencia, archivo.TipoMime);
+        MimeVistaPrevia = archivo.TipoMime;
+        NombreArchivoVistaPrevia = archivo.Nombre;
+    }
+
+    private async Task LimpiarVistaPreviaAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(VistaPreviaUrl) && ModuloJavaScript is not null)
+        {
+            await ModuloJavaScript.InvokeVoidAsync("liberarVista", VistaPreviaUrl);
+        }
+
+        VistaPreviaUrl = null;
+        MimeVistaPrevia = null;
+        NombreArchivoVistaPrevia = null;
+    }
+
+    private async Task QuitarArchivoPendienteAsync()
+    {
+        ArchivoPendiente = null;
+        Formulario.ArchivoNombre = Editando ? DocumentoSeleccionado?.Archivo?.Nombre ?? string.Empty : string.Empty;
+        EstadoVerificacion = null;
+        await LimpiarVistaPreviaAsync();
+        if (Editando && DocumentoSeleccionado?.Archivo is not null)
+        {
+            await CrearVistaPreviaAsync(DocumentoSeleccionado.Archivo);
+        }
+    }
+
+    private async Task GuardarAsync()
+    {
+        if (PasoFormulario != 3)
+        {
+            return;
+        }
+
+        MensajeError = null;
+        MensajeExito = null;
+
+        if (!Editando && ArchivoPendiente is null)
+        {
+            MensajeError = "Selecciona y revisa un archivo antes de registrar el documento.";
+            return;
+        }
+
+        if (Guardando)
+        {
+            return;
+        }
+
+        Guardando = true;
+        try
+        {
+            var usuario = await ObtenerUsuarioActualAsync();
+            var datos = new DatosDocumento(
+                Formulario.Titulo.Trim(),
+                Formulario.Tipo,
+                Formulario.Estado,
+                Formulario.Fecha,
+                Formulario.NumeroReferencia.Trim(),
+                Formulario.Descripcion.Trim(),
+                Formulario.CedulaAsociado.Trim(),
+                Formulario.NombreAsociado.Trim(),
+                Formulario.FechaVencimiento);
+
+            if (Editando && IdEnEdicion is Guid id)
+            {
+                var resultado = DocumentoService.Actualizar(id, datos, ArchivoPendiente, usuario);
+                if (!resultado.Exitoso)
+                {
+                    MensajeError = resultado.Mensaje;
+                    return;
+                }
+
+                MensajeExito = resultado.Cambios.Count == 0
+                    ? resultado.Mensaje
+                    : $"Ficha actualizada. {resultado.Cambios.Count} cambio(s) registrado(s) en la trazabilidad.";
+                if (resultado.Cambios.Count > 0)
+                {
+                    var actualizado = DocumentoService.ObtenerPorId(id);
+                    if (actualizado is not null)
+                    {
+                        PublicarNotificacionDocumento("Documento actualizado", actualizado);
+                    }
+                }
+                await AbrirDetalleAsync(id);
+            }
+            else
+            {
+                var creado = DocumentoService.Crear(datos, ArchivoPendiente, usuario);
+                MensajeExito = $"“{creado.Titulo}” quedó registrado con el código {creado.Codigo}.";
+                PublicarNotificacionDocumento("Documento registrado", creado);
+                await AbrirDetalleAsync(creado.Id);
+            }
+
+            Editando = false;
+            IdEnEdicion = null;
+            ArchivoPendiente = null;
+            PestanaActiva = "lista";
+            PasoFormulario = 1;
+            Navigation.NavigateTo("/actas-estatutos/documentos");
+        }
+        catch (JSException)
+        {
+            MensajeError = "El documento se guardó, pero no se pudo actualizar la vista previa. Cierra la ficha y vuelve a abrirla.";
+        }
+        finally
+        {
+            Guardando = false;
+        }
+    }
+
+    private void SiguientePasoFormulario()
+    {
+        MensajeError = null;
+
+        if (PasoFormulario == 1
+            && (string.IsNullOrWhiteSpace(Formulario.Tipo) || string.IsNullOrWhiteSpace(Formulario.Titulo)))
+        {
+            MensajeError = "Completa el tipo y el título del documento para continuar.";
+            return;
+        }
+
+        if (PasoFormulario == 2 && !Editando && ArchivoPendiente is null)
+        {
+            MensajeError = "Selecciona el archivo del documento antes de continuar.";
+            return;
+        }
+
+        if (PasoFormulario < 3)
+        {
+            PasoFormulario++;
+        }
+    }
+
+    private void PasoAnteriorFormulario()
+    {
+        if (PasoFormulario > 1)
+        {
+            PasoFormulario--;
+            MensajeError = null;
+        }
+    }
+
+    private void ActualizarAsociadoSeleccionado()
+    {
+        var asociado = AsociadosDisponibles.FirstOrDefault(item =>
+            string.Equals(item.Cedula, Formulario.CedulaAsociado, StringComparison.Ordinal));
+        Formulario.NombreAsociado = asociado?.NombreCompleto ?? string.Empty;
+    }
+
+    private void PublicarNotificacionDocumento(string accion, DocumentoInstitucional documento)
+    {
+        var relacionado = string.IsNullOrWhiteSpace(documento.NombreAsociado)
+            ? "Documento institucional"
+            : $"Asociado: {documento.NombreAsociado}";
+
+        Notificaciones.Publicar(new Asoagro.Models.Notificacion
+        {
+            Titulo = accion,
+            Descripcion = $"{documento.Titulo} · {relacionado} · por {ObtenerUsuarioActual()}.",
+            Etiqueta = accion,
+            Enlace = "/actas-estatutos/documentos",
+            Icono = "doc",
+            Categoria = Asoagro.Models.CategoriaNotificacion.Documentos,
+            Nivel = Asoagro.Models.NivelNotificacion.Informativa,
+            RolesDestino = new[] { "Presidente", "Director", "Tesorero" },
+            RolesEnlace = new[] { "Presidente" }
+        });
+    }
+
+    private async Task CancelarFormulario()
+    {
+        Editando = false;
+        IdEnEdicion = null;
+        ArchivoPendiente = null;
+        MensajeError = null;
+        EstadoVerificacion = null;
+        PasoFormulario = 1;
+        PestanaActiva = "lista";
+        Navigation.NavigateTo("/actas-estatutos/documentos");
+        await LimpiarVistaPreviaAsync();
+        if (DocumentoSeleccionado?.Archivo is not null)
+        {
+            await CrearVistaPreviaAsync(DocumentoSeleccionado.Archivo);
+        }
+    }
+
+    private void IniciarAnulacion()
+    {
+        SolicitaMotivoAnulacion = true;
+        MotivoAnulacion = string.Empty;
+        MensajeError = null;
+    }
+
+    private void CancelarAnulacion()
+    {
+        SolicitaMotivoAnulacion = false;
+        MotivoAnulacion = string.Empty;
+    }
+
+    private void ConfirmarAnulacion()
+    {
+        if (DocumentoSeleccionado is null)
+        {
+            MensajeError = "Selecciona un documento válido.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(MotivoAnulacion))
+        {
+            MensajeError = "Escribe el motivo de la anulación para dejar constancia en el historial.";
+            return;
+        }
+
+        if (!DocumentoService.Anular(DocumentoSeleccionado.Id, MotivoAnulacion, ObtenerUsuarioActual()))
+        {
+            MensajeError = "No fue posible anular el registro. Puede que ya estuviera anulado.";
+            return;
+        }
+
+        PublicarNotificacionDocumento("Documento anulado", DocumentoSeleccionado);
+        MensajeExito = "Registro anulado. Se conservó su archivo y su historial.";
+        SolicitaMotivoAnulacion = false;
+        ActualizarDetalleSeleccionado();
+    }
+
+    private void Restaurar(Guid id)
+    {
+        if (!DocumentoService.Restaurar(id, ObtenerUsuarioActual()))
+        {
+            MensajeError = "No fue posible restaurar el registro. Actualiza la lista e inténtalo de nuevo.";
+            return;
+        }
+
+        var restaurado = DocumentoService.ObtenerPorId(id);
+        if (restaurado is not null)
+        {
+            PublicarNotificacionDocumento("Documento restaurado", restaurado);
+        }
+        MensajeExito = "Registro restaurado y devuelto al estado Vigente.";
+        ActualizarDetalleSeleccionado();
+    }
+
+    private async Task DescargarAsync(Guid id)
+    {
+        var documento = DocumentoService.ObtenerPorId(id);
+        if (documento?.Archivo is null)
+        {
+            MensajeError = "Este registro no tiene un archivo disponible para descargar.";
+            return;
+        }
+
+        if (!documento.Archivo.Verificar())
+        {
+            MensajeError = "La huella del archivo no coincide. Se canceló la descarga para proteger la integridad del documento.";
+            return;
+        }
+
+        ModuloJavaScript ??= await JS.InvokeAsync<IJSObjectReference>("import", "/js/actas-archivos.js");
+        using var contenido = new MemoryStream(documento.Archivo.Contenido, writable: false);
+        using var referencia = new DotNetStreamReference(contenido);
+        await ModuloJavaScript.InvokeVoidAsync("descargar", documento.Archivo.Nombre, referencia, documento.Archivo.TipoMime);
+        DocumentoService.RegistrarDescarga(id, ObtenerUsuarioActual());
+        ActualizarDetalleSeleccionado();
+        MensajeExito = $"Descarga iniciada: {documento.Archivo.Nombre}.";
+    }
+
+    private async Task ExportarCsvAsync()
+    {
+        var documentos = DocumentosFiltrados;
+        if (documentos.Count == 0)
+        {
+            return;
+        }
+
+        var lineas = new List<string>
+        {
+            CrearFilaCsv("Código", "Título", "Tipo", "Estado", "Fecha", "Vencimiento",
+                "Referencia", "Asociado", "Cédula", "Versión", "Archivo", "Descripción")
+        };
+
+        lineas.AddRange(documentos.Select(documento => CrearFilaCsv(
+            documento.Codigo,
+            documento.Titulo,
+            documento.Tipo,
+            documento.Estado,
+            documento.Fecha.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            documento.FechaVencimiento?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
+            documento.NumeroReferencia,
+            string.IsNullOrWhiteSpace(documento.NombreAsociado) ? "Documento institucional" : documento.NombreAsociado,
+            documento.CedulaAsociado,
+            documento.Version.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            documento.Archivo?.Nombre,
+            documento.Descripcion)));
+
+        var nombre = $"repositorio-documentos-{DateTime.Now:yyyyMMdd-HHmm}.csv";
+        var contenido = string.Join("\r\n", lineas);
+        ModuloJavaScript ??= await JS.InvokeAsync<IJSObjectReference>("import", "/js/actas-archivos.js");
+        await ModuloJavaScript.InvokeVoidAsync("descargarCsv", nombre, contenido);
+        MensajeExito = $"Se exportaron {documentos.Count} documentos.";
+    }
+
+    private static string CrearFilaCsv(params string?[] valores) =>
+        string.Join(';', valores.Select(valor =>
+        {
+            var seguro = valor ?? string.Empty;
+            if (seguro.Length > 0 && seguro[0] is '=' or '+' or '-' or '@' or '\t' or '\r')
+            {
+                seguro = "'" + seguro;
+            }
+
+            return $"\"{seguro.Replace("\"", "\"\"")}\"";
+        }));
+
+    private void VerificarArchivo()
+    {
+        if (DocumentoSeleccionado?.Archivo is null)
+        {
+            MensajeError = "No hay un archivo adjunto para verificar.";
+            return;
+        }
+
+        ArchivoIntegro = DocumentoSeleccionado.Archivo.Verificar();
+        EstadoVerificacion = ArchivoIntegro
+            ? "Integridad comprobada: la huella SHA-256 coincide."
+            : "La huella SHA-256 no coincide con el contenido del archivo.";
+    }
+
+    private void VerificarArchivoPendiente()
+    {
+        if (ArchivoPendiente is null)
+        {
+            MensajeError = "Selecciona un archivo antes de verificarlo.";
+            return;
+        }
+
+        ArchivoIntegro = ArchivoPendiente.Verificar();
+        EstadoVerificacion = ArchivoIntegro
+            ? "Integridad comprobada: la huella SHA-256 coincide."
+            : "La huella SHA-256 no coincide con el contenido del archivo.";
+    }
+
+    private void ActualizarDetalleSeleccionado()
+    {
+        if (DocumentoSeleccionado is null)
+        {
+            return;
+        }
+
+        DocumentoSeleccionado = DocumentoService.ObtenerPorId(DocumentoSeleccionado.Id);
+        HistorialSeleccionado = DocumentoSeleccionado is null
+            ? Array.Empty<EntradaAuditoria>()
+            : DocumentoService.ObtenerHistorial(DocumentoSeleccionado.Id);
+        SolicitaMotivoAnulacion = false;
+        MotivoAnulacion = string.Empty;
+        EstadoVerificacion = null;
+    }
+
+    private async Task CerrarDetalle()
+    {
+        DocumentoSeleccionado = null;
+        HistorialSeleccionado = Array.Empty<EntradaAuditoria>();
+        SolicitaMotivoAnulacion = false;
+        EstadoVerificacion = null;
+        await InvokeAsync(StateHasChanged);
+
+        try
+        {
+            await LimpiarVistaPreviaAsync();
+        }
+        finally
+        {
+            await LiberarScrollModalAsync();
+        }
+    }
+
+    private async Task LiberarScrollModalAsync()
+    {
+        if (ModuloJavaScript is not null)
+        {
+            await ModuloJavaScript.InvokeVoidAsync("bloquearScroll", false);
+        }
+    }
+
+    private async Task ManejarTeclaModal(KeyboardEventArgs args)
+    {
+        if (DocumentoSeleccionado is not null && args.Key == "Escape")
+        {
+            await CerrarDetalle();
+        }
+    }
 
     private void LimpiarFiltros()
     {
-        busqueda = "";
-        filtroTipo = "";
+        Busqueda = string.Empty;
+        FiltroTipo = string.Empty;
+        FiltroEstado = string.Empty;
     }
 
-    private void CargarArchivo(InputFileChangeEventArgs e)
+    private async Task<string> ObtenerUsuarioActualAsync()
     {
-        var archivo = e.File;
-        if (archivo != null)
+        var estado = await AuthProvider.GetAuthenticationStateAsync();
+        return estado.User.FindFirst(ClaimTypes.Email)?.Value
+            ?? estado.User.Identity?.Name
+            ?? "Presidencia";
+    }
+
+    private string ObtenerUsuarioActual() => UsuarioActual;
+
+    private static bool Contiene(string? valor, string consulta) =>
+        !string.IsNullOrEmpty(valor) && valor.Contains(consulta, StringComparison.OrdinalIgnoreCase);
+
+    private static string ClaseEstado(string estado) => estado switch
+    {
+        EstadosDocumento.Vigente => "status-current",
+        EstadosDocumento.EnRevision => "status-review",
+        EstadosDocumento.Derogado => "status-repealed",
+        EstadosDocumento.Anulado => "status-cancelled",
+        _ => "status-review"
+    };
+
+    private static string ClaseTarjeta(string estado) => estado switch
+    {
+        EstadosDocumento.Vigente => "card-current",
+        EstadosDocumento.EnRevision => "card-review",
+        EstadosDocumento.Derogado => "card-repealed",
+        EstadosDocumento.Anulado => "card-cancelled",
+        _ => "card-current"
+    };
+
+    private static string IconoArchivo(string mime) => mime switch
+    {
+        "application/pdf" => "#ico-pdf",
+        "image/png" or "image/jpeg" => "#ico-imagen",
+        _ => "#ico-archivo"
+    };
+
+    private static string ObtenerMime(string extension) => extension switch
+    {
+        ".pdf" => "application/pdf",
+        ".png" => "image/png",
+        ".jpg" or ".jpeg" => "image/jpeg",
+        _ => "application/octet-stream"
+    };
+
+    private static bool CoincideContenido(string extension, byte[] contenido) => extension switch
+    {
+        ".pdf" => contenido.Length >= 5 && contenido.AsSpan(0, 5).SequenceEqual("%PDF-"u8),
+        ".png" => contenido.Length >= 8 && contenido.AsSpan(0, 8).SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }),
+        ".jpg" or ".jpeg" => contenido.Length >= 3 && contenido[0] == 0xFF && contenido[1] == 0xD8 && contenido[2] == 0xFF,
+        _ => false
+    };
+
+    private static string TamanoLegible(long bytes) => bytes switch
+    {
+        < 1024 => $"{bytes} B",
+        < 1024 * 1024 => $"{bytes / 1024d:0.#} KB",
+        _ => $"{bytes / (1024d * 1024):0.##} MB"
+    };
+
+    public async ValueTask DisposeAsync()
+    {
+        try
         {
-            nombreArchivoCargado = archivo.Name;
-            nuevoDocumento.ArchivoNombre = archivo.Name;
+            await LimpiarVistaPreviaAsync();
+            await LiberarScrollModalAsync();
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+
+        if (ModuloJavaScript is not null)
+        {
+            try
+            {
+                await ModuloJavaScript.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
         }
     }
 
-    private void GuardarDocumento()
-    { 
-        listaDocumentos.Insert(0, new DocumentoInstitucional
-        {
-            Tipo = nuevoDocumento.Tipo,
-            Titulo = nuevoDocumento.Titulo,
-            Fecha = nuevoDocumento.Fecha,
-            Descripcion = nuevoDocumento.Descripcion,
-            ArchivoNombre = nuevoDocumento.ArchivoNombre
-        });
-
-        mensajeExito = $"El documento '{nuevoDocumento.Titulo}' fue guardado correctamente en el histórico.";
-        nuevoDocumento = new();
-        nombreArchivoCargado = null;
-        pestanaActiva = "historico";
-    }
-
-    private string ObtenerBadgeColor(string tipo) => tipo switch
+    private sealed class FormularioDocumento
     {
-        "Acta de Asamblea" => "bg-primary text-white",
-        "Estatuto Actualizado" => "bg-success text-white",
-        "Reglamento Interno" => "bg-warning text-dark",
-        "Resolución Legal" => "bg-info text-dark",
-        _ => "bg-secondary text-white"
-    };
+        [Required(ErrorMessage = "Selecciona el tipo de documento.")]
+        public string Tipo { get; set; } = string.Empty;
+
+        public string Estado { get; set; } = EstadosDocumento.Vigente;
+
+        [Required(ErrorMessage = "Escribe el título del documento.")]
+        [StringLength(160, ErrorMessage = "El título no puede superar 160 caracteres.")]
+        public string Titulo { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Selecciona la fecha del documento.")]
+        public DateTime Fecha { get; set; } = DateTime.Today;
+
+        public DateTime? FechaVencimiento { get; set; }
+
+        [StringLength(80, ErrorMessage = "La referencia no puede superar 80 caracteres.")]
+        public string NumeroReferencia { get; set; } = string.Empty;
+
+        [StringLength(2000, ErrorMessage = "La descripción no puede superar 2000 caracteres.")]
+        public string Descripcion { get; set; } = string.Empty;
+
+        public string CedulaAsociado { get; set; } = string.Empty;
+        public string NombreAsociado { get; set; } = string.Empty;
+
+        public string ArchivoNombre { get; set; } = string.Empty;
+    }
 }

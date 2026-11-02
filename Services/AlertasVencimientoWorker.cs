@@ -13,15 +13,18 @@ public class AlertasVencimientoWorker : BackgroundService
     private static readonly string[] RolesVencimientos = Array.Empty<string>();
 
     private readonly IAlertaDocumentoService _alertas;
+    private readonly IDocumentoInstitucionalService _documentosInstitucionales;
     private readonly NotificacionService _notificaciones;
     private readonly ILogger<AlertasVencimientoWorker> _logger;
 
     public AlertasVencimientoWorker(
         IAlertaDocumentoService alertas,
+        IDocumentoInstitucionalService documentosInstitucionales,
         NotificacionService notificaciones,
         ILogger<AlertasVencimientoWorker> logger)
     {
         _alertas = alertas;
+        _documentosInstitucionales = documentosInstitucionales;
         _notificaciones = notificaciones;
         _logger = logger;
     }
@@ -62,6 +65,40 @@ public class AlertasVencimientoWorker : BackgroundService
                     Nivel = ObtenerNivel(umbral.Value),
                     RolesDestino = RolesVencimientos,
                     ClaveUnica = $"documento|{alerta.NombreAsociado}|{alerta.TipoDocumento}|{alerta.FechaVencimiento:yyyy-MM-dd}|{umbral}"
+                });
+
+                if (creado) nuevos++;
+            }
+
+            foreach (var documento in _documentosInstitucionales.ObtenerTodos())
+            {
+                if (documento.FechaVencimiento is not DateTime fechaVencimiento
+                    || documento.Estado == EstadosDocumento.Anulado
+                    || documento.Estado == EstadosDocumento.Derogado)
+                {
+                    continue;
+                }
+
+                var fecha = fechaVencimiento.Date;
+                var diasRestantes = (fecha - DateTime.Today).Days;
+                var umbral = ObtenerUmbral(diasRestantes);
+                if (umbral is null) continue;
+
+                var asociado = string.IsNullOrWhiteSpace(documento.NombreAsociado)
+                    ? "Documento institucional"
+                    : documento.NombreAsociado;
+                var creado = _notificaciones.Publicar(new Notificacion
+                {
+                    Titulo = $"{documento.Titulo} {DescribirPlazo(diasRestantes)}",
+                    Descripcion = $"{documento.Tipo} · {asociado} · fecha de vencimiento: {fecha:dd/MM/yyyy}.",
+                    Etiqueta = diasRestantes < 0 ? "Vencido" : "Por vencer",
+                    Enlace = "/actas-estatutos/documentos",
+                    Icono = "alerta",
+                    Categoria = CategoriaNotificacion.Documentos,
+                    Nivel = ObtenerNivel(umbral.Value),
+                    RolesDestino = new[] { "Presidente", "Director", "Tesorero" },
+                    RolesEnlace = new[] { "Presidente" },
+                    ClaveUnica = $"acta|{documento.Id:N}|{fecha:yyyy-MM-dd}|{umbral}"
                 });
 
                 if (creado) nuevos++;

@@ -1,0 +1,103 @@
+@page "/actas-estatutos/historial"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Presidente")]
+@rendermode InteractiveServer
+@using Asoagro.Models
+@using Asoagro.Services
+@inject IDocumentoInstitucionalService DocumentoService
+
+<PageTitle>Historial de actividad documental</PageTitle>
+
+<div class="ah">
+    <header class="ah-header">
+        <div>
+            <a class="ah-back" href="/actas-estatutos">← Centro documental</a>
+            <span class="ah-eyebrow">Trazabilidad · Presidencia</span>
+            <h1>Historial de actividad</h1>
+            <p>Consulta quién registró, modificó, descargó, anuló o restauró los documentos.</p>
+        </div>
+        <a class="ah-button" href="/actas-estatutos/documentos">Abrir repositorio</a>
+    </header>
+
+    <section class="ah-summary">
+        <div class="ah-summary-movements"><small>Movimientos registrados</small><strong>@Movimientos.Count</strong></div>
+        <div class="ah-summary-documents"><small>Documentos con actividad</small><strong>@Movimientos.Select(m => m.DocumentoId).Distinct().Count()</strong></div>
+        <div class="ah-summary-visible"><small>Mostrando</small><strong>@MovimientosFiltrados.Count()</strong></div>
+    </section>
+
+    <section class="ah-panel">
+        <div class="ah-toolbar">
+            <div><span class="ah-eyebrow">Registro de auditoría</span><h2>Todos los movimientos</h2></div>
+            <label class="ah-search">
+                <span aria-hidden="true">⌕</span>
+                <input aria-label="Buscar en el historial" placeholder="Buscar documento, usuario o acción…" @bind="Busqueda" @bind:event="oninput" />
+            </label>
+        </div>
+
+        @if (MovimientosFiltrados.Any())
+        {
+            <ol class="ah-timeline">
+                @foreach (var movimiento in MovimientosFiltrados)
+                {
+                    <li>
+                        <span class="ah-dot"></span>
+                        <article class="ah-entry">
+                            <div class="ah-entry-top">
+                                <div><span class="ah-action">@movimiento.Entrada.Accion</span><strong>@movimiento.DocumentoTitulo</strong></div>
+                                <time datetime="@movimiento.Entrada.Fecha.ToString("O")">@movimiento.Entrada.Fecha.ToString("dd/MM/yyyy HH:mm")</time>
+                            </div>
+                            <p>@movimiento.Entrada.Detalle</p>
+                            <div class="ah-entry-meta">
+                                <span>Por @movimiento.Entrada.Usuario</span>
+                                <span>@movimiento.Codigo</span>
+                                <span>@(string.IsNullOrWhiteSpace(movimiento.NombreAsociado) ? "Institucional" : movimiento.NombreAsociado)</span>
+                            </div>
+                        </article>
+                    </li>
+                }
+            </ol>
+        }
+        else
+        {
+            <div class="ah-empty">
+                <span aria-hidden="true">◷</span>
+                <strong>@(string.IsNullOrWhiteSpace(Busqueda) ? "Aún no hay movimientos" : "No se encontraron coincidencias")</strong>
+                <p>@(string.IsNullOrWhiteSpace(Busqueda) ? "Cuando registres o gestiones documentos, sus movimientos aparecerán aquí." : "Prueba con otro término de búsqueda.")</p>
+            </div>
+        }
+    </section>
+    <p class="ah-retention">El historial de esta versión se conserva en memoria y se reinicia al detener la aplicación.</p>
+</div>
+
+@code {
+    private string Busqueda { get; set; } = string.Empty;
+
+    private IReadOnlyList<MovimientoDocumento> Movimientos => DocumentoService.ObtenerTodos()
+        .SelectMany(documento => DocumentoService.ObtenerHistorial(documento.Id)
+            .Select(entrada => new MovimientoDocumento(
+                documento.Id,
+                documento.Codigo,
+                documento.Titulo,
+                documento.NombreAsociado,
+                entrada)))
+        .OrderByDescending(movimiento => movimiento.Entrada.Fecha)
+        .ToList();
+
+    private IEnumerable<MovimientoDocumento> MovimientosFiltrados => Movimientos.Where(movimiento =>
+        string.IsNullOrWhiteSpace(Busqueda)
+        || Contiene(movimiento.DocumentoTitulo, Busqueda)
+        || Contiene(movimiento.Codigo, Busqueda)
+        || Contiene(movimiento.NombreAsociado, Busqueda)
+        || Contiene(movimiento.Entrada.Accion, Busqueda)
+        || Contiene(movimiento.Entrada.Detalle, Busqueda)
+        || Contiene(movimiento.Entrada.Usuario, Busqueda));
+
+    private static bool Contiene(string? valor, string consulta) =>
+        !string.IsNullOrWhiteSpace(valor) && valor.Contains(consulta, StringComparison.OrdinalIgnoreCase);
+
+    private sealed record MovimientoDocumento(
+        Guid DocumentoId,
+        string Codigo,
+        string DocumentoTitulo,
+        string NombreAsociado,
+        EntradaAuditoria Entrada);
+}

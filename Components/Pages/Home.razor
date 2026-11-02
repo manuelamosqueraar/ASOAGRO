@@ -49,8 +49,9 @@
     .ag-velo { position: absolute; inset: 0; z-index: 1; background: radial-gradient(60% 50% at 85% 12%, rgba(185, 231, 122, .22), transparent 70%), linear-gradient(180deg, rgba(5, 31, 16, .55), rgba(5, 31, 16, .85) 85%, #051f10); }
     .ag-velo-oscuro { background: linear-gradient(180deg, rgba(5, 31, 16, .78), rgba(5, 31, 16, .88)); }
 
-    /* Video con sus colores naturales, sin tinte */
-    .ag-hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; filter: brightness(1.05) contrast(1.04) saturate(.92); }
+    /* El hero usa el encuadre nativo del video para evitar ampliaciones innecesarias. */
+    .ag-hero .ag-capa { inset: 0; }
+    .ag-hero-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; }
 
     /* Sombra solo en el centro para que el texto se lea. El verde queda en los bordes */
     .ag-hero-velo {
@@ -562,7 +563,7 @@
                     <span class="fin-insignia">Núcleo estratégico</span>
                     <h2 class="fin-titulo">Acceso oportuno a <span class="fin-resalte">fuentes de financiación</span></h2>
                     <p class="fin-descripcion">Evitamos que las asociaciones pierdan oportunidades de recursos externos por falta de registros listos o documentación desactualizada en convocatorias.</p>
-                    <button type="button" class="fin-boton" @onclick='() => NavegarA("consultar-asociados")'>
+                    <button type="button" class="fin-boton" @onclick='() => NavegarA("financiacion")'>
                         Revisar elegibilidad
                         <svg class="fin-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#fin-flecha" /></svg>
                     </button>

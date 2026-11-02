@@ -75,6 +75,14 @@ if (googleAuthenticationConfigured)
 
             options.Events.OnRemoteFailure = context =>
             {
+                var logger = context.HttpContext.RequestServices
+                    .GetRequiredService<ILoggerFactory>()
+                    .CreateLogger("GoogleOAuth");
+                logger.LogError(
+                    context.Failure,
+                    "Google OAuth failed. Failure type: {FailureType}",
+                    context.Failure?.GetType().Name ?? "unknown");
+
                 context.HandleResponse();
                 context.Response.Redirect("/login?error=google_oauth");
                 return Task.CompletedTask;
@@ -162,6 +170,9 @@ else
     builder.Services.AddSingleton<IAsociadoService, InMemoryAsociadoService>();
     builder.Services.AddSingleton<IAlertaDocumentoService, InMemoryAlertaDocumentoService>();
 }
+
+// Actas, estatutos y reglamentos (en memoria por ahora)
+builder.Services.AddSingleton<IDocumentoInstitucionalService, InMemoryDocumentoInstitucionalService>();
 
 // Servicio de gestión de sesión/roles de usuario
 builder.Services.AddScoped<UserService>();
