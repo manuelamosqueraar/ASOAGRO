@@ -1,10 +1,12 @@
 using Asoagro.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Asoagro.Controllers;
 
 [Route("api/documentos-institucionales")]
 [ApiController]
+[Authorize(Roles = "Presidente")]
 public class DocumentosInstitucionalesController : ControllerBase
 {
     private readonly IDocumentoInstitucionalService _service;

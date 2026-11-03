@@ -46,13 +46,17 @@
                                         <svg class="nm-ico"><use href="#ico-ajustes" /></svg>
                                         <span>Editar asociado</span>
                                     </NavLink>
+                                    <NavLink class="nm-link" href="seguimiento-asociados">
+                                        <svg class="nm-ico"><use href="#ico-check" /></svg>
+                                        <span>Seguimiento de asociados</span>
+                                    </NavLink>
                                 </div>
                             </div>
                         </section>
                     }
 
                     <!-- DOCUMENTOS (Tesorero y Presidente) -->
-                    @if (context.User.IsInRole("Tesorero") || context.User.IsInRole("Presidente") || context.User.IsInRole("Director"))
+                    @if (context.User.IsInRole("Tesorero") || context.User.IsInRole("Presidente"))
                     {
                         <section class="nm-grupo nm-grupo-trigo @(expandirDocumentos ? "abierto" : "")">
                             <button type="button" class="nm-grupo-btn" @onclick="ToggleDocumentos" aria-expanded="@(expandirDocumentos ? "true" : "false")">
@@ -83,7 +87,7 @@
                                         </NavLink>
                                     }
 
-                                    @if (context.User.IsInRole("Presidente") || context.User.IsInRole("Director"))
+                                    @if (context.User.IsInRole("Presidente"))
                                     {
                                         <NavLink class="nm-link" href="actas-estatutos" Match="NavLinkMatch.All">
                                             <svg class="nm-ico"><use href="#ico-ajustes" /></svg>

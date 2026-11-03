@@ -284,12 +284,6 @@
 
 .ra-alerta > span { flex: 1; }
 
-.ra-alerta-exito {
-    background: #eef8e3;
-    color: var(--ra-pino);
-    border: 1px solid #cfe9ad;
-}
-
 .ra-alerta-error {
     background: #fdecec;
     color: #b42318;
@@ -308,12 +302,10 @@
 
 .ra-alerta-cerrar:hover { opacity: 1; }
 
-/* ---------- Layout del formulario y carnet ---------- */
+/* ---------- Layout del formulario ---------- */
 .ra-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 330px;
-    gap: 1.5rem;
-    align-items: start;
+    grid-template-columns: minmax(0, 1fr);
 }
 
 .ra-panel {
@@ -708,15 +700,97 @@
 
 @keyframes ra-girar { to { transform: rotate(360deg); } }
 
-/* ---------- Carnet ---------- */
-.ra-carnet { position: sticky; top: calc(var(--ag-h, 4.25rem) + 1.5rem); }
+/* ---------- Confirmación y credencial ---------- */
+.ra-modal-fondo {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    display: grid;
+    place-items: center;
+    padding: 1rem;
+    background: rgba(5, 25, 15, .68);
+    backdrop-filter: blur(5px);
+    animation: ra-modal-aparecer .2s ease-out;
+}
+
+.ra-modal {
+    position: relative;
+    width: min(100%, 430px);
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 1.5rem;
+    border: 1px solid rgba(185, 231, 122, .35);
+    border-radius: 1.4rem;
+    background: #ffffff;
+    box-shadow: 0 28px 80px rgba(0, 0, 0, .32);
+}
+
+.ra-modal-cerrar {
+    position: absolute;
+    top: .8rem;
+    right: .8rem;
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: 50%;
+    background: #f1f5ee;
+    color: var(--ra-gris);
+    font-size: 1.4rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.ra-modal-cerrar:hover { background: #e4f5d2; color: var(--ra-pino); }
+
+.ra-modal-cab {
+    display: flex;
+    align-items: flex-start;
+    gap: .85rem;
+    padding-right: 1.5rem;
+}
+
+.ra-modal-check {
+    flex: 0 0 2.5rem;
+    width: 2.5rem;
+    height: 2.5rem;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #e4f5d2;
+    color: var(--ra-pino);
+}
+
+.ra-modal-cab h2 {
+    margin: 0 0 .25rem;
+    color: var(--ra-bosque);
+    font-size: 1.2rem;
+}
+
+.ra-modal-cab p {
+    margin: 0;
+    color: var(--ra-gris);
+    font-size: .82rem;
+    line-height: 1.45;
+}
+
+.ra-modal .ra-carnet { width: 100%; margin: 1.2rem auto; }
+
+.ra-modal-accion { width: 100%; justify-content: center; }
+
+@keyframes ra-modal-aparecer {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
 
 .ra-carnet-tarjeta {
     overflow: hidden;
-    border-radius: 1.5rem;
+    border-radius: 1.1rem;
     background: #ffffff;
     border: 1px solid var(--ra-linea);
-    box-shadow: 0 24px 48px -26px rgba(11, 46, 28, .45);
+    box-shadow: 0 20px 42px -26px rgba(11, 46, 28, .48);
 }
 
 .ra-carnet-cab {
@@ -725,7 +799,7 @@
     flex-direction: column;
     align-items: center;
     gap: .35rem;
-    padding: 1.5rem 1.25rem 1.75rem;
+    padding: 1rem 1rem 1.1rem;
     text-align: center;
     color: #ffffff;
     background:
@@ -764,9 +838,9 @@
 
 .ra-carnet-avatar {
     position: relative;
-    width: 4.6rem;
-    height: 4.6rem;
-    margin: .5rem 0 .25rem;
+    width: 4rem;
+    height: 4rem;
+    margin: .35rem 0 .2rem;
     display: grid;
     place-items: center;
     border-radius: 50%;
@@ -804,7 +878,7 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-family: var(--ag-titulo, 'Maname', serif);
-    font-size: 1.1rem;
+    font-size: 1.02rem;
     font-weight: 700;
     color: #ffffff;
 }
@@ -814,14 +888,14 @@
     color: var(--ra-brote);
 }
 
-.ra-carnet-cuerpo { padding: 1.25rem; }
+.ra-carnet-cuerpo { padding: .85rem 1rem; }
 
 .ra-carnet-fila {
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: .75rem;
-    padding: .7rem 0;
+    padding: .55rem 0;
     border-bottom: 1px dashed var(--ra-linea);
     font-size: .84rem;
 }
@@ -849,8 +923,8 @@
 .ra-pildora-no { background: #f1f4ee; color: var(--ra-gris); }
 
 .ra-carnet-progreso {
-    margin-top: 1.1rem;
-    padding: .9rem 1rem;
+    margin-top: .85rem;
+    padding: .75rem .85rem;
     border-radius: 1rem;
     background: #f7faf3;
     border: 1px solid var(--ra-linea);
@@ -871,8 +945,8 @@
     justify-content: space-between;
     align-items: center;
     gap: .75rem;
-    margin-top: 1.1rem;
-    padding-top: 1rem;
+    margin-top: .85rem;
+    padding-top: .8rem;
     border-top: 1px dashed var(--ra-linea);
 }
 
@@ -899,9 +973,8 @@
 }
 
 /* ---------- Responsive ---------- */
-@media (max-width: 1100px) {
+@media (max-width: 900px) {
     .ra-layout { grid-template-columns: 1fr; }
-    .ra-carnet { position: static; max-width: 420px; width: 100%; margin: 0 auto; }
 }
 
 @media (max-width: 800px) {
@@ -918,4 +991,6 @@
     .ra-acciones { flex-direction: column-reverse; align-items: stretch; }
     .ra-btn { justify-content: center; }
     .ra-seccion-cab { flex-wrap: wrap; }
+    .ra-modal { padding: 1.2rem; }
+    .ra-modal-cab h2 { font-size: 1.05rem; }
 }

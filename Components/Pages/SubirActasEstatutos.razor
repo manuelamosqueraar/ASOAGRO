@@ -1,7 +1,7 @@
 @page "/subir-actas-estatutos"
 @page "/actas-estatutos/documentos"
 @page "/actas-estatutos/registrar"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Presidente, Director")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Presidente")]
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
@@ -9,7 +9,6 @@
 @using Asoagro.Services
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IDocumentoInstitucionalService DocumentoService
-@inject AsociadoService AsociadoDatosService
 @inject IAsociadoService RegistroAsociados
 @inject NotificacionService Notificaciones
 @inject AuthenticationStateProvider AuthProvider
@@ -1199,13 +1198,8 @@
             .Where(asociado => !string.IsNullOrWhiteSpace(asociado.NombreCompleto)
                 && !string.IsNullOrWhiteSpace(asociado.Cedula))
             .Select(asociado => new OpcionAsociado(asociado.NombreCompleto, asociado.Cedula.Trim()));
-        var asociadosDelFormularioDirectora = AsociadoDatosService.ObtenerAsociados()
-            .Where(asociado => !string.IsNullOrWhiteSpace(asociado.NombreCompleto)
-                && !string.IsNullOrWhiteSpace(asociado.Cedula))
-            .Select(asociado => new OpcionAsociado(asociado.NombreCompleto, asociado.Cedula.Trim()));
 
-        AsociadosDisponibles = asociadosDelFormularioDirectora
-            .Concat(asociadosRegistrados)
+        AsociadosDisponibles = asociadosRegistrados
             .GroupBy(asociado => asociado.Cedula, StringComparer.OrdinalIgnoreCase)
             .Select(grupo => grupo.First())
             .OrderBy(asociado => asociado.NombreCompleto)

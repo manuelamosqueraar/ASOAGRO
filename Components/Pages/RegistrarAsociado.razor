@@ -1,13 +1,16 @@
 @page "/registrar-asociado"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Director")]
 @rendermode InteractiveServer
+@implements IAsyncDisposable
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.JSInterop
 @using Asoagro.Services
-@inject AsociadoService AsociadoService
+@inject IAsociadoService RegistroAsociados
 @inject NotificacionService Notificaciones
 @inject AuthenticationStateProvider AuthProvider
+@inject IJSRuntime JS
 
 <div class="ra"> 
 
@@ -66,15 +69,6 @@
     </nav>
 
     <!-- ALERTAS -->
-    @if (!string.IsNullOrEmpty(mensajeExito))
-    {
-        <div class="ra-alerta ra-alerta-exito">
-            <svg class="ra-ico"><use href="#ico-check" /></svg>
-            <span>@mensajeExito</span>
-            <button type="button" class="ra-alerta-cerrar" @onclick="() => mensajeExito = string.Empty" aria-label="Cerrar">&times;</button>
-        </div>
-    }
-
     @if (!string.IsNullOrEmpty(mensajeError))
     {
         <div class="ra-alerta ra-alerta-error">
@@ -283,66 +277,82 @@
             }
         </div>
 
-        <!-- CARNET DIGITAL -->
-        <aside class="ra-carnet" aria-label="Vista previa de la credencial">
-            <div class="ra-carnet-tarjeta">
-                <div class="ra-carnet-cab">
-                    <span class="ra-carnet-sello">Credencial provisional</span>
-                    <span class="ra-carnet-cc">CC @(string.IsNullOrWhiteSpace(asociado.Cedula) ? "—" : asociado.Cedula)</span>
-
-                    <div class="ra-carnet-avatar @(Paso1Completo ? "listo" : "")">
-                        @ObtenerIniciales(asociado.NombreCompleto)
-                        @if (asociado.TieneBPA)
-                        {
-                            <span class="ra-carnet-bpa" title="BPA vigente"><svg class="ra-ico"><use href="#ico-check" /></svg></span>
-                        }
-                    </div>
-
-                    <h3>@(string.IsNullOrWhiteSpace(asociado.NombreCompleto) ? "Nombre del productor" : asociado.NombreCompleto)</h3>
-                    <small>@(string.IsNullOrWhiteSpace(asociado.Telefono) ? "Teléfono pendiente" : asociado.Telefono)</small>
-                </div>
-
-                <div class="ra-carnet-cuerpo">
-                    <div class="ra-carnet-fila">
-                        <span>Predio</span>
-                        <strong>@(string.IsNullOrWhiteSpace(asociado.NombrePredio) ? "Sin registrar" : $"{asociado.NombrePredio} ({asociado.HectareasPredio} ha)")</strong>
-                    </div>
-                    <div class="ra-carnet-fila">
-                        <span>Cultivo eje</span>
-                        <strong>@(string.IsNullOrWhiteSpace(asociado.CultivoPrincipal) ? "Pendiente" : asociado.CultivoPrincipal)</strong>
-                    </div>
-                    <div class="ra-carnet-fila">
-                        <span>Certificación BPA</span>
-                        @if (asociado.TieneBPA)
-                        {
-                            <span class="ra-pildora-ok">Vigente ICA</span>
-                        }
-                        else
-                        {
-                            <span class="ra-pildora-no">No registra</span>
-                        }
-                    </div>
-
-                    <div class="ra-carnet-progreso">
-                        <div class="ra-carnet-progreso-cab">
-                            <span>Estado del expediente</span>
-                            <strong>@(Progreso)%</strong>
-                        </div>
-                        <div class="ra-barra ra-barra-oscura"><div class="ra-barra-relleno" style="width: @(Progreso)%;"></div></div>
-                    </div>
-
-                    <div class="ra-carnet-pie">
-                        <div>
-                            <strong>ASOAGRO · FAAUA</strong>
-                            <small>Gestión de asociados</small>
-                        </div>
-                        <span class="ra-carnet-qr" title="Código QR oficial"><svg class="ra-ico"><use href="#ico-mapa" /></svg></span>
-                    </div>
-                </div>
-            </div>
-        </aside>
-
     </EditForm>
+
+    @if (mostrarCredencial)
+    {
+        <div class="ra-modal-fondo" role="presentation" @onclick="CerrarCredencial">
+            <section class="ra-modal" role="dialog" aria-modal="true" aria-labelledby="ra-modal-titulo" @onclick:stopPropagation="true">
+                <button type="button" class="ra-modal-cerrar" @onclick="CerrarCredencial" aria-label="Cerrar credencial">&times;</button>
+                <header class="ra-modal-cab">
+                    <span class="ra-modal-check"><svg class="ra-ico"><use href="#ico-check" /></svg></span>
+                    <div>
+                        <h2 id="ra-modal-titulo">¡Asociado registrado!</h2>
+                        <p>El expediente quedó guardado correctamente. Esta es su credencial provisional.</p>
+                    </div>
+                </header>
+
+                <div class="ra-carnet" aria-label="Credencial provisional del asociado">
+                    <div class="ra-carnet-tarjeta">
+                        <div class="ra-carnet-cab">
+                            <span class="ra-carnet-sello">Credencial provisional</span>
+                            <span class="ra-carnet-cc">CC @asociadoRegistrado.Cedula</span>
+
+                            <div class="ra-carnet-avatar listo">
+                                @ObtenerIniciales(asociadoRegistrado.NombreCompleto)
+                                @if (asociadoRegistrado.TieneBPA)
+                                {
+                                    <span class="ra-carnet-bpa" title="BPA vigente"><svg class="ra-ico"><use href="#ico-check" /></svg></span>
+                                }
+                            </div>
+
+                            <h3>@asociadoRegistrado.NombreCompleto</h3>
+                            <small>@asociadoRegistrado.Telefono</small>
+                        </div>
+
+                        <div class="ra-carnet-cuerpo">
+                            <div class="ra-carnet-fila">
+                                <span>Predio</span>
+                                <strong>@asociadoRegistrado.NombrePredio (@asociadoRegistrado.HectareasPredio ha)</strong>
+                            </div>
+                            <div class="ra-carnet-fila">
+                                <span>Cultivo eje</span>
+                                <strong>@asociadoRegistrado.CultivoPrincipal</strong>
+                            </div>
+                            <div class="ra-carnet-fila">
+                                <span>Certificación BPA</span>
+                                @if (asociadoRegistrado.TieneBPA)
+                                {
+                                    <span class="ra-pildora-ok">Vigente ICA</span>
+                                }
+                                else
+                                {
+                                    <span class="ra-pildora-no">No registra</span>
+                                }
+                            </div>
+
+                            <div class="ra-carnet-progreso">
+                                <div class="ra-carnet-progreso-cab">
+                                    <span>Estado del expediente</span>
+                                    <strong>Completo</strong>
+                                </div>
+                                <div class="ra-barra ra-barra-oscura"><div class="ra-barra-relleno" style="width: 100%;"></div></div>
+                            </div>
+
+                            <div class="ra-carnet-pie">
+                                <div>
+                                    <strong>ASOAGRO · FAAUA</strong>
+                                    <small>Gestión de asociados</small>
+                                </div>
+                                <span class="ra-carnet-qr" aria-label="Credencial provisional"><svg class="ra-ico"><use href="#ico-brote" /></svg></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="ra-btn ra-btn-primario ra-modal-accion" @onclick="CerrarCredencial">Cerrar</button>
+            </section>
+        </div>
+    }
 </div>
 
 @code {
@@ -373,10 +383,11 @@
     };
 
     private Asociado asociado = new();
+    private Asociado asociadoRegistrado = new();
     private int PasoActual = 1;
-    private string mensajeExito = string.Empty;
     private string mensajeError = string.Empty;
     private bool guardando;
+    private bool mostrarCredencial;
 
     private bool Paso1Completo => !string.IsNullOrWhiteSpace(asociado.NombreCompleto)
         && !string.IsNullOrWhiteSpace(asociado.Cedula)
@@ -431,6 +442,24 @@
 
     private void SeleccionarCultivo(string valor) => asociado.CultivoPrincipal = valor;
     private void AlternarBPA() => asociado.TieneBPA = !asociado.TieneBPA;
+    private async Task CerrarCredencial()
+    {
+        mostrarCredencial = false;
+        await BloquearScrollModalAsync(false);
+    }
+
+    private async Task BloquearScrollModalAsync(bool bloquear)
+    {
+        if (bloquear)
+        {
+            ModuloJavaScript ??= await JS.InvokeAsync<IJSObjectReference>("import", "/js/actas-archivos.js");
+            await ModuloJavaScript.InvokeVoidAsync("bloquearScroll", true);
+        }
+        else if (ModuloJavaScript is not null)
+        {
+            await ModuloJavaScript.InvokeVoidAsync("bloquearScroll", false);
+        }
+    }
 
     private string ObtenerIniciales(string nombre)
     {
@@ -451,7 +480,6 @@
 
     private async Task ManejarEnvio()
     {
-        mensajeExito = string.Empty;
         mensajeError = string.Empty;
 
         // Un productor con registro incompleto no se guarda, así no aparece en Consultar Asociados
@@ -466,9 +494,7 @@
 
         try
         {
-            await Task.Delay(600);
-
-            AsociadoService.AgregarAsociado(new AsociadoModel
+            var modelo = new AsociadoModel
             {
                 NombreCompleto = asociado.NombreCompleto,
                 Cedula = asociado.Cedula,
@@ -483,7 +509,13 @@
                 EsVictima = asociado.EsVictima,
                 EstadoMembresia = asociado.EstadoMembresia,
                 FechaRegistro = DateTime.Now
-            });
+            };
+            var resultado = RegistroAsociados.Registrar(AsociadoMapper.ToEntity(modelo));
+            if (!resultado.Exitoso)
+            {
+                mensajeError = resultado.Mensaje;
+                return;
+            }
 
             // Avisa en tiempo real a todas las pantallas conectadas
             var autor = await NombreAutorAsync();
@@ -499,17 +531,50 @@
                 RolesEnlace = new[] { "Director" }
             });
 
-            mensajeExito = $"{asociado.NombreCompleto} quedó vinculado al padrón FAAUA.";
+            asociadoRegistrado = new Asociado
+            {
+                NombreCompleto = asociado.NombreCompleto,
+                Cedula = asociado.Cedula,
+                Telefono = asociado.Telefono,
+                NombrePredio = asociado.NombrePredio,
+                HectareasPredio = asociado.HectareasPredio,
+                CultivoPrincipal = asociado.CultivoPrincipal,
+                TieneBPA = asociado.TieneBPA
+            };
             asociado = new();
             PasoActual = 1;
-        }
-        catch
-        {
-            mensajeError = "No fue posible guardar el expediente. Intenta de nuevo.";
+            mostrarCredencial = true;
+            await BloquearScrollModalAsync(true);
         }
         finally
         {
             guardando = false;
+        }
+    }
+
+    private IJSObjectReference? ModuloJavaScript { get; set; }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (ModuloJavaScript is null)
+        {
+            return;
+        }
+
+        try
+        {
+            await ModuloJavaScript.InvokeVoidAsync("bloquearScroll", false);
+        }
+        catch (JSDisconnectedException)
+        {
+        }
+
+        try
+        {
+            await ModuloJavaScript.DisposeAsync();
+        }
+        catch (JSDisconnectedException)
+        {
         }
     }
 }

@@ -30,6 +30,8 @@ public class AsoagroDbContext : DbContext
 
     public DbSet<Acta> Actas => Set<Acta>();
 
+    public DbSet<SeguimientoAsociado> SeguimientosAsociados => Set<SeguimientoAsociado>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -236,6 +238,48 @@ public class AsoagroDbContext : DbContext
                 .HasColumnName("archivo_nombre")
                 .HasMaxLength(255)
                 .IsRequired();
+        });
+
+        modelBuilder.Entity<SeguimientoAsociado>(entity =>
+        {
+            entity.ToTable("seguimientos_asociados", "public");
+
+            entity.HasKey(seguimiento => seguimiento.Id);
+            entity.Property(seguimiento => seguimiento.Id)
+                .HasColumnName("id")
+                .UseIdentityByDefaultColumn();
+
+            entity.Property(seguimiento => seguimiento.AsociadoId)
+                .HasColumnName("asociado_id");
+
+            entity.Property(seguimiento => seguimiento.TipoGestion)
+                .HasColumnName("tipo_gestion")
+                .HasMaxLength(40)
+                .IsRequired();
+
+            entity.Property(seguimiento => seguimiento.FechaGestion)
+                .HasColumnName("fecha_gestion")
+                .HasColumnType("timestamp with time zone");
+
+            entity.Property(seguimiento => seguimiento.Descripcion)
+                .HasColumnName("descripcion")
+                .HasMaxLength(1000)
+                .IsRequired();
+
+            entity.Property(seguimiento => seguimiento.ProximaGestion)
+                .HasColumnName("proxima_gestion")
+                .HasColumnType("date");
+
+            entity.Property(seguimiento => seguimiento.GestionadoPor)
+                .HasColumnName("gestionado_por")
+                .HasMaxLength(254)
+                .IsRequired();
+
+            entity.HasOne(seguimiento => seguimiento.Asociado)
+                .WithMany()
+                .HasForeignKey(seguimiento => seguimiento.AsociadoId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("fk_seguimientos_asociados_asociado");
         });
     }
 }

@@ -6,7 +6,7 @@
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
-@inject AsociadoService AsociadoService
+@inject IAsociadoService RegistroAsociados
 @inject NotificacionService Notificaciones
 @inject AuthenticationStateProvider AuthProvider
 
@@ -357,16 +357,7 @@
     private string? _cedulaCargada;
 
     // Solo se consideran expedientes completos (pasos 1, 2 y 3 terminados)
-    private List<AsociadoModel> ProductoresCompletos => AsociadoService.ObtenerAsociados()
-        .Where(a => !string.IsNullOrWhiteSpace(a.NombreCompleto)
-                 && !string.IsNullOrWhiteSpace(a.Cedula)
-                 && !string.IsNullOrWhiteSpace(a.Telefono)
-                 && !string.IsNullOrWhiteSpace(a.NombrePredio)
-                 && !string.IsNullOrWhiteSpace(a.VeredaSector)
-                 && !string.IsNullOrWhiteSpace(a.Municipio)
-                 && a.HectareasPredio >= 1
-                 && !string.IsNullOrWhiteSpace(a.CultivoPrincipal))
-        .ToList();
+    private List<AsociadoModel> ProductoresCompletos { get; set; } = new();
 
     private IEnumerable<AsociadoModel> ProductoresFiltrados =>
         ProductoresCompletos.Where(a =>
@@ -417,30 +408,42 @@
             return;
         }
 
-        var registro = AsociadoService.ObtenerAsociados()
-            .FirstOrDefault(a => a.Cedula == Cedula);
-
+        var registro = ProductoresCompletos.FirstOrDefault(a => a.Cedula == Cedula);
         encontrado = registro is not null;
         asociado = registro is not null ? Copiar(registro) : new();
+    }
+
+    protected override void OnInitialized() => CargarProductores();
+
+    private void CargarProductores()
+    {
+        ProductoresCompletos = RegistroAsociados.ObtenerTodos()
+            .Select(AsociadoMapper.ToModel)
+            .Where(a => !string.IsNullOrWhiteSpace(a.NombreCompleto)
+                     && !string.IsNullOrWhiteSpace(a.Cedula)
+                     && !string.IsNullOrWhiteSpace(a.Telefono)
+                     && !string.IsNullOrWhiteSpace(a.NombrePredio)
+                     && !string.IsNullOrWhiteSpace(a.VeredaSector)
+                     && !string.IsNullOrWhiteSpace(a.Municipio)
+                     && a.HectareasPredio >= 1
+                     && !string.IsNullOrWhiteSpace(a.CultivoPrincipal))
+            .ToList();
     }
 
     private void AlternarBPA() => asociado.TieneBPA = !asociado.TieneBPA;
 
     private async Task GuardarCambios()
     {
-        var lista = AsociadoService.ObtenerAsociados();
-        var index = lista.FindIndex(a => a.Cedula == asociado.Cedula);
-
-        if (index == -1)
+        var resultado = RegistroAsociados.Actualizar(AsociadoMapper.ToEntity(asociado));
+        if (!resultado.Exitoso)
         {
-            mensajeError = "No fue posible encontrar el expediente. Intenta de nuevo.";
+            mensajeError = resultado.Mensaje;
+            mensajeExito = string.Empty;
             return;
         }
 
-        // Se guarda una copia, no el objeto del formulario
-        lista[index] = Copiar(asociado);
+        CargarProductores();
 
-        // Avisa en tiempo real a todas las pantallas conectadas
         var autor = await NombreAutorAsync();
         Notificaciones.Publicar(new Asoagro.Models.Notificacion
         {
@@ -450,10 +453,11 @@
             Enlace = $"/editar-asociado/{asociado.Cedula}",
             Icono = "ajustes",
             Categoria = Asoagro.Models.CategoriaNotificacion.Productores,
-            Nivel = Asoagro.Models.NivelNotificacion.Informativa, 
+            Nivel = Asoagro.Models.NivelNotificacion.Informativa,
             RolesEnlace = new[] { "Director" }
         });
 
+        mensajeError = string.Empty;
         mensajeExito = $"El expediente de {asociado.NombreCompleto} se actualizó correctamente.";
     }
 
@@ -468,6 +472,7 @@
 
     private static AsociadoModel Copiar(AsociadoModel origen) => new()
     {
+        Id = origen.Id,
         Cedula = origen.Cedula,
         NombreCompleto = origen.NombreCompleto,
         Telefono = origen.Telefono,

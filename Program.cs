@@ -162,12 +162,14 @@ if (!string.IsNullOrWhiteSpace(supabaseConnection))
         options.UseNpgsql(supabaseConnection));
 
     builder.Services.AddSingleton<IAsociadoService, PostgresAsociadoService>();
+    builder.Services.AddSingleton<ISeguimientoAsociadoService, PostgresSeguimientoAsociadoService>();
     builder.Services.AddSingleton<IAlertaDocumentoService, PostgresAlertaDocumentoService>();
 }
 else
 {
     // Servicios de datos en memoria
     builder.Services.AddSingleton<IAsociadoService, InMemoryAsociadoService>();
+    builder.Services.AddSingleton<ISeguimientoAsociadoService, InMemorySeguimientoAsociadoService>();
     builder.Services.AddSingleton<IAlertaDocumentoService, InMemoryAlertaDocumentoService>();
 }
 
@@ -183,12 +185,12 @@ builder.Services.AddScoped(sp =>
     var navigationManager = sp.GetRequiredService<NavigationManager>();
     return new HttpClient { BaseAddress = new Uri(navigationManager.BaseUri) };
 });
-builder.Services.AddSingleton<AsociadoService>();
 // Avisos en tiempo real: una sola lista compartida por todas las pantallas conectadas
 builder.Services.AddSingleton<NotificacionService>();
 
 // Revisa los vencimientos de documentos cada hora y crea los avisos
 builder.Services.AddHostedService<AlertasVencimientoWorker>();
+builder.Services.AddHostedService<AlertasSeguimientoWorker>();
 var app = builder.Build();
 
 if (string.IsNullOrWhiteSpace(supabaseConnection))

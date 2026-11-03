@@ -3,7 +3,8 @@ namespace Asoagro.Models;
 public enum CategoriaNotificacion
 {
     Productores,
-    Documentos
+    Documentos,
+    Seguimiento
 }
 
 public enum NivelNotificacion

@@ -31,6 +31,7 @@ En desarrollo, si no configuras `ASOAGRO_SUPABASE_CONNECTION`, el sistema usa da
 - Si aparece `Host desconocido` o `Name or service not known`, la aplicación no pudo resolver el servidor por DNS. Todavía no llegó a validar la contraseña ni a consultar tablas. Prueba otra red o desactiva temporalmente la VPN si aplica; también puedes configurar el DNS de tu adaptador de red con `1.1.1.1` o `8.8.8.8`, ejecutar `ipconfig /flushdns` y reiniciar la aplicación.
 - Si tu red no permite conexiones IPv6, usa la cadena **Session pooler** que ofrece el panel de Supabase (Database > Connect) en lugar de la conexión directa. Copia la cadena completa del panel y configúrala como variable de entorno; no la compartas ni la subas al repositorio.
 - Cuando DNS y red funcionen, un error de autenticación indica que la contraseña no coincide. Un error que nombre una tabla o columna sí puede indicar que falta aplicar el esquema de `Database/supabase_schema.sql` desde el SQL Editor de Supabase.
+- El módulo **Seguimiento de asociados** guarda cada gestión en `public.seguimientos_asociados`. Si la base de datos ya existía antes de este cambio, vuelve a ejecutar `Database/supabase_schema.sql` desde el SQL Editor de Supabase para crear la tabla y su relación con el padrón. Un proceso en segundo plano revisa cada hora las próximas gestiones: avisa al rol `Director` cuando el contacto está dentro de los próximos 7 días o ya venció, y evita duplicar avisos del mismo vencimiento. Las alertas aparecen en la campana, en la categoría **Seguimiento**.
 - La clave OAuth de Google también debe configurarse como `Authentication__Google__ClientSecret`; sin ella, la API funciona pero el inicio de sesión con Google queda deshabilitado.
 
 ### 2. Autenticación y Acceso por Roles
@@ -53,6 +54,8 @@ Módulos visibles:
 👥 Consultar Asociados
 
 👥 Editar Asociado
+
+🗓️ Seguimiento de Asociados
 
 Tesorero
 Correo autorizado: (Correo asignado a Tesorería)

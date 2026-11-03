@@ -290,7 +290,7 @@
     private record ItemMenu(string Texto, string Descripcion, string Icono, string Ruta);
     private record GrupoMenu(string Titulo, List<ItemMenu> Items);
 
-    private static readonly string[] Filtros = { "Todas", "Documentos", "Productores" };
+    private static readonly string[] Filtros = { "Todas", "Documentos", "Productores", "Seguimiento" };
 
     // Enlaces con "#" son de ejemplo: cámbialos por tus rutas reales.
     private readonly List<GrupoMenu> menu = new()
@@ -482,6 +482,7 @@
     {
         "Documentos" => notificacion.Categoria == CategoriaNotificacion.Documentos,
         "Productores" => notificacion.Categoria == CategoriaNotificacion.Productores,
+        "Seguimiento" => notificacion.Categoria == CategoriaNotificacion.Seguimiento,
         _ => true
     };
 

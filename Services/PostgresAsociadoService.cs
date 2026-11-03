@@ -19,6 +19,8 @@ public class PostgresAsociadoService : IAsociadoService
         this.options = options.Value;
     }
 
+    public bool UsaAlmacenamientoPermanente => true;
+
     public IReadOnlyCollection<Asociado> ObtenerTodos()
     {
         using var context = dbContextFactory.CreateDbContext();
@@ -69,6 +71,63 @@ public class PostgresAsociadoService : IAsociadoService
             Exitoso = true,
             Mensaje = "Asociado registrado exitosamente en el servidor de Asoagro",
             Asociado = asociado
+        };
+    }
+
+    public ResultadoRegistroAsociado Actualizar(Asociado asociado)
+    {
+        using var context = dbContextFactory.CreateDbContext();
+        var registro = context.Asociados.FirstOrDefault(a => a.Id == asociado.Id);
+        if (registro is null)
+        {
+            return new ResultadoRegistroAsociado
+            {
+                Exitoso = false,
+                Mensaje = "No se encontró el asociado que deseas actualizar."
+            };
+        }
+
+        asociado.Cedula = asociado.Cedula.Trim();
+        asociado.NombreCompleto = asociado.NombreCompleto.Trim();
+        asociado.FincaVereda = asociado.FincaVereda.Trim();
+        asociado.CultivoPrincipal = asociado.CultivoPrincipal.Trim();
+        asociado.Telefono = asociado.Telefono?.Trim();
+        asociado.Correo = asociado.Correo?.Trim();
+        asociado.NombrePredio = asociado.NombrePredio?.Trim();
+        asociado.VeredaSector = asociado.VeredaSector?.Trim();
+        asociado.Municipio = asociado.Municipio?.Trim();
+
+        if (context.Asociados.Any(a => a.Id != asociado.Id && a.Cedula == asociado.Cedula))
+        {
+            return new ResultadoRegistroAsociado
+            {
+                Exitoso = false,
+                Mensaje = "Ya existe otro asociado registrado con esa cédula."
+            };
+        }
+
+        registro.Cedula = asociado.Cedula;
+        registro.NombreCompleto = asociado.NombreCompleto;
+        registro.FincaVereda = asociado.FincaVereda;
+        registro.Telefono = asociado.Telefono;
+        registro.Correo = asociado.Correo;
+        registro.NombrePredio = asociado.NombrePredio;
+        registro.VeredaSector = asociado.VeredaSector;
+        registro.Municipio = asociado.Municipio;
+        registro.HectareasPredio = asociado.HectareasPredio;
+        registro.CultivoPrincipal = asociado.CultivoPrincipal;
+        registro.TieneBPA = asociado.TieneBPA;
+        registro.EsVictima = asociado.EsVictima;
+        registro.EstadoMembresia = asociado.EstadoMembresia;
+        registro.FechaActualizacion = DateTime.UtcNow;
+        registro.ActualizadoPor = options.Audit.DefaultUser;
+        context.SaveChanges();
+
+        return new ResultadoRegistroAsociado
+        {
+            Exitoso = true,
+            Mensaje = "El expediente se actualizó correctamente.",
+            Asociado = registro
         };
     }
 }

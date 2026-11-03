@@ -1,0 +1,587 @@
+@page "/seguimiento-asociados"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Director")]
+@rendermode InteractiveServer
+@using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Asoagro.Models
+@using Asoagro.Services
+@inject IAsociadoService AsociadoService
+@inject ISeguimientoAsociadoService SeguimientoService
+@inject AuthenticationStateProvider AuthProvider
+
+<PageTitle>Seguimiento de asociados · Asoagro</PageTitle>
+
+<main class="sa">
+    <section class="sa-hero">
+        <div class="sa-hero-copy">
+            <div class="sa-eyebrows">
+                <span class="sa-eyebrow"><svg class="sa-icon"><use href="#ico-brote" /></svg>FAAUA · Gestión administrativa</span>
+                <span class="sa-eyebrow sa-eyebrow-light">Panel de la directora</span>
+            </div>
+            <h1>Seguimiento de asociados</h1>
+            <p>Registra llamadas, visitas y acuerdos. Consulta el historial y programa el siguiente contacto para que cada gestión tenga continuidad.</p>
+        </div>
+        <div class="sa-hero-summary">
+            <span>Asociados en el padrón</span>
+            <strong>@asociados.Count</strong>
+            <small>Productores disponibles para seguimiento</small>
+        </div>
+    </section>
+
+    @if (!AsociadoService.UsaAlmacenamientoPermanente || !SeguimientoService.UsaAlmacenamientoPermanente)
+    {
+        <div class="sa-storage-note" role="status">
+            <svg class="sa-icon"><use href="#ico-alerta" /></svg>
+            <span><strong>Modo de desarrollo:</strong> los datos están en memoria y se perderán al reiniciar. Configura la conexión a Supabase para guardar el padrón y el historial de forma permanente.</span>
+        </div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(mensajeExito))
+    {
+        <div class="sa-alert sa-alert-success" role="status" aria-live="polite">
+            <svg class="sa-icon"><use href="#ico-check" /></svg>
+            <span>@mensajeExito</span>
+            <button type="button" class="sa-alert-close" @onclick="() => mensajeExito = string.Empty" aria-label="Cerrar aviso">&times;</button>
+        </div>
+    }
+
+    <section class="sa-metrics" aria-label="Resumen del seguimiento">
+        <article class="sa-metric">
+            <span class="sa-metric-icon sa-icon-green"><svg class="sa-icon"><use href="#ico-usuario" /></svg></span>
+            <div><small>Asociados</small><strong>@asociados.Count</strong><span>En el padrón completo</span></div>
+        </article>
+        <article class="sa-metric">
+            <span class="sa-metric-icon sa-icon-amber"><svg class="sa-icon"><use href="#ico-doc" /></svg></span>
+            <div><small>Próximos contactos</small><strong>@ContarConProximaGestion</strong><span>Programados para hoy o después</span></div>
+        </article>
+        <article class="sa-metric">
+            <span class="sa-metric-icon sa-icon-red"><svg class="sa-icon"><use href="#ico-alerta" /></svg></span>
+            <div><small>Contactos vencidos</small><strong>@ContarVencidos</strong><span>Requieren una nueva gestión</span></div>
+        </article>
+        <article class="sa-metric">
+            <span class="sa-metric-icon sa-icon-slate"><svg class="sa-icon"><use href="#ico-lista" /></svg></span>
+            <div><small>Sin seguimiento</small><strong>@ContarSinSeguimiento</strong><span>Aún no tienen gestiones registradas</span></div>
+        </article>
+    </section>
+
+    <section class="sa-analytics" aria-label="Gráficos de seguimiento">
+        <article class="sa-chart-card">
+            <header class="sa-chart-header">
+                <div>
+                    <span class="sa-section-kicker">Panorama del padrón</span>
+                    <h2>Estado del seguimiento</h2>
+                </div>
+                <span class="sa-chart-total">@asociados.Count asociados</span>
+            </header>
+            @if (asociados.Count == 0)
+            {
+                <p class="sa-chart-empty">Aún no hay asociados para mostrar.</p>
+            }
+            else
+            {
+                <div class="sa-state-chart">
+                    <div class="sa-donut" role="img" aria-label="@DescripcionGraficoEstados" style="@EstiloDonaEstados">
+                        <div class="sa-donut-center">
+                            <strong>@asociados.Count</strong>
+                            <span>asociados</span>
+                        </div>
+                    </div>
+                    <div class="sa-legend">
+                        @foreach (var dato in DistribucionEstados)
+                        {
+                            <div class="sa-legend-item">
+                                <span><i class="sa-chart-dot @dato.Clase" aria-hidden="true"></i>@dato.Etiqueta</span>
+                                <strong>@dato.Cantidad <small>@dato.Porcentaje%</small></strong>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            <p class="sa-chart-footnote"><span class="sa-chart-footnote-mark"></span>Cada asociado se cuenta una sola vez, según su gestión más reciente.</p>
+        </article>
+
+        <article class="sa-chart-card">
+            <header class="sa-chart-header">
+                <div>
+                    <span class="sa-section-kicker">Actividad registrada</span>
+                    <h2>Gestiones por tipo</h2>
+                </div>
+                <span class="sa-chart-total">@seguimientos.Count gestiones</span>
+            </header>
+            @if (seguimientos.Count == 0)
+            {
+                <p class="sa-chart-empty">Cuando registres llamadas, visitas o asesorías, aquí verás el resumen.</p>
+            }
+            else
+            {
+                <div class="sa-chart-rows">
+                    @foreach (var dato in DistribucionGestiones)
+                    {
+                        <div class="sa-chart-row">
+                            <div class="sa-chart-label">
+                                <span><i class="sa-chart-dot @dato.Clase" aria-hidden="true"></i>@dato.Etiqueta</span>
+                                <strong>@dato.Cantidad <small>@dato.Porcentaje%</small></strong>
+                            </div>
+                            <div class="sa-chart-track" role="progressbar" aria-label="@dato.Etiqueta" aria-valuemin="0" aria-valuemax="@MaximoGestiones" aria-valuenow="@dato.Cantidad">
+                                <span class="@dato.Clase" style="width: @($"{dato.Ancho}%")"></span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            <p class="sa-chart-footnote"><span class="sa-chart-footnote-mark"></span>Proporción frente al total de gestiones guardadas en el historial.</p>
+        </article>
+    </section>
+
+    <section class="sa-workspace">
+        <header class="sa-section-heading">
+            <div>
+                <span class="sa-section-kicker">Gestión individual</span>
+                <h2>Productores y próximas acciones</h2>
+                <p>El estado se calcula con la fecha de la próxima gestión registrada.</p>
+            </div>
+            <span class="sa-total">@AsociadosFiltrados.Count() asociado(s)</span>
+        </header>
+
+        <div class="sa-filters">
+            <div class="sa-search">
+                <svg class="sa-icon"><use href="#ico-lista" /></svg>
+                <input aria-label="Buscar asociado" placeholder="Buscar por nombre, cédula, predio o municipio" @bind="textoBusqueda" @bind:event="oninput" />
+                @if (!string.IsNullOrWhiteSpace(textoBusqueda))
+                {
+                    <button type="button" @onclick="() => textoBusqueda = string.Empty" aria-label="Limpiar búsqueda">&times;</button>
+                }
+            </div>
+            <label class="sa-filter-select">
+                <span>Estado del seguimiento</span>
+                <select @bind="filtroEstado" aria-label="Filtrar por estado del seguimiento">
+                    <option value="Todos">Todos los estados</option>
+                    <option value="Contacto vencido">Contacto vencido</option>
+                    <option value="Contacto programado">Contacto programado</option>
+                    <option value="Sin seguimiento">Sin seguimiento</option>
+                    <option value="Gestión registrada sin próxima fecha">Gestión registrada, sin próxima fecha</option>
+                </select>
+            </label>
+        </div>
+
+        @if (AsociadosFiltrados.Any())
+        {
+            <div class="sa-list">
+                @foreach (var asociado in AsociadosFiltrados)
+                {
+                    var ultimo = UltimoSeguimiento(asociado.Id);
+                    var estado = EstadoSeguimiento(ultimo);
+                    <article class="sa-card">
+                        <div class="sa-card-main">
+                            <div class="sa-person">
+                                <span class="sa-avatar">@ObtenerIniciales(asociado.NombreCompleto)</span>
+                                <div class="sa-person-copy">
+                                    <h3>@asociado.NombreCompleto</h3>
+                                    <span>CC @asociado.Cedula</span>
+                                    <div class="sa-tags">
+                                        <span class="sa-tag">@asociado.Municipio</span>
+                                        <span class="sa-tag">@NombreCultivo(asociado.CultivoPrincipal)</span>
+                                        <span class="sa-tag @(asociado.TieneBPA ? "sa-tag-ok" : "sa-tag-muted")">@(asociado.TieneBPA ? "BPA vigente" : "Sin BPA registrada")</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="sa-contact">
+                                <span class="sa-info-label">Contacto</span>
+                                <strong>@(string.IsNullOrWhiteSpace(asociado.Telefono) ? "Teléfono sin registrar" : asociado.Telefono)</strong>
+                                <span>@(string.IsNullOrWhiteSpace(asociado.Correo) ? "Sin correo registrado" : asociado.Correo)</span>
+                            </div>
+
+                            <div class="sa-followup">
+                                <span class="sa-info-label">Estado del seguimiento</span>
+                                <span class="sa-status @ClaseEstado(estado)">@estado</span>
+                                @if (ultimo is not null)
+                                {
+                                    <span class="sa-followup-detail">Última gestión: @NombreTipoGestion(ultimo.TipoGestion) · @ultimo.FechaGestion.ToLocalTime().ToString("dd MMM yyyy", CulturaEspanol)</span>
+                                    @if (ultimo.ProximaGestion.HasValue)
+                                    {
+                                        <strong class="@(ultimo.ProximaGestion.Value < Hoy ? "sa-overdue" : "sa-next-date")">
+                                            Próximo contacto: @ultimo.ProximaGestion.Value.ToString("dd MMM yyyy", CulturaEspanol)
+                                        </strong>
+                                    }
+                                    <span class="sa-followup-detail">Registró: @ultimo.GestionadoPor</span>
+                                }
+                                else
+                                {
+                                    <span class="sa-followup-detail">Todavía no se ha registrado ninguna gestión.</span>
+                                }
+                            </div>
+                        </div>
+
+                        <footer class="sa-card-actions">
+                            <button type="button" class="sa-history-button" @onclick="() => AlternarHistorial(asociado.Id)" aria-expanded="@(historialAbierto == asociado.Id)">
+                                <svg class="sa-icon"><use href="#ico-lista" /></svg>
+                                @(historialAbierto == asociado.Id ? "Ocultar historial" : $"Ver historial ({CantidadSeguimientos(asociado.Id)})")
+                            </button>
+                            <button type="button" class="sa-register-button" @onclick="() => AbrirFormulario(asociado)">
+                                <svg class="sa-icon"><use href="#ico-usuario-mas" /></svg>
+                                Registrar gestión
+                            </button>
+                        </footer>
+
+                        @if (historialAbierto == asociado.Id)
+                        {
+                            <div class="sa-history">
+                                <h4>Historial de gestiones de @asociado.NombreCompleto</h4>
+                                @if (CantidadSeguimientos(asociado.Id) == 0)
+                                {
+                                    <p class="sa-history-empty">No hay gestiones anteriores. Usa “Registrar gestión” para dejar la primera nota.</p>
+                                }
+                                else
+                                {
+                                    <ol>
+                                        @foreach (var gestion in Historial(asociado.Id))
+                                        {
+                                            <li>
+                                                <span class="sa-history-date">@gestion.FechaGestion.ToLocalTime().ToString("dd MMM yyyy · HH:mm", CulturaEspanol)</span>
+                                                <strong>@NombreTipoGestion(gestion.TipoGestion)</strong>
+                                                <p>@gestion.Descripcion</p>
+                                                <small>Registró: @gestion.GestionadoPor</small>
+                                                @if (gestion.ProximaGestion.HasValue)
+                                                {
+                                                    <small>Próximo contacto acordado: @gestion.ProximaGestion.Value.ToString("dd MMM yyyy", CulturaEspanol)</small>
+                                                }
+                                            </li>
+                                        }
+                                    </ol>
+                                }
+                            </div>
+                        }
+                    </article>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="sa-empty">
+                <span class="sa-empty-icon"><svg class="sa-icon"><use href="#ico-lista" /></svg></span>
+                <h3>@(asociados.Count == 0 ? "Aún no hay asociados registrados" : "No hay resultados con esos filtros")</h3>
+                <p>@(asociados.Count == 0 ? "Cuando registres productores, aparecerán aquí para iniciar su seguimiento." : "Prueba con otro nombre, cédula o estado del seguimiento.")</p>
+                @if (asociados.Count == 0)
+                {
+                    <a href="registrar-asociado" class="sa-empty-link">Registrar un asociado</a>
+                }
+            </div>
+        }
+    </section>
+</main>
+
+@if (asociadoEnFormulario is not null)
+{
+    <div class="sa-modal-backdrop" @onclick="CerrarFormulario">
+        <section class="sa-modal" role="dialog" aria-modal="true" aria-labelledby="sa-modal-title" @onclick:stopPropagation="true">
+            <header class="sa-modal-header">
+                <div>
+                    <span class="sa-section-kicker">Nueva nota de seguimiento</span>
+                    <h2 id="sa-modal-title">Registrar gestión</h2>
+                    <p>@asociadoEnFormulario.NombreCompleto · CC @asociadoEnFormulario.Cedula</p>
+                </div>
+                <button type="button" class="sa-modal-close" @onclick="CerrarFormulario" aria-label="Cerrar formulario">&times;</button>
+            </header>
+
+            @if (!string.IsNullOrWhiteSpace(mensajeError))
+            {
+                <div class="sa-alert sa-alert-error" role="alert">@mensajeError</div>
+            }
+
+            <EditForm Model="formulario" OnValidSubmit="GuardarSeguimiento">
+                <DataAnnotationsValidator />
+                <ValidationSummary class="sa-validation-summary" />
+                <div class="sa-form-grid">
+                    <label class="sa-field">
+                        <span>Tipo de gestión <b>*</b></span>
+                        <InputSelect @bind-Value="formulario.TipoGestion">
+                            <option value="">Selecciona el tipo de contacto</option>
+                            <option value="Llamada">Llamada telefónica</option>
+                            <option value="Visita">Visita al predio</option>
+                            <option value="Asesoria">Asesoría o acompañamiento</option>
+                            <option value="Documentos">Revisión de documentos</option>
+                            <option value="Otro">Otro contacto</option>
+                        </InputSelect>
+                        <ValidationMessage For="@(() => formulario.TipoGestion)" />
+                    </label>
+                    <label class="sa-field">
+                        <span>Próxima fecha de contacto <small>(opcional)</small></span>
+                        <InputDate @bind-Value="formulario.ProximaGestion" />
+                        <small class="sa-field-hint">Si acuerdan volver a comunicarse, selecciona una fecha futura o de hoy.</small>
+                    </label>
+                    <label class="sa-field sa-field-full">
+                        <span>Resumen y acuerdos <b>*</b></span>
+                        <InputTextArea @bind-Value="formulario.Descripcion" rows="5" placeholder="Escribe qué se habló, qué necesita el asociado y qué quedó acordado (mínimo 10 caracteres)." />
+                        <ValidationMessage For="@(() => formulario.Descripcion)" />
+                    </label>
+                </div>
+                <footer class="sa-modal-actions">
+                    <button type="button" class="sa-cancel-button" @onclick="CerrarFormulario">Cancelar</button>
+                    <button type="submit" class="sa-register-button sa-modal-save-button" disabled="@guardando">
+                        @if (guardando)
+                        {
+                            <span>Guardando…</span>
+                        }
+                        else
+                        {
+                            <svg class="sa-icon"><use href="#ico-check" /></svg>
+                            <span>Guardar gestión</span>
+                        }
+                    </button>
+                </footer>
+            </EditForm>
+        </section>
+    </div>
+}
+
+@code {
+    private static readonly System.Globalization.CultureInfo CulturaEspanol =
+        System.Globalization.CultureInfo.GetCultureInfo("es-CO");
+
+    private List<AsociadoModel> asociados = new();
+    private List<SeguimientoAsociado> seguimientos = new();
+    private Dictionary<int, SeguimientoAsociado> ultimosSeguimientos = new();
+    private string textoBusqueda = string.Empty;
+    private string filtroEstado = "Todos";
+    private string mensajeExito = string.Empty;
+    private string mensajeError = string.Empty;
+    private AsociadoModel? asociadoEnFormulario;
+    private FormularioSeguimiento formulario = new();
+    private int? historialAbierto;
+    private bool guardando;
+
+    private DateOnly Hoy => DateOnly.FromDateTime(DateTime.Today);
+
+    private IEnumerable<AsociadoModel> AsociadosFiltrados =>
+        asociados.Where(asociado =>
+                (string.IsNullOrWhiteSpace(textoBusqueda)
+                 || asociado.NombreCompleto.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                 || asociado.Cedula.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                 || asociado.NombrePredio.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                 || asociado.Municipio.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+                && (filtroEstado == "Todos" || EstadoSeguimiento(UltimoSeguimiento(asociado.Id)) == filtroEstado))
+            .OrderBy(asociado => PrioridadEstado(EstadoSeguimiento(UltimoSeguimiento(asociado.Id))))
+            .ThenBy(asociado => asociado.NombreCompleto);
+
+    private int ContarConProximaGestion => asociados.Count(asociado =>
+        UltimoSeguimiento(asociado.Id)?.ProximaGestion is DateOnly proxima && proxima >= Hoy);
+
+    private int ContarVencidos => asociados.Count(asociado =>
+        UltimoSeguimiento(asociado.Id)?.ProximaGestion is DateOnly proxima && proxima < Hoy);
+
+    private int ContarSinSeguimiento => asociados.Count(asociado => UltimoSeguimiento(asociado.Id) is null);
+
+    private string DescripcionGraficoEstados => string.Join(", ",
+        DistribucionEstados.Select(dato => $"{dato.Etiqueta}: {dato.Cantidad} ({dato.Porcentaje}%)"));
+
+    private string EstiloDonaEstados
+    {
+        get
+        {
+            if (asociados.Count == 0)
+            {
+                return "background: #e9efe5;";
+            }
+
+            var inicio = 0d;
+            var segmentos = new List<string>();
+            foreach (var dato in DistribucionEstados)
+            {
+                var fin = inicio + (double)dato.Cantidad / asociados.Count * 100;
+                segmentos.Add($"{ColorGrafico(dato.Clase)} {inicio.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}% {fin.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}%");
+                inicio = fin;
+            }
+
+            return $"background: conic-gradient({string.Join(", ", segmentos)});";
+        }
+    }
+
+    private IReadOnlyList<DatoGrafico> DistribucionEstados =>
+    [
+        CrearDatoGrafico("Contacto programado", asociados.Count(asociado => EstadoSeguimiento(UltimoSeguimiento(asociado.Id)) == "Contacto programado"), asociados.Count, "sa-chart-gold"),
+        CrearDatoGrafico("Contacto vencido", ContarVencidos, asociados.Count, "sa-chart-red"),
+        CrearDatoGrafico("Sin seguimiento", ContarSinSeguimiento, asociados.Count, "sa-chart-gray"),
+        CrearDatoGrafico("Sin próxima fecha", asociados.Count(asociado => EstadoSeguimiento(UltimoSeguimiento(asociado.Id)) == "Gestión registrada sin próxima fecha"), asociados.Count, "sa-chart-green")
+    ];
+
+    private int MaximoGestiones => DistribucionGestionesSinEscala.Max(dato => dato.Cantidad);
+
+    private IReadOnlyList<DatoGrafico> DistribucionGestionesSinEscala =>
+    [
+        CrearDatoGrafico("Llamadas", seguimientos.Count(seguimiento => seguimiento.TipoGestion == "Llamada"), seguimientos.Count, "sa-chart-green"),
+        CrearDatoGrafico("Visitas al predio", seguimientos.Count(seguimiento => seguimiento.TipoGestion == "Visita"), seguimientos.Count, "sa-chart-gold"),
+        CrearDatoGrafico("Asesorías", seguimientos.Count(seguimiento => seguimiento.TipoGestion == "Asesoria"), seguimientos.Count, "sa-chart-violet"),
+        CrearDatoGrafico("Revisión de documentos", seguimientos.Count(seguimiento => seguimiento.TipoGestion == "Documentos"), seguimientos.Count, "sa-chart-blue"),
+        CrearDatoGrafico("Otros contactos", seguimientos.Count(seguimiento => seguimiento.TipoGestion == "Otro"), seguimientos.Count, "sa-chart-gray")
+    ];
+
+    private IReadOnlyList<DatoGrafico> DistribucionGestiones => DistribucionGestionesSinEscala
+        .Select(dato => dato with { Ancho = MaximoGestiones == 0 ? 0 : dato.Cantidad * 100 / MaximoGestiones })
+        .ToList();
+
+    private static DatoGrafico CrearDatoGrafico(string etiqueta, int cantidad, int total, string clase) =>
+        new(etiqueta, cantidad, total == 0 ? 0 : cantidad * 100 / total, cantidad == 0 ? 0 : 100, clase);
+
+    private static string ColorGrafico(string clase) => clase switch
+    {
+        "sa-chart-gold" => "#d7ad43",
+        "sa-chart-red" => "#d76b5e",
+        "sa-chart-gray" => "#9aa79b",
+        _ => "#2e9a5b"
+    };
+
+    protected override void OnInitialized()
+    {
+        CargarDatos();
+    }
+
+    private void CargarDatos()
+    {
+        asociados = AsociadoService.ObtenerTodos()
+            .Select(AsociadoMapper.ToModel)
+            .OrderBy(asociado => asociado.NombreCompleto)
+            .ToList();
+        seguimientos = SeguimientoService.ObtenerTodos().ToList();
+        ultimosSeguimientos = seguimientos
+            .GroupBy(seguimiento => seguimiento.AsociadoId)
+            .ToDictionary(
+                grupo => grupo.Key,
+                grupo => grupo.OrderByDescending(seguimiento => seguimiento.FechaGestion).First());
+    }
+
+    private SeguimientoAsociado? UltimoSeguimiento(int asociadoId) =>
+        ultimosSeguimientos.GetValueOrDefault(asociadoId);
+
+    private IEnumerable<SeguimientoAsociado> Historial(int asociadoId) =>
+        seguimientos.Where(seguimiento => seguimiento.AsociadoId == asociadoId)
+            .OrderByDescending(seguimiento => seguimiento.FechaGestion);
+
+    private int CantidadSeguimientos(int asociadoId) =>
+        seguimientos.Count(seguimiento => seguimiento.AsociadoId == asociadoId);
+
+    private string EstadoSeguimiento(SeguimientoAsociado? ultimo)
+    {
+        if (ultimo is null) return "Sin seguimiento";
+        if (ultimo.ProximaGestion is not DateOnly proxima) return "Gestión registrada sin próxima fecha";
+        return proxima < Hoy ? "Contacto vencido" : "Contacto programado";
+    }
+
+    private static int PrioridadEstado(string estado) => estado switch
+    {
+        "Contacto vencido" => 0,
+        "Contacto programado" => 1,
+        "Sin seguimiento" => 2,
+        _ => 3
+    };
+
+    private static string ClaseEstado(string estado) => estado switch
+    {
+        "Contacto vencido" => "sa-status-overdue",
+        "Contacto programado" => "sa-status-scheduled",
+        "Sin seguimiento" => "sa-status-none",
+        _ => "sa-status-done"
+    };
+
+    private static string NombreTipoGestion(string tipo) => tipo switch
+    {
+        "Llamada" => "Llamada",
+        "Visita" => "Visita al predio",
+        "Asesoria" => "Asesoría",
+        "Documentos" => "Revisión de documentos",
+        "Otro" => "Otro contacto",
+        _ => tipo
+    };
+
+    private static string NombreCultivo(string cultivo) => cultivo switch
+    {
+        "Platano" => "Plátano",
+        "Ganaderia" => "Ganadería",
+        _ => cultivo
+    };
+
+    private static string ObtenerIniciales(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre)) return "AS";
+        var partes = nombre.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return partes.Length == 1
+            ? partes[0][..1].ToUpper(CulturaEspanol)
+            : $"{partes[0][0]}{partes[1][0]}".ToUpper(CulturaEspanol);
+    }
+
+    private void AlternarHistorial(int asociadoId) =>
+        historialAbierto = historialAbierto == asociadoId ? null : asociadoId;
+
+    private void AbrirFormulario(AsociadoModel asociado)
+    {
+        mensajeExito = string.Empty;
+        mensajeError = string.Empty;
+        asociadoEnFormulario = asociado;
+        formulario = new FormularioSeguimiento();
+    }
+
+    private void CerrarFormulario()
+    {
+        asociadoEnFormulario = null;
+        mensajeError = string.Empty;
+    }
+
+    private async Task GuardarSeguimiento()
+    {
+        if (asociadoEnFormulario is null) return;
+        if (formulario.ProximaGestion is DateOnly proxima && proxima < Hoy)
+        {
+            mensajeError = "La próxima fecha debe ser hoy o una fecha posterior.";
+            return;
+        }
+
+        guardando = true;
+        mensajeError = string.Empty;
+        try
+        {
+            var estado = await AuthProvider.GetAuthenticationStateAsync();
+            var autor = estado.User.Identity?.Name
+                ?? estado.User.FindFirst(ClaimTypes.Email)?.Value
+                ?? "Directora";
+            var resultado = SeguimientoService.Registrar(new SeguimientoAsociado
+            {
+                AsociadoId = asociadoEnFormulario.Id,
+                TipoGestion = formulario.TipoGestion,
+                Descripcion = formulario.Descripcion.Trim(),
+                ProximaGestion = formulario.ProximaGestion,
+                GestionadoPor = autor
+            });
+
+            if (!resultado.Exitoso)
+            {
+                mensajeError = resultado.Mensaje;
+                return;
+            }
+
+            CargarDatos();
+            mensajeExito = $"La gestión de {asociadoEnFormulario.NombreCompleto} se guardó correctamente.";
+            asociadoEnFormulario = null;
+            historialAbierto = null;
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private sealed class FormularioSeguimiento
+    {
+        [Required(ErrorMessage = "Selecciona el tipo de gestión.")]
+        public string TipoGestion { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Escribe el resumen de la gestión.")]
+        [MinLength(10, ErrorMessage = "El resumen debe tener al menos 10 caracteres.")]
+        [MaxLength(1000, ErrorMessage = "El resumen no puede superar los 1000 caracteres.")]
+        public string Descripcion { get; set; } = string.Empty;
+
+        public DateOnly? ProximaGestion { get; set; }
+    }
+
+    private sealed record DatoGrafico(string Etiqueta, int Cantidad, int Porcentaje, int Ancho, string Clase);
+}

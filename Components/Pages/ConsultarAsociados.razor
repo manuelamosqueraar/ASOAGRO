@@ -3,7 +3,7 @@
 @rendermode InteractiveServer
 @implements IAsyncDisposable
 @using Asoagro.Services
-@inject AsociadoService AsociadoService
+@inject IAsociadoService RegistroAsociados
 @inject IJSRuntime JS
 
 <div class="ca">
@@ -66,58 +66,76 @@
     <!-- LISTADO -->
     @if (AsociadosFiltrados.Any())
     {
-        <div class="ca-grid">
-            @foreach (var asociado in AsociadosFiltrados)
-            {
-                <article class="ca-tarjeta">
-                    <header class="ca-tarjeta-cab">
-                        <span class="ca-avatar">@ObtenerIniciales(asociado.NombreCompleto)</span>
-                        <div class="ca-tarjeta-id">
-                            <h3>@asociado.NombreCompleto</h3>
-                            <small>CC @asociado.Cedula</small>
-                        </div>
-                        <span class="ca-estado @(asociado.EstadoMembresia == "AlDia" ? "ca-estado-ok" : "ca-estado-gracia")">
-                            @(asociado.EstadoMembresia == "AlDia" ? "Al día" : "En gracia")
-                        </span>
-                    </header>
-
-                    <dl class="ca-datos">
-                        <div>
-                            <dt>Predio</dt>
-                            <dd>@asociado.NombrePredio</dd>
-                        </div>
-                        <div>
-                            <dt>Ubicación</dt>
-                            <dd>@asociado.VeredaSector, @asociado.Municipio</dd>
-                        </div>
-                        <div>
-                            <dt>Extensión</dt>
-                            <dd>@asociado.HectareasPredio ha</dd>
-                        </div>
-                        <div>
-                            <dt>Cultivo eje</dt>
-                            <dd><span class="ca-cultivo">@NombreCultivo(asociado.CultivoPrincipal)</span></dd>
-                        </div>
-                    </dl>
-
-                    <footer class="ca-tarjeta-pie">
-                        <span class="ca-bpa @(asociado.TieneBPA ? "ca-bpa-ok" : "")">
-                            <svg class="ca-ico"><use href="#ico-escudo" /></svg>
-                            @(asociado.TieneBPA ? "BPA vigente" : "Sin BPA")
-                        </span>
-                        <div class="ca-acciones-tarjeta">
-                            <button type="button" class="ca-btn ca-btn-mini" @onclick="() => VerDetalle(asociado)">
-                                <svg class="ca-ico"><use href="#ico-lista" /></svg>
-                                Ver ficha
-                            </button>
-                            <a href="@($"/editar-asociado/{asociado.Cedula}")" class="ca-btn ca-btn-mini ca-btn-outline">
-                                <svg class="ca-ico"><use href="#ico-ajustes" /></svg>
-                                Editar
-                            </a>
-                        </div>
-                    </footer>
-                </article>
-            }
+        <div class="ca-tabla-marco">
+            <table class="ca-tabla">
+                <colgroup>
+                    <col class="ca-col-asociado" />
+                    <col class="ca-col-predio" />
+                    <col class="ca-col-cultivo" />
+                    <col class="ca-col-estado" />
+                    <col class="ca-col-acciones" />
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th scope="col">Asociado</th>
+                        <th scope="col">Predio y ubicación</th>
+                        <th scope="col">Cultivo y extensión</th>
+                        <th scope="col">Estado</th>
+                        <th scope="col" class="ca-th-acciones">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var asociado in AsociadosFiltrados)
+                    {
+                        <tr>
+                            <td data-label="Asociado">
+                                <div class="ca-tabla-asociado">
+                                    <span class="ca-avatar">@ObtenerIniciales(asociado.NombreCompleto)</span>
+                                    <span class="ca-fila-identidad">
+                                        <strong>@asociado.NombreCompleto</strong>
+                                        <small>CC @asociado.Cedula</small>
+                                    </span>
+                                </div>
+                            </td>
+                            <td data-label="Predio y ubicación">
+                                <div class="ca-tabla-dato">
+                                    <strong>@asociado.NombrePredio</strong>
+                                    <span>@asociado.VeredaSector, @asociado.Municipio</span>
+                                </div>
+                            </td>
+                            <td data-label="Cultivo y extensión">
+                                <div class="ca-tabla-dato ca-tabla-cultivo">
+                                    <span class="ca-cultivo">@NombreCultivo(asociado.CultivoPrincipal)</span>
+                                    <span>@asociado.HectareasPredio ha</span>
+                                </div>
+                            </td>
+                            <td data-label="Estado">
+                                <div class="ca-tabla-estado">
+                                    <span class="ca-estado @(asociado.EstadoMembresia == "AlDia" ? "ca-estado-ok" : "ca-estado-gracia")">
+                                        @(asociado.EstadoMembresia == "AlDia" ? "Al día" : "En gracia")
+                                    </span>
+                                    <span class="ca-bpa @(asociado.TieneBPA ? "ca-bpa-ok" : "")">
+                                        <svg class="ca-ico"><use href="#ico-escudo" /></svg>
+                                        @(asociado.TieneBPA ? "BPA vigente" : "Sin BPA")
+                                    </span>
+                                </div>
+                            </td>
+                            <td data-label="Acciones">
+                                <div class="ca-tabla-acciones">
+                                    <button type="button" class="ca-btn ca-btn-mini" @onclick="() => VerDetalle(asociado)">
+                                        <svg class="ca-ico"><use href="#ico-lista" /></svg>
+                                        Ver ficha
+                                    </button>
+                                    <a href="@($"/editar-asociado/{asociado.Cedula}")" class="ca-btn ca-btn-mini ca-btn-outline">
+                                        <svg class="ca-ico"><use href="#ico-ajustes" /></svg>
+                                        Editar
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     }
     else
@@ -193,7 +211,8 @@
     protected override void OnInitialized()
     {
         // Solo se muestran registros completos (pasos 1, 2 y 3 terminados)
-        listaAsociados = AsociadoService.ObtenerAsociados()
+        listaAsociados = RegistroAsociados.ObtenerTodos()
+            .Select(AsociadoMapper.ToModel)
             .Where(a => !string.IsNullOrWhiteSpace(a.NombreCompleto)
                      && !string.IsNullOrWhiteSpace(a.Cedula)
                      && !string.IsNullOrWhiteSpace(a.Telefono)
