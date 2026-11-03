@@ -10,6 +10,7 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IDocumentoInstitucionalService DocumentoService
 @inject AsociadoService AsociadoDatosService
+@inject IAsociadoService RegistroAsociados
 @inject NotificacionService Notificaciones
 @inject AuthenticationStateProvider AuthProvider
 @inject NavigationManager Navigation
@@ -481,18 +482,54 @@
                             </div>
                             <div class="ai-field ai-field-wide">
                                 <label for="ai-asociado">Asociado relacionado</label>
-                                <InputSelect id="ai-asociado" class="ai-input" @bind-Value="Formulario.CedulaAsociado" @bind-Value:after="ActualizarAsociadoSeleccionado">
-                                    <option value="">Institucional / no corresponde a una persona</option>
-                                    @if (!string.IsNullOrWhiteSpace(Formulario.CedulaAsociado) && !AsociadosDisponibles.Any(a => a.Cedula == Formulario.CedulaAsociado))
+                                <div class="ai-associate-picker">
+                                    <input id="ai-asociado"
+                                           class="ai-input"
+                                           type="text"
+                                           role="combobox"
+                                           aria-autocomplete="list"
+                                           aria-controls="ai-asociado-opciones"
+                                           aria-expanded="@MostrarSugerenciasAsociado.ToString().ToLowerInvariant()"
+                                           aria-activedescendant="@IdAsociadoActivo"
+                                           autocomplete="off"
+                                           placeholder="Escribe un nombre o una cédula"
+                                           value="@BusquedaAsociado"
+                                           @oninput="FiltrarAsociados"
+                                           @onfocus="AbrirSugerenciasAsociado"
+                                           @onblur="CerrarSugerenciasAsociado"
+                                           @onkeydown="ManejarTeclaAsociado" />
+                                    @if (MostrarSugerenciasAsociado)
                                     {
-                                        <option value="@Formulario.CedulaAsociado">@Formulario.NombreAsociado (registro no disponible)</option>
+                                        <div id="ai-asociado-opciones" class="ai-associate-suggestions" role="listbox" aria-label="Asociados disponibles">
+                                            @if (AsociadosFiltrados.Count == 0)
+                                            {
+                                                <p class="ai-associate-empty" role="status">No se encontraron asociados con ese nombre o cédula.</p>
+                                            }
+                                            else
+                                            {
+                                                @for (var indice = 0; indice < AsociadosFiltrados.Count; indice++)
+                                                {
+                                                    var asociado = AsociadosFiltrados[indice];
+                                                    <button id="@($"ai-asociado-opcion-{indice}")"
+                                                            type="button"
+                                                            class="ai-associate-option @(indice == IndiceAsociadoActivo ? "active" : "")"
+                                                            role="option"
+                                                            aria-selected="@(indice == IndiceAsociadoActivo)"
+                                                            @onmousedown:preventDefault="true"
+                                                            @onclick="() => SeleccionarAsociado(asociado)">
+                                                        <span>@asociado.NombreCompleto</span>
+                                                        <small>CC @asociado.Cedula</small>
+                                                    </button>
+                                                }
+                                            }
+                                        </div>
                                     }
-                                    @foreach (var asociado in AsociadosDisponibles)
+                                    @if (!string.IsNullOrWhiteSpace(Formulario.CedulaAsociado))
                                     {
-                                        <option value="@asociado.Cedula">@asociado.NombreCompleto · CC @asociado.Cedula</option>
+                                        <button type="button" class="ai-associate-clear" @onclick="LimpiarAsociado">Quitar asociado relacionado</button>
                                     }
-                                </InputSelect>
-                                <small class="ai-field-help">Vincúlalo con una persona si el contenido del acta se refiere a ella. Estatutos y reglamentos pueden quedar como institucionales.</small>
+                                </div>
+                                <small class="ai-field-help">Escribe para filtrar por nombre o cédula y selecciona un resultado. Si no corresponde a una persona, déjalo vacío; los documentos pueden quedar como institucionales.</small>
                             </div>
                             <div class="ai-field ai-field-third">
                                 <label for="ai-fecha">Fecha del documento <span>*</span></label>
@@ -690,16 +727,22 @@
     private IReadOnlyList<EntradaAuditoria> HistorialSeleccionado = Array.Empty<EntradaAuditoria>();
     private IJSObjectReference? ModuloJavaScript;
     private FormularioDocumento Formulario = new();
+    private IReadOnlyList<OpcionAsociado> AsociadosDisponibles = Array.Empty<OpcionAsociado>();
+    private string BusquedaAsociado = string.Empty;
+    private IReadOnlyList<OpcionAsociado> AsociadosFiltrados = Array.Empty<OpcionAsociado>();
+    private bool MostrarSugerenciasAsociado;
+    private int IndiceAsociadoActivo = -1;
+    private string? IdAsociadoActivo => MostrarSugerenciasAsociado
+        && IndiceAsociadoActivo >= 0
+        && IndiceAsociadoActivo < AsociadosFiltrados.Count
+            ? $"ai-asociado-opcion-{IndiceAsociadoActivo}"
+            : null;
 
     private IReadOnlyList<DocumentoInstitucional> Documentos => DocumentoService.ObtenerTodos();
-    private IReadOnlyList<AsociadoModel> AsociadosDisponibles => AsociadoDatosService.ObtenerAsociados()
-        .Where(asociado => !string.IsNullOrWhiteSpace(asociado.NombreCompleto)
-            && !string.IsNullOrWhiteSpace(asociado.Cedula))
-        .OrderBy(asociado => asociado.NombreCompleto)
-        .ToList();
 
     protected override async Task OnInitializedAsync()
     {
+        ActualizarAsociadosDisponibles();
         UsuarioActual = await ObtenerUsuarioActualAsync();
     }
 
@@ -760,6 +803,7 @@
 
     private async Task IniciarNuevo()
     {
+        ActualizarAsociadosDisponibles();
         await LimpiarVistaPreviaAsync();
         DocumentoSeleccionado = null;
         HistorialSeleccionado = Array.Empty<EntradaAuditoria>();
@@ -769,6 +813,9 @@
         PestanaActiva = "formulario";
         PasoFormulario = 1;
         Formulario = new FormularioDocumento();
+        BusquedaAsociado = string.Empty;
+        MostrarSugerenciasAsociado = false;
+        IndiceAsociadoActivo = -1;
         EstadoVerificacion = null;
         MensajeError = null;
         MensajeExito = null;
@@ -801,6 +848,7 @@
 
     private async Task IniciarEdicion(Guid id)
     {
+        ActualizarAsociadosDisponibles();
         var documento = DocumentoService.ObtenerPorId(id);
         if (documento is null)
         {
@@ -832,6 +880,11 @@
             FechaVencimiento = documento.FechaVencimiento,
             ArchivoNombre = documento.Archivo?.Nombre ?? "archivo-actual"
         };
+        BusquedaAsociado = string.IsNullOrWhiteSpace(documento.CedulaAsociado)
+            ? string.Empty
+            : $"{documento.NombreAsociado} · CC {documento.CedulaAsociado}";
+        MostrarSugerenciasAsociado = false;
+        IndiceAsociadoActivo = -1;
         PasoFormulario = 1;
         EstadoVerificacion = null;
         MensajeError = null;
@@ -1051,11 +1104,107 @@
         }
     }
 
-    private void ActualizarAsociadoSeleccionado()
+    private void FiltrarAsociados(ChangeEventArgs args)
     {
-        var asociado = AsociadosDisponibles.FirstOrDefault(item =>
-            string.Equals(item.Cedula, Formulario.CedulaAsociado, StringComparison.Ordinal));
-        Formulario.NombreAsociado = asociado?.NombreCompleto ?? string.Empty;
+        BusquedaAsociado = args.Value?.ToString() ?? string.Empty;
+        Formulario.CedulaAsociado = string.Empty;
+        Formulario.NombreAsociado = string.Empty;
+        MostrarSugerenciasAsociado = true;
+        IndiceAsociadoActivo = 0;
+        ActualizarOpcionesFiltradas();
+    }
+
+    private void AbrirSugerenciasAsociado()
+    {
+        MostrarSugerenciasAsociado = true;
+        ActualizarOpcionesFiltradas();
+        IndiceAsociadoActivo = AsociadosFiltrados.Count > 0 ? 0 : -1;
+    }
+
+    private void CerrarSugerenciasAsociado()
+    {
+        MostrarSugerenciasAsociado = false;
+        IndiceAsociadoActivo = -1;
+    }
+
+    private void ManejarTeclaAsociado(KeyboardEventArgs args)
+    {
+        if (args.Key == "Escape")
+        {
+            CerrarSugerenciasAsociado();
+            return;
+        }
+
+        if (args.Key is "ArrowDown" or "ArrowUp")
+        {
+            if (!MostrarSugerenciasAsociado)
+            {
+                AbrirSugerenciasAsociado();
+            }
+
+            if (AsociadosFiltrados.Count == 0)
+            {
+                return;
+            }
+
+            IndiceAsociadoActivo = args.Key == "ArrowDown"
+                ? (IndiceAsociadoActivo + 1) % AsociadosFiltrados.Count
+                : (IndiceAsociadoActivo <= 0 ? AsociadosFiltrados.Count - 1 : IndiceAsociadoActivo - 1);
+            return;
+        }
+
+        if (args.Key == "Enter"
+            && MostrarSugerenciasAsociado
+            && IndiceAsociadoActivo >= 0
+            && IndiceAsociadoActivo < AsociadosFiltrados.Count)
+        {
+            SeleccionarAsociado(AsociadosFiltrados[IndiceAsociadoActivo]);
+        }
+    }
+
+    private void ActualizarOpcionesFiltradas()
+    {
+        var termino = BusquedaAsociado.Trim();
+        AsociadosFiltrados = AsociadosDisponibles
+            .Where(asociado => string.IsNullOrWhiteSpace(termino)
+                || asociado.NombreCompleto.Contains(termino, StringComparison.OrdinalIgnoreCase)
+                || asociado.Cedula.Contains(termino, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    private void SeleccionarAsociado(OpcionAsociado asociado)
+    {
+        Formulario.CedulaAsociado = asociado.Cedula;
+        Formulario.NombreAsociado = asociado.NombreCompleto;
+        BusquedaAsociado = $"{asociado.NombreCompleto} · CC {asociado.Cedula}";
+        CerrarSugerenciasAsociado();
+    }
+
+    private void LimpiarAsociado()
+    {
+        Formulario.CedulaAsociado = string.Empty;
+        Formulario.NombreAsociado = string.Empty;
+        BusquedaAsociado = string.Empty;
+        CerrarSugerenciasAsociado();
+    }
+
+    private void ActualizarAsociadosDisponibles()
+    {
+        var asociadosRegistrados = RegistroAsociados.ObtenerTodos()
+            .Where(asociado => !string.IsNullOrWhiteSpace(asociado.NombreCompleto)
+                && !string.IsNullOrWhiteSpace(asociado.Cedula))
+            .Select(asociado => new OpcionAsociado(asociado.NombreCompleto, asociado.Cedula.Trim()));
+        var asociadosDelFormularioDirectora = AsociadoDatosService.ObtenerAsociados()
+            .Where(asociado => !string.IsNullOrWhiteSpace(asociado.NombreCompleto)
+                && !string.IsNullOrWhiteSpace(asociado.Cedula))
+            .Select(asociado => new OpcionAsociado(asociado.NombreCompleto, asociado.Cedula.Trim()));
+
+        AsociadosDisponibles = asociadosDelFormularioDirectora
+            .Concat(asociadosRegistrados)
+            .GroupBy(asociado => asociado.Cedula, StringComparer.OrdinalIgnoreCase)
+            .Select(grupo => grupo.First())
+            .OrderBy(asociado => asociado.NombreCompleto)
+            .ToList();
     }
 
     private void PublicarNotificacionDocumento(string accion, DocumentoInstitucional documento)
@@ -1418,4 +1567,6 @@
 
         public string ArchivoNombre { get; set; } = string.Empty;
     }
+
+    private sealed record OpcionAsociado(string NombreCompleto, string Cedula);
 }
