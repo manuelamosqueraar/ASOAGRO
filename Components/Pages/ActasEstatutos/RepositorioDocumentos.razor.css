@@ -1,1 +1,746 @@
+/* ==========================================================================
+   ASOAGRO · Repositorio de Actas y Estatutos (Diseño Sencillo y Humano)
+   ========================================================================== */
 
+.repo-wrap {
+    --r-verde-oscuro: #0e2e1c;
+    --r-verde: #17603a;
+    --r-verde-suave: #2e9a5b;
+    --r-verde-fondo: #eef7eb;
+    --r-trigo: #d9a441;
+    --r-trigo-fondo: #fcf6e8;
+    --r-azul: #20639b;
+    --r-azul-fondo: #edf4fb;
+    --r-fondo: #fbf8ee;
+    --r-texto: #15291d;
+    --r-gris: #5d6f64;
+    --r-borde: rgba(23, 96, 58, 0.12);
+
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+    padding-bottom: 2.5rem;
+    color: var(--r-texto);
+    font-family: var(--ag-ui, 'Inter', system-ui, sans-serif);
+}
+
+.repo-ico {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* ---------- 1. Cabecera Principal ---------- */
+.repo-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding: 1.8rem 2rem;
+    background: #ffffff;
+    border: 1px solid var(--r-borde);
+    border-radius: 1.25rem;
+    box-shadow: 0 4px 16px -8px rgba(14, 46, 28, 0.08);
+}
+
+.repo-badge-presidencia {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    background: var(--r-verde-fondo);
+    color: var(--r-verde);
+    font-size: 0.76rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.repo-badge-presidencia .repo-ico {
+    width: 14px;
+    height: 14px;
+}
+
+.repo-titulo {
+    font-family: var(--ag-titulo, 'Maname', Georgia, serif);
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--r-verde-oscuro);
+    line-height: 1.15;
+    margin: 0 0 0.35rem;
+}
+
+.repo-subtitulo {
+    font-size: 0.92rem;
+    color: var(--r-gris);
+    max-width: 600px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.repo-btn-nuevo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.4rem;
+    border-radius: 0.85rem;
+    background: var(--r-verde);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.92rem;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(23, 96, 58, 0.25);
+    transition: all 0.2s ease;
+}
+
+.repo-btn-nuevo:hover {
+    background: var(--r-verde-oscuro);
+    transform: translateY(-1px);
+    color: #ffffff;
+}
+
+/* ---------- 2. Resumen en 3 Tarjetas ---------- */
+.repo-resumen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+}
+
+.repo-resumen-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.3rem;
+    background: #ffffff;
+    border: 1px solid var(--r-borde);
+    border-radius: 1rem;
+    box-shadow: 0 3px 10px -5px rgba(14, 46, 28, 0.05);
+}
+
+.repo-resumen-ico {
+    width: 44px;
+    height: 44px;
+    border-radius: 0.85rem;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.ico-verde { background: var(--r-verde-fondo); color: var(--r-verde); }
+.ico-trigo { background: var(--r-trigo-fondo); color: #8a6412; }
+.ico-azul  { background: var(--r-azul-fondo); color: var(--r-azul); }
+
+.repo-resumen-numero {
+    display: block;
+    font-family: var(--ag-titulo, 'Maname', Georgia, serif);
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--r-verde-oscuro);
+}
+
+.repo-resumen-etiqueta {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--r-gris);
+    margin-top: 0.2rem;
+}
+
+/* ---------- 3. Barra de Búsqueda y Filtros ---------- */
+.repo-caja-filtros {
+    background: #ffffff;
+    border: 1px solid var(--r-borde);
+    border-radius: 1.15rem;
+    padding: 1.25rem 1.5rem;
+    box-shadow: 0 4px 14px -6px rgba(14, 46, 28, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.repo-busqueda-fila {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.repo-input-wrapper {
+    flex: 1;
+    min-width: 260px;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.repo-lupa {
+    position: absolute;
+    left: 1rem;
+    color: var(--r-gris);
+    pointer-events: none;
+}
+
+.repo-input {
+    width: 100%;
+    padding: 0.75rem 2.5rem 0.75rem 2.6rem;
+    border-radius: 0.75rem;
+    border: 1.5px solid var(--r-borde);
+    background: #fafcf8;
+    font-family: inherit;
+    font-size: 0.92rem;
+    color: var(--r-texto);
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.repo-input:focus {
+    background: #ffffff;
+    border-color: var(--r-verde);
+    box-shadow: 0 0 0 3px rgba(23, 96, 58, 0.12);
+}
+
+.repo-btn-limpiar {
+    position: absolute;
+    right: 0.85rem;
+    border: 0;
+    background: transparent;
+    font-size: 1.2rem;
+    color: var(--r-gris);
+    cursor: pointer;
+    line-height: 1;
+}
+
+.repo-select-wrapper {
+    min-width: 190px;
+}
+
+.repo-select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    border: 1.5px solid var(--r-borde);
+    background: #fafcf8;
+    font-family: inherit;
+    font-size: 0.88rem;
+    color: var(--r-texto);
+    outline: none;
+    cursor: pointer;
+}
+
+.repo-select:focus {
+    border-color: var(--r-verde);
+}
+
+.repo-filtros-pie {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.82rem;
+    color: var(--r-gris);
+    padding-top: 0.4rem;
+}
+
+.repo-contador strong {
+    color: var(--r-texto);
+}
+
+.repo-enlace-restablecer {
+    background: transparent;
+    border: 0;
+    color: var(--r-verde);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    padding: 0;
+}
+
+/* ---------- 4. Tabla Limpia ---------- */
+.repo-tabla-card {
+    background: #ffffff;
+    border: 1px solid var(--r-borde);
+    border-radius: 1.25rem;
+    padding: 0.5rem 1rem 1rem;
+    box-shadow: 0 6px 18px -8px rgba(14, 46, 28, 0.06);
+    overflow-x: auto;
+}
+
+.repo-tabla {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.88rem;
+}
+
+.repo-tabla th {
+    padding: 0.85rem 1rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--r-gris);
+    border-bottom: 1.5px solid var(--r-borde);
+}
+
+.repo-tabla td {
+    padding: 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(23, 96, 58, 0.06);
+}
+
+.repo-tabla tr:last-child td {
+    border-bottom: none;
+}
+
+.fila-anulada {
+    opacity: 0.65;
+    background: #fdfaf9;
+}
+
+.repo-doc-celda {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+}
+
+.repo-doc-icono {
+    width: 38px;
+    height: 38px;
+    border-radius: 0.65rem;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.repo-doc-textos {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.repo-doc-nombre {
+    font-size: 0.94rem;
+    color: var(--r-texto);
+    line-height: 1.35;
+}
+
+.repo-doc-ref {
+    font-size: 0.78rem;
+    color: var(--r-gris);
+}
+
+.repo-tipo-pildora {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    background: #f1f5ee;
+    color: #3b5042;
+    white-space: nowrap;
+}
+
+.repo-fecha-texto {
+    font-size: 0.86rem;
+    color: var(--r-texto);
+    white-space: nowrap;
+}
+
+/* Badges de estado */
+.repo-badge-estado {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badge-verde { background: #e0f2e3; color: #17603a; }
+.badge-amarillo { background: #fdf0d2; color: #8a6412; }
+.badge-rojo { background: #fce8e6; color: #b42318; }
+.badge-gris { background: #eaeaea; color: #555555; }
+
+/* Botones de acción en tabla */
+.repo-btn-descarga {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.38rem 0.75rem;
+    border-radius: 0.55rem;
+    background: var(--r-verde-fondo);
+    color: var(--r-verde);
+    border: 1px solid rgba(23, 96, 58, 0.2);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.repo-btn-descarga:hover {
+    background: var(--r-verde);
+    color: #ffffff;
+}
+
+.repo-sin-archivo {
+    font-size: 0.78rem;
+    color: var(--r-gris);
+    font-style: italic;
+}
+
+.repo-btn-detalle {
+    padding: 0.38rem 0.8rem;
+    border-radius: 0.55rem;
+    border: 1px solid var(--r-borde);
+    background: #ffffff;
+    color: var(--r-texto);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.repo-btn-detalle:hover {
+    background: #f1f5ee;
+    border-color: var(--r-verde);
+    color: var(--r-verde);
+}
+
+/* ---------- 5. Estado Vacío ---------- */
+.repo-vacio-box {
+    padding: 3rem 1.5rem;
+    text-align: center;
+    background: #ffffff;
+    border: 1.5px dashed var(--r-borde);
+    border-radius: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.repo-vacio-ico {
+    width: 50px;
+    height: 50px;
+    border-radius: 1rem;
+    background: var(--r-verde-fondo);
+    color: var(--r-verde);
+    display: grid;
+    place-items: center;
+    margin-bottom: 0.3rem;
+}
+
+.repo-vacio-box h3 {
+    font-family: var(--ag-titulo, 'Maname', Georgia, serif);
+    font-size: 1.3rem;
+    color: var(--r-verde-oscuro);
+    margin: 0;
+}
+
+.repo-vacio-box p {
+    font-size: 0.9rem;
+    color: var(--r-gris);
+    margin: 0;
+}
+
+/* ---------- 6. Ventana Modal de Detalle ---------- */
+.repo-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1300;
+    background: rgba(14, 46, 28, 0.55);
+    backdrop-filter: blur(4px);
+    display: grid;
+    place-items: center;
+    padding: 1.25rem;
+}
+
+.repo-modal-dialog {
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 1.35rem;
+    box-shadow: 0 20px 50px -15px rgba(14, 46, 28, 0.35);
+    display: flex;
+    flex-direction: column;
+}
+
+.repo-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 1.5rem 1.8rem 1.2rem;
+    border-bottom: 1px solid var(--r-borde);
+}
+
+.repo-modal-titulo-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.repo-modal-titulo-box h3 {
+    font-family: var(--ag-titulo, 'Maname', Georgia, serif);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--r-verde-oscuro);
+    margin: 0;
+    line-height: 1.3;
+}
+
+.repo-modal-cerrar {
+    background: transparent;
+    border: 0;
+    font-size: 1.6rem;
+    color: var(--r-gris);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 0.2rem;
+}
+
+.repo-modal-body {
+    padding: 1.5rem 1.8rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.35rem;
+}
+
+.repo-datos-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.85rem 1.2rem;
+    background: #fbfdf9;
+    padding: 1rem 1.2rem;
+    border-radius: 0.9rem;
+    border: 1px solid rgba(23, 96, 58, 0.08);
+}
+
+.repo-dato-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--r-gris);
+    font-weight: 600;
+}
+
+.repo-dato-val {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--r-texto);
+}
+
+.repo-seccion-desc h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--r-verde-oscuro);
+    margin: 0 0 0.35rem;
+}
+
+.repo-seccion-desc p {
+    font-size: 0.9rem;
+    line-height: 1.55;
+    color: #2b3b30;
+    margin: 0;
+}
+
+/* Caja de Descarga en Modal */
+.repo-caja-descarga {
+    background: #f7fbf4;
+    border: 1.5px solid rgba(46, 154, 91, 0.25);
+    border-radius: 1rem;
+    padding: 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.repo-descarga-info {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.repo-ico-pdf {
+    width: 32px;
+    height: 32px;
+    color: var(--r-verde);
+}
+
+.repo-descarga-info strong {
+    display: block;
+    font-size: 0.92rem;
+    color: var(--r-verde-oscuro);
+}
+
+.repo-descarga-info small {
+    font-size: 0.78rem;
+    color: var(--r-gris);
+}
+
+.repo-btn-descarga-grande {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.75rem;
+    background: var(--r-verde);
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.repo-btn-descarga-grande:hover {
+    background: var(--r-verde-oscuro);
+    color: #ffffff;
+}
+
+.repo-sin-archivo-aviso {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.84rem;
+    color: #8a6412;
+}
+
+/* Zona de Gestión */
+.repo-zona-gestion {
+    border-top: 1px dashed var(--r-borde);
+    padding-top: 0.5rem;
+}
+
+.repo-btn-link-peligro {
+    background: transparent;
+    border: 0;
+    color: #b42318;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.repo-confirmar-anulacion {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.repo-input-pequeno {
+    flex: 1;
+    padding: 0.4rem 0.75rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--r-borde);
+    font-size: 0.84rem;
+    outline: none;
+}
+
+.repo-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 1rem 1.8rem;
+    border-top: 1px solid var(--r-borde);
+    background: #fafcf8;
+}
+
+/* Botones Comunes */
+.repo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-family: inherit;
+    font-size: 0.86rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.65rem;
+    border: 1px solid transparent;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.15s ease;
+}
+
+.repo-btn-secundario {
+    background: #f1f5ee;
+    color: var(--r-verde);
+    border-color: rgba(23, 96, 58, 0.18);
+}
+
+.repo-btn-secundario:hover {
+    background: #e2edd9;
+}
+
+.repo-btn-peligro {
+    background: #fdeeee;
+    color: #b42318;
+    border-color: rgba(180, 35, 24, 0.3);
+}
+
+.repo-btn-peligro:hover {
+    background: #b42318;
+    color: #ffffff;
+}
+
+/* Avisos */
+.repo-aviso {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 1.2rem;
+    border-radius: 0.9rem;
+    font-size: 0.88rem;
+}
+
+.repo-aviso-exito {
+    background: #e6f5eb;
+    color: #17603a;
+    border: 1px solid rgba(46, 154, 91, 0.3);
+}
+
+.repo-aviso-error {
+    background: #fdeeee;
+    color: #b42318;
+    border: 1px solid rgba(180, 35, 24, 0.3);
+}
+
+.repo-cerrar-aviso {
+    margin-left: auto;
+    background: transparent;
+    border: 0;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: inherit;
+}
+
+@media (max-width: 768px) {
+    .repo-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .repo-datos-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .repo-busqueda-fila {
+        flex-direction: column;
+    }
+
+    .repo-select-wrapper {
+        width: 100%;
+    }
+}

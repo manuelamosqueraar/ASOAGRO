@@ -1,1 +1,272 @@
+/* ==========================================================================
+   ASOAGRO · Radicación de Actas (Diseño Sencillo)
+   ========================================================================== */
 
+.reg-wrap {
+    --g-verde: #17603a;
+    --g-verde-oscuro: #0e2e1c;
+    --g-verde-fondo: #eef7eb;
+    --g-borde: rgba(23, 96, 58, 0.12);
+    --g-texto: #15291d;
+    --g-gris: #5d6f64;
+
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2.5rem;
+    color: var(--g-texto);
+    font-family: var(--ag-ui, 'Inter', system-ui, sans-serif);
+}
+
+.reg-ico {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.reg-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1.6rem 2rem;
+    background: #ffffff;
+    border: 1px solid var(--g-borde);
+    border-radius: 1.25rem;
+    box-shadow: 0 4px 16px -8px rgba(14, 46, 28, 0.08);
+}
+
+.reg-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    background: var(--g-verde-fondo);
+    color: var(--g-verde);
+    font-size: 0.76rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+}
+
+.reg-titulo {
+    font-family: var(--ag-titulo, 'Maname', Georgia, serif);
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--g-verde-oscuro);
+    margin: 0 0 0.3rem;
+}
+
+.reg-subtitulo {
+    font-size: 0.9rem;
+    color: var(--g-gris);
+    margin: 0;
+}
+
+.reg-btn-volver {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--g-verde);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.65rem;
+    background: var(--g-verde-fondo);
+}
+
+.reg-btn-volver:hover {
+    background: #e2edd9;
+}
+
+.reg-tarjeta-form {
+    background: #ffffff;
+    border: 1px solid var(--g-borde);
+    border-radius: 1.25rem;
+    padding: 2rem;
+    box-shadow: 0 6px 18px -8px rgba(14, 46, 28, 0.06);
+}
+
+.reg-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+.campo-full {
+    grid-column: 1 / -1;
+}
+
+.reg-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.reg-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--g-texto);
+}
+
+.reg-input, .reg-select, .reg-textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: 0.75rem;
+    border: 1.5px solid var(--g-borde);
+    background: #fafcf8;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--g-texto);
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+
+.reg-input:focus, .reg-select:focus, .reg-textarea:focus {
+    background: #ffffff;
+    border-color: var(--g-verde);
+    box-shadow: 0 0 0 3px rgba(23, 96, 58, 0.12);
+}
+
+.reg-error {
+    font-size: 0.78rem;
+    color: #b42318;
+    margin-top: 0.15rem;
+}
+
+/* Zona Archivo */
+.reg-zona-archivo {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 1.8rem;
+    border: 1.5px dashed var(--g-borde);
+    border-radius: 1rem;
+    background: #fbfdf9;
+    text-align: center;
+}
+
+.reg-ico-grande {
+    width: 32px;
+    height: 32px;
+    color: var(--g-verde);
+}
+
+.reg-btn-examinar {
+    display: inline-block;
+    padding: 0.5rem 1.2rem;
+    border-radius: 0.65rem;
+    background: var(--g-verde);
+    color: #ffffff;
+    font-size: 0.86rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.reg-archivo-cargado {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.9rem;
+    border-radius: 0.6rem;
+    background: #ffffff;
+    border: 1px solid rgba(46, 154, 91, 0.3);
+}
+
+/* Pie Formulario */
+.reg-pie-form {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.85rem;
+    margin-top: 1.8rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--g-borde);
+}
+
+.reg-btn-guardar {
+    padding: 0.75rem 1.6rem;
+    border-radius: 0.75rem;
+    background: var(--g-verde);
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 0.92rem;
+    border: 0;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.reg-btn-guardar:hover:not(:disabled) {
+    background: var(--g-verde-oscuro);
+}
+
+.reg-btn-cancelar {
+    font-size: 0.88rem;
+    color: var(--g-gris);
+    text-decoration: none;
+    padding: 0.6rem 1rem;
+}
+
+/* Avisos */
+.reg-aviso {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 1.3rem;
+    border-radius: 1rem;
+    font-size: 0.9rem;
+}
+
+.reg-aviso-exito {
+    background: #e6f5eb;
+    color: #17603a;
+    border: 1px solid rgba(46, 154, 91, 0.3);
+}
+
+.reg-aviso-error {
+    background: #fdeeee;
+    color: #b42318;
+    border: 1px solid rgba(180, 35, 24, 0.3);
+}
+
+.reg-btn-pildora {
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.5rem;
+    background: var(--g-verde);
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.reg-btn-pildora-sec {
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.5rem;
+    background: #ffffff;
+    color: var(--g-verde);
+    border: 1px solid var(--g-verde);
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.reg-cerrar-aviso {
+    background: transparent;
+    border: 0;
+    font-size: 1.3rem;
+    color: inherit;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .reg-form-grid {
+        grid-template-columns: 1fr;
+    }
+}

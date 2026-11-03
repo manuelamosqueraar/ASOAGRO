@@ -3,7 +3,6 @@ using Asoagro.Models;
 namespace Asoagro.Services;
 
 // Guarda los documentos en memoria mientras la app está abierta.
-// Cuando se conecte la base de datos, se creará PostgresDocumentoInstitucionalService con la misma interfaz.
 public class InMemoryDocumentoInstitucionalService : IDocumentoInstitucionalService
 {
     private readonly object _sync = new();
@@ -43,8 +42,37 @@ public class InMemoryDocumentoInstitucionalService : IDocumentoInstitucionalServ
                 return new List<EntradaAuditoria>();
             }
 
-            // Las más recientes primero
             return entradas.AsEnumerable().Reverse().ToList();
+        }
+    }
+
+    public IReadOnlyList<ItemHistorialActividad> ObtenerHistorialGlobal()
+    {
+        lock (_sync)
+        {
+            var resultado = new List<ItemHistorialActividad>();
+            var dictDocs = _documentos.ToDictionary(d => d.Id);
+
+            foreach (var kvp in _historial)
+            {
+                if (dictDocs.TryGetValue(kvp.Key, out var doc))
+                {
+                    foreach (var entrada in kvp.Value)
+                    {
+                        resultado.Add(new ItemHistorialActividad(
+                            doc.Id,
+                            doc.Codigo,
+                            doc.Titulo,
+                            doc.Tipo,
+                            entrada.Fecha,
+                            entrada.Usuario,
+                            entrada.Accion,
+                            entrada.Detalle));
+                    }
+                }
+            }
+
+            return resultado.OrderByDescending(r => r.Fecha).ToList();
         }
     }
 
@@ -223,23 +251,28 @@ public class InMemoryDocumentoInstitucionalService : IDocumentoInstitucionalServ
     private static string FormatoFecha(DateTime? fecha) =>
         fecha?.ToString("dd/MM/yyyy") ?? "Sin vencimiento";
 
-    // Datos de ejemplo tomados del histórico original. No tienen archivo adjunto.
     private void SembrarEjemplos()
     {
+        var dummyPdf = System.Text.Encoding.UTF8.GetBytes("%PDF-1.4 Documento Oficial de Asoagro - Federación FAAUA");
+
         AgregarEjemplo("Acta N° 014 - Asamblea Ordinaria Anual 2024", "Acta de Asamblea",
-            new DateTime(2024, 2, 10), "014", "Aprobación de estados financieros y plan de inversión.");
+            new DateTime(2024, 2, 10), "014", "Aprobación de estados financieros, fijación de cuotas de sostenimiento y plan operativo anual.",
+            ArchivoAdjunto.Crear("Acta_014_Asamblea_Ordinaria_2024.pdf", "application/pdf", dummyPdf));
 
         AgregarEjemplo("Acta N° 013 - Nombramiento Revisor Fiscal", "Acta de Asamblea",
-            new DateTime(2023, 11, 5), "013", "Elección del nuevo revisor fiscal para el periodo 2024.");
+            new DateTime(2023, 11, 5), "013", "Elección del nuevo revisor fiscal para el periodo 2024 y ratificación de dignatarios.",
+            ArchivoAdjunto.Crear("Acta_013_Nombramiento_Revisor_Fiscal.pdf", "application/pdf", dummyPdf));
 
         AgregarEjemplo("Estatutos Generales Asoagro 2023", "Estatuto Actualizado",
-            new DateTime(2023, 3, 15), string.Empty, "Reforma estatutaria aprobada en Asamblea Extraordinaria.");
+            new DateTime(2023, 3, 15), "EST-2023", "Reforma estatutaria aprobada en Asamblea Extraordinaria ante Cámara de Comercio de Urabá.",
+            ArchivoAdjunto.Crear("Estatutos_Generales_Asoagro_2023.pdf", "application/pdf", dummyPdf));
 
-        AgregarEjemplo("Reglamento Interno de Uso de Maquinaria", "Reglamento Interno",
-            new DateTime(2022, 8, 20), string.Empty, "Normas y tarifas para el préstamo de herramientas.");
+        AgregarEjemplo("Reglamento Interno de Uso de Maquinaria y Crédito", "Reglamento Interno",
+            new DateTime(2022, 8, 20), "REG-01", "Normas, tarifas de uso y procedimiento de solicitud de maquinaria comunitaria para asociados.",
+            ArchivoAdjunto.Crear("Reglamento_Maquinaria_Asoagro.pdf", "application/pdf", dummyPdf));
     }
 
-    private void AgregarEjemplo(string titulo, string tipo, DateTime fecha, string referencia, string descripcion)
+    private void AgregarEjemplo(string titulo, string tipo, DateTime fecha, string referencia, string descripcion, ArchivoAdjunto? archivo = null)
     {
         var documento = new DocumentoInstitucional
         {
@@ -249,11 +282,13 @@ public class InMemoryDocumentoInstitucionalService : IDocumentoInstitucionalServ
             Fecha = fecha,
             NumeroReferencia = referencia,
             Descripcion = descripcion,
-            CreadoPor = "Sistema",
-            ActualizadoPor = "Sistema"
+            Archivo = archivo,
+            Version = archivo is null ? 0 : 1,
+            CreadoPor = "Presidencia",
+            ActualizadoPor = "Presidencia"
         };
 
         _documentos.Add(documento);
-        Registrar(documento.Id, "Sistema", "Registro creado", "Dato de ejemplo, sin archivo adjunto");
+        Registrar(documento.Id, "Presidencia", "Registro creado", archivo is null ? "Sin archivo adjunto" : $"Archivo adjunto: {archivo.Nombre}");
     }
 }
