@@ -52,7 +52,7 @@
                     }
 
                     <!-- DOCUMENTOS (Tesorero y Presidente) -->
-                    @if (context.User.IsInRole("Tesorero") || context.User.IsInRole("Presidente"))
+                    @if (context.User.IsInRole("Tesorero") || context.User.IsInRole("Presidente") || context.User.IsInRole("Director"))
                     {
                         <section class="nm-grupo nm-grupo-trigo @(expandirDocumentos ? "abierto" : "")">
                             <button type="button" class="nm-grupo-btn" @onclick="ToggleDocumentos" aria-expanded="@(expandirDocumentos ? "true" : "false")">
@@ -83,15 +83,19 @@
                                         </NavLink>
                                     }
 
-                                    @if (context.User.IsInRole("Presidente"))
+                                    @if (context.User.IsInRole("Presidente") || context.User.IsInRole("Director"))
                                     {
-                                        <NavLink class="nm-link" href="actas-estatutos">
+                                        <NavLink class="nm-link" href="actas-estatutos" Match="NavLinkMatch.All">
                                             <svg class="nm-ico"><use href="#ico-ajustes" /></svg>
-                                            <span>Panel documental</span>
+                                            <span>Centro documental</span>
                                         </NavLink>
                                         <NavLink class="nm-link" href="actas-estatutos/documentos">
                                             <svg class="nm-ico"><use href="#ico-lista" /></svg>
                                             <span>Repositorio de actas</span>
+                                        </NavLink>
+                                        <NavLink class="nm-link" href="actas-estatutos/registrar">
+                                            <svg class="nm-ico"><use href="#ico-doc" /></svg>
+                                            <span>Registrar documento</span>
                                         </NavLink>
                                         <NavLink class="nm-link" href="actas-estatutos/historial">
                                             <svg class="nm-ico"><use href="#ico-check" /></svg>

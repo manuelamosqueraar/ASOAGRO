@@ -1,1 +1,209 @@
+/* ==========================================================================
+   ASOAGRO · Historial de Actividad (Diseño Sencillo)
+   ========================================================================== */
 
+.hist-wrap {
+    --h-verde: #17603a;
+    --h-verde-oscuro: #0e2e1c;
+    --h-verde-fondo: #eef7eb;
+    --h-borde: rgba(23, 96, 58, 0.12);
+    --h-texto: #15291d;
+    --h-gris: #5d6f64;
+
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2.5rem;
+    color: var(--h-texto);
+    font-family: var(--ag-ui, 'Inter', system-ui, sans-serif);
+}
+
+.hist-ico {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.hist-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1.6rem 2rem;
+    background: #ffffff;
+    border: 1px solid var(--h-borde);
+    border-radius: 1.25rem;
+    box-shadow: 0 4px 16px -8px rgba(14, 46, 28, 0.08);
+}
+
+.hist-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    background: var(--h-verde-fondo);
+    color: var(--h-verde);
+    font-size: 0.76rem;
+    font-weight: 700;
+    margin-bottom: 0.4rem;
+}
+
+.hist-titulo {
+    font-family: var(--ag-titulo, 'Maname', Georgia, serif);
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--h-verde-oscuro);
+    margin: 0 0 0.3rem;
+}
+
+.hist-subtitulo {
+    font-size: 0.9rem;
+    color: var(--h-gris);
+    margin: 0;
+}
+
+.hist-btn-volver {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--h-verde);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.65rem;
+    background: var(--h-verde-fondo);
+}
+
+.hist-caja-filtro {
+    background: #ffffff;
+    border: 1px solid var(--h-borde);
+    border-radius: 1.15rem;
+    padding: 1.1rem 1.4rem;
+    box-shadow: 0 4px 14px -6px rgba(14, 46, 28, 0.06);
+}
+
+.hist-busqueda-fila {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.hist-input-wrapper {
+    flex: 1;
+    min-width: 260px;
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.hist-lupa {
+    position: absolute;
+    left: 1rem;
+    color: var(--h-gris);
+    pointer-events: none;
+}
+
+.hist-input {
+    width: 100%;
+    padding: 0.7rem 2.2rem 0.7rem 2.5rem;
+    border-radius: 0.75rem;
+    border: 1.5px solid var(--h-borde);
+    background: #fafcf8;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--h-texto);
+    outline: none;
+}
+
+.hist-limpiar {
+    position: absolute;
+    right: 0.8rem;
+    background: transparent;
+    border: 0;
+    font-size: 1.2rem;
+    color: var(--h-gris);
+    cursor: pointer;
+}
+
+.hist-select {
+    padding: 0.7rem 1rem;
+    border-radius: 0.75rem;
+    border: 1.5px solid var(--h-borde);
+    background: #fafcf8;
+    font-family: inherit;
+    font-size: 0.88rem;
+    color: var(--h-texto);
+    outline: none;
+    cursor: pointer;
+}
+
+.hist-tabla-card {
+    background: #ffffff;
+    border: 1px solid var(--h-borde);
+    border-radius: 1.25rem;
+    padding: 0.5rem 1rem 1rem;
+    box-shadow: 0 6px 18px -8px rgba(14, 46, 28, 0.06);
+    overflow-x: auto;
+}
+
+.hist-tabla {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.88rem;
+}
+
+.hist-tabla th {
+    padding: 0.85rem 1rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--h-gris);
+    border-bottom: 1.5px solid var(--h-borde);
+}
+
+.hist-tabla td {
+    padding: 0.95rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(23, 96, 58, 0.06);
+}
+
+.hist-badge-accion {
+    display: inline-block;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badge-verde { background: #e0f2e3; color: #17603a; }
+.badge-azul  { background: #edf4fb; color: #20639b; }
+.badge-rojo  { background: #fce8e6; color: #b42318; }
+.badge-gris  { background: #eaeaea; color: #555555; }
+
+.hist-usuario {
+    font-weight: 600;
+    color: var(--h-texto);
+}
+
+.hist-detalle {
+    color: var(--h-gris);
+    display: block;
+    max-width: 340px;
+    line-height: 1.4;
+}
+
+.hist-vacio {
+    padding: 2.5rem;
+    text-align: center;
+    background: #ffffff;
+    border: 1px dashed var(--h-borde);
+    border-radius: 1rem;
+}
