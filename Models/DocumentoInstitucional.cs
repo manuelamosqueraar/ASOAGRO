@@ -72,3 +72,14 @@ public record ResultadoActualizacion(bool Exitoso, string Mensaje, IReadOnlyList
 
 // Una línea del historial de cambios
 public record EntradaAuditoria(DateTime Fecha, string Usuario, string Accion, string Detalle);
+
+// Elemento consolidado para la vista de historial de actividad
+public record ItemHistorialActividad(
+    Guid DocumentoId,
+    string CodigoDocumento,
+    string TituloDocumento,
+    string TipoDocumento,
+    DateTime Fecha,
+    string Usuario,
+    string Accion,
+    string Detalle);

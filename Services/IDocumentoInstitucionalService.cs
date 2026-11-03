@@ -12,6 +12,9 @@ public interface IDocumentoInstitucionalService
     // Historial del documento, del más reciente al más antiguo
     IReadOnlyList<EntradaAuditoria> ObtenerHistorial(Guid id);
 
+    // Historial consolidado de toda la actividad de documentos
+    IReadOnlyList<ItemHistorialActividad> ObtenerHistorialGlobal();
+
     DocumentoInstitucional Crear(DatosDocumento datos, ArchivoAdjunto? archivo, string usuario);
 
     // Cambia los datos y, si se envía, reemplaza el archivo. Un registro anulado no se puede editar.

@@ -150,7 +150,19 @@
 .ai-card-file span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ai-card-file small { margin-left: auto; color: var(--ai-gris); white-space: nowrap; }
 .ai-card-actions { display: flex; gap: .4rem; align-items: center; }
-.ai-card-actions .ai-btn { min-height: 38px; padding: .5rem .65rem; white-space: nowrap; }
+.ai-card-actions .ai-btn { min-height: 36px; padding: .45rem .75rem; font-size: .78rem; white-space: nowrap; border-radius: .6rem; }
+.ai-btn-descarga-rapida { background: #edf7eb; border: 1px solid #c2e2be; color: var(--ai-pino); font-weight: 700; }
+.ai-btn-descarga-rapida:hover { background: var(--ai-pino); color: #fff; border-color: var(--ai-pino); box-shadow: 0 4px 10px -4px rgba(23,96,58,.5); }
+.ai-btn-ver { background: #f7faf5; border: 1px solid #dbe6d6; color: var(--ai-tinta); }
+.ai-btn-ver:hover { background: #eaf1e7; color: var(--ai-pino); }
+.ai-doc-header-line { display: flex; align-items: center; gap: .45rem; margin-bottom: .2rem; }
+.ai-doc-title { font-size: .95rem; font-weight: 700; color: var(--ai-tinta); }
+.ai-date-line { display: flex; align-items: center; gap: .35rem; color: var(--ai-tinta); font-size: .8rem; }
+.ai-version-tag { display: inline-block; margin-top: .15rem; font-size: .68rem; color: var(--ai-gris); background: #f0f4ee; padding: .1rem .4rem; border-radius: 4px; }
+.ai-file-badge { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .6rem; border: 1px solid #e1e9dd; border-radius: .55rem; background: #fafcfa; font-size: .74rem; color: var(--ai-pino); max-width: 200px; }
+.ai-file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.ai-file-size { color: var(--ai-gris); font-size: .68rem; margin-left: auto; white-space: nowrap; }
+.ai-no-file { font-size: .72rem; color: var(--ai-gris); font-style: italic; }
 
 .ai-empty { display: grid; justify-items: center; gap: .45rem; padding: 3rem 1.5rem; border: 1px dashed #cbd9c8; border-radius: 1.1rem; background: rgba(255,255,255,.7); text-align: center; }
 .ai-empty-icon { display: grid; place-items: center; width: 54px; height: 54px; margin-bottom: .4rem; border-radius: 1rem; background: #e8f5de; color: var(--ai-pino); }

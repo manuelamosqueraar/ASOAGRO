@@ -1,1 +1,297 @@
+/* ==========================================================================
+   ASOAGRO · Centro de Gestión Documental (Diseño Limpio)
+   ========================================================================== */
 
+.cgd-wrap {
+    --c-verde-oscuro: #0e2e1c;
+    --c-verde: #17603a;
+    --c-verde-suave: #2e9a5b;
+    --c-verde-fondo: #eef7eb;
+    --c-trigo: #d9a441;
+    --c-trigo-fondo: #fcf6e8;
+    --c-azul-fondo: #edf4fb;
+    --c-azul: #20639b;
+    --c-texto: #15291d;
+    --c-gris: #5d6f64;
+    --c-borde: rgba(23, 96, 58, 0.12);
+
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2.5rem;
+    color: var(--c-texto);
+    font-family: var(--ag-ui, 'Inter', system-ui, sans-serif);
+}
+
+.cgd-ico {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+/* Cabecera */
+.cgd-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    padding: 1.8rem 2rem;
+    background: #ffffff;
+    border: 1px solid var(--c-borde);
+    border-radius: 1.25rem;
+    box-shadow: 0 4px 16px -8px rgba(14, 46, 28, 0.08);
+}
+
+.cgd-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    background: var(--c-verde-fondo);
+    color: var(--c-verde);
+    font-size: 0.76rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.cgd-badge .cgd-ico {
+    width: 14px;
+    height: 14px;
+}
+
+.cgd-titulo {
+    font-family: var(--ag-titulo, 'Maname', Georgia, serif);
+    font-size: 1.85rem;
+    font-weight: 700;
+    color: var(--c-verde-oscuro);
+    margin: 0 0 0.35rem;
+}
+
+.cgd-subtitulo {
+    font-size: 0.92rem;
+    color: var(--c-gris);
+    max-width: 620px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.cgd-header-resumen {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    background: var(--c-verde-fondo);
+    padding: 0.9rem 1.4rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(23, 96, 58, 0.15);
+}
+
+.cgd-resumen-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--c-gris);
+}
+
+.cgd-resumen-val {
+    font-family: var(--ag-titulo, 'Maname', Georgia, serif);
+    font-size: 2.2rem;
+    line-height: 1;
+    color: var(--c-verde-oscuro);
+    margin: 0.2rem 0;
+}
+
+.cgd-resumen-ok {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--c-verde);
+    font-weight: 700;
+}
+
+.cgd-punto {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--c-verde-suave);
+}
+
+/* Tarjetas de Acceso */
+.cgd-accesos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+}
+
+.cgd-tarjeta-acceso {
+    display: flex;
+    gap: 1.1rem;
+    padding: 1.5rem;
+    background: #ffffff;
+    border: 1px solid var(--c-borde);
+    border-radius: 1.25rem;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 4px 14px -6px rgba(14, 46, 28, 0.06);
+    transition: all 0.2s ease;
+}
+
+.cgd-tarjeta-acceso:hover {
+    transform: translateY(-2px);
+    border-color: var(--c-verde);
+    box-shadow: 0 10px 24px -10px rgba(23, 96, 58, 0.18);
+}
+
+.cgd-tarjeta-ico {
+    width: 48px;
+    height: 48px;
+    border-radius: 1rem;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+}
+
+.acceso-repo .cgd-tarjeta-ico { background: var(--c-azul-fondo); color: var(--c-azul); }
+.acceso-registro .cgd-tarjeta-ico { background: var(--c-verde-fondo); color: var(--c-verde); }
+.acceso-historial .cgd-tarjeta-ico { background: var(--c-trigo-fondo); color: #8a6412; }
+
+.cgd-tarjeta-textos {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.cgd-tarjeta-textos strong {
+    font-size: 1.05rem;
+    color: var(--c-verde-oscuro);
+}
+
+.cgd-tarjeta-textos p {
+    font-size: 0.85rem;
+    color: var(--c-gris);
+    line-height: 1.45;
+    margin: 0;
+}
+
+.cgd-tarjeta-enlace {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--c-verde);
+    margin-top: 0.4rem;
+}
+
+/* Recientes */
+.cgd-seccion-recientes {
+    background: #ffffff;
+    border: 1px solid var(--c-borde);
+    border-radius: 1.25rem;
+    padding: 1.5rem 1.8rem;
+    box-shadow: 0 4px 14px -6px rgba(14, 46, 28, 0.06);
+}
+
+.cgd-seccion-cab {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--c-borde);
+}
+
+.cgd-seccion-cab h3 {
+    font-family: var(--ag-titulo, 'Maname', Georgia, serif);
+    font-size: 1.25rem;
+    color: var(--c-verde-oscuro);
+    margin: 0;
+}
+
+.cgd-btn-ver-todo {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--c-verde);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.cgd-tabla-card {
+    overflow-x: auto;
+}
+
+.cgd-tabla {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 0.88rem;
+}
+
+.cgd-tabla th {
+    padding: 0.75rem 1rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--c-gris);
+    border-bottom: 1px solid var(--c-borde);
+}
+
+.cgd-tabla td {
+    padding: 0.9rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(23, 96, 58, 0.05);
+}
+
+.cgd-pildora {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    background: #f1f5ee;
+    color: #3b5042;
+    font-weight: 600;
+}
+
+.cgd-badge-estado {
+    display: inline-flex;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+.estado-vigente { background: #e0f2e3; color: #17603a; }
+.estado-revision { background: #fdf0d2; color: #8a6412; }
+
+.cgd-btn-descarga-mini {
+    display: inline-flex;
+    padding: 0.35rem 0.75rem;
+    border-radius: 0.55rem;
+    background: var(--c-verde-fondo);
+    color: var(--c-verde);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-decoration: none;
+}
+
+.cgd-btn-descarga-mini:hover {
+    background: var(--c-verde);
+    color: #ffffff;
+}
+
+@media (max-width: 768px) {
+    .cgd-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cgd-header-resumen {
+        align-items: flex-start;
+        width: 100%;
+    }
+}
