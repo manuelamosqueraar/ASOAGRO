@@ -1,7 +1,7 @@
 @page "/subir-actas-estatutos"
 @page "/actas-estatutos/documentos"
 @page "/actas-estatutos/registrar"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Presidente")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Presidente, Director")]
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
@@ -141,14 +141,14 @@
         <section class="ai-list-section">
             <div class="ai-section-heading">
                 <div>
-                    <h2>Resultados del repositorio</h2>
-                    <p>@documentosFiltrados.Count resultados · Usa los encabezados de columna para cambiar el orden.</p>
+                    <h2>Documentos disponibles</h2>
+                    <p>@documentosFiltrados.Count documento(s) encontrado(s) · Haz clic en los encabezados para cambiar el orden</p>
                 </div>
                 @if (documentosFiltrados.Count > 0)
                 {
                     <button type="button" class="ai-btn ai-btn-light ai-export" @onclick="ExportarCsvAsync">
                         <svg class="ai-icon"><use href="#ico-exportar" /></svg>
-                        Exportar resultados
+                        Descargar reporte (CSV)
                     </button>
                 }
             </div>
@@ -166,7 +166,7 @@
                                 </th>
                                 <th scope="col" aria-sort="@AriaOrden("fecha")">
                                     <button type="button" class="ai-table-sort" @onclick='() => CambiarOrden("fecha")'>
-                                        Fecha y versión <span aria-hidden="true">@IndicadorOrden("fecha")</span>
+                                        Fecha <span aria-hidden="true">@IndicadorOrden("fecha")</span>
                                     </button>
                                 </th>
                                 <th scope="col" aria-sort="@AriaOrden("estado")">
@@ -174,8 +174,8 @@
                                         Estado <span aria-hidden="true">@IndicadorOrden("estado")</span>
                                     </button>
                                 </th>
-                                <th scope="col">Archivo</th>
-                                <th scope="col"><span class="ai-visually-hidden">Acciones</span></th>
+                                <th scope="col">Archivo digital</th>
+                                <th scope="col" style="text-align: right;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -225,13 +225,18 @@
                                         <div class="ai-card-actions">
                                             <button type="button" class="ai-btn ai-btn-light" @onclick="() => AbrirDetalleAsync(documento.Id)">
                                                 <svg class="ai-icon"><use href="#ico-ojo" /></svg>
-                                                Inspeccionar
+                                                Ver detalles
                                             </button>
                                             @if (documento.Archivo is not null)
                                             {
-                                                <button type="button" class="ai-icon-btn" title="Descargar archivo" aria-label="@($"Descargar {documento.Archivo.Nombre}")" @onclick="() => DescargarAsync(documento.Id)">
+                                                <button type="button" class="ai-btn ai-btn-descarga-rapida" title="Descargar archivo" aria-label="@($"Descargar {documento.Archivo.Nombre}")" @onclick="() => DescargarAsync(documento.Id)">
+
                                                     <svg class="ai-icon"><use href="#ico-descargar" /></svg>
-                                                </button>
+                                                    <span>Descargar</span></button>
+
+
+
+
                                             }
                                         </div>
                                     </td>
