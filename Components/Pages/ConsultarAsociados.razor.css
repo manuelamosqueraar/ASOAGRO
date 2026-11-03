@@ -283,6 +283,11 @@
 
 .ca-btn-secundario:hover { background: var(--ca-papel); }
 
+.ca-exportacion-mensaje {
+    color: var(--ca-pino);
+    font-size: .8rem;
+}
+
 .ca-btn-mini {
     padding: .5rem .9rem;
     font-size: .8rem;

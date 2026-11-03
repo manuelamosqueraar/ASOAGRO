@@ -1,8 +1,10 @@
 @page "/consultar-asociados"
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Director")]
 @rendermode InteractiveServer
+@implements IAsyncDisposable
 @using Asoagro.Services
 @inject AsociadoService AsociadoService
+@inject IJSRuntime JS
 
 <div class="ca">
  
@@ -43,6 +45,10 @@
                 <svg class="ca-ico"><use href="#ico-doc" /></svg>
                 Exportar Excel
             </button>
+            @if (!string.IsNullOrEmpty(mensajeExportacion))
+            {
+                <span class="ca-exportacion-mensaje" role="status" aria-live="polite">@mensajeExportacion</span>
+            }
         </div>
 
         <div class="ca-filtros">
@@ -181,6 +187,8 @@
     private string filtroCultivo = string.Empty;
     private List<AsociadoModel> listaAsociados = new();
     private AsociadoModel? asociadoSeleccionado;
+    private IJSObjectReference? ModuloJavaScript;
+    private string mensajeExportacion = string.Empty;
 
     protected override void OnInitialized()
     {
@@ -208,7 +216,57 @@
 
     private void VerDetalle(AsociadoModel asociado) => asociadoSeleccionado = asociado;
     private void CerrarDetalle() => asociadoSeleccionado = null;
-    private void ExportarReporte() { }
+
+    private async Task ExportarReporte()
+    {
+        var asociados = AsociadosFiltrados.ToList();
+        if (asociados.Count == 0)
+        {
+            mensajeExportacion = "No hay asociados que coincidan con los filtros actuales.";
+            return;
+        }
+
+        var lineas = new List<string>
+        {
+            CrearFilaCsv(
+                "Nombre completo", "Cédula", "Teléfono", "Correo electrónico", "Predio",
+                "Vereda o sector", "Municipio", "Hectáreas", "Cultivo principal", "BPA vigente",
+                "Víctima", "Estado de membresía", "Fecha de registro")
+        };
+
+        lineas.AddRange(asociados.Select(asociado => CrearFilaCsv(
+            asociado.NombreCompleto,
+            asociado.Cedula,
+            asociado.Telefono,
+            asociado.Correo,
+            asociado.NombrePredio,
+            asociado.VeredaSector,
+            asociado.Municipio,
+            asociado.HectareasPredio.ToString(System.Globalization.CultureInfo.GetCultureInfo("es-CO")),
+            NombreCultivo(asociado.CultivoPrincipal),
+            asociado.TieneBPA ? "Sí" : "No",
+            asociado.EsVictima,
+            asociado.EstadoMembresia == "AlDia" ? "Al día" : asociado.EstadoMembresia,
+            asociado.FechaRegistro.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture))));
+
+        var nombre = $"asociados-{DateTime.Now:yyyyMMdd-HHmm}.csv";
+        var contenido = string.Join("\r\n", lineas);
+        ModuloJavaScript ??= await JS.InvokeAsync<IJSObjectReference>("import", "/js/actas-archivos.js");
+        await ModuloJavaScript.InvokeVoidAsync("descargarCsv", nombre, contenido);
+        mensajeExportacion = $"Se exportaron {asociados.Count} asociados.";
+    }
+
+    private static string CrearFilaCsv(params string?[] valores) =>
+        string.Join(';', valores.Select(valor =>
+        {
+            var seguro = valor ?? string.Empty;
+            if (seguro.Length > 0 && seguro[0] is '=' or '+' or '-' or '@' or '\t' or '\r')
+            {
+                seguro = "'" + seguro;
+            }
+
+            return $"\"{seguro.Replace("\"", "\"\"")}\"";
+        }));
 
     private string NombreCultivo(string valor) => valor switch
     {
@@ -225,5 +283,19 @@
         var partes = nombre.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (partes.Length == 1) return partes[0].Substring(0, 1).ToUpper();
         return $"{partes[0][0]}{partes[1][0]}".ToUpper();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (ModuloJavaScript is not null)
+        {
+            try
+            {
+                await ModuloJavaScript.DisposeAsync();
+            }
+            catch (JSDisconnectedException)
+            {
+            }
+        }
     }
 }
