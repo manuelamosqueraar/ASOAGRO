@@ -210,14 +210,8 @@ var app = builder.Build();
 
 if (string.IsNullOrWhiteSpace(supabaseConnection))
 {
-    if (!app.Environment.IsDevelopment())
-    {
-        throw new InvalidOperationException(
-            "Falta configurar ASOAGRO_SUPABASE_CONNECTION. La aplicación no puede iniciar en producción usando datos en memoria.");
-    }
-
     app.Logger.LogWarning(
-        "No hay una conexión válida a Supabase configurada. La aplicación usará datos en memoria, que se perderán al reiniciar.");
+        "No hay una conexión válida a Supabase configurada (ASOAGRO_SUPABASE_CONNECTION). La aplicación iniciará usando datos en memoria.");
 }
 
 if (!googleAuthenticationConfigured)
