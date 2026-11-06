@@ -1,6 +1,6 @@
 @page "/editar-asociado"
 @page "/editar-asociado/{Cedula}"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Director")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Director,Directora,Secretaria,Secretario,Administrador")]
 @rendermode InteractiveServer
 @using Asoagro.Services
 @using System.ComponentModel.DataAnnotations

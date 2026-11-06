@@ -280,9 +280,34 @@
                         Google no pudo completar el inicio de sesión. Revisa las credenciales OAuth y la URI de redirección; el detalle técnico está en el registro de la aplicación.
                     </p>
                 }
+                else if (Error == "invalid_credentials")
+                {
+                    <p class="ag-error" role="alert">
+                        Credenciales incorrectas. Verifica tu usuario/correo y contraseña.
+                    </p>
+                }
+                else if (Error == "user_inactive")
+                {
+                    <p class="ag-error" role="alert">
+                        Tu usuario se encuentra inactivo. Contacta al administrador del sistema.
+                    </p>
+                }
+                else if (Error == "empty_user")
+                {
+                    <p class="ag-error" role="alert">
+                        Por favor ingresa tu correo electrónico o documento de identidad.
+                    </p>
+                }
+                else if (!string.IsNullOrEmpty(Error))
+                {
+                    <p class="ag-error" role="alert">
+                        No se pudo iniciar sesión. Por favor intenta de nuevo.
+                    </p>
+                }
 
-                <EditForm Model="@loginModel" OnValidSubmit="ManejarLogin">
-                    <DataAnnotationsValidator />
+                <form method="post" action="/Auth/login">
+                    <AntiforgeryToken />
+                    <input type="hidden" name="returnUrl" value="@ReturnUrl" />
 
                     <div class="ag-campo">
                         <label class="ag-etiqueta" for="usuario">Correo o usuario</label>
@@ -291,9 +316,8 @@
                                 <circle cx="12" cy="8" r="4" />
                                 <path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" />
                             </svg>
-                            <InputText id="usuario" class="ag-input" placeholder="ej. usuario@asoagro.org" autocomplete="username" @bind-Value="loginModel.Usuario" />
+                            <input id="usuario" name="usuario" class="ag-input" placeholder="ej. usuario@asoagro.org o documento" autocomplete="username" required value="@loginModel.Usuario" />
                         </div>
-                        <ValidationMessage For="@(() => loginModel.Usuario)" class="ag-error" />
                     </div>
 
                     <div class="ag-campo">
@@ -306,7 +330,7 @@
                                 <rect x="4" y="11" width="16" height="10" rx="2.5" />
                                 <path d="M8 11V8a4 4 0 0 1 8 0v3" />
                             </svg>
-                            <InputText id="password" type="@(_verPassword ? "text" : "password")" class="ag-input ag-input-clave" placeholder="••••••••" autocomplete="current-password" @bind-Value="loginModel.Password" />
+                            <input id="password" name="password" type="@(_verPassword ? "text" : "password")" class="ag-input ag-input-clave" placeholder="••••••••" autocomplete="current-password" required />
                             <button type="button" class="ag-ojo" @onclick="AlternarPassword" aria-label="@(_verPassword ? "Ocultar contraseña" : "Mostrar contraseña")">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12z" />
@@ -314,26 +338,17 @@
                                 </svg>
                             </button>
                         </div>
-                        <ValidationMessage For="@(() => loginModel.Password)" class="ag-error" />
                     </div>
 
                     <label class="ag-check">
-                        <InputCheckbox @bind-Value="loginModel.Recordarme" />
+                        <input type="checkbox" name="recordarme" value="true" />
                         Recordar este dispositivo
                     </label>
 
-                    <button type="submit" class="ag-btn ag-btn-principal" disabled="@_cargando">
-                        @if (_cargando)
-                        {
-                            <span class="ag-spinner" aria-hidden="true"></span>
-                            <span>Ingresando…</span>
-                        }
-                        else
-                        {
-                            <span>Ingresar a la plataforma</span>
-                        }
+                    <button type="submit" class="ag-btn ag-btn-principal">
+                        <span>Ingresar a la plataforma</span>
                     </button>
-                </EditForm>
+                </form>
 
                 <div class="ag-separador"><span>o continúa con</span></div>
 
@@ -362,27 +377,14 @@
 @code {
     private LoginModel loginModel = new();
     private bool _verPassword;
-    private bool _cargando;
 
     [SupplyParameterFromQuery(Name = "error")]
     private string? Error { get; set; }
 
-    private void AlternarPassword() => _verPassword = !_verPassword;
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    private string? ReturnUrl { get; set; }
 
-    private async Task ManejarLogin()
-    {
-        _cargando = true;
-        StateHasChanged();
-        try
-        {
-            // TODO: aquí va tu lógica de autenticación con usuario y contraseña.
-            await Task.CompletedTask;
-        }
-        finally
-        {
-            _cargando = false;
-        }
-    }
+    private void AlternarPassword() => _verPassword = !_verPassword;
 
     public class LoginModel
     {

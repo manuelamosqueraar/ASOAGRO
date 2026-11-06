@@ -14,13 +14,19 @@
 
     <AuthorizeView>
         <Authorized>
+            @{
+                var nombreUsuario = context.User.Identity?.Name ?? "Usuario Asoagro";
+                var correoUsuario = context.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "";
+                var rolNombre = context.User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "Miembro";
+                var iniciales = ObtenerIniciales(nombreUsuario);
+            }
 
             <!-- Módulos -->
             <div class="nm-scroll">
                 <nav class="nm-nav" aria-label="Módulos del panel">
 
-                    <!-- ASOCIADOS (Director) -->
-                    @if (context.User.IsInRole("Director"))
+                    <!-- ASOCIADOS (Director, Directora, Presidente, Secretaria, Administrador) -->
+                    @if (context.User.IsInRole("Director") || context.User.IsInRole("Directora") || context.User.IsInRole("Presidente") || context.User.IsInRole("Secretaria") || context.User.IsInRole("Administrador"))
                     {
                         <section class="nm-grupo @(expandirAsociados ? "abierto" : "")">
                             <button type="button" class="nm-grupo-btn" @onclick="ToggleAsociados" aria-expanded="@(expandirAsociados ? "true" : "false")">
@@ -55,8 +61,8 @@
                         </section>
                     }
 
-                    <!-- DOCUMENTOS (Tesorero y Presidente) -->
-                    @if (context.User.IsInRole("Tesorero") || context.User.IsInRole("Presidente"))
+                    <!-- DOCUMENTOS (Tesorero, Secretaria, Presidente, Directora, Administrador) -->
+                    @if (context.User.IsInRole("Tesorero") || context.User.IsInRole("Tesorera") || context.User.IsInRole("Presidente") || context.User.IsInRole("Secretaria") || context.User.IsInRole("Secretario") || context.User.IsInRole("Directora") || context.User.IsInRole("Director") || context.User.IsInRole("Administrador"))
                     {
                         <section class="nm-grupo nm-grupo-trigo @(expandirDocumentos ? "abierto" : "")">
                             <button type="button" class="nm-grupo-btn" @onclick="ToggleDocumentos" aria-expanded="@(expandirDocumentos ? "true" : "false")">
@@ -71,7 +77,7 @@
                             <div class="nm-sub">
                                 <div class="nm-sub-inner">
 
-                                    @if (context.User.IsInRole("Tesorero"))
+                                    @if (context.User.IsInRole("Tesorero") || context.User.IsInRole("Tesorera") || context.User.IsInRole("Secretaria") || context.User.IsInRole("Secretario") || context.User.IsInRole("Directora") || context.User.IsInRole("Director") || context.User.IsInRole("Administrador"))
                                     {
                                         <NavLink class="nm-link" href="registrar-documentos">
                                             <svg class="nm-ico"><use href="#ico-doc" /></svg>
@@ -87,7 +93,7 @@
                                         </NavLink>
                                     }
 
-                                    @if (context.User.IsInRole("Presidente"))
+                                    @if (context.User.IsInRole("Presidente") || context.User.IsInRole("Secretaria") || context.User.IsInRole("Secretario") || context.User.IsInRole("Directora") || context.User.IsInRole("Director") || context.User.IsInRole("Administrador"))
                                     {
                                         <NavLink class="nm-link" href="actas-estatutos" Match="NavLinkMatch.All">
                                             <svg class="nm-ico"><use href="#ico-ajustes" /></svg>
@@ -122,10 +128,10 @@
                 {
                     <div class="nm-popup">
                         <div class="nm-popup-cab">
-                            <span class="nm-avatar nm-avatar-grande">MM</span>
+                            <span class="nm-avatar nm-avatar-grande">@iniciales</span>
                             <div>
-                                <strong>Manuela Andrea Mosquera</strong>
-                                <small>directora@asoagro-faaua.org</small>
+                                <strong>@nombreUsuario</strong>
+                                <small>@correoUsuario</small>
                             </div>
                         </div>
 
@@ -134,7 +140,7 @@
                             <span class="nm-popup-ico"><svg class="nm-ico"><use href="#ico-usuario" /></svg></span>
                             <span>
                                 <strong>Perfil de usuario</strong>
-                                <small>Editar datos e información</small>
+                                <small>Rol: @rolNombre</small>
                             </span>
                         </button>
                         <button type="button" class="nm-popup-item" @onclick='() => AbrirModal("Seguridad y clave")'>
@@ -155,13 +161,6 @@
                                 <small>Asoagro · FAAUA</small>
                             </span>
                         </button>
-                        <button type="button" class="nm-popup-item" @onclick='() => AbrirModal("Soporte técnico")'>
-                            <span class="nm-popup-ico"><svg class="nm-ico"><use href="#ico-sobre" /></svg></span>
-                            <span>
-                                <strong>Soporte técnico</strong>
-                                <small>Asistencia de la plataforma</small>
-                            </span>
-                        </button>
 
                         <div class="nm-popup-sep"></div>
 
@@ -173,10 +172,10 @@
                 }
 
                 <button type="button" class="nm-perfil" @onclick="ToggleMenuInferior" aria-expanded="@(mostrarMenuInferior ? "true" : "false")">
-                    <span class="nm-avatar">MM</span>
+                    <span class="nm-avatar">@iniciales</span>
                     <span class="nm-perfil-texto">
-                        <strong>Manuela Mosquera</strong>
-                        <small>Dirección Ejecutiva</small>
+                        <strong>@nombreUsuario</strong>
+                        <small>@rolNombre</small>
                     </span>
                     <svg class="nm-ico nm-chevron @(mostrarMenuInferior ? "abierto" : "")"><use href="#ico-flecha" /></svg>
                 </button>
@@ -247,6 +246,14 @@
     private bool mostrarMenuInferior;
     private string? modalActivo;
     private bool abrirDialogo;
+
+    private static string ObtenerIniciales(string? nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre)) return "AS";
+        var partes = nombre.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length == 1) return partes[0].Substring(0, Math.Min(2, partes[0].Length)).ToUpperInvariant();
+        return $"{char.ToUpperInvariant(partes[0][0])}{char.ToUpperInvariant(partes[1][0])}";
+    }
 
     private void ToggleAsociados() => expandirAsociados = !expandirAsociados;
     private void ToggleDocumentos() => expandirDocumentos = !expandirDocumentos;

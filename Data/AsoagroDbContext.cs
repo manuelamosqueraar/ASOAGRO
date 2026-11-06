@@ -21,6 +21,10 @@ public class AsoagroDbContext : DbContext
 
     public DbSet<Asociado> Asociados => Set<Asociado>();
 
+    public DbSet<Asociacion> Asociaciones => Set<Asociacion>();
+
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
+
     public DbSet<TipoDocumento> TiposDocumento => Set<TipoDocumento>();
 
     public DbSet<Documento> Documentos => Set<Documento>();
@@ -32,6 +36,43 @@ public class AsoagroDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Asociacion>(entity =>
+        {
+            entity.ToTable("asociaciones", "public");
+            entity.HasKey(a => a.Id);
+            entity.Property(a => a.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(a => a.Nombre).HasColumnName("nombre").IsRequired();
+            entity.Property(a => a.Nit).HasColumnName("nit");
+            entity.Property(a => a.Municipio).HasColumnName("municipio");
+            entity.Property(a => a.RepresentanteLegal).HasColumnName("representante_legal");
+            entity.Property(a => a.Correo).HasColumnName("correo");
+            entity.Property(a => a.Telefono).HasColumnName("telefono");
+            entity.Property(a => a.Activo).HasColumnName("activo").HasDefaultValue(true);
+            entity.Property(a => a.CreadoEn).HasColumnName("creado_en");
+        });
+
+        modelBuilder.Entity<Usuario>(entity =>
+        {
+            entity.ToTable("usuarios", "public");
+            entity.HasKey(u => u.Id);
+            entity.Property(u => u.Id).HasColumnName("id").UseIdentityByDefaultColumn();
+            entity.Property(u => u.NombreCompleto).HasColumnName("nombre_completo").IsRequired();
+            entity.Property(u => u.DocumentoId).HasColumnName("documento_id").IsRequired();
+            entity.Property(u => u.Correo).HasColumnName("correo").IsRequired();
+            entity.Property(u => u.Telefono).HasColumnName("telefono");
+            entity.Property(u => u.ContrasenaHash).HasColumnName("contrasena_hash");
+            entity.Property(u => u.Rol).HasColumnName("rol").HasColumnType("public.rol_usuario").IsRequired();
+            entity.Property(u => u.AsociacionId).HasColumnName("asociacion_id");
+            entity.Property(u => u.Activo).HasColumnName("activo").HasDefaultValue(true);
+            entity.Property(u => u.UltimoAcceso).HasColumnName("ultimo_acceso");
+            entity.Property(u => u.CreadoEn).HasColumnName("creado_en");
+
+            entity.HasOne(u => u.Asociacion)
+                .WithMany()
+                .HasForeignKey(u => u.AsociacionId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
 
         modelBuilder.Entity<Asociado>(entity =>
         {
