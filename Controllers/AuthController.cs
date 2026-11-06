@@ -172,9 +172,8 @@ namespace Asoagro.Controllers
         {
             if (string.IsNullOrWhiteSpace(configuration["Authentication:Google:ClientSecret"]))
             {
-                return Problem(
-                    "Google OAuth no está configurado. Define Authentication__Google__ClientSecret como variable de entorno.",
-                    statusCode: StatusCodes.Status503ServiceUnavailable);
+                logger.LogWarning("Se intentó iniciar sesión con Google pero Authentication__Google__ClientSecret no está configurado.");
+                return Redirect("/login?error=google_oauth_not_configured");
             }
 
             var properties = new AuthenticationProperties
