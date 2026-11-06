@@ -205,6 +205,9 @@ namespace Asoagro.Controllers
                 if (rolUsuario == "Presidente" || rolUsuario == "Secretaria" || rolUsuario == "Secretario")
                     return LocalRedirect("/actas-estatutos");
 
+                if (rolUsuario == "Administrador")
+                    return LocalRedirect("/consultar-asociados");
+
                 if (rolUsuario == "Invitado")
                     return LocalRedirect("/");
             }
@@ -214,7 +217,7 @@ namespace Asoagro.Controllers
                 return LocalRedirect(returnUrl);
             }
 
-            return LocalRedirect("/");
+            return LocalRedirect("/consultar-asociados");
         }
 
         [HttpGet("logout")]

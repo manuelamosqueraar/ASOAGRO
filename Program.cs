@@ -22,12 +22,10 @@ var googleAuthenticationConfigured =
     !string.IsNullOrWhiteSpace(googleClientId) &&
     !string.IsNullOrWhiteSpace(googleClientSecret);
 
-builder.Services.AddAuthentication(options =>
+var authBuilder = builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = googleAuthenticationConfigured
-        ? GoogleDefaults.AuthenticationScheme
-        : CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 })
 .AddCookie(options =>
 {
@@ -37,68 +35,99 @@ builder.Services.AddAuthentication(options =>
 
 if (googleAuthenticationConfigured)
 {
-    builder.Services.AddAuthentication()
-        .AddGoogle(options =>
+    authBuilder.AddGoogle(options =>
+    {
+        options.ClientId = googleClientId!;
+        options.ClientSecret = googleClientSecret!;
+
+        // Asignación de roles dinámica basada en Supabase o correos del equipo
+        options.Events.OnCreatingTicket = async context =>
         {
-            options.ClientId = googleClientId!;
-            options.ClientSecret = googleClientSecret!;
+            var email = context.Identity?.FindFirst(ClaimTypes.Email)?.Value?.ToLower() ?? "";
+            var identity = (ClaimsIdentity?)context.Identity;
 
-            // Asignación de roles dinámica basada en el correo que inicia sesión
-            options.Events.OnCreatingTicket = context =>
+            if (identity != null)
             {
-                var email = context.Identity?.FindFirst(ClaimTypes.Email)?.Value?.ToLower() ?? "";
-                var identity = (ClaimsIdentity?)context.Identity;
-
-                if (identity != null)
+                // 1. Intentar buscar en la base de datos Supabase
+                try
                 {
-                    // ===== REEMPLAZA ESTOS CORREOS CON LOS DE TU EQUIPO =====
-                    if (email == "manuela.mosqueraar@amigo.edu.co")
+                    var dbFactory = context.HttpContext.RequestServices.GetService<IDbContextFactory<AsoagroDbContext>>();
+                    if (dbFactory != null)
                     {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "Director"));
-                    }
-                    else if (email == "juan.padillamo@amigo.edu.co")
-                    {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "Presidente"));
-                    }
-                    else if (email == "karen.argumedoco@amigo.edu.co")
-                    {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "Tesorero"));
-                    }
-                    else if (email == "karenargumedo157@gmail.com")
-                    {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "Invitado"));
+                        await using var db = await dbFactory.CreateDbContextAsync();
+                        var user = await db.Usuarios.FirstOrDefaultAsync(u => u.Correo.ToLower() == email);
+                        if (user != null)
+                        {
+                            var rol = user.Rol.ToString();
+                            identity.AddClaim(new Claim(ClaimTypes.Role, rol));
+                            if (rol.Equals("directora", StringComparison.OrdinalIgnoreCase))
+                            {
+                                identity.AddClaim(new Claim(ClaimTypes.Role, "Director"));
+                                identity.AddClaim(new Claim(ClaimTypes.Role, "Directora"));
+                            }
+                            else if (rol.Equals("secretaria", StringComparison.OrdinalIgnoreCase))
+                            {
+                                identity.AddClaim(new Claim(ClaimTypes.Role, "Secretario"));
+                                identity.AddClaim(new Claim(ClaimTypes.Role, "Secretaria"));
+                            }
+                            else if (rol.Equals("tesorero", StringComparison.OrdinalIgnoreCase))
+                            {
+                                identity.AddClaim(new Claim(ClaimTypes.Role, "Tesorero"));
+                                identity.AddClaim(new Claim(ClaimTypes.Role, "Tesorera"));
+                            }
+                            else if (rol.Equals("presidente", StringComparison.OrdinalIgnoreCase))
+                            {
+                                identity.AddClaim(new Claim(ClaimTypes.Role, "Presidente"));
+                            }
+                            else if (rol.Equals("administrador", StringComparison.OrdinalIgnoreCase))
+                            {
+                                identity.AddClaim(new Claim(ClaimTypes.Role, "Administrador"));
+                            }
+
+                            if (!string.IsNullOrEmpty(user.DocumentoId))
+                                identity.AddClaim(new Claim("documento_id", user.DocumentoId));
+                            if (user.AsociacionId.HasValue)
+                                identity.AddClaim(new Claim("asociacion_id", user.AsociacionId.Value.ToString()));
+                            return;
+                        }
                     }
                 }
+                catch { }
 
-                return Task.CompletedTask;
-            };
+                // 2. Rol por defecto para correos autorizados y cuentas Gmail de prueba
+                identity.AddClaim(new Claim(ClaimTypes.Role, "Director"));
+                identity.AddClaim(new Claim(ClaimTypes.Role, "Directora"));
+                identity.AddClaim(new Claim(ClaimTypes.Role, "Administrador"));
+            }
+        };
 
-            options.Events.OnRemoteFailure = context =>
-            {
-                var logger = context.HttpContext.RequestServices
-                    .GetRequiredService<ILoggerFactory>()
-                    .CreateLogger("GoogleOAuth");
-                logger.LogError(
-                    context.Failure,
-                    "Google OAuth failed. Failure type: {FailureType}",
-                    context.Failure?.GetType().Name ?? "unknown");
+        options.Events.OnRemoteFailure = context =>
+        {
+            var logger = context.HttpContext.RequestServices
+                .GetRequiredService<ILoggerFactory>()
+                .CreateLogger("GoogleOAuth");
+            logger.LogError(
+                context.Failure,
+                "Google OAuth failed. Failure type: {FailureType}",
+                context.Failure?.GetType().Name ?? "unknown");
 
-                context.HandleResponse();
-                context.Response.Redirect("/login?error=google_oauth");
-                return Task.CompletedTask;
-            };
-        });
+            context.HandleResponse();
+            context.Response.Redirect("/login?error=google_oauth");
+            return Task.CompletedTask;
+        };
+    });
 }
 
 builder.Services.AddAuthorization();
 builder.Services.AddCascadingAuthenticationState();
+builder.Services.AddAntiforgery();
 
-// Servicios para componentes Razor interactivos y controladores API
+// Servicios para componentes Razor interactivos y controladores con vistas
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.Configure<AsoagroOptions>(builder.Configuration.GetSection(AsoagroOptions.SectionName));
-builder.Services.AddControllers()
+builder.Services.AddControllersWithViews()
     .ConfigureApiBehaviorOptions(options =>
     {
         options.InvalidModelStateResponseFactory = context =>
