@@ -144,8 +144,22 @@ static string? NormalizarConexionSupabase(string? raw)
             Database = string.IsNullOrWhiteSpace(uri.AbsolutePath.Trim('/')) ? "postgres" : uri.AbsolutePath.Trim('/'),
             Username = Uri.UnescapeDataString(userInfo[0]),
             Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
-            SslMode = SslMode.Require
+            SslMode = SslMode.Require,
+            Timeout = 30,
+            CommandTimeout = 30,
+            KeepAlive = 30
         };
+
+        if (!string.IsNullOrWhiteSpace(uri.Host))
+        {
+            try
+            {
+                var dnsTask = System.Net.Dns.GetHostAddressesAsync(uri.Host);
+                dnsTask.Wait(TimeSpan.FromSeconds(3));
+            }
+            catch { }
+        }
+
         return connBuilder.ConnectionString;
     }
 
@@ -190,7 +204,7 @@ if (!string.IsNullOrWhiteSpace(supabaseConnection))
 {
     builder.Services.AddDbContextFactory<AsoagroDbContext>(options =>
         options.UseNpgsql(supabaseConnection, npgsqlOptions =>
-            npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null)));
+            npgsqlOptions.EnableRetryOnFailure(5, TimeSpan.FromSeconds(3), null)));
 
     builder.Services.AddSingleton<IAsociadoService, PostgresAsociadoService>();
     builder.Services.AddSingleton<ISeguimientoAsociadoService, PostgresSeguimientoAsociadoService>();

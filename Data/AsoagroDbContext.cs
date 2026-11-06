@@ -83,6 +83,10 @@ public class AsoagroDbContext : DbContext
                 .HasColumnName("id")
                 .UseIdentityByDefaultColumn();
 
+            entity.Property<int>("asociacion_id")
+                .HasColumnName("asociacion_id")
+                .HasDefaultValue(1);
+
             entity.Property(a => a.Cedula)
                 .HasColumnName("cedula")
                 .HasMaxLength(20)
@@ -192,6 +196,10 @@ public class AsoagroDbContext : DbContext
                 .HasColumnName("id")
                 .UseIdentityByDefaultColumn();
 
+            entity.Property<int>("asociacion_id")
+                .HasColumnName("asociacion_id")
+                .HasDefaultValue(1);
+
             entity.Property(d => d.AsociadoId)
                 .HasColumnName("asociado_id");
 
@@ -240,6 +248,10 @@ public class AsoagroDbContext : DbContext
             entity.Property(a => a.Id)
                 .HasColumnName("id")
                 .UseIdentityByDefaultColumn();
+
+            entity.Property<int>("asociacion_id")
+                .HasColumnName("asociacion_id")
+                .HasDefaultValue(1);
 
             entity.Property(a => a.Tipo)
                 .HasColumnName("tipo")
