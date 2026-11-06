@@ -25,7 +25,7 @@ function paralaje() {
         const seccion = el.closest('section') || el.parentElement;
         
         // Excluir la sección 1 (Hero) para que su imagen de fondo quede estática
-        if (seccion.classList.contains('ag-hero') || seccion.querySelector('.img-hero-1')) return;
+        if (seccion.classList.contains('ag-hero') || seccion.classList.contains('eco-hero') || seccion.querySelector('.img-hero-1')) return;
 
         const r = seccion.getBoundingClientRect();
         const desplazamiento = (r.top + r.height / 2) - vh / 2;
@@ -37,7 +37,7 @@ function paralaje() {
         const seccion = el.closest('section') || el.parentElement;
         
         // Excluir la sección 1 (Hero) para que su texto no se desvanezca al hacer scroll
-        if (seccion.classList.contains('ag-hero') || seccion.querySelector('.ag-hero-txt')) return;
+        if (seccion.classList.contains('ag-hero') || seccion.classList.contains('eco-hero') || seccion.querySelector('.ag-hero-txt')) return;
 
         const r = seccion.getBoundingClientRect();
         const avance = limitar(-r.top / (r.height * 0.7), 0, 1);

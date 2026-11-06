@@ -96,8 +96,8 @@ public class AlertasVencimientoWorker : BackgroundService
                     Icono = "alerta",
                     Categoria = CategoriaNotificacion.Documentos,
                     Nivel = ObtenerNivel(umbral.Value),
-                    RolesDestino = new[] { "Presidente", "Director", "Tesorero" },
-                    RolesEnlace = new[] { "Presidente" },
+                    RolesDestino = new[] { "Presidenta", "Presidente", "Directora", "Director", "Secretaria", "Secretaría", "Tesorero", "Tesorera" },
+                    RolesEnlace = new[] { "Presidenta", "Presidente" },
                     ClaveUnica = $"acta|{documento.Id:N}|{fecha:yyyy-MM-dd}|{umbral}"
                 });
 

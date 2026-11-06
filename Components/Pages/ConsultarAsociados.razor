@@ -1,13 +1,29 @@
 @page "/consultar-asociados"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Director")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Directora,Director")]
 @rendermode InteractiveServer
 @implements IAsyncDisposable
 @using Asoagro.Services
 @inject IAsociadoService RegistroAsociados
 @inject IJSRuntime JS
-
-<div class="ca">
  
+<div class="ca">
+    <!-- BARRA DE BÚSQUEDA ÚNICA SUPERIOR -->
+    <div class="ca-barra-superior">
+        <div class="ca-buscador">
+            <svg class="ca-ico ca-buscador-ico"><use href="#ico-lista" /></svg>
+            <input id="ca-filtro"
+                   class="ca-input"
+                   placeholder="Buscar por nombre, cédula, cultivo o vereda…"
+                   @bind="textoFiltro"
+                   @bind:event="oninput"
+                   aria-label="Buscar productor" />
+            @if (!string.IsNullOrEmpty(textoFiltro))
+            {
+                <button type="button" class="ca-limpiar" @onclick="() => textoFiltro = string.Empty" aria-label="Limpiar búsqueda">&times;</button>
+            }
+        </div>
+    </div>
+
     <!-- ENCABEZADO -->
     <section class="ca-hero">
         <div class="ca-hero-texto">
@@ -16,7 +32,7 @@
                 <span class="ca-etiqueta ca-etiqueta-suave"><svg class="ca-ico"><use href="#ico-escudo" /></svg>Control administrativo</span>
             </div>
             <h1 class="ca-titulo">Listado de asociados</h1>
-            <p class="ca-descripcion">Consulta integral de familias productoras, cultivos, cumplimiento de BPA y elegibilidad para convocatorias.</p>
+            <p class="ca-descripcion">Consulta integral de familias productoras, líneas productivas múltiples, cumplimiento de BPA y caracterización social con soportes.</p>
         </div>
 
         <div class="ca-hero-resumen">
@@ -29,38 +45,39 @@
         </div>
     </section>
 
-    <!-- BÚSQUEDA Y FILTROS -->
+    <!-- FILTROS Y EXPORTACIÓN -->
     <section class="ca-panel">
-        <div class="ca-barra">
-            <div class="ca-buscador">
-                <svg class="ca-ico ca-buscador-ico"><use href="#ico-lista" /></svg>
-                <input id="ca-filtro" class="ca-input" placeholder="Buscar por nombre, cédula o vereda…" @bind="textoFiltro" @bind:event="oninput" aria-label="Buscar productor" />
-                @if (!string.IsNullOrEmpty(textoFiltro))
-                {
-                    <button type="button" class="ca-limpiar" @onclick="() => textoFiltro = string.Empty" aria-label="Limpiar búsqueda">&times;</button>
-                }
+        <div class="ca-filtros">
+            <div class="ca-filtros-grupo">
+                <span class="ca-filtros-titulo">Cultivo</span>
+                <div class="ca-filtros-chips" role="group" aria-label="Filtrar por cultivo">
+                    <button type="button" class="ca-chip @(filtroCultivo == "" ? "activo" : "")" @onclick='() => filtroCultivo = ""'>Todos</button>
+                    @foreach (var cultivo in AsociadoModel.CatalogoCultivos)
+                    {
+                        <button type="button"
+                                class="ca-chip @(string.Equals(filtroCultivo, cultivo.Codigo, StringComparison.OrdinalIgnoreCase) ? "activo" : "")"
+                                @onclick="() => filtroCultivo = cultivo.Codigo">
+                            @cultivo.Nombre
+                        </button>
+                    }
+                </div>
             </div>
 
-            <button type="button" class="ca-btn ca-btn-secundario" @onclick="ExportarReporte">
-                <svg class="ca-ico"><use href="#ico-doc" /></svg>
-                Exportar Excel
-            </button>
-            @if (!string.IsNullOrEmpty(mensajeExportacion))
-            {
+            <div class="ca-filtros-acciones">
+                <span class="ca-conteo">@AsociadosFiltrados.Count() resultado(s)</span>
+                <button type="button" class="ca-btn ca-btn-secundario" @onclick="ExportarReporte">
+                    <svg class="ca-ico"><use href="#ico-doc" /></svg>
+                    Exportar Excel
+                </button>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(mensajeExportacion))
+        {
+            <div class="ca-exportacion-fila">
                 <span class="ca-exportacion-mensaje" role="status" aria-live="polite">@mensajeExportacion</span>
-            }
-        </div>
-
-        <div class="ca-filtros">
-            <span class="ca-filtros-titulo">Cultivo</span>
-            <button type="button" class="ca-chip @(filtroCultivo == "" ? "activo" : "")" @onclick='() => filtroCultivo = ""'>Todos</button>
-            <button type="button" class="ca-chip @(filtroCultivo == "Platano" ? "activo" : "")" @onclick='() => filtroCultivo = "Platano"'>Plátano</button>
-            <button type="button" class="ca-chip @(filtroCultivo == "Banano" ? "activo" : "")" @onclick='() => filtroCultivo = "Banano"'>Banano</button>
-            <button type="button" class="ca-chip @(filtroCultivo == "Cacao" ? "activo" : "")" @onclick='() => filtroCultivo = "Cacao"'>Cacao</button>
-            <button type="button" class="ca-chip @(filtroCultivo == "Ganaderia" ? "activo" : "")" @onclick='() => filtroCultivo = "Ganaderia"'>Ganadería</button>
-
-            <span class="ca-conteo">@AsociadosFiltrados.Count() resultado(s)</span>
-        </div>
+            </div>
+        }
     </section>
 
     <!-- LISTADO -->
@@ -79,9 +96,9 @@
                     <tr>
                         <th scope="col">Asociado</th>
                         <th scope="col">Predio y ubicación</th>
-                        <th scope="col">Cultivo y extensión</th>
-                        <th scope="col">Estado</th>
-                        <th scope="col" class="ca-th-acciones">Acciones</th>
+                        <th scope="col">Línea productiva y área</th>
+                        <th scope="col">Estado y BPA</th>
+                        <th scope="col" class="ca-th-acciones">Reporte del asociado</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -100,13 +117,13 @@
                             <td data-label="Predio y ubicación">
                                 <div class="ca-tabla-dato">
                                     <strong>@asociado.NombrePredio</strong>
-                                    <span>@asociado.VeredaSector, @asociado.Municipio</span>
+                                    <span>@asociado.VeredaSector, @asociado.Municipio@(!string.IsNullOrWhiteSpace(asociado.TenenciaTerreno) ? $" · {asociado.TenenciaTerreno}" : "")</span>
                                 </div>
                             </td>
-                            <td data-label="Cultivo y extensión">
+                            <td data-label="Línea productiva y área">
                                 <div class="ca-tabla-dato ca-tabla-cultivo">
-                                    <span class="ca-cultivo">@NombreCultivo(asociado.CultivoPrincipal)</span>
-                                    <span>@asociado.HectareasPredio ha</span>
+                                    <span class="ca-cultivo">@NombreCultivo(asociado.CultivoPrincipal)@(!string.IsNullOrWhiteSpace(asociado.TipoActividadProductiva) ? $" · {asociado.TipoActividadProductiva}" : "")</span>
+                                    <span>@(asociado.HectareasLineaProductiva > 0 ? $"{asociado.HectareasLineaProductiva:0.#} ha prod." : $"{asociado.HectareasPredio:0.#} ha") (@asociado.HectareasPredio.ToString("0.#") ha total)@(!string.IsNullOrWhiteSpace(asociado.ProduccionAproximada) ? $" · {asociado.ProduccionAproximada}" : "")</span>
                                 </div>
                             </td>
                             <td data-label="Estado">
@@ -120,16 +137,16 @@
                                     </span>
                                 </div>
                             </td>
-                            <td data-label="Acciones">
+                            <td data-label="Reporte del asociado">
                                 <div class="ca-tabla-acciones">
-                                    <button type="button" class="ca-btn ca-btn-mini" @onclick="() => VerDetalle(asociado)">
-                                        <svg class="ca-ico"><use href="#ico-lista" /></svg>
-                                        Ver ficha
+                                    <button type="button"
+                                            class="ca-btn ca-btn-mini"
+                                            disabled="@(cedulaDescargandoPdf == asociado.Cedula)"
+                                            title="Generar y descargar PDF con la información completa del asociado"
+                                            @onclick="() => DescargarPdfAsociado(asociado)">
+                                        <svg class="ca-ico"><use href="#ico-doc" /></svg>
+                                        <span>@(cedulaDescargandoPdf == asociado.Cedula ? "Generando..." : "Descargar PDF")</span>
                                     </button>
-                                    <a href="@($"/editar-asociado/{asociado.Cedula}")" class="ca-btn ca-btn-mini ca-btn-outline">
-                                        <svg class="ca-ico"><use href="#ico-ajustes" /></svg>
-                                        Editar
-                                    </a>
                                 </div>
                             </td>
                         </tr>
@@ -171,29 +188,102 @@
 
                 <div class="ca-ficha-cuerpo">
                     <section class="ca-bloque">
-                        <h4><svg class="ca-ico"><use href="#ico-mapa" /></svg>Predio y ubicación</h4>
+                        <h4><svg class="ca-ico"><use href="#ico-mapa" /></svg>I. Predio y Ubicación</h4>
                         <dl>
                             <div><dt>Predio</dt><dd>@asociadoSeleccionado.NombrePredio</dd></div>
                             <div><dt>Vereda</dt><dd>@asociadoSeleccionado.VeredaSector</dd></div>
                             <div><dt>Municipio</dt><dd>@asociadoSeleccionado.Municipio</dd></div>
-                            <div><dt>Extensión</dt><dd class="ca-destacado">@asociadoSeleccionado.HectareasPredio ha</dd></div>
+                            <div><dt>Tenencia del Terreno</dt><dd>@(string.IsNullOrWhiteSpace(asociadoSeleccionado.TenenciaTerreno) ? "No especificada" : asociadoSeleccionado.TenenciaTerreno)</dd></div>
+                            <div><dt>Extensión Total</dt><dd class="ca-destacado">@asociadoSeleccionado.HectareasPredio.ToString("0.#") ha</dd></div>
+                            <div><dt>Fotocopia Cédula / NIT</dt><dd title="@asociadoSeleccionado.CedulaArchivoNombre">@(string.IsNullOrWhiteSpace(asociadoSeleccionado.CedulaArchivoNombre) ? "No adjunta" : asociadoSeleccionado.CedulaArchivoNombre)</dd></div>
                         </dl>
                     </section>
 
                     <section class="ca-bloque">
-                        <h4><svg class="ca-ico"><use href="#ico-brote" /></svg>Producción y social</h4>
+                        <h4><svg class="ca-ico"><use href="#ico-brote" /></svg>II. Línea Productiva y BPA</h4>
                         <dl>
-                            <div><dt>Cultivo eje</dt><dd>@NombreCultivo(asociadoSeleccionado.CultivoPrincipal)</dd></div>
-                            <div><dt>BPA</dt><dd class="@(asociadoSeleccionado.TieneBPA ? "ca-destacado" : "")">@(asociadoSeleccionado.TieneBPA ? "Vigente ICA" : "No registra")</dd></div>
-                            <div><dt>Víctimas</dt><dd>@(asociadoSeleccionado.EsVictima == "Si" ? "Sí" : "No")</dd></div>
+                            <div><dt>Actividad Productiva</dt><dd>@(string.IsNullOrWhiteSpace(asociadoSeleccionado.TipoActividadProductiva) ? "No especificada" : asociadoSeleccionado.TipoActividadProductiva)</dd></div>
+                            <div><dt>Cultivos</dt><dd>@NombreCultivo(asociadoSeleccionado.CultivoPrincipal)</dd></div>
+                            <div><dt>Producción Aproximada</dt><dd>@(string.IsNullOrWhiteSpace(asociadoSeleccionado.ProduccionAproximada) ? "No especificada" : asociadoSeleccionado.ProduccionAproximada)</dd></div>
+                            <div><dt>Área Productiva</dt><dd class="ca-destacado">@(asociadoSeleccionado.HectareasLineaProductiva > 0 ? $"{asociadoSeleccionado.HectareasLineaProductiva:0.#} ha" : $"{asociadoSeleccionado.HectareasPredio:0.#} ha")</dd></div>
+                            <div>
+                                <dt>Certificación BPA</dt>
+                                <dd class="@(asociadoSeleccionado.TieneBPA ? "ca-destacado" : "")" title="@asociadoSeleccionado.CertificadoBpaNombre">
+                                    @(asociadoSeleccionado.TieneBPA
+                                        ? (!string.IsNullOrWhiteSpace(asociadoSeleccionado.CertificadoBpaNombre) ? $"Vigente ({asociadoSeleccionado.CertificadoBpaNombre})" : "Vigente ICA")
+                                        : "No registra")
+                                </dd>
+                            </div>
                             <div><dt>Membresía</dt><dd>@(asociadoSeleccionado.EstadoMembresia == "AlDia" ? "Al día" : "En gracia")</dd></div>
+                        </dl>
+                    </section>
+
+                    <section class="ca-bloque ca-bloque-completo">
+                        <h4><svg class="ca-ico"><use href="#ico-escudo" /></svg>III. Componente Social y Soportes de Vulnerabilidad</h4>
+                        @if (asociadoSeleccionado.GruposVulnerables.Count > 0)
+                        {
+                            <dl>
+                                @foreach (var cod in asociadoSeleccionado.GruposVulnerables)
+                                {
+                                    var soporte = asociadoSeleccionado.SoportesGruposVulnerables.TryGetValue(cod, out var n) ? n : "Soporte verificado";
+                                    <div>
+                                        <dt>@AsociadoModel.TraducirGrupoVulnerable(cod)</dt>
+                                        <dd class="ca-destacado" title="@soporte">@soporte</dd>
+                                    </div>
+                                }
+                            </dl>
+                        }
+                        else
+                        {
+                            <dl>
+                                <div>
+                                    <dt>Condición de vulnerabilidad</dt>
+                                    <dd>@(asociadoSeleccionado.EsVictima == "Si" ? "Víctima del conflicto armado" : "Sin condición reportada")</dd>
+                                </div>
+                            </dl>
+                        }
+                    </section>
+
+                    <section class="ca-bloque ca-bloque-completo">
+                        <h4><svg class="ca-ico"><use href="#ico-lista" /></svg>IV. Cuotas Sociales y Aportes</h4>
+                        <dl>
+                            <div>
+                                <dt>Estado General de Pago</dt>
+                                <dd class="ca-destacado">@asociadoSeleccionado.EstadoGeneralCuotas</dd>
+                            </div>
+                            <div>
+                                <dt>Valor Total Pagado</dt>
+                                <dd class="ca-destacado">$@asociadoSeleccionado.ValorTotalPagadoAcumulado.ToString("N0")</dd>
+                            </div>
+                            <div>
+                                <dt>Valor Total Pendiente</dt>
+                                <dd>$@asociadoSeleccionado.ValorTotalPendienteAcumulado.ToString("N0") (@asociadoSeleccionado.TotalCuotasPendientes cuota(s))</dd>
+                            </div>
+                            @foreach (var cuota in asociadoSeleccionado.CuotasAportes)
+                            {
+                                var nombresSoportes = cuota.Soportes.Count > 0
+                                    ? string.Join(", ", cuota.Soportes.Select(s => s.ArchivoNombre))
+                                    : "Sin comprobante adjunto";
+                                <div>
+                                    <dt>@cuota.TipoCuota (@cuota.Periodicidad) · $@cuota.ValorCuota.ToString("N0")</dt>
+                                    <dd title="@nombresSoportes">
+                                        @cuota.CalcularEstadoAutomatico() · Vence: @(cuota.FechaVencimiento?.ToString("dd/MM/yyyy") ?? "N/A") · Soportes: @nombresSoportes
+                                    </dd>
+                                </div>
+                            }
                         </dl>
                     </section>
                 </div>
 
                 <footer class="ca-ficha-pie">
-                    <span>Registro: @asociadoSeleccionado.FechaRegistro.ToString("dd/MM/yyyy")</span>
-                    <button type="button" class="ca-btn ca-btn-primario" @onclick="CerrarDetalle">Cerrar ficha</button>
+                    <span>Fecha de registro: @asociadoSeleccionado.FechaRegistro.ToString("dd/MM/yyyy")</span>
+                    <div class="ca-tabla-acciones">
+                        <a href="@($"/editar-asociado/{asociadoSeleccionado.Cedula}")" class="ca-btn ca-btn-secundario">
+                            <svg class="ca-ico"><use href="#ico-ajustes" /></svg>
+                            Editar expediente
+                        </a>
+                        <button type="button" class="ca-btn ca-btn-primario" @onclick="CerrarDetalle">Cerrar ficha</button>
+                    </div>
                 </footer>
             </article>
         </div>
@@ -201,16 +291,27 @@
 </div>
 
 @code {
+    [SupplyParameterFromQuery(Name = "q")]
+    public string? BusquedaUrl { get; set; }
+
     private string textoFiltro = string.Empty;
     private string filtroCultivo = string.Empty;
     private List<AsociadoModel> listaAsociados = new();
     private AsociadoModel? asociadoSeleccionado;
+    private string? cedulaDescargandoPdf;
     private IJSObjectReference? ModuloJavaScript;
     private string mensajeExportacion = string.Empty;
 
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrWhiteSpace(BusquedaUrl))
+        {
+            textoFiltro = BusquedaUrl;
+        }
+    }
+
     protected override void OnInitialized()
     {
-        // Solo se muestran registros completos (pasos 1, 2 y 3 terminados)
         listaAsociados = RegistroAsociados.ObtenerTodos()
             .Select(AsociadoMapper.ToModel)
             .Where(a => !string.IsNullOrWhiteSpace(a.NombreCompleto)
@@ -219,7 +320,7 @@
                      && !string.IsNullOrWhiteSpace(a.NombrePredio)
                      && !string.IsNullOrWhiteSpace(a.VeredaSector)
                      && !string.IsNullOrWhiteSpace(a.Municipio)
-                     && a.HectareasPredio >= 1
+                     && a.HectareasPredio > 0
                      && !string.IsNullOrWhiteSpace(a.CultivoPrincipal))
             .ToList();
     }
@@ -229,12 +330,47 @@
             (string.IsNullOrWhiteSpace(textoFiltro) ||
              a.NombreCompleto.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) ||
              a.Cedula.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) ||
-             a.VeredaSector.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase)) &&
+             a.VeredaSector.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) ||
+             a.Municipio.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) ||
+             a.NombrePredio.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) ||
+             a.CultivoPrincipal.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) ||
+             NombreCultivo(a.CultivoPrincipal).Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) ||
+             a.CultivosSeleccionados.Any(c =>
+                 c.Contains(textoFiltro, StringComparison.OrdinalIgnoreCase) ||
+                 NombreCultivo(c).Contains(textoFiltro, StringComparison.OrdinalIgnoreCase))) &&
             (string.IsNullOrWhiteSpace(filtroCultivo) ||
-             a.CultivoPrincipal.Equals(filtroCultivo, StringComparison.OrdinalIgnoreCase)));
+             a.CultivosSeleccionados.Any(c => string.Equals(c, filtroCultivo, StringComparison.OrdinalIgnoreCase)) ||
+             a.CultivoPrincipal.Contains(filtroCultivo, StringComparison.OrdinalIgnoreCase)));
 
     private void VerDetalle(AsociadoModel asociado) => asociadoSeleccionado = asociado;
     private void CerrarDetalle() => asociadoSeleccionado = null;
+
+    private async Task DescargarPdfAsociado(AsociadoModel asociado)
+    {
+        try
+        {
+            cedulaDescargandoPdf = asociado.Cedula;
+            var fechaAhora = DateTime.Now;
+            var pdfBytes = AsociadoPdfGenerator.GenerarFichaPdf(asociado, fechaAhora);
+            var cedulaLimpia = string.Concat(asociado.Cedula.Where(char.IsLetterOrDigit));
+            if (string.IsNullOrWhiteSpace(cedulaLimpia))
+            {
+                cedulaLimpia = "asociado";
+            }
+
+            var nombreArchivo = $"Reporte_Asociado_{cedulaLimpia}_{fechaAhora:yyyyMMdd_HHmm}.pdf";
+
+            await using var stream = new MemoryStream(pdfBytes);
+            using var streamRef = new DotNetStreamReference(stream);
+            ModuloJavaScript ??= await JS.InvokeAsync<IJSObjectReference>("import", "/js/actas-archivos.js");
+            await ModuloJavaScript.InvokeVoidAsync("descargar", nombreArchivo, streamRef, "application/pdf");
+            mensajeExportacion = $"Se descargó el PDF del expediente de {asociado.NombreCompleto}.";
+        }
+        finally
+        {
+            cedulaDescargandoPdf = null;
+        }
+    }
 
     private async Task ExportarReporte()
     {
@@ -248,23 +384,36 @@
         var lineas = new List<string>
         {
             CrearFilaCsv(
-                "Nombre completo", "Cédula", "Teléfono", "Correo electrónico", "Predio",
-                "Vereda o sector", "Municipio", "Hectáreas", "Cultivo principal", "BPA vigente",
-                "Víctima", "Estado de membresía", "Fecha de registro")
+                "Nombre completo", "Cédula", "Fotocopia Cédula/NIT", "Teléfono", "Correo electrónico", "Predio",
+                "Vereda o sector", "Municipio", "Tenencia del terreno", "Hectáreas predio", "Hectáreas productivas",
+                "Actividad productiva", "Producción aproximada", "Cultivos", "BPA vigente",
+                "Certificado BPA", "Condición vulnerable", "Estado de cuotas", "Total pagado cuotas", "Total pendiente cuotas",
+                "Estado de membresía", "Fecha de registro")
         };
 
         lineas.AddRange(asociados.Select(asociado => CrearFilaCsv(
             asociado.NombreCompleto,
             asociado.Cedula,
+            asociado.CedulaArchivoNombre,
             asociado.Telefono,
             asociado.Correo,
             asociado.NombrePredio,
             asociado.VeredaSector,
             asociado.Municipio,
+            asociado.TenenciaTerreno,
             asociado.HectareasPredio.ToString(System.Globalization.CultureInfo.GetCultureInfo("es-CO")),
+            asociado.HectareasLineaProductiva.ToString(System.Globalization.CultureInfo.GetCultureInfo("es-CO")),
+            asociado.TipoActividadProductiva,
+            asociado.ProduccionAproximada,
             NombreCultivo(asociado.CultivoPrincipal),
             asociado.TieneBPA ? "Sí" : "No",
-            asociado.EsVictima,
+            asociado.CertificadoBpaNombre,
+            asociado.GruposVulnerables.Count > 0
+                ? string.Join(", ", asociado.GruposVulnerables.Select(AsociadoModel.TraducirGrupoVulnerable))
+                : asociado.EsVictima,
+            asociado.EstadoGeneralCuotas,
+            asociado.ValorTotalPagadoAcumulado.ToString("0"),
+            asociado.ValorTotalPendienteAcumulado.ToString("0"),
             asociado.EstadoMembresia == "AlDia" ? "Al día" : asociado.EstadoMembresia,
             asociado.FechaRegistro.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture))));
 
@@ -287,14 +436,7 @@
             return $"\"{seguro.Replace("\"", "\"\"")}\"";
         }));
 
-    private string NombreCultivo(string valor) => valor switch
-    {
-        "Platano" => "Plátano",
-        "Banano" => "Banano", 
-        "Cacao" => "Cacao",
-        "Ganaderia" => "Ganadería",
-        _ => valor
-    };
+    private string NombreCultivo(string valor) => AsociadoModel.FormatearNombreCultivo(valor);
 
     private string ObtenerIniciales(string nombre)
     {

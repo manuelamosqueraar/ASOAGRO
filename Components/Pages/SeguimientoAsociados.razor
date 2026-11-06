@@ -1,5 +1,5 @@
 @page "/seguimiento-asociados"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Director")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Directora,Director,Presidenta,Presidente")]
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
@@ -8,120 +8,303 @@
 @using Asoagro.Services
 @inject IAsociadoService AsociadoService
 @inject ISeguimientoAsociadoService SeguimientoService
+@inject NotificacionService Notificaciones
 @inject AuthenticationStateProvider AuthProvider
+@implements IDisposable
 
-<PageTitle>Seguimiento de asociados · Asoagro</PageTitle>
+<PageTitle>Seguimiento de asociados · ASOAGRO</PageTitle>
 
 <main class="sa">
     <section class="sa-hero">
         <div class="sa-hero-copy">
             <div class="sa-eyebrows">
-                <span class="sa-eyebrow"><svg class="sa-icon"><use href="#ico-brote" /></svg>FAAUA · Gestión administrativa</span>
-                <span class="sa-eyebrow sa-eyebrow-light">Panel de la directora</span>
+                <span class="sa-eyebrow">
+                    <svg class="sa-icon" width="15" height="15" viewBox="0 0 24 24"><use href="#ico-usuario" /></svg>
+                    FAAUA · Seguimiento asociativo
+                </span>
+                <span class="sa-eyebrow sa-eyebrow-light">@(esSoloConsulta ? "Consulta Directiva · Presidencia" : "Panel de la directora")</span>
             </div>
-            <h1>Seguimiento de asociados</h1>
-            <p>Registra llamadas, visitas y acuerdos. Consulta el historial y programa el siguiente contacto para que cada gestión tenga continuidad.</p>
+            <h1>Seguimiento de asociados y encuentros</h1>
+            <p>Consulta a las personas asociadas, revisa sus reuniones próximas y anteriores, verifica el estado de atención de cada integrante y revisa notas o acuerdos de cada encuentro.</p>
         </div>
-        <div class="sa-hero-summary">
-            <span>Asociados en el padrón</span>
-            <strong>@asociados.Count</strong>
-            <small>Productores disponibles para seguimiento</small>
+        <div class="sa-hero-aside">
+            <div class="sa-hero-summary">
+                <span>Personas asociadas</span>
+                <strong>@asociados.Count</strong>
+                <small>@seguimientos.Count encuentro(s) en el historial</small>
+            </div>
+            @if (!esSoloConsulta)
+            {
+                <button type="button" class="sa-hero-cta" @onclick="AbrirFormularioGeneral">
+                    <svg class="sa-icon" width="18" height="18" viewBox="0 0 24 24"><use href="#ico-usuario-mas" /></svg>
+                    <span>Registrar encuentro</span>
+                </button>
+            }
+            else
+            {
+                <span class="badge bg-light text-muted border px-3 py-2 rounded-pill small" title="Presidencia tiene acceso de consulta y supervisión directiva">
+                    <i class="bi bi-eye me-1"></i> Modo Consulta Directiva
+                </span>
+            }
         </div>
     </section>
 
     @if (!AsociadoService.UsaAlmacenamientoPermanente || !SeguimientoService.UsaAlmacenamientoPermanente)
     {
         <div class="sa-storage-note" role="status">
-            <svg class="sa-icon"><use href="#ico-alerta" /></svg>
-            <span><strong>Modo de desarrollo:</strong> los datos están en memoria y se perderán al reiniciar. Configura la conexión a Supabase para guardar el padrón y el historial de forma permanente.</span>
+            <svg class="sa-icon" width="19" height="19" viewBox="0 0 24 24"><use href="#ico-alerta" /></svg>
+            <span><strong>Modo de desarrollo:</strong> los datos están en memoria durante esta sesión. Configura la conexión a Supabase para conservar los encuentros permanentemente.</span>
         </div>
     }
 
     @if (!string.IsNullOrWhiteSpace(mensajeExito))
     {
         <div class="sa-alert sa-alert-success" role="status" aria-live="polite">
-            <svg class="sa-icon"><use href="#ico-check" /></svg>
+            <svg class="sa-icon" width="19" height="19" viewBox="0 0 24 24"><use href="#ico-check" /></svg>
             <span>@mensajeExito</span>
             <button type="button" class="sa-alert-close" @onclick="() => mensajeExito = string.Empty" aria-label="Cerrar aviso">&times;</button>
         </div>
     }
 
-    <section class="sa-metrics" aria-label="Resumen del seguimiento">
-        <article class="sa-metric">
-            <span class="sa-metric-icon sa-icon-green"><svg class="sa-icon"><use href="#ico-usuario" /></svg></span>
-            <div><small>Asociados</small><strong>@asociados.Count</strong><span>En el padrón completo</span></div>
-        </article>
-        <article class="sa-metric">
-            <span class="sa-metric-icon sa-icon-amber"><svg class="sa-icon"><use href="#ico-doc" /></svg></span>
-            <div><small>Próximos contactos</small><strong>@ContarConProximaGestion</strong><span>Programados para hoy o después</span></div>
-        </article>
-        <article class="sa-metric">
-            <span class="sa-metric-icon sa-icon-red"><svg class="sa-icon"><use href="#ico-alerta" /></svg></span>
-            <div><small>Contactos vencidos</small><strong>@ContarVencidos</strong><span>Requieren una nueva gestión</span></div>
-        </article>
-        <article class="sa-metric">
-            <span class="sa-metric-icon sa-icon-slate"><svg class="sa-icon"><use href="#ico-lista" /></svg></span>
-            <div><small>Sin seguimiento</small><strong>@ContarSinSeguimiento</strong><span>Aún no tienen gestiones registradas</span></div>
-        </article>
+    <!-- Resumen operativo interactivo -->
+    <section class="sa-metrics" aria-label="Resumen del seguimiento de asociados">
+        <button type="button" class="sa-metric @(filtroEstado == "Todos" ? "sa-metric-active" : "")" @onclick='() => SeleccionarFiltroEstado("Todos")'>
+            <span class="sa-metric-icon sa-icon-green">
+                <svg class="sa-icon" width="20" height="20" viewBox="0 0 24 24"><use href="#ico-usuario" /></svg>
+            </span>
+            <div>
+                <small>Personas asociadas</small>
+                <strong>@asociados.Count</strong>
+                <span>Padrón general activo</span>
+            </div>
+        </button>
+
+        <button type="button" class="sa-metric @(filtroEstado == "Contacto programado" ? "sa-metric-active" : "")" @onclick='() => SeleccionarFiltroEstado("Contacto programado")'>
+            <span class="sa-metric-icon sa-icon-amber">
+                <svg class="sa-icon" width="20" height="20" viewBox="0 0 24 24"><use href="#ico-doc" /></svg>
+            </span>
+            <div>
+                <small>Reuniones próximas</small>
+                <strong>@ContarConProximaGestion</strong>
+                <span>Programadas para hoy o después</span>
+            </div>
+        </button>
+
+        <button type="button" class="sa-metric @(filtroEstado == "Contacto vencido" ? "sa-metric-active" : "")" @onclick='() => SeleccionarFiltroEstado("Contacto vencido")'>
+            <span class="sa-metric-icon sa-icon-red">
+                <svg class="sa-icon" width="20" height="20" viewBox="0 0 24 24"><use href="#ico-alerta" /></svg>
+            </span>
+            <div>
+                <small>Encuentros vencidos</small>
+                <strong>@ContarVencidos</strong>
+                <span>Fecha programada ya cumplida</span>
+            </div>
+        </button>
+
+        <button type="button" class="sa-metric @(filtroEstado == "Sin seguimiento" ? "sa-metric-active" : "")" @onclick='() => SeleccionarFiltroEstado("Sin seguimiento")'>
+            <span class="sa-metric-icon sa-icon-slate">
+                <svg class="sa-icon" width="20" height="20" viewBox="0 0 24 24"><use href="#ico-lista" /></svg>
+            </span>
+            <div>
+                <small>Sin encuentros</small>
+                <strong>@ContarSinSeguimiento</strong>
+                <span>Pendientes de primer contacto</span>
+            </div>
+        </button>
     </section>
 
-    <section class="sa-analytics" aria-label="Gráficos de seguimiento">
-        <article class="sa-chart-card">
-            <header class="sa-chart-header">
+    <!-- Agenda de reuniones próximas / anteriores y panorama de atención -->
+    <section class="sa-overview-grid" aria-label="Agenda de encuentros y estado de atención">
+        <!-- Columna izquierda: Reuniones próximas y encuentros anteriores -->
+        <article class="sa-panel-card">
+            <header class="sa-panel-header">
                 <div>
-                    <span class="sa-section-kicker">Panorama del padrón</span>
-                    <h2>Estado del seguimiento</h2>
+                    <span class="sa-section-kicker">Agenda de la asociación</span>
+                    <h2>Encuentros programados y realizados</h2>
                 </div>
-                <span class="sa-chart-total">@asociados.Count asociados</span>
+                <div class="sa-tabs" role="tablist" aria-label="Vistas de encuentros">
+                    <button type="button"
+                            role="tab"
+                            aria-selected="@(vistaAgenda == "proximos")"
+                            class="sa-tab @(vistaAgenda == "proximos" ? "activo" : "")"
+                            @onclick='() => vistaAgenda = "proximos"'>
+                        Próximas reuniones (@EncuentrosAgendaProximos.Count)
+                    </button>
+                    <button type="button"
+                            role="tab"
+                            aria-selected="@(vistaAgenda == "anteriores")"
+                            class="sa-tab @(vistaAgenda == "anteriores" ? "activo" : "")"
+                            @onclick='() => vistaAgenda = "anteriores"'>
+                        Encuentros anteriores (@seguimientos.Count)
+                    </button>
+                </div>
             </header>
-            @if (asociados.Count == 0)
+
+            @if (vistaAgenda == "proximos")
             {
-                <p class="sa-chart-empty">Aún no hay asociados para mostrar.</p>
-            }
-            else
-            {
-                <div class="sa-state-chart">
-                    <div class="sa-donut" role="img" aria-label="@DescripcionGraficoEstados" style="@EstiloDonaEstados">
-                        <div class="sa-donut-center">
-                            <strong>@asociados.Count</strong>
-                            <span>asociados</span>
-                        </div>
-                    </div>
-                    <div class="sa-legend">
-                        @foreach (var dato in DistribucionEstados)
+                @if (EncuentrosAgendaProximos.Count == 0)
+                {
+                    <div class="sa-agenda-empty">
+                        <p>No hay reuniones programadas en este momento.</p>
+                        <small>Al registrar un encuentro con una persona asociada puedes definir la fecha de la próxima reunión.</small>
+                        @if (!esSoloConsulta)
                         {
-                            <div class="sa-legend-item">
-                                <span><i class="sa-chart-dot @dato.Clase" aria-hidden="true"></i>@dato.Etiqueta</span>
-                                <strong>@dato.Cantidad <small>@dato.Porcentaje%</small></strong>
-                            </div>
+                            <button type="button" class="sa-register-button" @onclick="AbrirFormularioGeneral">
+                                <svg class="sa-icon" width="16" height="16" viewBox="0 0 24 24"><use href="#ico-usuario-mas" /></svg>
+                                Programar encuentro
+                            </button>
                         }
                     </div>
-                </div>
-            }
-            <p class="sa-chart-footnote"><span class="sa-chart-footnote-mark"></span>Cada asociado se cuenta una sola vez, según su gestión más reciente.</p>
-        </article>
+                }
+                else
+                {
+                    <ul class="sa-agenda-list">
+                        @foreach (var item in EncuentrosAgendaProximos)
+                        {
+                            var fechaProg = item.Seguimiento.ProximaGestion!.Value;
+                            var vencido = fechaProg < Hoy;
+                            var esHoy = fechaProg == Hoy;
 
-        <article class="sa-chart-card">
-            <header class="sa-chart-header">
-                <div>
-                    <span class="sa-section-kicker">Actividad registrada</span>
-                    <h2>Gestiones por tipo</h2>
-                </div>
-                <span class="sa-chart-total">@seguimientos.Count gestiones</span>
-            </header>
-            @if (seguimientos.Count == 0)
-            {
-                <p class="sa-chart-empty">Cuando registres llamadas, visitas o asesorías, aquí verás el resumen.</p>
+                            <li class="sa-agenda-item @(vencido ? "sa-agenda-overdue" : esHoy ? "sa-agenda-today" : "")">
+                                <div class="sa-agenda-date-badge">
+                                    <small>@fechaProg.ToString("MMM", CulturaEspanol).ToUpperInvariant()</small>
+                                    <strong>@fechaProg.ToString("dd")</strong>
+                                    <span>@(!string.IsNullOrWhiteSpace(item.Seguimiento.HoraReunion) ? FormatearHora(item.Seguimiento.HoraReunion) : fechaProg.ToString("yyyy"))</span>
+                                </div>
+                                <div class="sa-agenda-body">
+                                    <div class="sa-agenda-top">
+                                        <strong>@item.Asociado.NombreCompleto</strong>
+                                        <span class="sa-status @(vencido ? "sa-status-overdue" : "sa-status-scheduled")">
+                                            @(vencido 
+                                                ? $"Reunión vencida ({fechaProg.ToString("dd/MM/yyyy")}{(!string.IsNullOrWhiteSpace(item.Seguimiento.HoraReunion) ? " · " + FormatearHora(item.Seguimiento.HoraReunion) : "")})" 
+                                                : esHoy 
+                                                    ? $"Programada para hoy{(!string.IsNullOrWhiteSpace(item.Seguimiento.HoraReunion) ? " a las " + FormatearHora(item.Seguimiento.HoraReunion) : "")}" 
+                                                    : $"Próxima · {fechaProg.ToString("dd/MM/yyyy")}{(!string.IsNullOrWhiteSpace(item.Seguimiento.HoraReunion) ? " a las " + FormatearHora(item.Seguimiento.HoraReunion) : "")}")
+                                        </span>
+                                    </div>
+                                    <span class="sa-agenda-sub">
+                                        CC @item.Asociado.Cedula · @(string.IsNullOrWhiteSpace(item.Asociado.Municipio) ? "Urabá" : item.Asociado.Municipio) · Último: @NombreTipoGestion(item.Seguimiento.TipoGestion)
+                                    </span>
+                                    <p class="sa-agenda-notes">@item.Seguimiento.Descripcion</p>
+                                </div>
+                                <div class="sa-agenda-actions">
+                                    <button type="button" class="sa-history-button" @onclick="() => IrAHistorialAsociado(item.Asociado.Id)">
+                                        Historial
+                                    </button>
+                                    @if (!esSoloConsulta)
+                                    {
+                                        <button type="button" class="sa-register-button" @onclick="() => AbrirFormulario(item.Asociado)">
+                                            Registrar
+                                        </button>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
             }
             else
             {
+                @if (seguimientos.Count == 0)
+                {
+                    <div class="sa-agenda-empty">
+                        <p>Aún no se han registrado encuentros con los asociados.</p>
+                        <small>Registra llamadas, reuniones o asesorías para consultar aquí la bitácora completa de encuentros.</small>
+                        @if (!esSoloConsulta)
+                        {
+                            <button type="button" class="sa-register-button" @onclick="AbrirFormularioGeneral">
+                                <svg class="sa-icon" width="16" height="16" viewBox="0 0 24 24"><use href="#ico-usuario-mas" /></svg>
+                                Registrar primer encuentro
+                            </button>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <ul class="sa-agenda-list">
+                        @foreach (var seg in seguimientos.Take(10))
+                        {
+                            var asoc = ObtenerAsociadoPorId(seg.AsociadoId);
+                            var nombreAsoc = asoc?.NombreCompleto ?? seg.Asociado?.NombreCompleto ?? $"Asociado #{seg.AsociadoId}";
+                            var cedulaAsoc = asoc?.Cedula ?? seg.Asociado?.Cedula ?? "S/D";
+
+                            <li class="sa-agenda-item">
+                                <div class="sa-agenda-date-badge sa-agenda-date-past">
+                                    <small>@seg.FechaGestion.ToLocalTime().ToString("MMM", CulturaEspanol).ToUpperInvariant()</small>
+                                    <strong>@seg.FechaGestion.ToLocalTime().ToString("dd")</strong>
+                                    <span>@(!string.IsNullOrWhiteSpace(seg.HoraReunion) ? FormatearHora(seg.HoraReunion) : seg.FechaGestion.ToLocalTime().ToString("yyyy"))</span>
+                                </div>
+                                <div class="sa-agenda-body">
+                                    <div class="sa-agenda-top">
+                                        <strong>@nombreAsoc</strong>
+                                        <span class="sa-status sa-status-done">@NombreTipoGestion(seg.TipoGestion)</span>
+                                    </div>
+                                    <span class="sa-agenda-sub">
+                                        CC @cedulaAsoc · Registrado el @seg.FechaGestion.ToLocalTime().ToString("dd/MM/yyyy") por @seg.GestionadoPor
+                                        @if (seg.ProximaGestion.HasValue)
+                                        {
+                                            <text> · Próxima reunión: @seg.ProximaGestion.Value.ToString("dd/MM/yyyy")@(!string.IsNullOrWhiteSpace(seg.HoraReunion) ? $" a las {FormatearHora(seg.HoraReunion)}" : "")</text>
+                                        }
+                                    </span>
+                                    <p class="sa-agenda-notes">@seg.Descripcion</p>
+                                </div>
+                                @if (asoc is not null && !esSoloConsulta)
+                                {
+                                    <div class="sa-agenda-actions">
+                                        <button type="button" class="sa-register-button" @onclick="() => AbrirFormulario(asoc)">
+                                            Nuevo encuentro
+                                        </button>
+                                    </div>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+            }
+        </article>
+
+        <!-- Columna derecha: Resumen de cobertura y modalidades de encuentro -->
+        <article class="sa-panel-card">
+            <header class="sa-panel-header">
+                <div>
+                    <span class="sa-section-kicker">Cobertura asociativa</span>
+                    <h2>Estado de atención y tipos de encuentro</h2>
+                </div>
+                <span class="sa-chart-total">@asociados.Count integrantes</span>
+            </header>
+
+            <div class="sa-summary-section">
+                <h3 class="sa-summary-subtitle">Estado actual por persona asociada</h3>
+                <div class="sa-chart-rows">
+                    @foreach (var dato in DistribucionEstados)
+                    {
+                        <div class="sa-chart-row">
+                            <div class="sa-chart-label">
+                                <span><i class="sa-chart-dot @dato.Clase" aria-hidden="true"></i>@dato.Etiqueta</span>
+                                <strong>@dato.Cantidad <small>(@dato.Porcentaje%)</small></strong>
+                            </div>
+                            <div class="sa-chart-track" role="progressbar" aria-label="@dato.Etiqueta" aria-valuemin="0" aria-valuemax="100" aria-valuenow="@dato.Porcentaje">
+                                <span class="@dato.Clase" style="width: @($"{dato.Porcentaje}%")"></span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="sa-summary-divider"></div>
+
+            <div class="sa-summary-section">
+                <div class="sa-summary-head-inline">
+                    <h3 class="sa-summary-subtitle">Encuentros registrados por modalidad</h3>
+                    <small>@seguimientos.Count total</small>
+                </div>
                 <div class="sa-chart-rows">
                     @foreach (var dato in DistribucionGestiones)
                     {
                         <div class="sa-chart-row">
                             <div class="sa-chart-label">
                                 <span><i class="sa-chart-dot @dato.Clase" aria-hidden="true"></i>@dato.Etiqueta</span>
-                                <strong>@dato.Cantidad <small>@dato.Porcentaje%</small></strong>
+                                <strong>@dato.Cantidad <small>(@dato.Porcentaje%)</small></strong>
                             </div>
                             <div class="sa-chart-track" role="progressbar" aria-label="@dato.Etiqueta" aria-valuemin="0" aria-valuemax="@MaximoGestiones" aria-valuenow="@dato.Cantidad">
                                 <span class="@dato.Clase" style="width: @($"{dato.Ancho}%")"></span>
@@ -129,38 +312,47 @@
                         </div>
                     }
                 </div>
-            }
-            <p class="sa-chart-footnote"><span class="sa-chart-footnote-mark"></span>Proporción frente al total de gestiones guardadas en el historial.</p>
+            </div>
         </article>
     </section>
 
-    <section class="sa-workspace">
+    <!-- Directorio individual de personas asociadas y sus encuentros -->
+    <section class="sa-workspace" aria-label="Directorio de seguimiento por asociado">
         <header class="sa-section-heading">
             <div>
-                <span class="sa-section-kicker">Gestión individual</span>
-                <h2>Productores y próximas acciones</h2>
-                <p>El estado se calcula con la fecha de la próxima gestión registrada.</p>
+                <span class="sa-section-kicker">Seguimiento por integrante</span>
+                <h2>Personas asociadas y bitácora de encuentros</h2>
+                <p>Selecciona un asociado para revisar sus reuniones anteriores, verificar su próxima fecha acordada o registrar un nuevo encuentro.</p>
             </div>
-            <span class="sa-total">@AsociadosFiltrados.Count() asociado(s)</span>
+            <div class="sa-heading-actions">
+                <span class="sa-total">@AsociadosFiltrados.Count() de @asociados.Count asociado(s)</span>
+                <button type="button" class="sa-register-button" @onclick="AbrirFormularioGeneral">
+                    <svg class="sa-icon" width="16" height="16" viewBox="0 0 24 24"><use href="#ico-usuario-mas" /></svg>
+                    Registrar encuentro
+                </button>
+            </div>
         </header>
 
         <div class="sa-filters">
             <div class="sa-search">
-                <svg class="sa-icon"><use href="#ico-lista" /></svg>
-                <input aria-label="Buscar asociado" placeholder="Buscar por nombre, cédula, predio o municipio" @bind="textoBusqueda" @bind:event="oninput" />
+                <svg class="sa-icon" width="17" height="17" viewBox="0 0 24 24"><use href="#ico-lista" /></svg>
+                <input aria-label="Buscar persona asociada"
+                       placeholder="Buscar por nombre, cédula, teléfono, correo o municipio..."
+                       @bind="textoBusqueda"
+                       @bind:event="oninput" />
                 @if (!string.IsNullOrWhiteSpace(textoBusqueda))
                 {
                     <button type="button" @onclick="() => textoBusqueda = string.Empty" aria-label="Limpiar búsqueda">&times;</button>
                 }
             </div>
             <label class="sa-filter-select">
-                <span>Estado del seguimiento</span>
+                <span>Filtrar por estado de seguimiento</span>
                 <select @bind="filtroEstado" aria-label="Filtrar por estado del seguimiento">
-                    <option value="Todos">Todos los estados</option>
-                    <option value="Contacto vencido">Contacto vencido</option>
-                    <option value="Contacto programado">Contacto programado</option>
-                    <option value="Sin seguimiento">Sin seguimiento</option>
-                    <option value="Gestión registrada sin próxima fecha">Gestión registrada, sin próxima fecha</option>
+                    <option value="Todos">Todos los estados (@asociados.Count)</option>
+                    <option value="Contacto vencido">Encuentro vencido (@ContarVencidos)</option>
+                    <option value="Contacto programado">Reunión próxima programada (@ContarConProximaGestion)</option>
+                    <option value="Sin seguimiento">Sin seguimiento (@ContarSinSeguimiento)</option>
+                    <option value="Gestión registrada sin próxima fecha">Atendido sin próxima fecha (@ContarAtendidosSinFecha)</option>
                 </select>
             </label>
         </div>
@@ -172,81 +364,120 @@
                 {
                     var ultimo = UltimoSeguimiento(asociado.Id);
                     var estado = EstadoSeguimiento(ultimo);
-                    <article class="sa-card">
+                    var totalEncuentros = CantidadSeguimientos(asociado.Id);
+
+                    <article class="sa-card" id="asociado-@asociado.Id">
                         <div class="sa-card-main">
+                            <!-- Datos de la persona asociada -->
                             <div class="sa-person">
                                 <span class="sa-avatar">@ObtenerIniciales(asociado.NombreCompleto)</span>
                                 <div class="sa-person-copy">
                                     <h3>@asociado.NombreCompleto</h3>
                                     <span>CC @asociado.Cedula</span>
                                     <div class="sa-tags">
-                                        <span class="sa-tag">@asociado.Municipio</span>
-                                        <span class="sa-tag">@NombreCultivo(asociado.CultivoPrincipal)</span>
-                                        <span class="sa-tag @(asociado.TieneBPA ? "sa-tag-ok" : "sa-tag-muted")">@(asociado.TieneBPA ? "BPA vigente" : "Sin BPA registrada")</span>
+                                        @if (!string.IsNullOrWhiteSpace(asociado.Municipio))
+                                        {
+                                            <span class="sa-tag">@asociado.Municipio</span>
+                                        }
+                                        <span class="sa-tag sa-tag-ok">Asociado activo</span>
+                                        <span class="sa-tag">@totalEncuentros encuentro(s)</span>
+                                        @if (asociado.ValorTotalPagadoAcumulado > 0)
+                                        {
+                                            <span class="sa-tag sa-tag-money" title="Aportes registrados en pesos colombianos">
+                                                Aportes: @FormatearMonedaCop(asociado.ValorTotalPagadoAcumulado)
+                                            </span>
+                                        }
+                                        @if (asociado.ValorTotalPendienteAcumulado > 0)
+                                        {
+                                            <span class="sa-tag sa-tag-warning" title="Valor pendiente en pesos colombianos">
+                                                Pendiente: @FormatearMonedaCop(asociado.ValorTotalPendienteAcumulado)
+                                            </span>
+                                        }
                                     </div>
                                 </div>
                             </div>
 
+                            <!-- Datos de contacto directo -->
                             <div class="sa-contact">
-                                <span class="sa-info-label">Contacto</span>
+                                <span class="sa-info-label">Canales de contacto</span>
                                 <strong>@(string.IsNullOrWhiteSpace(asociado.Telefono) ? "Teléfono sin registrar" : asociado.Telefono)</strong>
-                                <span>@(string.IsNullOrWhiteSpace(asociado.Correo) ? "Sin correo registrado" : asociado.Correo)</span>
+                                <span>@(string.IsNullOrWhiteSpace(asociado.Correo) ? "Sin correo electrónico" : asociado.Correo)</span>
                             </div>
 
+                            <!-- Estado del seguimiento y fechas -->
                             <div class="sa-followup">
-                                <span class="sa-info-label">Estado del seguimiento</span>
-                                <span class="sa-status @ClaseEstado(estado)">@estado</span>
+                                <span class="sa-info-label">Estado y próxima reunión</span>
+                                <span class="sa-status @ClaseEstado(estado)">@EtiquetaEstadoLegible(estado)</span>
                                 @if (ultimo is not null)
                                 {
-                                    <span class="sa-followup-detail">Última gestión: @NombreTipoGestion(ultimo.TipoGestion) · @ultimo.FechaGestion.ToLocalTime().ToString("dd MMM yyyy", CulturaEspanol)</span>
+                                    <span class="sa-followup-detail">
+                                        Último encuentro: <strong>@NombreTipoGestion(ultimo.TipoGestion)</strong> (@ultimo.FechaGestion.ToLocalTime().ToString("dd MMM yyyy", CulturaEspanol))
+                                    </span>
                                     @if (ultimo.ProximaGestion.HasValue)
                                     {
                                         <strong class="@(ultimo.ProximaGestion.Value < Hoy ? "sa-overdue" : "sa-next-date")">
-                                            Próximo contacto: @ultimo.ProximaGestion.Value.ToString("dd MMM yyyy", CulturaEspanol)
+                                            Próxima reunión: @ultimo.ProximaGestion.Value.ToString("dd MMM yyyy", CulturaEspanol)@(!string.IsNullOrWhiteSpace(ultimo.HoraReunion) ? $" a las {FormatearHora(ultimo.HoraReunion)}" : "")
                                         </strong>
                                     }
-                                    <span class="sa-followup-detail">Registró: @ultimo.GestionadoPor</span>
+                                    <span class="sa-followup-detail">Acuerdo / nota: @ultimo.Descripcion</span>
                                 }
                                 else
                                 {
-                                    <span class="sa-followup-detail">Todavía no se ha registrado ninguna gestión.</span>
+                                    <span class="sa-followup-detail">Aún no tiene encuentros ni reuniones registradas con la asociación.</span>
                                 }
                             </div>
                         </div>
 
                         <footer class="sa-card-actions">
-                            <button type="button" class="sa-history-button" @onclick="() => AlternarHistorial(asociado.Id)" aria-expanded="@(historialAbierto == asociado.Id)">
-                                <svg class="sa-icon"><use href="#ico-lista" /></svg>
-                                @(historialAbierto == asociado.Id ? "Ocultar historial" : $"Ver historial ({CantidadSeguimientos(asociado.Id)})")
+                            <button type="button"
+                                    class="sa-history-button"
+                                    @onclick="() => AlternarHistorial(asociado.Id)"
+                                    aria-expanded="@(historialAbierto == asociado.Id)">
+                                <svg class="sa-icon" width="16" height="16" viewBox="0 0 24 24"><use href="#ico-lista" /></svg>
+                                @(historialAbierto == asociado.Id ? "Ocultar encuentros anteriores" : $"Ver encuentros ({totalEncuentros})")
                             </button>
-                            <button type="button" class="sa-register-button" @onclick="() => AbrirFormulario(asociado)">
-                                <svg class="sa-icon"><use href="#ico-usuario-mas" /></svg>
-                                Registrar gestión
-                            </button>
+                            @if (!esSoloConsulta)
+                            {
+                                <button type="button"
+                                        class="sa-register-button"
+                                        @onclick="() => AbrirFormulario(asociado)">
+                                    <svg class="sa-icon" width="16" height="16" viewBox="0 0 24 24"><use href="#ico-usuario-mas" /></svg>
+                                    Registrar encuentro
+                                </button>
+                            }
                         </footer>
 
                         @if (historialAbierto == asociado.Id)
                         {
                             <div class="sa-history">
-                                <h4>Historial de gestiones de @asociado.NombreCompleto</h4>
-                                @if (CantidadSeguimientos(asociado.Id) == 0)
+                                <div class="sa-history-head">
+                                    <h4>Historial de encuentros con @asociado.NombreCompleto</h4>
+                                    <span>@totalEncuentros registro(s)</span>
+                                </div>
+                                @if (totalEncuentros == 0)
                                 {
-                                    <p class="sa-history-empty">No hay gestiones anteriores. Usa “Registrar gestión” para dejar la primera nota.</p>
+                                    <p class="sa-history-empty">No hay encuentros anteriores registrados para esta persona. Haz clic en «Registrar encuentro» para guardar la primera reunión o contacto.</p>
                                 }
                                 else
                                 {
-                                    <ol>
+                                    <ol class="sa-history-list">
                                         @foreach (var gestion in Historial(asociado.Id))
                                         {
                                             <li>
-                                                <span class="sa-history-date">@gestion.FechaGestion.ToLocalTime().ToString("dd MMM yyyy · HH:mm", CulturaEspanol)</span>
-                                                <strong>@NombreTipoGestion(gestion.TipoGestion)</strong>
+                                                <div class="sa-history-item-top">
+                                                    <strong>@NombreTipoGestion(gestion.TipoGestion)</strong>
+                                                    <span class="sa-history-date">Registrado el @gestion.FechaGestion.ToLocalTime().ToString("dd MMM yyyy", CulturaEspanol)</span>
+                                                </div>
                                                 <p>@gestion.Descripcion</p>
-                                                <small>Registró: @gestion.GestionadoPor</small>
-                                                @if (gestion.ProximaGestion.HasValue)
-                                                {
-                                                    <small>Próximo contacto acordado: @gestion.ProximaGestion.Value.ToString("dd MMM yyyy", CulturaEspanol)</small>
-                                                }
+                                                <div class="sa-history-meta">
+                                                    <small>Registrado por: <strong>@gestion.GestionadoPor</strong></small>
+                                                    @if (gestion.ProximaGestion.HasValue)
+                                                    {
+                                                        <small class="sa-history-next">
+                                                            Próxima reunión acordada: <strong>@gestion.ProximaGestion.Value.ToString("dd MMM yyyy", CulturaEspanol)@(!string.IsNullOrWhiteSpace(gestion.HoraReunion) ? $" a las {FormatearHora(gestion.HoraReunion)}" : "")</strong>
+                                                        </small>
+                                                    }
+                                                </div>
                                             </li>
                                         }
                                     </ol>
@@ -260,27 +491,43 @@
         else
         {
             <div class="sa-empty">
-                <span class="sa-empty-icon"><svg class="sa-icon"><use href="#ico-lista" /></svg></span>
-                <h3>@(asociados.Count == 0 ? "Aún no hay asociados registrados" : "No hay resultados con esos filtros")</h3>
-                <p>@(asociados.Count == 0 ? "Cuando registres productores, aparecerán aquí para iniciar su seguimiento." : "Prueba con otro nombre, cédula o estado del seguimiento.")</p>
+                <span class="sa-empty-icon">
+                    <svg class="sa-icon" width="24" height="24" viewBox="0 0 24 24"><use href="#ico-lista" /></svg>
+                </span>
+                <h3>@(asociados.Count == 0 ? "Aún no hay personas asociadas registradas" : "No se encontraron asociados con esos criterios")</h3>
+                <p>@(asociados.Count == 0 ? "Cuando registres asociados en el padrón, aparecerán aquí para organizar sus encuentros de seguimiento." : "Prueba ajustando el texto de búsqueda o mostrando todos los estados de seguimiento.")</p>
                 @if (asociados.Count == 0)
                 {
-                    <a href="registrar-asociado" class="sa-empty-link">Registrar un asociado</a>
+                    <a href="registrar-asociado" class="sa-empty-link">Ir a registrar asociado</a>
+                }
+                else
+                {
+                    <button type="button" class="sa-history-button" style="margin-top: .85rem;" @onclick="LimpiarFiltros">
+                        Mostrar todos los asociados
+                    </button>
                 }
             </div>
         }
     </section>
 </main>
 
-@if (asociadoEnFormulario is not null)
+<!-- Modal para registrar un encuentro o acuerdo de seguimiento -->
+@if (mostrarModalFormulario)
 {
     <div class="sa-modal-backdrop" @onclick="CerrarFormulario">
         <section class="sa-modal" role="dialog" aria-modal="true" aria-labelledby="sa-modal-title" @onclick:stopPropagation="true">
             <header class="sa-modal-header">
                 <div>
-                    <span class="sa-section-kicker">Nueva nota de seguimiento</span>
-                    <h2 id="sa-modal-title">Registrar gestión</h2>
-                    <p>@asociadoEnFormulario.NombreCompleto · CC @asociadoEnFormulario.Cedula</p>
+                    <span class="sa-section-kicker">Registro de encuentro asociativo</span>
+                    <h2 id="sa-modal-title">Registrar encuentro de seguimiento</h2>
+                    @if (asociadoEnFormulario is not null)
+                    {
+                        <p>@asociadoEnFormulario.NombreCompleto · CC @asociadoEnFormulario.Cedula</p>
+                    }
+                    else
+                    {
+                        <p>Selecciona la persona asociada y registra los acuerdos de la reunión o contacto.</p>
+                    }
                 </div>
                 <button type="button" class="sa-modal-close" @onclick="CerrarFormulario" aria-label="Cerrar formulario">&times;</button>
             </header>
@@ -293,30 +540,63 @@
             <EditForm Model="formulario" OnValidSubmit="GuardarSeguimiento">
                 <DataAnnotationsValidator />
                 <ValidationSummary class="sa-validation-summary" />
+
                 <div class="sa-form-grid">
-                    <label class="sa-field">
-                        <span>Tipo de gestión <b>*</b></span>
+                    <label class="sa-field sa-field-full">
+                        <span>Persona asociada <b>*</b></span>
+                        <select value="@(asociadoEnFormulario?.Id.ToString() ?? string.Empty)"
+                                @onchange="CambiarAsociadoFormulario"
+                                aria-label="Seleccionar persona asociada">
+                            <option value="">-- Selecciona un asociado del padrón --</option>
+                            @foreach (var asoc in asociados)
+                            {
+                                <option value="@asoc.Id">@asoc.NombreCompleto · CC @asoc.Cedula (@(string.IsNullOrWhiteSpace(asoc.Municipio) ? "Urabá" : asoc.Municipio))</option>
+                            }
+                        </select>
+                    </label>
+
+                    <label class="sa-field sa-field-full">
+                        <span>Modalidad del encuentro <b>*</b></span>
                         <InputSelect @bind-Value="formulario.TipoGestion">
-                            <option value="">Selecciona el tipo de contacto</option>
+                            <option value="">Selecciona el tipo de encuentro</option>
                             <option value="Llamada">Llamada telefónica</option>
-                            <option value="Visita">Visita al predio</option>
+                            <option value="Visita">Reunión o visita presencial</option>
                             <option value="Asesoria">Asesoría o acompañamiento</option>
-                            <option value="Documentos">Revisión de documentos</option>
-                            <option value="Otro">Otro contacto</option>
+                            <option value="Documentos">Revisión de documentación</option>
+                            <option value="Otro">Otro encuentro asociativo</option>
                         </InputSelect>
                         <ValidationMessage For="@(() => formulario.TipoGestion)" />
                     </label>
+
                     <label class="sa-field">
-                        <span>Próxima fecha de contacto <small>(opcional)</small></span>
+                        <span>Fecha de la reunión <b>*</b></span>
                         <InputDate @bind-Value="formulario.ProximaGestion" />
-                        <small class="sa-field-hint">Si acuerdan volver a comunicarse, selecciona una fecha futura o de hoy.</small>
+                        <ValidationMessage For="@(() => formulario.ProximaGestion)" />
+                        <small class="sa-field-hint">Día acordado para el encuentro (hoy o fecha futura).</small>
                     </label>
+
+                    <label class="sa-field">
+                        <span>Hora de la reunión <b>*</b></span>
+                        <InputSelect @bind-Value="formulario.HoraReunion" aria-label="Hora de la reunión">
+                            <option value="">-- Selecciona hora (8:00 a. m. a 5:00 p. m.) --</option>
+                            @foreach (var horario in HorariosDisponibles)
+                            {
+                                <option value="@horario.Valor">@horario.Etiqueta</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="@(() => formulario.HoraReunion)" />
+                        <small class="sa-field-hint">Horarios permitidos únicamente entre 8:00 a. m. y 5:00 p. m.</small>
+                    </label>
+
                     <label class="sa-field sa-field-full">
-                        <span>Resumen y acuerdos <b>*</b></span>
-                        <InputTextArea @bind-Value="formulario.Descripcion" rows="5" placeholder="Escribe qué se habló, qué necesita el asociado y qué quedó acordado (mínimo 10 caracteres)." />
+                        <span>Notas y acuerdos del encuentro <b>*</b></span>
+                        <InputTextArea @bind-Value="formulario.Descripcion"
+                                       rows="5"
+                                       placeholder="Describe los temas tratados con la persona asociada, sus solicitudes y los compromisos o acuerdos establecidos (mínimo 10 caracteres)." />
                         <ValidationMessage For="@(() => formulario.Descripcion)" />
                     </label>
                 </div>
+
                 <footer class="sa-modal-actions">
                     <button type="button" class="sa-cancel-button" @onclick="CerrarFormulario">Cancelar</button>
                     <button type="submit" class="sa-register-button sa-modal-save-button" disabled="@guardando">
@@ -326,8 +606,8 @@
                         }
                         else
                         {
-                            <svg class="sa-icon"><use href="#ico-check" /></svg>
-                            <span>Guardar gestión</span>
+                            <svg class="sa-icon" width="16" height="16" viewBox="0 0 24 24"><use href="#ico-check" /></svg>
+                            <span>Guardar encuentro</span>
                         }
                     </button>
                 </footer>
@@ -337,16 +617,23 @@
 }
 
 @code {
+    [SupplyParameterFromQuery(Name = "q")]
+    public string? BusquedaUrl { get; set; }
+
     private static readonly System.Globalization.CultureInfo CulturaEspanol =
         System.Globalization.CultureInfo.GetCultureInfo("es-CO");
 
     private List<AsociadoModel> asociados = new();
     private List<SeguimientoAsociado> seguimientos = new();
     private Dictionary<int, SeguimientoAsociado> ultimosSeguimientos = new();
+
     private string textoBusqueda = string.Empty;
     private string filtroEstado = "Todos";
+    private string vistaAgenda = "proximos";
     private string mensajeExito = string.Empty;
     private string mensajeError = string.Empty;
+
+    private bool mostrarModalFormulario;
     private AsociadoModel? asociadoEnFormulario;
     private FormularioSeguimiento formulario = new();
     private int? historialAbierto;
@@ -359,11 +646,21 @@
                 (string.IsNullOrWhiteSpace(textoBusqueda)
                  || asociado.NombreCompleto.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
                  || asociado.Cedula.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
-                 || asociado.NombrePredio.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
-                 || asociado.Municipio.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+                 || (!string.IsNullOrWhiteSpace(asociado.Telefono) && asociado.Telefono.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+                 || (!string.IsNullOrWhiteSpace(asociado.Correo) && asociado.Correo.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
+                 || (!string.IsNullOrWhiteSpace(asociado.Municipio) && asociado.Municipio.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
                 && (filtroEstado == "Todos" || EstadoSeguimiento(UltimoSeguimiento(asociado.Id)) == filtroEstado))
             .OrderBy(asociado => PrioridadEstado(EstadoSeguimiento(UltimoSeguimiento(asociado.Id))))
             .ThenBy(asociado => asociado.NombreCompleto);
+
+    private IReadOnlyList<ItemAgendaEncuentro> EncuentrosAgendaProximos =>
+        asociados
+            .Select(a => (Asociado: a, Ultimo: UltimoSeguimiento(a.Id)))
+            .Where(x => x.Ultimo?.ProximaGestion is not null)
+            .Select(x => new ItemAgendaEncuentro(x.Asociado, x.Ultimo!))
+            .OrderBy(x => x.Seguimiento.ProximaGestion!.Value)
+            .ThenBy(x => x.Asociado.NombreCompleto)
+            .ToList();
 
     private int ContarConProximaGestion => asociados.Count(asociado =>
         UltimoSeguimiento(asociado.Id)?.ProximaGestion is DateOnly proxima && proxima >= Hoy);
@@ -373,68 +670,71 @@
 
     private int ContarSinSeguimiento => asociados.Count(asociado => UltimoSeguimiento(asociado.Id) is null);
 
-    private string DescripcionGraficoEstados => string.Join(", ",
-        DistribucionEstados.Select(dato => $"{dato.Etiqueta}: {dato.Cantidad} ({dato.Porcentaje}%)"));
-
-    private string EstiloDonaEstados
-    {
-        get
-        {
-            if (asociados.Count == 0)
-            {
-                return "background: #e9efe5;";
-            }
-
-            var inicio = 0d;
-            var segmentos = new List<string>();
-            foreach (var dato in DistribucionEstados)
-            {
-                var fin = inicio + (double)dato.Cantidad / asociados.Count * 100;
-                segmentos.Add($"{ColorGrafico(dato.Clase)} {inicio.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}% {fin.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}%");
-                inicio = fin;
-            }
-
-            return $"background: conic-gradient({string.Join(", ", segmentos)});";
-        }
-    }
+    private int ContarAtendidosSinFecha => asociados.Count(asociado =>
+        EstadoSeguimiento(UltimoSeguimiento(asociado.Id)) == "Gestión registrada sin próxima fecha");
 
     private IReadOnlyList<DatoGrafico> DistribucionEstados =>
     [
-        CrearDatoGrafico("Contacto programado", asociados.Count(asociado => EstadoSeguimiento(UltimoSeguimiento(asociado.Id)) == "Contacto programado"), asociados.Count, "sa-chart-gold"),
-        CrearDatoGrafico("Contacto vencido", ContarVencidos, asociados.Count, "sa-chart-red"),
-        CrearDatoGrafico("Sin seguimiento", ContarSinSeguimiento, asociados.Count, "sa-chart-gray"),
-        CrearDatoGrafico("Sin próxima fecha", asociados.Count(asociado => EstadoSeguimiento(UltimoSeguimiento(asociado.Id)) == "Gestión registrada sin próxima fecha"), asociados.Count, "sa-chart-green")
+        CrearDatoGrafico("Reunión próxima programada", ContarConProximaGestion, asociados.Count, "sa-chart-gold"),
+        CrearDatoGrafico("Encuentro vencido", ContarVencidos, asociados.Count, "sa-chart-red"),
+        CrearDatoGrafico("Sin encuentros registrados", ContarSinSeguimiento, asociados.Count, "sa-chart-gray"),
+        CrearDatoGrafico("Atendido sin próxima fecha", ContarAtendidosSinFecha, asociados.Count, "sa-chart-green")
     ];
 
     private int MaximoGestiones => DistribucionGestionesSinEscala.Max(dato => dato.Cantidad);
 
     private IReadOnlyList<DatoGrafico> DistribucionGestionesSinEscala =>
     [
-        CrearDatoGrafico("Llamadas", seguimientos.Count(seguimiento => seguimiento.TipoGestion == "Llamada"), seguimientos.Count, "sa-chart-green"),
-        CrearDatoGrafico("Visitas al predio", seguimientos.Count(seguimiento => seguimiento.TipoGestion == "Visita"), seguimientos.Count, "sa-chart-gold"),
-        CrearDatoGrafico("Asesorías", seguimientos.Count(seguimiento => seguimiento.TipoGestion == "Asesoria"), seguimientos.Count, "sa-chart-violet"),
-        CrearDatoGrafico("Revisión de documentos", seguimientos.Count(seguimiento => seguimiento.TipoGestion == "Documentos"), seguimientos.Count, "sa-chart-blue"),
-        CrearDatoGrafico("Otros contactos", seguimientos.Count(seguimiento => seguimiento.TipoGestion == "Otro"), seguimientos.Count, "sa-chart-gray")
+        CrearDatoGrafico("Llamadas telefónicas", seguimientos.Count(s => EsTipo(s.TipoGestion, "Llamada")), seguimientos.Count, "sa-chart-green"),
+        CrearDatoGrafico("Reuniones o visitas", seguimientos.Count(s => EsTipo(s.TipoGestion, "Visita")), seguimientos.Count, "sa-chart-gold"),
+        CrearDatoGrafico("Asesorías y acompañamiento", seguimientos.Count(s => EsTipo(s.TipoGestion, "Asesoria")), seguimientos.Count, "sa-chart-violet"),
+        CrearDatoGrafico("Revisión documental", seguimientos.Count(s => EsTipo(s.TipoGestion, "Documentos")), seguimientos.Count, "sa-chart-blue"),
+        CrearDatoGrafico("Otros encuentros", seguimientos.Count(s => EsTipo(s.TipoGestion, "Otro")), seguimientos.Count, "sa-chart-gray")
     ];
 
     private IReadOnlyList<DatoGrafico> DistribucionGestiones => DistribucionGestionesSinEscala
         .Select(dato => dato with { Ancho = MaximoGestiones == 0 ? 0 : dato.Cantidad * 100 / MaximoGestiones })
         .ToList();
 
-    private static DatoGrafico CrearDatoGrafico(string etiqueta, int cantidad, int total, string clase) =>
-        new(etiqueta, cantidad, total == 0 ? 0 : cantidad * 100 / total, cantidad == 0 ? 0 : 100, clase);
-
-    private static string ColorGrafico(string clase) => clase switch
+    private static bool EsTipo(string valorReal, string clave) => clave switch
     {
-        "sa-chart-gold" => "#d7ad43",
-        "sa-chart-red" => "#d76b5e",
-        "sa-chart-gray" => "#9aa79b",
-        _ => "#2e9a5b"
+        "Llamada" => valorReal.Contains("Llamada", StringComparison.OrdinalIgnoreCase),
+        "Visita" => valorReal.Contains("Visita", StringComparison.OrdinalIgnoreCase) || valorReal.Contains("Reunión", StringComparison.OrdinalIgnoreCase),
+        "Asesoria" => valorReal.Contains("Asesor", StringComparison.OrdinalIgnoreCase) || valorReal.Contains("Acuerdo", StringComparison.OrdinalIgnoreCase),
+        "Documentos" => valorReal.Contains("Documento", StringComparison.OrdinalIgnoreCase) || valorReal.Contains("tributaria", StringComparison.OrdinalIgnoreCase),
+        _ => !valorReal.Contains("Llamada", StringComparison.OrdinalIgnoreCase)
+             && !valorReal.Contains("Visita", StringComparison.OrdinalIgnoreCase)
+             && !valorReal.Contains("Reunión", StringComparison.OrdinalIgnoreCase)
+             && !valorReal.Contains("Asesor", StringComparison.OrdinalIgnoreCase)
+             && !valorReal.Contains("Acuerdo", StringComparison.OrdinalIgnoreCase)
+             && !valorReal.Contains("Documento", StringComparison.OrdinalIgnoreCase)
+             && !valorReal.Contains("tributaria", StringComparison.OrdinalIgnoreCase)
     };
 
-    protected override void OnInitialized()
+    private static DatoGrafico CrearDatoGrafico(string etiqueta, int cantidad, int total, string clase) =>
+        new(etiqueta, cantidad, total == 0 ? 0 : (int)Math.Round((double)cantidad * 100 / total), cantidad == 0 ? 0 : 100, clase);
+
+    private bool esSoloConsulta = false;
+
+    protected override async Task OnInitializedAsync()
     {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        esSoloConsulta = authState.User.IsInRole("Presidenta") || authState.User.IsInRole("Presidente");
         CargarDatos();
+        Notificaciones.NotificacionPublicada += EnNuevaNotificacion;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrWhiteSpace(BusquedaUrl))
+        {
+            textoBusqueda = BusquedaUrl;
+        }
+    }
+
+    private void EnNuevaNotificacion(Notificacion _)
+    {
+        InvokeAsync(StateHasChanged);
     }
 
     private void CargarDatos()
@@ -443,13 +743,18 @@
             .Select(AsociadoMapper.ToModel)
             .OrderBy(asociado => asociado.NombreCompleto)
             .ToList();
+
         seguimientos = SeguimientoService.ObtenerTodos().ToList();
+
         ultimosSeguimientos = seguimientos
             .GroupBy(seguimiento => seguimiento.AsociadoId)
             .ToDictionary(
                 grupo => grupo.Key,
                 grupo => grupo.OrderByDescending(seguimiento => seguimiento.FechaGestion).First());
     }
+
+    private AsociadoModel? ObtenerAsociadoPorId(int asociadoId) =>
+        asociados.FirstOrDefault(a => a.Id == asociadoId);
 
     private SeguimientoAsociado? UltimoSeguimiento(int asociadoId) =>
         ultimosSeguimientos.GetValueOrDefault(asociadoId);
@@ -467,6 +772,14 @@
         if (ultimo.ProximaGestion is not DateOnly proxima) return "Gestión registrada sin próxima fecha";
         return proxima < Hoy ? "Contacto vencido" : "Contacto programado";
     }
+
+    private static string EtiquetaEstadoLegible(string estado) => estado switch
+    {
+        "Contacto vencido" => "Encuentro vencido",
+        "Contacto programado" => "Reunión programada",
+        "Sin seguimiento" => "Sin seguimiento",
+        _ => "Atendido · sin próxima fecha"
+    };
 
     private static int PrioridadEstado(string estado) => estado switch
     {
@@ -486,19 +799,12 @@
 
     private static string NombreTipoGestion(string tipo) => tipo switch
     {
-        "Llamada" => "Llamada",
-        "Visita" => "Visita al predio",
-        "Asesoria" => "Asesoría",
+        "Llamada" => "Llamada telefónica",
+        "Visita" => "Reunión o visita presencial",
+        "Asesoria" => "Asesoría o acompañamiento",
         "Documentos" => "Revisión de documentos",
-        "Otro" => "Otro contacto",
+        "Otro" => "Otro encuentro",
         _ => tipo
-    };
-
-    private static string NombreCultivo(string cultivo) => cultivo switch
-    {
-        "Platano" => "Plátano",
-        "Ganaderia" => "Ganadería",
-        _ => cultivo
     };
 
     private static string ObtenerIniciales(string nombre)
@@ -510,29 +816,103 @@
             : $"{partes[0][0]}{partes[1][0]}".ToUpper(CulturaEspanol);
     }
 
+    private void SeleccionarFiltroEstado(string estado)
+    {
+        filtroEstado = estado;
+    }
+
+    private void LimpiarFiltros()
+    {
+        textoBusqueda = string.Empty;
+        filtroEstado = "Todos";
+    }
+
     private void AlternarHistorial(int asociadoId) =>
         historialAbierto = historialAbierto == asociadoId ? null : asociadoId;
+
+    private void IrAHistorialAsociado(int asociadoId)
+    {
+        filtroEstado = "Todos";
+        textoBusqueda = string.Empty;
+        historialAbierto = asociadoId;
+    }
+
+    private void AbrirFormularioGeneral()
+    {
+        mensajeExito = string.Empty;
+        mensajeError = string.Empty;
+        asociadoEnFormulario = asociados.FirstOrDefault();
+        formulario = new FormularioSeguimiento
+        {
+            TipoGestion = "Visita",
+            ProximaGestion = DateOnly.FromDateTime(DateTime.Today.AddDays(7)),
+            HoraReunion = "09:00"
+        };
+        mostrarModalFormulario = true;
+    }
 
     private void AbrirFormulario(AsociadoModel asociado)
     {
         mensajeExito = string.Empty;
         mensajeError = string.Empty;
         asociadoEnFormulario = asociado;
-        formulario = new FormularioSeguimiento();
+        formulario = new FormularioSeguimiento
+        {
+            TipoGestion = "Visita",
+            ProximaGestion = DateOnly.FromDateTime(DateTime.Today.AddDays(7)),
+            HoraReunion = "09:00"
+        };
+        mostrarModalFormulario = true;
+    }
+
+    private void CambiarAsociadoFormulario(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var id))
+        {
+            asociadoEnFormulario = asociados.FirstOrDefault(a => a.Id == id);
+        }
+        else
+        {
+            asociadoEnFormulario = null;
+        }
     }
 
     private void CerrarFormulario()
     {
+        mostrarModalFormulario = false;
         asociadoEnFormulario = null;
         mensajeError = string.Empty;
     }
 
     private async Task GuardarSeguimiento()
     {
-        if (asociadoEnFormulario is null) return;
-        if (formulario.ProximaGestion is DateOnly proxima && proxima < Hoy)
+        if (asociadoEnFormulario is null)
         {
-            mensajeError = "La próxima fecha debe ser hoy o una fecha posterior.";
+            mensajeError = "Debes seleccionar una persona asociada para registrar el encuentro.";
+            return;
+        }
+
+        if (!formulario.ProximaGestion.HasValue)
+        {
+            mensajeError = "Debes indicar la fecha de la reunión.";
+            return;
+        }
+
+        if (formulario.ProximaGestion.Value < Hoy)
+        {
+            mensajeError = "La fecha de la reunión debe ser hoy o una fecha posterior.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(formulario.HoraReunion))
+        {
+            mensajeError = "La hora de la reunión es obligatoria.";
+            return;
+        }
+
+        if (!EsHoraValida(formulario.HoraReunion, out _))
+        {
+            mensajeError = "La hora de la reunión debe estar entre las 8:00 a. m. y las 5:00 p. m.";
             return;
         }
 
@@ -544,12 +924,15 @@
             var autor = estado.User.Identity?.Name
                 ?? estado.User.FindFirst(ClaimTypes.Email)?.Value
                 ?? "Directora";
+
+            var horaLimpia = formulario.HoraReunion.Trim();
             var resultado = SeguimientoService.Registrar(new SeguimientoAsociado
             {
                 AsociadoId = asociadoEnFormulario.Id,
                 TipoGestion = formulario.TipoGestion,
                 Descripcion = formulario.Descripcion.Trim(),
                 ProximaGestion = formulario.ProximaGestion,
+                HoraReunion = horaLimpia,
                 GestionadoPor = autor
             });
 
@@ -559,10 +942,27 @@
                 return;
             }
 
+            Notificaciones.Publicar(new Notificacion
+            {
+                Titulo = $"Encuentro agendado: {asociadoEnFormulario.NombreCompleto}",
+                Descripcion = $"{NombreTipoGestion(formulario.TipoGestion)} · {formulario.ProximaGestion:dd/MM/yyyy} a las {FormatearHora(horaLimpia)} · Registrado por {autor}.",
+                Etiqueta = "Seguimiento",
+                Enlace = "/seguimiento-asociados",
+                Icono = "check",
+                Categoria = CategoriaNotificacion.Seguimiento,
+                Nivel = NivelNotificacion.Informativa,
+                RolesDestino = new[] { "Directora", "Director" },
+                RolesEnlace = new[] { "Directora", "Director" }
+            });
+
+            var nombreGuardado = asociadoEnFormulario.NombreCompleto;
+            var idGuardado = asociadoEnFormulario.Id;
+
             CargarDatos();
-            mensajeExito = $"La gestión de {asociadoEnFormulario.NombreCompleto} se guardó correctamente.";
+            mensajeExito = $"El encuentro con {nombreGuardado} para el {formulario.ProximaGestion:dd/MM/yyyy} a las {FormatearHora(horaLimpia)} se guardó correctamente.";
+            mostrarModalFormulario = false;
             asociadoEnFormulario = null;
-            historialAbierto = null;
+            historialAbierto = idGuardado;
         }
         finally
         {
@@ -570,18 +970,83 @@
         }
     }
 
-    private sealed class FormularioSeguimiento
+    public void Dispose()
     {
-        [Required(ErrorMessage = "Selecciona el tipo de gestión.")]
-        public string TipoGestion { get; set; } = string.Empty;
-
-        [Required(ErrorMessage = "Escribe el resumen de la gestión.")]
-        [MinLength(10, ErrorMessage = "El resumen debe tener al menos 10 caracteres.")]
-        [MaxLength(1000, ErrorMessage = "El resumen no puede superar los 1000 caracteres.")]
-        public string Descripcion { get; set; } = string.Empty;
-
-        public DateOnly? ProximaGestion { get; set; }
+        Notificaciones.NotificacionPublicada -= EnNuevaNotificacion;
     }
 
+    private sealed class FormularioSeguimiento
+    {
+        [Required(ErrorMessage = "Selecciona la modalidad del encuentro.")]
+        public string TipoGestion { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "La fecha de la reunión es obligatoria.")]
+        public DateOnly? ProximaGestion { get; set; }
+
+        [Required(ErrorMessage = "La hora de la reunión es obligatoria.")]
+        public string HoraReunion { get; set; } = "09:00";
+
+        [Required(ErrorMessage = "Escribe las notas y acuerdos del encuentro.")]
+        [MinLength(10, ErrorMessage = "Las notas deben tener al menos 10 caracteres.")]
+        [MaxLength(1000, ErrorMessage = "Las notas no pueden superar los 1000 caracteres.")]
+        public string Descripcion { get; set; } = string.Empty;
+    }
+
+    private sealed record OpcionHorario(string Valor, string Etiqueta);
+
+    private static readonly TimeOnly HoraMinima = new(8, 0);
+    private static readonly TimeOnly HoraMaxima = new(17, 0);
+
+    private static readonly IReadOnlyList<OpcionHorario> HorariosDisponibles = new List<OpcionHorario>
+    {
+        new("08:00", "8:00 a. m."),
+        new("08:30", "8:30 a. m."),
+        new("09:00", "9:00 a. m."),
+        new("09:30", "9:30 a. m."),
+        new("10:00", "10:00 a. m."),
+        new("10:30", "10:30 a. m."),
+        new("11:00", "11:00 a. m."),
+        new("11:30", "11:30 a. m."),
+        new("12:00", "12:00 m."),
+        new("12:30", "12:30 p. m."),
+        new("13:00", "1:00 p. m."),
+        new("13:30", "1:30 p. m."),
+        new("14:00", "2:00 p. m."),
+        new("14:30", "2:30 p. m."),
+        new("15:00", "3:00 p. m."),
+        new("15:30", "3:30 p. m."),
+        new("16:00", "4:00 p. m."),
+        new("16:30", "4:30 p. m."),
+        new("17:00", "5:00 p. m.")
+    };
+
+    private static bool EsHoraValida(string? hora, out TimeOnly timeVal)
+    {
+        timeVal = default;
+        if (string.IsNullOrWhiteSpace(hora)) return false;
+        if (!TimeOnly.TryParse(hora, out timeVal)) return false;
+        return timeVal >= HoraMinima && timeVal <= HoraMaxima;
+    }
+
+    private static string FormatearHora(string? hora)
+    {
+        if (string.IsNullOrWhiteSpace(hora)) return string.Empty;
+        if (TimeOnly.TryParse(hora, out var time))
+        {
+            var h = time.Hour;
+            var m = time.Minute;
+            var ampm = h >= 12 ? "p. m." : "a. m.";
+            if (h == 12 && m == 0) return "12:00 m.";
+            var h12 = h % 12;
+            if (h12 == 0) h12 = 12;
+            return m == 0 ? $"{h12}:00 {ampm}" : $"{h12}:{m:D2} {ampm}";
+        }
+        return hora;
+    }
+
+    private static string FormatearMonedaCop(decimal valor) =>
+        string.Format(new System.Globalization.CultureInfo("es-CO"), "$ {0:N0} COP", valor);
+
     private sealed record DatoGrafico(string Etiqueta, int Cantidad, int Porcentaje, int Ancho, string Clase);
+    private sealed record ItemAgendaEncuentro(AsociadoModel Asociado, SeguimientoAsociado Seguimiento);
 }

@@ -1,276 +1,309 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @inject IJSRuntime JS
 
-<div class="nm">
-
-    <!-- Cabecera: no repite la marca del encabezado -->
-    <div class="nm-cabecera">
-        <span class="nm-cabecera-ico"><svg class="nm-ico"><use href="#ico-brote" /></svg></span>
-        <div class="nm-cabecera-texto">
-            <small>Federación FAAUA</small>
-            <strong>Urabá · Antioquia</strong>
-        </div>
+<div class="hv-sidebar-inner">
+    <!-- Encabezado: Marca con Logo Real de ASOAGRO + Botón Hamburguesa -->
+    <div class="hv-brand-row">
+        <a href="/" class="hv-brand" title="Ir al portal de Asoagro">
+            <span class="hv-brand-plantita-wrap">
+                <svg class="hv-brand-plantita" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22v-9" stroke="#b9e77a" />
+                    <path d="M12 13C12 7.5 7.5 4 2 4c0 5.5 3.5 10 10 10z" fill="#84cc16" stroke="#b9e77a" />
+                    <path d="M12 13c0-5.5 4.5-9 10-9 0 5.5-3.5 10-10 10z" fill="#4ade80" stroke="#b9e77a" />
+                </svg>
+            </span>
+            <div class="hv-brand-text">
+                <span class="hv-brand-name">ASOAGRO</span>
+                <span class="hv-brand-sub">FAAUA · Urabá</span>
+            </div>
+        </a>
+        <button type="button" class="hv-hamb-btn" @onclick="AlternarMenu" title="Colapsar o expandir menú" aria-label="Menú hamburguesa">
+            <span class="hv-bar"></span>
+            <span class="hv-bar"></span>
+            <span class="hv-bar"></span>
+        </button>
     </div>
 
+    <!-- Módulos de Navegación según Rol del usuario -->
     <AuthorizeView>
         <Authorized>
-
-            <!-- Módulos -->
-            <div class="nm-scroll">
-                <nav class="nm-nav" aria-label="Módulos del panel">
-
-                    <!-- ASOCIADOS (Director) -->
-                    @if (context.User.IsInRole("Director"))
-                    {
-                        <section class="nm-grupo @(expandirAsociados ? "abierto" : "")">
-                            <button type="button" class="nm-grupo-btn" @onclick="ToggleAsociados" aria-expanded="@(expandirAsociados ? "true" : "false")">
-                                <span class="nm-grupo-ico"><svg class="nm-ico"><use href="#ico-usuario" /></svg></span>
-                                <span class="nm-grupo-texto">
-                                    <strong>Asociados</strong>
-                                    <small>Productores y fincas</small>
-                                </span>
-                                <svg class="nm-ico nm-chevron"><use href="#ico-flecha" /></svg>
-                            </button>
-
-                            <div class="nm-sub">
-                                <div class="nm-sub-inner">
-                                    <NavLink class="nm-link" href="registrar-asociado">
-                                        <svg class="nm-ico"><use href="#ico-usuario-mas" /></svg>
-                                        <span>Registrar asociado</span>
-                                    </NavLink>
-                                    <NavLink class="nm-link" href="consultar-asociados">
-                                        <svg class="nm-ico"><use href="#ico-lista" /></svg>
-                                        <span>Consultar asociados</span>
-                                    </NavLink>
-                                    <NavLink class="nm-link" href="editar-asociado">
-                                        <svg class="nm-ico"><use href="#ico-ajustes" /></svg>
-                                        <span>Editar asociado</span>
-                                    </NavLink>
-                                    <NavLink class="nm-link" href="seguimiento-asociados">
-                                        <svg class="nm-ico"><use href="#ico-check" /></svg>
-                                        <span>Seguimiento de asociados</span>
-                                    </NavLink>
-                                </div>
-                            </div>
-                        </section>
-                    }
-
-                    <!-- DOCUMENTOS (Tesorero y Presidente) -->
-                    @if (context.User.IsInRole("Tesorero") || context.User.IsInRole("Presidente"))
-                    {
-                        <section class="nm-grupo nm-grupo-trigo @(expandirDocumentos ? "abierto" : "")">
-                            <button type="button" class="nm-grupo-btn" @onclick="ToggleDocumentos" aria-expanded="@(expandirDocumentos ? "true" : "false")">
-                                <span class="nm-grupo-ico"><svg class="nm-ico"><use href="#ico-doc" /></svg></span>
-                                <span class="nm-grupo-texto">
-                                    <strong>Documentos</strong>
-                                    <small>Estatutos, actas y vencimientos</small>
-                                </span>
-                                <svg class="nm-ico nm-chevron"><use href="#ico-flecha" /></svg>
-                            </button>
-
-                            <div class="nm-sub">
-                                <div class="nm-sub-inner">
-
-                                    @if (context.User.IsInRole("Tesorero"))
-                                    {
-                                        <NavLink class="nm-link" href="registrar-documentos">
-                                            <svg class="nm-ico"><use href="#ico-doc" /></svg>
-                                            <span>Registrar documentos</span>
-                                        </NavLink>
-                                        <NavLink class="nm-link" href="consultar-estado-documentos">
-                                            <svg class="nm-ico"><use href="#ico-check" /></svg>
-                                            <span>Estado de documentación</span>
-                                        </NavLink>
-                                        <NavLink class="nm-link" href="alertas-documentos">
-                                            <svg class="nm-ico"><use href="#ico-alerta" /></svg>
-                                            <span>Alertas de vencimiento</span>
-                                        </NavLink>
-                                    }
-
-                                    @if (context.User.IsInRole("Presidente"))
-                                    {
-                                        <NavLink class="nm-link" href="actas-estatutos" Match="NavLinkMatch.All">
-                                            <svg class="nm-ico"><use href="#ico-ajustes" /></svg>
-                                            <span>Centro documental</span>
-                                        </NavLink>
-                                        <NavLink class="nm-link" href="actas-estatutos/documentos">
-                                            <svg class="nm-ico"><use href="#ico-lista" /></svg>
-                                            <span>Repositorio de actas</span>
-                                        </NavLink>
-                                        <NavLink class="nm-link" href="actas-estatutos/registrar">
-                                            <svg class="nm-ico"><use href="#ico-doc" /></svg>
-                                            <span>Registrar documento</span>
-                                        </NavLink>
-                                        <NavLink class="nm-link" href="actas-estatutos/historial">
-                                            <svg class="nm-ico"><use href="#ico-check" /></svg>
-                                            <span>Historial de actividad</span>
-                                        </NavLink>
-                                    }
-
-                                </div>
-                            </div>
-                        </section>
-                    }
-
-                </nav>
-            </div>
-
-            <!-- PERFIL INFERIOR -->
-            <div class="nm-pie">
-
-                @if (mostrarMenuInferior)
+            <nav class="hv-nav" aria-label="Módulos de la plataforma">
+                @* MÓDULOS DE DIRECCIÓN EJECUTIVA (DIRECTORA / DIRECTOR) *@
+                @if (context.User.IsInRole("Directora") || context.User.IsInRole("Director"))
                 {
-                    <div class="nm-popup">
-                        <div class="nm-popup-cab">
-                            <span class="nm-avatar nm-avatar-grande">MM</span>
-                            <div>
-                                <strong>Manuela Andrea Mosquera</strong>
-                                <small>directora@asoagro-faaua.org</small>
-                            </div>
-                        </div>
-
-                        <p class="nm-popup-titulo">Mi cuenta</p>
-                        <button type="button" class="nm-popup-item" @onclick='() => AbrirModal("Perfil de usuario")'>
-                            <span class="nm-popup-ico"><svg class="nm-ico"><use href="#ico-usuario" /></svg></span>
-                            <span>
-                                <strong>Perfil de usuario</strong>
-                                <small>Editar datos e información</small>
-                            </span>
-                        </button>
-                        <button type="button" class="nm-popup-item" @onclick='() => AbrirModal("Seguridad y clave")'>
-                            <span class="nm-popup-ico"><svg class="nm-ico"><use href="#ico-escudo" /></svg></span>
-                            <span>
-                                <strong>Seguridad y clave</strong>
-                                <small>Verificación de acceso</small>
-                            </span>
-                        </button>
-
-                        <div class="nm-popup-sep"></div>
-
-                        <p class="nm-popup-titulo">Organización</p>
-                        <button type="button" class="nm-popup-item" @onclick='() => AbrirModal("Asociación base")'>
-                            <span class="nm-popup-ico"><svg class="nm-ico"><use href="#ico-red" /></svg></span>
-                            <span>
-                                <strong>Asociación base</strong>
-                                <small>Asoagro · FAAUA</small>
-                            </span>
-                        </button>
-                        <button type="button" class="nm-popup-item" @onclick='() => AbrirModal("Soporte técnico")'>
-                            <span class="nm-popup-ico"><svg class="nm-ico"><use href="#ico-sobre" /></svg></span>
-                            <span>
-                                <strong>Soporte técnico</strong>
-                                <small>Asistencia de la plataforma</small>
-                            </span>
-                        </button>
-
-                        <div class="nm-popup-sep"></div>
-
-                        <a href="/Auth/logout" class="nm-popup-item peligro">
-                            <span class="nm-popup-ico"><svg class="nm-ico"><use href="#ico-salir" /></svg></span>
-                            <span><strong>Cerrar sesión</strong></span>
-                        </a>
+                    <div class="hv-nav-section-title">
+                        <span>Gestión de Productores</span>
                     </div>
+
+                    <!-- 1. Registrar asociado -->
+                    <NavLink class="hv-nav-item" href="registrar-asociado" Match="NavLinkMatch.All">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="9" cy="8" r="4" />
+                            <path d="M2 21c0-4 3.1-7 7-7s7 3 7 7" />
+                            <line x1="19" y1="8" x2="19" y2="14" />
+                            <line x1="22" y1="11" x2="16" y2="11" />
+                        </svg>
+                        <span class="hv-nav-txt">Registrar asociado</span>
+                    </NavLink>
+
+                    <!-- 2. Consultar asociados -->
+                    <NavLink class="hv-nav-item" href="consultar-asociados">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                        </svg>
+                        <span class="hv-nav-txt">Consultar asociados</span>
+                    </NavLink>
+
+                    <!-- 3. Editar asociado -->
+                    <NavLink class="hv-nav-item" href="editar-asociado">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3" />
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                        </svg>
+                        <span class="hv-nav-txt">Editar asociado</span>
+                    </NavLink>
+
+                    <!-- 4. Seguimiento de asociados -->
+                    <NavLink class="hv-nav-item" href="seguimiento-asociados">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22v-9" />
+                            <path d="M12 13C12 7.5 7.5 4 2 4c0 5.5 3.5 10 10 10z" />
+                            <path d="M12 13c0-5.5 4.5-9 10-9 0 5.5-3.5 10-10 10z" />
+                        </svg>
+                        <span class="hv-nav-txt">Seguimiento de asociados</span>
+                    </NavLink>
+
+                    <!-- 5. Gestión Financiera -->
+                    <NavLink class="hv-nav-item" href="gestion-financiera/resumen">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="5" width="20" height="14" rx="2" />
+                            <line x1="2" y1="10" x2="22" y2="10" />
+                            <circle cx="7" cy="15" r="1.5" />
+                        </svg>
+                        <span class="hv-nav-txt">Gestión Financiera</span>
+                    </NavLink>
                 }
 
-                <button type="button" class="nm-perfil" @onclick="ToggleMenuInferior" aria-expanded="@(mostrarMenuInferior ? "true" : "false")">
-                    <span class="nm-avatar">MM</span>
-                    <span class="nm-perfil-texto">
-                        <strong>Manuela Mosquera</strong>
-                        <small>Dirección Ejecutiva</small>
-                    </span>
-                    <svg class="nm-ico nm-chevron @(mostrarMenuInferior ? "abierto" : "")"><use href="#ico-flecha" /></svg>
-                </button>
-            </div>
+                @* MÓDULOS DE SECRETARÍA *@
+                @if (context.User.IsInRole("Secretaria") || context.User.IsInRole("Secretaría"))
+                {
+                    <div class="hv-nav-section-title">
+                        <span>Expediente Institucional</span>
+                    </div>
 
+                    <NavLink class="hv-nav-item" href="registrar-documentos">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        </svg>
+                        <span class="hv-nav-txt">Registrar documentos</span>
+                    </NavLink>
+                    <NavLink class="hv-nav-item" href="consultar-estado-documentos">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span class="hv-nav-txt">Estado documentación</span>
+                    </NavLink>
+                    <NavLink class="hv-nav-item" href="alertas-documentos">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        </svg>
+                        <span class="hv-nav-txt">Alertas vencimiento</span>
+                    </NavLink>
+                    <NavLink class="hv-nav-item" href="gestion-financiera/resumen">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="5" width="20" height="14" rx="2" />
+                            <line x1="2" y1="10" x2="22" y2="10" />
+                            <circle cx="7" cy="15" r="1.5" />
+                        </svg>
+                        <span class="hv-nav-txt">Consulta financiera</span>
+                    </NavLink>
+                    <NavLink class="hv-nav-item" href="gestion-financiera/facturacion-soportes">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                        </svg>
+                        <span class="hv-nav-txt">Soportes y facturación</span>
+                    </NavLink>
+                }
+
+                @* MÓDULOS DE GESTIÓN FINANCIERA (TESORERÍA) *@
+                @if (context.User.IsInRole("Tesorero") || context.User.IsInRole("Tesorera"))
+                {
+                    <div class="hv-nav-section-title">
+                        <span>Gestión Financiera</span>
+                    </div>
+
+                    <!-- 1. Resumen financiero -->
+                    <NavLink class="hv-nav-item" href="gestion-financiera/resumen" Match="NavLinkMatch.All">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                            <path d="M22 12A10 10 0 0 0 12 2v10z" />
+                        </svg>
+                        <span class="hv-nav-txt">Resumen financiero</span>
+                    </NavLink>
+
+                    <!-- 2. Costos y gastos -->
+                    <NavLink class="hv-nav-item" href="gestion-financiera/costos-gastos">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="9" cy="21" r="1" />
+                            <circle cx="20" cy="21" r="1" />
+                            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                        </svg>
+                        <span class="hv-nav-txt">Costos y gastos</span>
+                    </NavLink>
+
+                    <!-- 3. Ingresos y ventas -->
+                    <NavLink class="hv-nav-item" href="gestion-financiera/ingresos-ventas">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="6" width="20" height="12" rx="2" />
+                            <circle cx="12" cy="12" r="2" />
+                            <path d="M6 12h.01M18 12h.01" />
+                        </svg>
+                        <span class="hv-nav-txt">Ingresos y ventas</span>
+                    </NavLink>
+
+                    <!-- 4. Cuentas por cobrar -->
+                    <NavLink class="hv-nav-item" href="gestion-financiera/cuentas-por-cobrar">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="6" />
+                            <line x1="8" y1="2" x2="8" y2="6" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                            <path d="M9 16l2 2 4-4" />
+                        </svg>
+                        <span class="hv-nav-txt">Cuentas por cobrar</span>
+                    </NavLink>
+
+                    <!-- 5. Cuentas por pagar y pagos -->
+                    <NavLink class="hv-nav-item" href="gestion-financiera/cuentas-por-pagar">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="1" y="3" width="15" height="13" />
+                            <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                            <circle cx="5.5" cy="18.5" r="2.5" />
+                            <circle cx="18.5" cy="18.5" r="2.5" />
+                        </svg>
+                        <span class="hv-nav-txt">Cuentas por pagar y pagos</span>
+                    </NavLink>
+
+                    <!-- 6. Facturación y soportes -->
+                    <NavLink class="hv-nav-item" href="gestion-financiera/facturacion-soportes">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                        </svg>
+                        <span class="hv-nav-txt">Facturación y soportes</span>
+                    </NavLink>
+
+                    <!-- 7. Reportes y balances -->
+                    <NavLink class="hv-nav-item" href="gestion-financiera/reportes-balances">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10" />
+                            <line x1="12" y1="20" x2="12" y2="4" />
+                            <line x1="6" y1="20" x2="6" y2="14" />
+                        </svg>
+                        <span class="hv-nav-txt">Reportes y balances</span>
+                    </NavLink>
+                }
+
+                @* MÓDULOS DE PRESIDENCIA (Supervisión y Consulta Directiva) *@
+                @if (context.User.IsInRole("Presidenta") || context.User.IsInRole("Presidente"))
+                {
+                    <div class="hv-nav-section-title">
+                        <span>Supervisión Directiva</span>
+                    </div>
+
+                    <!-- 1. Resumen de Presidencia -->
+                    <NavLink class="hv-nav-item" href="actas-estatutos" Match="NavLinkMatch.All">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7" />
+                            <rect x="14" y="3" width="7" height="7" />
+                            <rect x="14" y="14" width="7" height="7" />
+                            <rect x="3" y="14" width="7" height="7" />
+                        </svg>
+                        <span class="hv-nav-txt">Resumen de Presidencia</span>
+                    </NavLink>
+
+                    <!-- 2. Centro documental -->
+                    <NavLink class="hv-nav-item" href="consultar-estado-documentos">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                        </svg>
+                        <span class="hv-nav-txt">Centro documental</span>
+                    </NavLink>
+
+                    <!-- 3. Repositorio de actas -->
+                    <NavLink class="hv-nav-item" href="actas-estatutos/documentos">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                        </svg>
+                        <span class="hv-nav-txt">Repositorio de actas</span>
+                    </NavLink>
+
+                    <!-- 4. Resumen financiero -->
+                    <NavLink class="hv-nav-item" href="gestion-financiera/resumen">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="2" y="5" width="20" height="14" rx="2" />
+                            <line x1="2" y1="10" x2="22" y2="10" />
+                            <circle cx="7" cy="15" r="1.5" />
+                        </svg>
+                        <span class="hv-nav-txt">Resumen financiero</span>
+                    </NavLink>
+
+                    <!-- 5. Seguimiento de gestión -->
+                    <NavLink class="hv-nav-item" href="seguimiento-asociados">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22v-9" />
+                            <path d="M12 13C12 7.5 7.5 4 2 4c0 5.5 3.5 10 10 10z" />
+                            <path d="M12 13c0-5.5 4.5-9 10-9 0 5.5-3.5 10-10 10z" />
+                        </svg>
+                        <span class="hv-nav-txt">Seguimiento de gestión</span>
+                    </NavLink>
+
+                    <!-- 6. Historial de actividad -->
+                    <NavLink class="hv-nav-item" href="actas-estatutos/historial">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 16 14" />
+                        </svg>
+                        <span class="hv-nav-txt">Historial de actividad</span>
+                    </NavLink>
+                }
+            </nav>
         </Authorized>
     </AuthorizeView>
 
+    <!-- Única opción de Cerrar Sesión oficial de la plataforma -->
+    <div class="hv-logout-wrapper">
+        <a href="/Auth/logout" class="hv-logout" title="Cerrar sesión de Asoagro">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span class="hv-logout-txt">CERRAR SESIÓN</span>
+        </a>
+    </div>
 </div>
 
-<!-- MODAL: <dialog> se muestra en la capa superior, fuera de la barra lateral -->
-<dialog id="nm-dialogo" class="nm-dialogo" aria-labelledby="nm-dialogo-titulo">
-    @if (modalActivo != null)
-    {
-        <div class="nm-dialogo-caja">
-            <div class="nm-dialogo-cab">
-                <strong id="nm-dialogo-titulo">@modalActivo</strong>
-                <button type="button" class="nm-dialogo-cerrar" @onclick="CerrarModal" aria-label="Cerrar">&times;</button>
-            </div>
-
-            <div class="nm-dialogo-cuerpo">
-                @if (modalActivo == "Perfil de usuario")
-                {
-                    <p class="nm-texto-suave">Actualiza tu información personal y datos de contacto.</p>
-                    <div class="nm-campo">
-                        <label for="nm-nombre">Nombre completo</label>
-                        <input id="nm-nombre" type="text" value="Manuela Andrea Mosquera Martinez" />
-                    </div>
-                    <div class="nm-campo">
-                        <label for="nm-correo">Correo institucional</label>
-                        <input id="nm-correo" type="email" value="directora@asoagro-faaua.org" />
-                    </div>
-                }
-                else if (modalActivo == "Seguridad y clave")
-                {
-                    <div class="nm-aviso">
-                        <svg class="nm-ico"><use href="#ico-escudo" /></svg>
-                        <span>Autenticación gestionada vía Google OAuth 2.0.</span>
-                    </div>
-                    <p class="nm-texto-suave">Tu acceso está vinculado de forma segura con tu cuenta institucional.</p>
-                }
-                else if (modalActivo == "Asociación base")
-                {
-                    <h4 class="nm-subtitulo">Asoagro</h4>
-                    <p class="nm-texto-suave">Asociación de base agropecuaria adscrita a la Federación de Asociaciones Agropecuarias del Urabá Antioqueño (FAAUA).</p>
-                }
-                else if (modalActivo == "Soporte técnico")
-                {
-                    <p class="nm-texto-suave">¿Presentas inconvenientes técnicos con la plataforma?</p>
-                    <div class="nm-soporte">
-                        <svg class="nm-ico"><use href="#ico-sobre" /></svg>
-                        <strong>soporte@faaua.org</strong>
-                    </div>
-                }
-            </div>
-
-            <div class="nm-dialogo-pie">
-                <button type="button" class="nm-btn nm-btn-secundario" @onclick="CerrarModal">Cerrar</button>
-                <button type="button" class="nm-btn nm-btn-primario" @onclick="CerrarModal">Guardar cambios</button>
-            </div>
-        </div>
-    }
-</dialog>
-
 @code {
-    private bool expandirAsociados = true;
-    private bool expandirDocumentos = true;
-    private bool mostrarMenuInferior;
-    private string? modalActivo;
-    private bool abrirDialogo;
+    [Parameter] public EventCallback OnToggleCollapse { get; set; }
 
-    private void ToggleAsociados() => expandirAsociados = !expandirAsociados;
-    private void ToggleDocumentos() => expandirDocumentos = !expandirDocumentos;
-    private void ToggleMenuInferior() => mostrarMenuInferior = !mostrarMenuInferior;
- 
-    private void AbrirModal(string nombre)
+    private async Task AlternarMenu()
     {
-        mostrarMenuInferior = false;
-        modalActivo = nombre;
-        abrirDialogo = true;
-    }
-
-    private async Task CerrarModal()
-    {
-        modalActivo = null;
-        await JS.InvokeVoidAsync("eval", "document.getElementById('nm-dialogo')?.close()");
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (abrirDialogo)
+        if (OnToggleCollapse.HasDelegate)
         {
-            abrirDialogo = false;
-            await JS.InvokeVoidAsync("eval", "document.getElementById('nm-dialogo')?.showModal()");
+            await OnToggleCollapse.InvokeAsync();
         }
     }
 }

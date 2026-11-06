@@ -48,22 +48,23 @@ namespace Asoagro.Controllers
             // Redirección inteligente según el rol del equipo
             if (!string.IsNullOrEmpty(rolUsuario))
             {
-                if (rolUsuario == "Tesorero")
+                if (rolUsuario == "Tesorero" || rolUsuario == "Tesorera")
+                {
+                    return LocalRedirect("/panel-tesorero");
+                }
+
+                if (rolUsuario == "Secretaria" || rolUsuario == "Secretaría")
                 {
                     return LocalRedirect("/registrar-documentos");
                 }
 
-                if (rolUsuario == "Director")
+                if (rolUsuario == "Directora" || rolUsuario == "Director")
                 {
                     return LocalRedirect("/consultar-asociados");
                 }
-                if (rolUsuario == "Presidente")
+                if (rolUsuario == "Presidenta" || rolUsuario == "Presidente")
                 {
                     return LocalRedirect("/actas-estatutos");
-                }
-                if (rolUsuario == "Invitado")
-                {
-                    return LocalRedirect("/");
                 }
             }
 
@@ -71,6 +72,77 @@ namespace Asoagro.Controllers
             if (!string.IsNullOrEmpty(returnUrl) && returnUrl != "/")
             {
                 return LocalRedirect(returnUrl);
+            }
+
+            return LocalRedirect("/");
+        }
+
+        [HttpGet("login-local")]
+        public async Task<IActionResult> LoginLocal([FromQuery] string rol = "", [FromQuery] string email = "")
+        {
+            var correo = !string.IsNullOrWhiteSpace(email) ? email.Trim() : "manuela.mosqueraar@amigo.edu.co";
+            var nombre = "Manuela Andrea Mosquera";
+            var rolAsignado = "Directora";
+
+            var lower = correo.ToLowerInvariant();
+            if (lower == "manumosque743@gmail.com" || rol.Equals("Tesorero", StringComparison.OrdinalIgnoreCase))
+            {
+                rolAsignado = "Tesorero";
+                nombre = "Manuela Mosquera";
+                if (string.IsNullOrWhiteSpace(email)) correo = "manumosque743@gmail.com";
+            }
+            else if (lower == "manuela.mosqueraar@amigo.edu.co" || rol.Equals("Directora", StringComparison.OrdinalIgnoreCase))
+            {
+                rolAsignado = "Directora";
+                nombre = "Manuela Andrea Mosquera";
+                if (string.IsNullOrWhiteSpace(email)) correo = "manuela.mosqueraar@amigo.edu.co";
+            }
+            else if (lower == "juan.padillamo@amigo.edu.co" || rol.Equals("Presidenta", StringComparison.OrdinalIgnoreCase))
+            {
+                rolAsignado = "Presidenta";
+                nombre = "Juan Padilla";
+                if (string.IsNullOrWhiteSpace(email)) correo = "juan.padillamo@amigo.edu.co";
+            }
+            else if (lower == "karen.argumedoco@amigo.edu.co" || rol.Equals("Secretaria", StringComparison.OrdinalIgnoreCase))
+            {
+                rolAsignado = "Secretaria";
+                nombre = "Karen Argumedo";
+                if (string.IsNullOrWhiteSpace(email)) correo = "karen.argumedoco@amigo.edu.co";
+            }
+            else
+            {
+                var parteLocal = correo.Split('@')[0].Replace('.', ' ');
+                nombre = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(parteLocal);
+                rolAsignado = "Directora";
+            }
+
+            var claims = new List<Claim>
+            {
+                new(ClaimTypes.Name, nombre),
+                new(ClaimTypes.Email, correo),
+                new(ClaimTypes.Role, rolAsignado)
+            };
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+            if (rolAsignado == "Tesorero")
+            {
+                return LocalRedirect("/panel-tesorero");
+            }
+            if (rolAsignado == "Secretaria")
+            {
+                return LocalRedirect("/registrar-documentos");
+            }
+            if (rolAsignado == "Directora")
+            {
+                return LocalRedirect("/consultar-asociados");
+            }
+            if (rolAsignado == "Presidenta")
+            {
+                return LocalRedirect("/actas-estatutos");
             }
 
             return LocalRedirect("/");

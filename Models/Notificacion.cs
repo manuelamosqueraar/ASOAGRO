@@ -4,7 +4,8 @@ public enum CategoriaNotificacion
 {
     Productores,
     Documentos,
-    Seguimiento
+    Seguimiento,
+    Finanzas
 }
 
 public enum NivelNotificacion

@@ -6,7 +6,7 @@ namespace Asoagro.Controllers;
 
 [Route("api/documentos-institucionales")]
 [ApiController]
-[Authorize(Roles = "Presidente")]
+[Authorize(Roles = "Presidenta,Presidente")]
 public class DocumentosInstitucionalesController : ControllerBase
 {
     private readonly IDocumentoInstitucionalService _service;

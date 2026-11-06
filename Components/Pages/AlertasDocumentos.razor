@@ -1,99 +1,484 @@
 @page "/alertas-documentos"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Tesorero")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Directora,Director,Presidenta,Presidente")]
 @rendermode InteractiveServer
-@inject HttpClient Http
+@using Asoagro.Models
+@using Asoagro.Services
+@inject IDocumentoAsociacionService DocumentoService
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
 
-<div class="page-header">
-    <div>
-        <p class="eyebrow text-success">Alertas</p>
-        <h1>Vencimientos de documentos</h1>
-        <p>Prioriza certificados y soportes próximos a vencer según umbrales operativos.</p>
+<PageTitle>Alertas de Vencimiento de Documentos · Asoagro & FAAUA</PageTitle>
+
+<div class="asoagro-documentos-wrapper container-fluid px-0 pb-5">
+
+    <!-- HERO PANEL INSTITUCIONAL -->
+    <div class="asoagro-hero-banner p-4 p-md-5 mb-4 position-relative overflow-hidden rounded-4">
+        <div class="hero-bg-shapes"></div>
+        <div class="row align-items-center position-relative" style="z-index: 2;">
+            <div class="col-lg-8">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <span class="badge-agri-pill">
+                        <i class="bi bi-bell-fill me-1"></i> FAAUA · Secretaría General
+                    </span>
+                    <span class="badge-agri-pill-sub">
+                        <i class="bi bi-shield-exclamation me-1"></i> Alertas y Vencimientos
+                    </span>
+                </div>
+                <h1 class="fw-extrabold text-white mb-2 tracking-tight" style="font-size: 1.85rem; font-weight: 800;">
+                    Vencimientos de Documentos Institucionales
+                </h1>
+                <p class="text-white-50 mb-0 small" style="max-width: 650px; line-height: 1.6;">
+                    Monitoreo en tiempo real de soportes legales, tributarios y certificaciones de las asociaciones de base. Alerta sobre vigencias críticas y permite renovar los expedientes para mantener la elegibilidad de la federación.
+                </p>
+            </div>
+            
+            <div class="col-lg-4 mt-4 mt-lg-0 text-lg-end">
+                <div class="hero-stats-glass p-3 rounded-4 d-inline-block text-start w-100" style="max-width: 280px;">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="alerta-indicador-label">Umbrales Operativos</span>
+                        <span class="badge-umbrales">30 / 15 / 7 días</span>
+                    </div>
+                    <div class="d-flex align-items-center justify-content-between gap-3 pt-2 border-top border-white border-opacity-25">
+                        <span class="alerta-indicador-label">Alertas Activas</span>
+                        <strong class="alerta-contador">@alertas.Count</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-    <span class="status-chip">30 / 15 / 7 días</span>
+
+    <!-- MENSAJES DE ESTADO -->
+    @if (!string.IsNullOrEmpty(mensajeExito))
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm rounded-3 mb-4" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <strong>¡Actualización exitosa!</strong> @mensajeExito
+            <button type="button" class="btn-close" @onclick="() => mensajeExito = string.Empty"></button>
+        </div>
+    }
+
+    <!-- BARRA DE FILTROS Y RESUMEN -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 p-md-4 bg-white">
+        <div class="row g-3 align-items-end">
+            <!-- Filtro por asociación -->
+            <div class="col-lg-4 col-md-6">
+                <label class="form-label fw-bold small text-dark mb-1">
+                    <i class="bi bi-building me-1 text-success"></i> Filtrar por Asociación:
+                </label>
+                <select class="form-select" @bind="filtroAsociacion">
+                    <option value="">-- Todas las asociaciones --</option>
+                    @foreach (var asoc in listaAsociaciones)
+                    {
+                        <option value="@asoc">@asoc</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Filtro por severidad / nivel de alerta -->
+            <div class="col-lg-4 col-md-6">
+                <label class="form-label fw-bold small text-dark mb-1">
+                    <i class="bi bi-exclamation-triangle me-1 text-warning"></i> Nivel de Alerta:
+                </label>
+                <select class="form-select" @bind="filtroNivel">
+                    <option value="Todos">Todos los niveles</option>
+                    <option value="Vencido">Documentos vencidos</option>
+                    <option value="Crítica">Alerta crítica (&le; 7 días)</option>
+                    <option value="Advertencia">Advertencia (&le; 15 días)</option>
+                    <option value="Preventivo">Aviso preventivo (&le; 30 días)</option>
+                </select>
+            </div>
+
+            <div class="col-lg-4 col-md-12 text-md-end">
+                <a href="registrar-documentos" class="btn btn-success fw-bold px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2">
+                    <i class="bi bi-cloud-arrow-up-fill"></i>
+                    <span>Registrar Documento</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- TABLA DE ALERTAS REALES DE ASOCIACIONES -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+            <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-shield-exclamation text-danger"></i>
+                <span>Documentos Próximos a Vencer o Vencidos</span>
+                <span class="badge bg-danger-subtle text-danger rounded-pill">@AlertasFiltradas.Count()</span>
+            </h6>
+            <small class="text-muted">Calculado según la fecha del sistema (@DateTime.Today.ToString("dd/MM/yyyy"))</small>
+        </div>
+
+        @if (!AlertasFiltradas.Any())
+        {
+            <div class="p-5 text-center">
+                <div class="mb-3 text-success">
+                    <i class="bi bi-shield-check display-3"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">No hay alertas de vencimiento pendientes</h5>
+                <p class="text-muted small mb-3">
+                    @(string.IsNullOrWhiteSpace(filtroAsociacion)
+                        ? "Todos los documentos registrados de las asociaciones cuentan con vigencia óptima o no tienen vencimientos próximos (umbrales de 30, 15 y 7 días)."
+                        : $"La asociación '{filtroAsociacion}' no presenta documentos con vencimiento próximo en el sistema.")
+                </p>
+                <div class="d-flex justify-content-center gap-2">
+                    <a href="consultar-estado-documentos" class="btn btn-sm btn-outline-success fw-semibold px-3 py-2 rounded-pill">
+                        <i class="bi bi-folder-check me-1"></i> Consultar Expedientes
+                    </a>
+                    <a href="registrar-documentos" class="btn btn-sm btn-success fw-bold px-3 py-2 rounded-pill">
+                        <i class="bi bi-cloud-plus me-1"></i> Registrar Documento
+                    </a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0 alerta-tabla" style="min-width: 880px;">
+                    <colgroup>
+                        <col style="width: 23%;" />
+                        <col style="width: 25%;" />
+                        <col style="width: 14%;" />
+                        <col style="width: 12%;" />
+                        <col style="width: 14%;" />
+                        <col style="width: 12%;" />
+                    </colgroup>
+                    <thead style="background: linear-gradient(105deg, #0b2e1c, #17603a) !important;">
+                        <tr>
+                            <th class="alerta-th ps-4 py-3 text-start" style="color: #ffffff !important; font-weight: 800; font-size: 0.76rem; letter-spacing: 0.065em; text-transform: uppercase; border: none !important;">Asociación</th>
+                            <th class="alerta-th py-3 text-start" style="color: #ffffff !important; font-weight: 800; font-size: 0.76rem; letter-spacing: 0.065em; text-transform: uppercase; border: none !important;">Documento</th>
+                            <th class="alerta-th py-3 text-center" style="color: #ffffff !important; font-weight: 800; font-size: 0.76rem; letter-spacing: 0.065em; text-transform: uppercase; border: none !important;">Fecha de Vencimiento</th>
+                            <th class="alerta-th py-3 text-center" style="color: #ffffff !important; font-weight: 800; font-size: 0.76rem; letter-spacing: 0.065em; text-transform: uppercase; border: none !important;">Días Restantes</th>
+                            <th class="alerta-th py-3 text-start" style="color: #ffffff !important; font-weight: 800; font-size: 0.76rem; letter-spacing: 0.065em; text-transform: uppercase; border: none !important;">Estado de Alerta</th>
+                            <th class="alerta-th py-3 text-center pe-4" style="color: #ffffff !important; font-weight: 800; font-size: 0.76rem; letter-spacing: 0.065em; text-transform: uppercase; border: none !important;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var alerta in AlertasFiltradas)
+                        {
+                            var esVencido = alerta.DiasRestantes < 0;
+                            var esCritica = alerta.DiasRestantes >= 0 && alerta.DiasRestantes <= 7;
+                            var esAdvertencia = alerta.DiasRestantes > 7 && alerta.DiasRestantes <= 15;
+
+                            <tr>
+                                <td class="ps-4 text-start">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-circle @(esVencido ? "bg-danger" : esCritica ? "bg-danger" : "bg-warning-emphasis") text-white d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.75rem;">
+                                            @ObtenerInicialesAsociacion(alerta.NombreAsociacion)
+                                        </div>
+                                        <div>
+                                            <strong class="d-block text-dark small">@alerta.NombreAsociacion</strong>
+                                            @if (!string.IsNullOrWhiteSpace(alerta.NitAsociacion))
+                                            {
+                                                <small class="text-muted extra-small">NIT: @alerta.NitAsociacion</small>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td class="text-start">
+                                    <strong class="d-block text-dark small">@alerta.TipoDocumento</strong>
+                                    @if (!string.IsNullOrWhiteSpace(alerta.Titulo) && alerta.Titulo != alerta.TipoDocumento)
+                                    {
+                                        <span class="text-muted extra-small d-block">@alerta.Titulo</span>
+                                    }
+                                </td>
+
+                                <td class="text-center">
+                                    <strong class="small @(esVencido ? "text-danger fw-bold" : esCritica ? "text-danger fw-bold" : "text-dark")">
+                                        @alerta.FechaVencimiento.ToString("dd/MM/yyyy")
+                                    </strong>
+                                </td>
+
+                                <td class="text-center">
+                                    @if (esVencido)
+                                    {
+                                        <span class="badge bg-danger text-white px-2.5 py-1 rounded-pill small fw-bold">
+                                            Vencido (@Math.Abs(alerta.DiasRestantes)d)
+                                        </span>
+                                    }
+                                    else if (esCritica)
+                                    {
+                                        <span class="badge bg-danger text-white px-2.5 py-1 rounded-pill small fw-bold">
+                                            @alerta.DiasRestantes días
+                                        </span>
+                                    }
+                                    else if (esAdvertencia)
+                                    {
+                                        <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill small fw-bold">
+                                            @alerta.DiasRestantes días
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-info text-dark px-2.5 py-1 rounded-pill small fw-bold">
+                                            @alerta.DiasRestantes días
+                                        </span>
+                                    }
+                                </td>
+
+                                <td class="text-start">
+                                    <div class="d-flex align-items-center gap-1.5">
+                                        @if (esVencido)
+                                        {
+                                            <i class="bi bi-x-circle-fill text-danger"></i>
+                                            <strong class="small text-danger">Documento vencido</strong>
+                                        }
+                                        else if (esCritica)
+                                        {
+                                            <i class="bi bi-exclamation-octagon-fill text-danger"></i>
+                                            <strong class="small text-danger">Alerta crítica: vence en &le; 7 días</strong>
+                                        }
+                                        else if (esAdvertencia)
+                                        {
+                                            <i class="bi bi-exclamation-triangle-fill text-warning-emphasis"></i>
+                                            <strong class="small text-warning-emphasis">Advertencia: vence en &le; 15 días</strong>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-info-circle-fill text-primary"></i>
+                                            <strong class="small text-primary">Aviso preventivo: vence en &le; 30 días</strong>
+                                        }
+                                    </div>
+                                </td>
+
+                                <td class="text-center pe-4 align-middle">
+                                    <div class="alerta-acciones-fila" style="justify-content: center;">
+                                        @if (!string.IsNullOrWhiteSpace(alerta.ArchivoNombre))
+                                        {
+                                            <button type="button"
+                                                    class="alerta-btn alerta-btn-ver"
+                                                    title="Descargar o consultar archivo archivado"
+                                                    @onclick="() => DescargarArchivoPorId(alerta.DocumentoId)">
+                                                <i class="bi bi-file-earmark-arrow-down-fill"></i>
+                                                <span>Ver</span>
+                                            </button>
+                                        }
+
+                                        <button type="button"
+                                                class="alerta-btn alerta-btn-actualizar"
+                                                title="Actualizar fecha de vencimiento o subir renovación"
+                                                @onclick="() => AbrirModalActualizar(alerta)">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                            <span>Actualizar</span>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+
 </div>
 
-<div class="notice-card" role="note">
-    Mostrando alertas basadas en umbrales de 30, 15 y 7 días para documentos de productores y fincas.
-</div>
+<!-- MODAL PARA ACTUALIZAR O RENOVAR DOCUMENTO -->
+@if (alertaSeleccionada != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(11, 46, 28, 0.65); backdrop-filter: blur(4px);">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-light border-bottom py-3 px-4">
+                    <div>
+                        <span class="badge bg-success-subtle text-success extra-small fw-bold">Renovación de Documento</span>
+                        <h5 class="modal-title fw-bold text-dark mb-0">Actualizar Expediente Institucional</h5>
+                    </div>
+                    <button type="button" class="btn-close" @onclick="CerrarModalActualizar"></button>
+                </div>
 
-@if (cargando)
-{
-    <div class="loading-state">Cargando alertas...</div>
-}
-else if (!string.IsNullOrEmpty(mensajeError))
-{
-    <div class="alert alert-danger mt-3" role="alert">
-        @mensajeError
-    </div>
-}
-else if (alertasPendientes.Any())
-{
-    <div class="content-card table-responsive">
-        <table class="table table-striped align-middle mb-0">
-            <thead>
-                <tr>
-                    <th>Asociado</th>
-                    <th>Documento</th>
-                    <th>Fecha de Vencimiento</th>
-                    <th>Días Restantes</th>
-                    <th>Estado de Alerta</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var alerta in alertasPendientes)
-                {
-                    <tr>
-                        <td>@alerta.NombreAsociado</td>
-                        <td>@alerta.TipoDocumento</td>
-                        <td>@alerta.FechaVencimiento.ToLocalTime().ToString("dd/MM/yyyy")</td>
-                        <td>
-                            <span class="badge @ObtenerColorBadge(alerta.DiasRestantes)">
-                                @alerta.DiasRestantes días
+                <div class="modal-body p-4">
+                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                        <strong class="d-block text-dark small">@alertaSeleccionada.NombreAsociacion</strong>
+                        <span class="text-secondary small d-block">Documento: <strong>@alertaSeleccionada.TipoDocumento</strong></span>
+                        <span class="extra-small text-muted">Vencimiento anterior: @alertaSeleccionada.FechaVencimiento.ToString("dd/MM/yyyy")</span>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(errorModal))
+                    {
+                        <div class="alert alert-danger py-2 px-3 small mb-3">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> @errorModal
+                        </div>
+                    }
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark">Nueva Fecha de Vencimiento <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" @bind="nuevaFechaVencimiento" min="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                        <small class="text-muted extra-small">Indica la nueva vigencia acordada o expedida por la entidad.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold small text-dark">Reemplazar Archivo Soporte (Opcional)</label>
+                        <InputFile class="form-control form-control-sm" OnChange="CargarNuevoArchivo" accept=".pdf,.png,.jpg,.jpeg" />
+                        @if (!string.IsNullOrEmpty(nuevoArchivoNombre))
+                        {
+                            <span class="badge bg-success-subtle text-success mt-1 small">
+                                <i class="bi bi-file-earmark-check me-1"></i> @nuevoArchivoNombre
                             </span>
-                        </td>
-                        <td>
-                            <strong>@alerta.MensajeAlerta</strong>
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
-}
-else
-{
-    <div class="empty-state mt-3" role="status">
-        <strong>No hay alertas pendientes</strong>
-        <p class="mb-0">Los documentos registrados no tienen vencimientos próximos.</p>
+                        }
+                    </div>
+
+                    <div class="mb-2">
+                        <label class="form-label fw-bold small text-dark">Observaciones de la Renovación</label>
+                        <textarea class="form-control" rows="2" placeholder="Ej. Renovación tramitada ante Cámara de Comercio / Nuevo aval expedido..." @bind="nuevasObservaciones"></textarea>
+                    </div>
+                </div>
+
+                <div class="modal-footer bg-light border-top py-2.5 px-4">
+                    <button type="button" class="btn btn-outline-secondary btn-sm px-3" @onclick="CerrarModalActualizar">Cancelar</button>
+                    <button type="button" class="btn btn-success btn-sm px-4 fw-bold" @onclick="GuardarActualizacionDocumento">
+                        <i class="bi bi-check2-circle me-1"></i> Guardar Renovación
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 }
 
 @code {
-    private List<AlertaDocumento> alertasPendientes = new();
-    private string mensajeError = string.Empty;
-    private bool cargando = true;
+    private List<AlertaDocumentoAsociacion> alertas = new();
+    private List<string> listaAsociaciones = new();
 
-    protected override async Task OnInitializedAsync()
+    private string filtroAsociacion = string.Empty;
+    private string filtroNivel = "Todos";
+    private string mensajeExito = string.Empty;
+
+    // Estado del modal de actualización
+    private AlertaDocumentoAsociacion? alertaSeleccionada;
+    private DateTime nuevaFechaVencimiento = DateTime.Today.AddMonths(6);
+    private string? nuevoArchivoNombre;
+    private byte[]? nuevoArchivoContenido;
+    private string nuevasObservaciones = string.Empty;
+    private string errorModal = string.Empty;
+
+    protected override void OnInitialized()
     {
-        try
+        CargarAlertas();
+        listaAsociaciones = DocumentoService.ObtenerAsociaciones().ToList();
+    }
+
+    private void CargarAlertas()
+    {
+        alertas = DocumentoService.ObtenerAlertas(DateTime.Today).ToList();
+    }
+
+    private IEnumerable<AlertaDocumentoAsociacion> AlertasFiltradas
+    {
+        get
         {
-            alertasPendientes = await Http.GetFromJsonAsync<List<AlertaDocumento>>("api/alertas-documentos") ?? new();
-        }
-        catch (HttpRequestException)
-        {
-            mensajeError = "No fue posible cargar las alertas de documentos.";
-        }
-        finally
-        {
-            cargando = false;
+            var res = alertas.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(filtroAsociacion))
+            {
+                res = res.Where(a => string.Equals(a.NombreAsociacion.Trim(), filtroAsociacion.Trim(), StringComparison.OrdinalIgnoreCase));
+            }
+
+            if (filtroNivel != "Todos")
+            {
+                if (filtroNivel == "Vencido")
+                    res = res.Where(a => a.DiasRestantes < 0);
+                else if (filtroNivel == "Crítica")
+                    res = res.Where(a => a.DiasRestantes >= 0 && a.DiasRestantes <= 7);
+                else if (filtroNivel == "Advertencia")
+                    res = res.Where(a => a.DiasRestantes > 7 && a.DiasRestantes <= 15);
+                else if (filtroNivel == "Preventivo")
+                    res = res.Where(a => a.DiasRestantes > 15 && a.DiasRestantes <= 30);
+            }
+
+            return res;
         }
     }
 
-    private string ObtenerColorBadge(int dias)
+    private static string ObtenerInicialesAsociacion(string nombre)
     {
-        if (dias <= 7) return "bg-danger";
-        if (dias <= 15) return "bg-warning text-dark";
-        return "bg-info text-dark";
+        if (string.IsNullOrWhiteSpace(nombre)) return "AS";
+        var partes = nombre.Trim().Split(new[] { ' ', '-' }, StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length == 1) return partes[0][..Math.Min(2, partes[0].Length)].ToUpperInvariant();
+        return $"{partes[0][0]}{partes[1][0]}".ToUpperInvariant();
     }
 
+    private async Task DescargarArchivoPorId(Guid docId)
+    {
+        var doc = DocumentoService.ObtenerPorId(docId);
+        if (doc == null) return;
+
+        if (doc.ArchivoContenido != null && doc.ArchivoContenido.Length > 0)
+        {
+            var base64 = Convert.ToBase64String(doc.ArchivoContenido);
+            await JS.InvokeVoidAsync("descargarArchivoBase64", doc.ArchivoNombre, doc.ArchivoTipoMime, base64);
+        }
+        else
+        {
+            var textoInfo = $"DOCUMENTO INSTITUCIONAL FAAUA\nAsociación: {doc.NombreAsociacion}\nTipo: {doc.TipoDocumento}\nTítulo: {doc.Titulo}\nFecha Emisión: {doc.FechaEmision:dd/MM/yyyy}\nVencimiento: {(doc.FechaVencimiento.HasValue ? doc.FechaVencimiento.Value.ToString("dd/MM/yyyy") : "N/A")}\nArchivo: {doc.ArchivoNombre}";
+            var bytes = System.Text.Encoding.UTF8.GetBytes(textoInfo);
+            var base64 = Convert.ToBase64String(bytes);
+            await JS.InvokeVoidAsync("descargarArchivoBase64", $"{doc.ArchivoNombre}.txt", "text/plain", base64);
+        }
+    }
+
+    private void AbrirModalActualizar(AlertaDocumentoAsociacion alerta)
+    {
+        alertaSeleccionada = alerta;
+        nuevaFechaVencimiento = DateTime.Today.AddMonths(6);
+        nuevoArchivoNombre = null;
+        nuevoArchivoContenido = null;
+        nuevasObservaciones = string.Empty;
+        errorModal = string.Empty;
+    }
+
+    private void CerrarModalActualizar()
+    {
+        alertaSeleccionada = null;
+    }
+
+    private async Task CargarNuevoArchivo(InputFileChangeEventArgs e)
+    {
+        var archivo = e.File;
+        errorModal = string.Empty;
+
+        if (archivo != null)
+        {
+            if (archivo.Size > 10 * 1024 * 1024)
+            {
+                errorModal = "El archivo supera el tamaño máximo permitido de 10 MB.";
+                return;
+            }
+
+            nuevoArchivoNombre = archivo.Name;
+            using var stream = archivo.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            nuevoArchivoContenido = ms.ToArray();
+        }
+    }
+
+    private void GuardarActualizacionDocumento()
+    {
+        if (alertaSeleccionada == null) return;
+
+        if (nuevaFechaVencimiento < DateTime.Today)
+        {
+            errorModal = "La nueva fecha de vencimiento debe ser posterior o igual a la fecha de hoy.";
+            return;
+        }
+
+        var exitoso = DocumentoService.ActualizarVencimientoYArchivo(
+            alertaSeleccionada.DocumentoId,
+            nuevaFechaVencimiento,
+            nuevoArchivoNombre,
+            nuevoArchivoContenido,
+            nuevasObservaciones,
+            "Secretaría");
+
+        if (exitoso)
+        {
+            mensajeExito = $"Se renovó la vigencia de '{alertaSeleccionada.TipoDocumento}' para {alertaSeleccionada.NombreAsociacion} hasta el {nuevaFechaVencimiento:dd/MM/yyyy}.";
+            alertaSeleccionada = null;
+            CargarAlertas();
+        }
+        else
+        {
+            errorModal = "No fue posible actualizar el documento en el sistema.";
+        }
+    }
 }

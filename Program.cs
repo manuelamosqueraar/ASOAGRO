@@ -51,22 +51,31 @@ if (googleAuthenticationConfigured)
 
                 if (identity != null)
                 {
-                    // ===== REEMPLAZA ESTOS CORREOS CON LOS DE TU EQUIPO =====
+                    if (context.User.TryGetProperty("picture", out var pictureProp))
+                    {
+                        var pic = pictureProp.GetString();
+                        if (!string.IsNullOrWhiteSpace(pic))
+                        {
+                            identity.AddClaim(new Claim("picture", pic));
+                        }
+                    }
+
+                    // ===== ASIGNACIÓN DE ROLES SEGÚN CORREO INSTITUCIONAL =====
                     if (email == "manuela.mosqueraar@amigo.edu.co")
                     {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "Director"));
+                        identity.AddClaim(new Claim(ClaimTypes.Role, "Directora"));
                     }
                     else if (email == "juan.padillamo@amigo.edu.co")
                     {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "Presidente"));
+                        identity.AddClaim(new Claim(ClaimTypes.Role, "Presidenta"));
                     }
                     else if (email == "karen.argumedoco@amigo.edu.co")
                     {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "Tesorero"));
+                        identity.AddClaim(new Claim(ClaimTypes.Role, "Secretaria"));
                     }
-                    else if (email == "karenargumedo157@gmail.com")
+                    else if (email == "manumosque743@gmail.com")
                     {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "Invitado"));
+                        identity.AddClaim(new Claim(ClaimTypes.Role, "Tesorero"));
                     }
                 }
 
@@ -161,6 +170,7 @@ if (!string.IsNullOrWhiteSpace(supabaseConnection))
     builder.Services.AddDbContextFactory<AsoagroDbContext>(options =>
         options.UseNpgsql(supabaseConnection));
 
+    builder.Services.AddSingleton<IDocumentoAsociacionService, InMemoryDocumentoAsociacionService>();
     builder.Services.AddSingleton<IAsociadoService, PostgresAsociadoService>();
     builder.Services.AddSingleton<ISeguimientoAsociadoService, PostgresSeguimientoAsociadoService>();
     builder.Services.AddSingleton<IAlertaDocumentoService, PostgresAlertaDocumentoService>();
@@ -168,6 +178,7 @@ if (!string.IsNullOrWhiteSpace(supabaseConnection))
 else
 {
     // Servicios de datos en memoria
+    builder.Services.AddSingleton<IDocumentoAsociacionService, InMemoryDocumentoAsociacionService>();
     builder.Services.AddSingleton<IAsociadoService, InMemoryAsociadoService>();
     builder.Services.AddSingleton<ISeguimientoAsociadoService, InMemorySeguimientoAsociadoService>();
     builder.Services.AddSingleton<IAlertaDocumentoService, InMemoryAlertaDocumentoService>();
@@ -175,6 +186,9 @@ else
 
 // Actas, estatutos y reglamentos (en memoria por ahora)
 builder.Services.AddSingleton<IDocumentoInstitucionalService, InMemoryDocumentoInstitucionalService>();
+
+// Gestión financiera y tesorería sincronizada
+builder.Services.AddSingleton<IFinanzasService, InMemoryFinanzasService>();
 
 // Servicio de gestión de sesión/roles de usuario
 builder.Services.AddScoped<UserService>();
@@ -187,6 +201,7 @@ builder.Services.AddScoped(sp =>
 });
 // Avisos en tiempo real: una sola lista compartida por todas las pantallas conectadas
 builder.Services.AddSingleton<NotificacionService>();
+builder.Services.AddSingleton<MunicipiosColombiaService>();
 
 // Revisa los vencimientos de documentos cada hora y crea los avisos
 builder.Services.AddHostedService<AlertasVencimientoWorker>();

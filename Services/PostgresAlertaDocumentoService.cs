@@ -7,14 +7,33 @@ namespace Asoagro.Services;
 public class PostgresAlertaDocumentoService : IAlertaDocumentoService
 {
     private readonly IDbContextFactory<AsoagroDbContext> dbContextFactory;
+    private readonly IDocumentoAsociacionService? docAsocService;
 
-    public PostgresAlertaDocumentoService(IDbContextFactory<AsoagroDbContext> dbContextFactory)
+    public PostgresAlertaDocumentoService(
+        IDbContextFactory<AsoagroDbContext> dbContextFactory,
+        IDocumentoAsociacionService? docAsocService = null)
     {
         this.dbContextFactory = dbContextFactory;
+        this.docAsocService = docAsocService;
     }
 
     public IReadOnlyCollection<AlertaDocumento> ObtenerAlertasPendientes(DateTime fechaReferencia)
     {
+        var alertas = new List<AlertaDocumento>();
+
+        if (docAsocService != null)
+        {
+            var alertasAsoc = docAsocService.ObtenerAlertas(fechaReferencia);
+            alertas.AddRange(alertasAsoc.Select(a => new AlertaDocumento
+            {
+                NombreAsociado = a.NombreAsociacion,
+                TipoDocumento = $"{a.TipoDocumento}{(string.IsNullOrWhiteSpace(a.Titulo) || a.Titulo == a.TipoDocumento ? "" : $" - {a.Titulo}")}",
+                FechaVencimiento = a.FechaVencimiento,
+                DiasRestantes = a.DiasRestantes,
+                MensajeAlerta = a.NivelAlerta
+            }));
+        }
+
         using var context = dbContextFactory.CreateDbContext();
         var fechaBase = fechaReferencia.Date;
 
@@ -25,7 +44,7 @@ public class PostgresAlertaDocumentoService : IAlertaDocumentoService
             .Where(d => d.FechaVencimiento != null)
             .ToList();
 
-        var alertas = documentos
+        var alertasDocs = documentos
             .Select(d =>
             {
                 var fechaVencimiento = d.FechaVencimiento!.Value.Date;
@@ -37,7 +56,7 @@ public class PostgresAlertaDocumentoService : IAlertaDocumentoService
                     DiasRestantes = diasRestantes
                 };
             })
-            .Where(x => x.DiasRestantes >= 0 && x.DiasRestantes <= 30)
+            .Where(x => x.DiasRestantes <= 30)
             .OrderBy(x => x.DiasRestantes)
             .Select(x => new AlertaDocumento
             {
@@ -49,14 +68,15 @@ public class PostgresAlertaDocumentoService : IAlertaDocumentoService
             })
             .ToList();
 
-        return alertas;
+        alertas.AddRange(alertasDocs);
+        return alertas.OrderBy(a => a.DiasRestantes).ToList();
     }
 
     private static string ObtenerMensaje(int diasRestantes)
     {
+        if (diasRestantes < 0) return "Vencido";
         if (diasRestantes <= 7) return "Alerta crítica: vence en menos de 7 días";
         if (diasRestantes <= 15) return "Advertencia: vence en menos de 15 días";
         return "Aviso preventivo: vence en menos de 30 días";
     }
 }
-

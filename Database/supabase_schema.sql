@@ -104,10 +104,18 @@ CREATE TABLE IF NOT EXISTS public.seguimientos_asociados (
     fecha_gestion timestamp with time zone NOT NULL DEFAULT now(),
     descripcion varchar(1000) NOT NULL,
     proxima_gestion date,
+    hora_reunion varchar(20) DEFAULT '',
     gestionado_por varchar(254) NOT NULL,
     CONSTRAINT fk_seguimientos_asociados_asociado
         FOREIGN KEY (asociado_id) REFERENCES public.asociados (id) ON DELETE CASCADE
 );
+
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'seguimientos_asociados' AND column_name = 'hora_reunion') THEN
+        ALTER TABLE public.seguimientos_asociados ADD COLUMN hora_reunion varchar(20) DEFAULT '';
+    END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS ix_seguimientos_asociados_asociado_fecha
     ON public.seguimientos_asociados (asociado_id, fecha_gestion DESC);

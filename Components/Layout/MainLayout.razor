@@ -1,4 +1,4 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
 @using Asoagro.Components.Pages
@@ -11,7 +11,8 @@
 
 <style>
     /* Avisos en tiempo real: campana, panel y aviso emergente */
-    .ag-nv-punto { flex: 0 0 8px; width: 8px; height: 8px; align-self: center; border-radius: 50%; background: #2e9a5b; box-shadow: 0 0 0 3px rgba(46, 154, 91, .18); }
+    .ag-nv-punto { flex: 0 0 8px !important; width: 8px !important; height: 8px !important; min-width: 8px !important; max-width: 8px !important; align-self: center; border-radius: 50%; background: #2e9a5b; box-shadow: 0 0 0 3px rgba(46, 154, 91, .18); }
+    .ag-notif > span:nth-child(2) { display: flex; flex-direction: column; flex: 1; min-width: 0; }
     .ag-notif.ag-nv-leida { opacity: .6; }
     .ag-notif:not([href]) { cursor: default; }
     .ag-nv-pie { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
@@ -54,47 +55,205 @@
         <symbol id="ico-campana" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9M13.7 21a2 2 0 0 1-3.4 0" /></symbol>
         <symbol id="ico-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" /></symbol>
         <symbol id="ico-flecha" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" /></symbol>
+        <symbol id="ico-flecha-der" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" /></symbol>
     </defs>
 </svg>
 
-<div class="page @(EsInicio ? "ag-pagina-inicio" : "ag-pagina-admin")">
+@if (!EsInicio)
+{
+    <!-- ======================================================== -->
+    <!--            LAYOUT UNIFICADO HARVEST (ADMIN / DIRECTORA)   -->
+    <!-- ======================================================== -->
+    <div class="hv-app @(collapseNavMenu ? "hv-sidebar-collapsed" : "")">
+        <!-- Barra lateral unificada con módulos en su orden original -->
+        <aside class="hv-sidebar">
+            <NavMenu OnToggleCollapse="ToggleNavMenu" />
+        </aside>
 
-    @if (!EsInicio)
-    {
-        <div class="sidebar @(collapseNavMenu ? "sidebar-collapsed" : "") @(menuMovilAbierto ? "sidebar-open" : "")" @onclick="CerrarMenuMovil">
-            <NavMenu />
-        </div>
-        <div class="ag-velo-menu @(menuMovilAbierto ? "visible" : "")" @onclick="CerrarMenuMovil"></div>
-    }
-
-    <header class="ag-header">
-        <div class="ag-header-izq">
-            @if (!EsInicio)
+        <!-- Columna principal -->
+        <div class="hv-main-col" style="flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 100vh; background-color: #edf2ed;">
+            @if (mostrarMenuUsuario || mostrarNotificaciones)
             {
-                <button class="ag-icono-btn" @onclick="ToggleNavMenu" title="Mostrar u ocultar menú" aria-label="Mostrar u ocultar menú">
-                    <svg class="ag-ico"><use href="#ico-menu" /></svg>
-                </button>
+                <div class="hv-backdrop-close" style="position: fixed; inset: 0; z-index: 900; background: transparent;" @onclick="CerrarTodo"></div>
             }
 
-            <a href="/" class="ag-marca" aria-label="Ir al inicio de ASOAGRO">
-                <span class="ag-marca-icono"><svg class="ag-ico"><use href="#ico-brote" /></svg></span>
-                <span class="ag-marca-texto">
-                    <strong>ASOAGRO</strong>
-                </span>
-            </a>
+            <!-- Barra superior de acciones y perfil -->
+            <header class="hv-topbar" style="display: flex; align-items: center; justify-content: flex-end; gap: 20px; padding: 22px 32px 14px; background-color: #edf2ed; position: relative; z-index: 1200; pointer-events: none;">
+                <div class="hv-top-actions" style="margin-left: auto; pointer-events: auto;">
+                    <!-- Campana de notificaciones exactamente con las mismas funciones y panel de antes -->
+                    <div class="ag-desplegable">
+                        <button type="button" class="hv-action-circle" @onclick="ToggleNotificaciones" title="Centro de alertas" aria-label="Centro de alertas" aria-expanded="@(mostrarNotificaciones ? "true" : "false")">
+                            <svg class="ag-ico"><use href="#ico-campana" /></svg>
+                            @if (NoLeidas > 0)
+                            {
+                                <span class="hv-badge-count">@NoLeidas</span>
+                            }
+                        </button>
 
-            @if (!EsInicio)
-            {
-                <div class="ag-titulo-pagina">
-                    <small>Panel de gestión</small>
-                    <strong>@TituloSeccion()</strong>
+                        @if (mostrarNotificaciones)
+                        {
+                            var lista = NotificacionesVisibles;
+
+                            <div class="ag-panel" style="z-index: 1300;" @onclick:stopPropagation>
+                                <div class="ag-panel-cab">
+                                    <div>
+                                        <strong>Alertas del sistema</strong>
+                                        <small>Registros, cambios y vencimientos</small>
+                                    </div>
+                                    <span class="ag-pildora">@NoLeidas sin leer</span>
+                                </div>
+
+                                <div class="ag-filtros">
+                                    @foreach (var f in Filtros)
+                                    {
+                                        <button type="button" class="ag-chip @(filtroActivo == f ? "activo" : "")" @onclick="() => FiltrarNotificaciones(f)">@f</button>
+                                    }
+                                </div>
+
+                                <div class="ag-lista-notif">
+                                    @if (lista.Count == 0)
+                                    {
+                                        <p class="ag-vacio">No hay alertas en esta categoría.</p>
+                                    }
+                                    else
+                                    {
+                                        @foreach (var n in lista)
+                                        {
+                                            var leida = EstaLeida(n);
+                                            var puedeIr = PuedeAbrir(n);
+
+                                            <a href="@(puedeIr ? n.Enlace : null)"
+                                               class="ag-notif @(leida ? "ag-nv-leida" : "")"
+                                               @onclick="() => AbrirNotificacion(n)">
+                                                <span class="ag-notif-ico @ObtenerTono(n)"><svg class="ag-ico"><use href="#ico-@n.Icono" /></svg></span>
+                                                <span style="display: flex; flex-direction: column; flex: 1; min-width: 0;">
+                                                    <span class="ag-notif-meta"><small>@n.Etiqueta</small><small>@TiempoTranscurrido(n.FechaCreacion)</small></span>
+                                                    <strong>@n.Titulo</strong>
+                                                    <em>@n.Descripcion</em>
+                                                </span>
+                                                @if (!leida)
+                                                {
+                                                    <span class="ag-nv-punto" style="flex: 0 0 8px; width: 8px; height: 8px; min-width: 8px; max-width: 8px;" title="Sin leer"></span>
+                                                }
+                                            </a>
+                                        }
+                                    }
+                                </div>
+
+                                <div class="ag-panel-pie ag-nv-pie">
+                                    <button type="button" class="ag-nv-marcar" @onclick="MarcarTodasComoLeidas" disabled="@(NoLeidas == 0)">Marcar todas como leídas</button>
+                                    <a href="/alertas-documentos" @onclick="IrAPanelCompleto">Ver panel completo</a>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Píldora de usuario dinámico con Menú Desplegable -->
+                    <div class="hv-user-menu-wrap">
+                        <button type="button" class="hv-user-badge" @onclick="ToggleMenuUsuario" aria-expanded="@(mostrarMenuUsuario ? "true" : "false")">
+                            @if (!string.IsNullOrWhiteSpace(fotoUsuarioActual))
+                            {
+                                <span class="hv-user-avatar-circle"><img src="@fotoUsuarioActual" alt="@nombreUsuarioActual" /></span>
+                            }
+                            else
+                            {
+                                <span class="hv-user-avatar-circle">@inicialesUsuarioActual</span>
+                            }
+                            <div class="hv-user-meta">
+                                <span class="hv-user-name">@nombreUsuarioActual</span>
+                                <span class="hv-user-loc">@rolUsuarioLegible · Urabá</span>
+                            </div>
+                            <span class="hv-user-chevron @(mostrarMenuUsuario ? "abierto" : "")">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M7 10l5 5 5-5z" />
+                                </svg>
+                            </span>
+                        </button>
+
+                        @if (mostrarMenuUsuario)
+                        {
+                            <div class="hv-user-popover" @onclick:stopPropagation>
+                                <div class="hv-user-pop-cab">
+                                    @if (!string.IsNullOrWhiteSpace(fotoUsuarioActual))
+                                    {
+                                        <span class="hv-user-avatar-lg"><img src="@fotoUsuarioActual" alt="@nombreUsuarioActual" /></span>
+                                    }
+                                    else
+                                    {
+                                        <span class="hv-user-avatar-lg">@inicialesUsuarioActual</span>
+                                    }
+                                    <div>
+                                        <strong>@nombreUsuarioActual</strong>
+                                        <small>@correoUsuarioActual</small>
+                                    </div>
+                                </div>
+
+                                <p class="hv-pop-section-title">Mi cuenta</p>
+                                <button type="button" class="hv-pop-action-item" @onclick='() => AbrirModalUsuario("Perfil de usuario")'>
+                                    <svg class="hv-pop-action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></svg>
+                                    <div>
+                                        <strong>Perfil de usuario</strong>
+                                        <small>Editar datos e información</small>
+                                    </div>
+                                </button>
+                                <button type="button" class="hv-pop-action-item" @onclick='() => AbrirModalUsuario("Seguridad y clave")'>
+                                    <svg class="hv-pop-action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z" /></svg>
+                                    <div>
+                                        <strong>Seguridad y clave</strong>
+                                        <small>Verificación de acceso</small>
+                                    </div>
+                                </button>
+
+                                <div class="hv-pop-divider"></div>
+
+                                <p class="hv-pop-section-title">Organización</p>
+                                <button type="button" class="hv-pop-action-item" @onclick='() => AbrirModalUsuario("Asociación base")'>
+                                    <svg class="hv-pop-action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2.5" /><circle cx="5" cy="18" r="2.5" /><circle cx="19" cy="18" r="2.5" /><path d="M12 7.5v4M12 11.5l-5 4M12 11.5l5 4" /></svg>
+                                    <div>
+                                        <strong>Asociación base</strong>
+                                        <small>Asoagro · FAAUA</small>
+                                    </div>
+                                </button>
+                                <button type="button" class="hv-pop-action-item" @onclick='() => AbrirModalUsuario("Soporte técnico")'>
+                                    <svg class="hv-pop-action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M22 6l-10 7L2 6" /></svg>
+                                    <div>
+                                        <strong>Soporte técnico</strong>
+                                        <small>Asistencia de la plataforma</small>
+                                    </div>
+                                </button>
+                            </div>
+                        }
+                    </div>
                 </div>
-            }
-        </div>
+            </header>
 
-        @if (EsInicio)
-        {
+            <!-- Contenedor del contenido principal de cualquier módulo del admin -->
+            <main class="hv-body-container" @onclick="CerrarTodo">
+                @Body
+            </main>
+        </div>
+    </div>
+}
+else
+{
+    <!-- ======================================================== -->
+    <!--             LAYOUT PÚBLICO (HOME / NOSOTROS / ETC)       -->
+    <!-- ======================================================== -->
+    <div class="page ag-pagina-inicio">
+        <header class="ag-header">
+            <div class="ag-header-izq">
+                <a href="/" class="ag-marca" aria-label="Ir al inicio de ASOAGRO">
+                    <span class="ag-marca-icono"><svg class="ag-ico"><use href="#ico-brote" /></svg></span>
+                    <span class="ag-marca-texto">
+                        <strong>ASOAGRO</strong>
+                    </span>
+                </a>
+            </div>
+
             <nav class="ag-nav" aria-label="Navegación principal">
+                <a href="/" class="ag-nav-btn ag-nav-inicio @(string.IsNullOrEmpty(RutaActual) || RutaActual == "home" ? "activo-inicio" : "")" @onclick="CerrarTodo">
+                    Inicio
+                </a>
                 @foreach (var grupo in menu)
                 {
                     <div class="ag-nav-item @(grupoAbierto == grupo.Titulo ? "abierto" : "")">
@@ -115,139 +274,38 @@
                                     </a>
                                 }
                             </div>
-                            @if (grupo.Titulo == "Plataforma")
-                            {
-                                <div class="ag-dd-pie">
-                                    <span>¿Tu asociación está lista para las convocatorias?</span>
-                                    <a href="/financiacion" @onclick="CerrarTodo">Ver guía de financiación</a>
-                                </div>
-                            }
                         </div>
                     </div>
                 }
             </nav>
-        }
 
-        <div class="ag-header-der">
-            @if (EsInicio)
-            {
-                <button class="ag-icono-btn ag-solo-movil" @onclick="ToggleMenuNavMovil" aria-label="Abrir menú">
-                    <svg class="ag-ico"><use href="#ico-menu" /></svg>
-                </button>
-            }
-
-            <IdiomaSelector />
-
-            @if (!EsInicio && autenticado)
-            {
-                <div class="ag-desplegable">
-                    <button type="button" class="ag-icono-btn" @onclick="ToggleNotificaciones" title="Centro de alertas" aria-label="Centro de alertas">
-                        <svg class="ag-ico"><use href="#ico-campana" /></svg>
-                        @if (NoLeidas > 0)
-                        {
-                            <span class="ag-contador">@NoLeidas</span>
-                        }
-                    </button>
-
-                    @if (mostrarNotificaciones)
-                    {
-                        var lista = NotificacionesVisibles;
-
-                        <div class="ag-panel">
-                            <div class="ag-panel-cab">
-                                <div>
-                                    <strong>Alertas del sistema</strong>
-                                    <small>Registros, cambios y vencimientos</small>
-                                </div>
-                                <span class="ag-pildora">@NoLeidas sin leer</span>
-                            </div>
-
-                            <div class="ag-filtros">
-                                @foreach (var f in Filtros)
-                                {
-                                    <button type="button" class="ag-chip @(filtroActivo == f ? "activo" : "")" @onclick="() => FiltrarNotificaciones(f)">@f</button>
-                                }
-                            </div>
-
-                            <div class="ag-lista-notif">
-                                @if (lista.Count == 0)
-                                {
-                                    <p class="ag-vacio">No hay alertas en esta categoría.</p>
-                                }
-                                else
-                                {
-                                    @foreach (var n in lista)
-                                    {
-                                        var leida = EstaLeida(n);
-
-                                        <a href="@(PuedeAbrir(n) ? n.Enlace : null)" class="ag-notif @(leida ? "ag-nv-leida" : "")" @onclick="() => AbrirNotificacion(n)">
-                                            <span class="ag-notif-ico @ObtenerTono(n)"><svg class="ag-ico"><use href="#ico-@n.Icono" /></svg></span>
-                                            <span>
-                                                <span class="ag-notif-meta"><small>@n.Etiqueta</small><small>@TiempoTranscurrido(n.FechaCreacion)</small></span>
-                                                <strong>@n.Titulo</strong>
-                                                <em>@n.Descripcion</em>
-                                            </span>
-                                            @if (!leida)
-                                            {
-                                                <span class="ag-nv-punto" title="Sin leer"></span>
-                                            }
-                                        </a>
-                                    }
-                                }
-                            </div>
-
-                            <div class="ag-panel-pie ag-nv-pie">
-                                <button type="button" class="ag-nv-marcar" @onclick="MarcarTodasComoLeidas" disabled="@(NoLeidas == 0)">Marcar todas como leídas</button>
-                                <a href="/alertas-documentos" @onclick="CerrarTodo">Ver panel completo</a>
-                            </div>
-                        </div>
-                    }
-                </div>
-            }
-            else if (EsInicio || !autenticado)
-            {
-                <a href="/login" class="ag-entrar">
-                    <svg class="ag-ico"><use href="#ico-entrar" /></svg>
-                    <span class="ag-texto-entrar">Iniciar sesión</span>
+            <div class="ag-header-der">
+                <a href="tel:+573001234567" class="ag-call-btn" title="Llamar a la federación">
+                    <span class="ag-call-ico">
+                        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" fill="none" stroke="currentColor" stroke-width="2" /></svg>
+                    </span>
+                    <span class="ag-call-txt">
+                        <small>Contacto FAAUA</small>
+                        <strong>+57 300 123 4567</strong>
+                    </span>
                 </a>
-            }
-        </div>
-    </header>
 
-    @if (HayDesplegableAbierto)
-    {
-        <div class="ag-capa-cerrar" @onclick="CerrarTodo"></div>
-    }
+                <IdiomaSelector />
 
-    @if (EsInicio)
-    {
-        <div class="ag-menu-movil @(menuNavMovilAbierto ? "abierto" : "")">
-            @foreach (var grupo in menu)
-            {
-                <p class="ag-menu-grupo">@grupo.Titulo</p>
-                @foreach (var item in grupo.Items)
-                {
-                    <a href="@item.Ruta" class="ag-menu-link" @onclick="CerrarTodo">
-                        <svg class="ag-ico"><use href="#ico-@item.Icono" /></svg>
-                        @item.Texto
-                    </a>
-                }
-            }
+                <a href="/login" class="ag-entrar">
+                    <span class="ag-texto-entrar">Iniciar sesión</span>
+                    <span class="ag-entrar-circulo" aria-hidden="true">
+                        <svg class="ag-ico"><use href="#ico-flecha-der" /></svg>
+                    </span>
+                </a>
+            </div>
+        </header>
 
-            @if (!autenticado)
-            {
-                <a href="/login" class="ag-entrar ag-entrar-bloque" @onclick="CerrarTodo">Iniciar sesión</a>
-            }
-        </div>
-    }
+        <main class="ag-main">
+            <article class="ag-contenido-inicio" @onclick="CerrarTodo">
+                @Body
+            </article>
 
-    <main class="ag-main">
-        <article class="@(EsInicio ? "ag-contenido-inicio" : "ag-contenido-admin")" @onclick="CerrarTodo">
-            @Body
-        </article>
-
-        @if (!EsInicio)
-        {
             <footer class="ag-pie">
                 <div class="ag-pie-cont">
                     <span>&copy; 2026 ASOAGRO. Federación de Asociaciones Agropecuarias (FAAUA)</span>
@@ -258,15 +316,15 @@
                     </nav>
                 </div>
             </footer>
-        }
-    </main>
-</div>
+        </main>
 
-@if (EsInicio)
-{
-    <ChatAsistente />
+        <ChatAsistente />
+    </div>
 }
 
+<!-- ======================================================== -->
+<!--             AVISO EMERGENTE EN TIEMPO REAL               -->
+<!-- ======================================================== -->
 @if (!EsInicio && avisoEmergente is not null)
 {
     var aviso = avisoEmergente;
@@ -279,10 +337,74 @@
             <em>@aviso.Descripcion</em>
             @if (PuedeAbrir(aviso))
             {
-                <a href="@aviso.Enlace" class="ag-nv-ver" @onclick="CerrarAviso">Ver detalle</a>
+                <a href="@aviso.Enlace" class="ag-nv-ver" @onclick="() => AbrirAvisoEmergente(aviso)">Ver detalle</a>
             }
         </div>
         <button type="button" class="ag-nv-cerrar" @onclick="CerrarAviso" aria-label="Cerrar aviso">&times;</button>
+    </div>
+}
+
+<!-- ======================================================== -->
+<!--   MODALES DE USUARIO Y CONFIGURACIÓN (EXACTOS DE ANTES)   -->
+<!-- ======================================================== -->
+@if (modalUsuarioActivo != null)
+{
+    <div class="hv-modal-backdrop" @onclick="CerrarModalUsuario">
+        <div class="hv-modal-dialog" @onclick:stopPropagation>
+            <header class="hv-modal-head">
+                <div>
+                    <h3>@modalUsuarioActivo</h3>
+                    <p>Configuración de cuenta y organización</p>
+                </div>
+                <button type="button" class="hv-modal-close" @onclick="CerrarModalUsuario">&times;</button>
+            </header>
+
+            <div class="hv-modal-body">
+                @if (modalUsuarioActivo == "Perfil de usuario")
+                {
+                    <p class="hv-modal-desc">Información del usuario y credenciales institucionales de la sesión activa.</p>
+                    <div class="hv-form-group">
+                        <label>Nombre completo</label>
+                        <input type="text" class="hv-form-input" value="@nombreUsuarioActual" readonly />
+                    </div>
+                    <div class="hv-form-group">
+                        <label>Correo institucional</label>
+                        <input type="email" class="hv-form-input" value="@correoUsuarioActual" readonly />
+                    </div>
+                    <div class="hv-form-group">
+                        <label>Cargo o función</label>
+                        <input type="text" class="hv-form-input" value="@($"{rolUsuarioLegible} · Federación FAAUA")" readonly />
+                    </div>
+                }
+                else if (modalUsuarioActivo == "Seguridad y clave")
+                {
+                    <div class="hv-modal-security-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z" /></svg>
+                        <span>Autenticación gestionada vía Google OAuth 2.0.</span>
+                    </div>
+                    <p class="hv-modal-desc">Tu acceso está vinculado de forma segura con tu cuenta institucional de Google.</p>
+                }
+                else if (modalUsuarioActivo == "Asociación base")
+                {
+                    <h4 style="margin: 0; color: #0d2c1c;">Asoagro</h4>
+                    <p class="hv-modal-desc">Asociación de base agropecuaria adscrita a la Federación de Asociaciones Agropecuarias del Urabá Antioqueño (FAAUA).</p>
+                    <p style="font-size: 0.82rem; color: #4a6152;">Jurisdicción: Subregión de Urabá (Apartadó, Turbo, Carepa, Chigorodó, Necoclí).</p>
+                }
+                else if (modalUsuarioActivo == "Soporte técnico")
+                {
+                    <p class="hv-modal-desc">¿Presentas inconvenientes técnicos con la plataforma?</p>
+                    <div class="hv-modal-security-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M22 6l-10 7L2 6" /></svg>
+                        <strong>soporte@faaua.org</strong>
+                    </div>
+                }
+            </div>
+
+            <footer class="hv-modal-foot">
+                <button type="button" class="hv-btn-outline" @onclick="CerrarModalUsuario">Cerrar</button>
+                <button type="button" class="hv-btn-primary" @onclick="CerrarModalUsuario">Aceptar</button>
+            </footer>
+        </div>
     </div>
 }
 
@@ -291,8 +413,8 @@
     private record GrupoMenu(string Titulo, List<ItemMenu> Items);
 
     private static readonly string[] Filtros = { "Todas", "Documentos", "Productores", "Seguimiento" };
+    private static readonly string[] RutasPublicas = { "home", "historia/origenes", "historia/impacto", "financiacion" };
 
-    // Enlaces con "#" son de ejemplo: cámbialos por tus rutas reales.
     private readonly List<GrupoMenu> menu = new()
     {
         new("Plataforma", new()
@@ -316,27 +438,46 @@
         }),
     };
 
-    // Páginas con encabezado público y sin barra lateral. Para sumar otra, agrégala a esta lista.
-    private static readonly string[] RutasPublicas = { "home", "historia/origenes", "historia/impacto", "financiacion" };
-
     private bool collapseNavMenu;
-    private bool menuMovilAbierto;
-    private bool menuNavMovilAbierto;
     private bool mostrarNotificaciones;
+    private bool mostrarMenuUsuario;
+    private string? modalUsuarioActivo;
     private string? grupoAbierto;
     private string filtroActivo = "Todas";
+    private string busquedaGlobal = string.Empty;
 
     // Usuario que inició sesión. Su correo identifica sus avisos leídos y sus roles filtran lo que ve.
     private bool autenticado;
     private string claveUsuario = string.Empty;
     private List<string> roles = new();
+    private string nombreUsuarioActual = "Manuela Andrea Mosquera";
+    private string correoUsuarioActual = "directora@asoagro-faaua.org";
+    private string fotoUsuarioActual = "";
+    private string rolUsuarioActual = "Directora";
+    private string inicialesUsuarioActual = "MM";
+
+    private string rolUsuarioLegible => rolUsuarioActual switch
+    {
+        "Directora" or "Director" => "Directora FAAUA",
+        "Presidenta" or "Presidente" => "Presidencia FAAUA",
+        "Secretaria" or "Secretaría" => "Secretaría FAAUA",
+        "Tesorero" or "Tesorera" => "Tesorería FAAUA",
+        _ => !string.IsNullOrWhiteSpace(rolUsuarioActual) ? rolUsuarioActual : "Directora FAAUA"
+    };
+
+    private static string ObtenerIniciales(string? nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre)) return "AS";
+        var partes = nombre.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length == 1) return partes[0][..Math.Min(2, partes[0].Length)].ToUpperInvariant();
+        return $"{partes[0][0]}{partes[1][0]}".ToUpperInvariant();
+    }
 
     // Aviso emergente que aparece cuando llega una notificación nueva
     private Notificacion? avisoEmergente;
     private bool _disposed;
 
     private bool EsInicio => IsHomePage();
-    private bool HayDesplegableAbierto => mostrarNotificaciones || grupoAbierto is not null || menuNavMovilAbierto;
     private string RutaActual => Navigation.ToBaseRelativePath(Navigation.Uri).Trim('/').ToLowerInvariant();
 
     // Se calculan en cada render, así siempre reflejan el estado actual del servicio
@@ -353,6 +494,11 @@
         await CargarUsuarioAsync();
     }
 
+    protected override async Task OnParametersSetAsync()
+    {
+        await CargarUsuarioAsync();
+    }
+
     private async Task CargarUsuarioAsync()
     {
         var estado = await AuthProvider.GetAuthenticationStateAsync();
@@ -363,15 +509,51 @@
         {
             claveUsuario = string.Empty;
             roles = new List<string>();
+            nombreUsuarioActual = "Invitado";
+            correoUsuarioActual = "contacto@asoagro-faaua.org";
+            fotoUsuarioActual = "";
+            rolUsuarioActual = "Invitado";
+            inicialesUsuarioActual = "IN";
             return;
         }
 
-        // El correo identifica al usuario en los avisos leídos. El nombre es solo para mostrar.
-        claveUsuario = usuario.FindFirst(ClaimTypes.Email)?.Value
-            ?? usuario.Identity?.Name
-            ?? "usuario";
-
         roles = usuario.FindAll(ClaimTypes.Role).Select(c => c.Value).ToList();
+        rolUsuarioActual = roles.FirstOrDefault() ?? "Usuario";
+
+        correoUsuarioActual = usuario.FindFirst(ClaimTypes.Email)?.Value
+            ?? usuario.FindFirst("email")?.Value
+            ?? usuario.FindFirst(ClaimTypes.NameIdentifier)?.Value
+            ?? "";
+
+        claveUsuario = !string.IsNullOrWhiteSpace(correoUsuarioActual)
+            ? correoUsuarioActual
+            : (usuario.Identity?.Name ?? "usuario");
+
+        var nombreClaim = usuario.FindFirst(ClaimTypes.Name)?.Value
+            ?? usuario.FindFirst("name")?.Value
+            ?? usuario.Identity?.Name;
+
+        if (!string.IsNullOrWhiteSpace(nombreClaim))
+        {
+            nombreUsuarioActual = nombreClaim;
+        }
+        else if (!string.IsNullOrWhiteSpace(correoUsuarioActual))
+        {
+            var parteLocal = correoUsuarioActual.Split('@')[0].Replace('.', ' ');
+            nombreUsuarioActual = System.Globalization.CultureInfo.CurrentCulture.TextInfo.ToTitleCase(parteLocal);
+        }
+        else
+        {
+            nombreUsuarioActual = rolUsuarioLegible;
+        }
+
+        fotoUsuarioActual = usuario.FindFirst("picture")?.Value
+            ?? usuario.FindFirst("urn:google:picture")?.Value
+            ?? usuario.FindFirst("image")?.Value
+            ?? usuario.FindFirst("avatar_url")?.Value
+            ?? "";
+
+        inicialesUsuarioActual = ObtenerIniciales(nombreUsuarioActual);
     }
 
     // Llega cuando cualquier pantalla publica un aviso, incluida la de otro navegador.
@@ -409,12 +591,26 @@
 
     private void CerrarAviso() => avisoEmergente = null;
 
+    private void AbrirAvisoEmergente(Notificacion aviso)
+    {
+        if (autenticado) Notificaciones.MarcarComoLeida(claveUsuario, aviso.Id);
+        var destino = PuedeAbrir(aviso) ? aviso.Enlace : null;
+        CerrarAviso();
+        if (!string.IsNullOrWhiteSpace(destino))
+        {
+            Navigation.NavigateTo(destino);
+        }
+    }
+
     private void EnCambioDeRuta(object? sender, LocationChangedEventArgs e)
     {
         CerrarTodo();
         CerrarAviso();
-        menuMovilAbierto = false;
-        InvokeAsync(StateHasChanged);
+        _ = InvokeAsync(async () =>
+        {
+            await CargarUsuarioAsync();
+            StateHasChanged();
+        });
     }
 
     private bool IsHomePage()
@@ -425,34 +621,25 @@
 
     private bool EsRutaActiva(string ruta) => ruta != "#" && RutaActual == ruta.Trim('/').ToLowerInvariant();
 
-    private string TituloSeccion() => RutaActual switch
-    {
-        "registrar-asociado" => "Registrar asociado",
-        "consultar-asociados" => "Consultar registros",
-        "alertas-documentos" => "Alertas y documentos",
-        "actas-estatutos" => "Panel documental",
-        "actas-estatutos/documentos" => "Repositorio de actas",
-        "actas-estatutos/registrar" => "Registrar documento",
-        "actas-estatutos/historial" => "Historial de actividad",
-        "historia/origenes" => "Orígenes y misión",
-        "historia/impacto" => "Impacto y trazabilidad",
-        _ => "Inicio del panel"
-    };
+    private void ToggleNavMenu() => collapseNavMenu = !collapseNavMenu;
 
-    // Escritorio: oculta o muestra la barra lateral. Móvil: abre o cierra el cajón.
-    private void ToggleNavMenu()
+    private void ToggleNotificaciones()
     {
-        collapseNavMenu = !collapseNavMenu;
-        menuMovilAbierto = !menuMovilAbierto;
+        var abrir = !mostrarNotificaciones;
+        CerrarTodo();
+        mostrarNotificaciones = abrir;
     }
 
-    private void CerrarMenuMovil() => menuMovilAbierto = false;
-
-    private void ToggleMenuNavMovil()
+    private void ToggleMenuUsuario()
     {
-        var abrir = !menuNavMovilAbierto;
+        var abrir = !mostrarMenuUsuario;
         CerrarTodo();
-        menuNavMovilAbierto = abrir;
+        mostrarMenuUsuario = abrir;
+    }
+
+    private void AlternarChat()
+    {
+        // Canal de chat
     }
 
     private void AlternarGrupo(string titulo)
@@ -462,18 +649,22 @@
         if (abrir) grupoAbierto = titulo;
     }
 
-    private void ToggleNotificaciones()
-    {
-        var abrir = !mostrarNotificaciones;
-        CerrarTodo();
-        mostrarNotificaciones = abrir;
-    }
-
     private void CerrarTodo()
     {
         mostrarNotificaciones = false;
+        mostrarMenuUsuario = false;
         grupoAbierto = null;
-        menuNavMovilAbierto = false;
+    }
+
+    private void AbrirModalUsuario(string modal)
+    {
+        CerrarTodo();
+        modalUsuarioActivo = modal;
+    }
+
+    private void CerrarModalUsuario()
+    {
+        modalUsuarioActivo = null;
     }
 
     private void FiltrarNotificaciones(string filtro) => filtroActivo = filtro;
@@ -496,7 +687,18 @@
     private void AbrirNotificacion(Notificacion notificacion)
     {
         if (autenticado) Notificaciones.MarcarComoLeida(claveUsuario, notificacion.Id);
+        var destino = PuedeAbrir(notificacion) ? notificacion.Enlace : null;
         CerrarTodo();
+        if (!string.IsNullOrWhiteSpace(destino))
+        {
+            Navigation.NavigateTo(destino);
+        }
+    }
+
+    private void IrAPanelCompleto()
+    {
+        CerrarTodo();
+        Navigation.NavigateTo("/alertas-documentos");
     }
 
     private void MarcarTodasComoLeidas()
@@ -517,6 +719,14 @@
         NivelNotificacion.Advertencia => "advertencia",
         _ => string.Empty
     };
+
+    private void ManejarBusquedaGlobal(Microsoft.AspNetCore.Components.Web.KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !string.IsNullOrWhiteSpace(busquedaGlobal))
+        {
+            Navigation.NavigateTo($"/consultar-asociados?q={Uri.EscapeDataString(busquedaGlobal)}");
+        }
+    }
 
     private static string TiempoTranscurrido(DateTime fecha)
     {

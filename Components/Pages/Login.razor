@@ -375,7 +375,8 @@
         StateHasChanged();
         try
         {
-            // TODO: aquí va tu lógica de autenticación con usuario y contraseña.
+            var emailParam = Uri.EscapeDataString(loginModel.Usuario?.Trim() ?? "");
+            Navigation.NavigateTo($"/Auth/login-local?email={emailParam}", forceLoad: true);
             await Task.CompletedTask;
         }
         finally

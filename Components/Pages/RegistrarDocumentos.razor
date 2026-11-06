@@ -1,205 +1,2427 @@
 @page "/registrar-documentos"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Tesorero")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Directora,Director,Presidenta,Presidente")]
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
+@using System.Security.Claims
+@using System.Text.RegularExpressions
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.JSInterop
+@using Asoagro.Models
+@using Asoagro.Services
+@inject IDocumentoAsociacionService DocumentoService
+@inject MunicipiosColombiaService MunicipiosService
+@inject NotificacionService Notificaciones
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
 
-<PageTitle>Registrar Documentos - Asoagro & FAAUA</PageTitle>
+<PageTitle>Registro de Documentación Institucional · Asoagro & FAAUA</PageTitle>
 
-<div class="asoagro-documentos-wrapper container-fluid px-0 pb-5">
-    
-    <!-- BANNER HERO EJECUTIVO -->
-    <div class="asoagro-hero-banner p-4 p-md-5 mb-4 position-relative overflow-hidden rounded-4">
-        <div class="hero-bg-shapes"></div>
-        <div class="row align-items-center position-relative" style="z-index: 2;">
-            <div class="col-lg-8">
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                    <span class="badge-agri-pill">
-                        <i class="bi bi-folder-fill me-1"></i> FAAUA · Gestión Documental
+<div class="ra">
+    <div class="ra-shell">
+
+        <!-- HERO BANNER INSTITUCIONAL -->
+        <section class="ra-hero">
+            <div class="ra-hero-texto">
+                <div class="ra-etiquetas">
+                    <span class="ra-etiqueta">
+                        <svg class="ra-ico"><use href="#ico-brote" /></svg>
+                        FAAUA · Urabá Antioqueño
                     </span>
-                    <span class="badge-agri-pill-sub">
-                        <i class="bi bi-shield-fill-check me-1"></i> Control y Cumplimiento
+                    <span class="ra-etiqueta ra-etiqueta-trigo">
+                        <svg class="ra-ico"><use href="#ico-escudo" /></svg>
+                        Secretaría General · Gestión Documental
                     </span>
                 </div>
-                <h1 class="fw-extrabold text-white mb-2 tracking-tight" style="font-size: 1.85rem; font-weight: 800;">
-                    Registro y Archivo de Soportes Prediales
-                </h1>
-                <p class="text-white-50 mb-0 small" style="max-width: 600px; line-height: 1.6;">
-                    Centralice los documentos legales, certificados de tradición y libertades, y avales BPA para anticipar vencimientos y cumplir con convocatorias.
+                <h1 class="ra-titulo">Registro de Documentación Institucional de Asociaciones</h1>
+                <p class="ra-descripcion">
+                    Custodia y radicación de los expedientes legales, estatutarios y tributarios de las asociaciones agrícolas federadas.
+                    Flujo por pasos para centralizar la información institucional de la entidad, sin solicitar datos personales de sus asociados.
                 </p>
             </div>
-            
-            <div class="col-lg-4 mt-4 mt-lg-0 text-lg-end">
-                <div class="hero-stats-glass p-3 rounded-4 d-inline-block text-start w-100" style="max-width: 260px;">
-                    <div class="d-flex align-items-center gap-3 mb-2">
-                        <div class="hero-stat-icon">
-                            <i class="bi bi-cloud-arrow-up-fill"></i>
-                        </div>
-                        <div>
-                            <span class="d-block extra-small text-white-50">Estado del Módulo</span>
-                            <span class="fw-bold text-success small d-flex align-items-center gap-1.5">
-                                <span class="pulse-dot"></span> Sincronizado
-                            </span>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between gap-3 pt-2 border-top border-white border-opacity-10">
-                        <span class="extra-small text-white-50">Seguridad</span>
-                        <span class="fw-bold text-white small">Cifrado PDF/Img</span>
-                    </div>
+
+            <div class="ra-hero-progreso">
+                <div class="ra-hero-progreso-top">
+                    <span class="ra-hero-etiqueta">Avance del expediente</span>
+                    <strong class="ra-hero-valor">@CalcularPorcentajeAvance()%</strong>
                 </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ALERTA DE ÉXITO DINÁMICA -->
-    @if (!string.IsNullOrEmpty(mensajeExito))
-    {
-        <div class="toast-banner toast-success p-3 mb-4 d-flex align-items-center justify-content-between animate-fade-in">
-            <div class="d-flex align-items-center gap-3">
-                <div class="toast-icon-box bg-success text-white"><i class="bi bi-check2-all fs-4"></i></div>
-                <div>
-                    <h6 class="fw-bold mb-0 text-dark">¡Soporte Digitalizado con Éxito!</h6>
-                    <span class="small text-secondary">@mensajeExito</span>
+                <div class="ra-barra">
+                    <div class="ra-barra-relleno" style="width: @(CalcularPorcentajeAvance())%;"></div>
                 </div>
+                <span class="ra-hero-pie">Paso @pasoActual de 7 · @ObtenerNombrePaso(pasoActual)</span>
             </div>
-            <button type="button" class="btn-close" @onclick="() => mensajeExito = string.Empty"></button>
-        </div>
-    }
+        </section>
 
-    <EditForm Model="@documentoModel" OnValidSubmit="GuardarDocumento">
-        <DataAnnotationsValidator />
-
-        <div class="row g-4">
-            <!-- COLUMNA IZQUIERDA: FORMULARIO MODULAR -->
-            <div class="col-lg-8">
-                <div class="unified-form-panel p-4 p-md-5">
-                    
-                    <div class="mb-4">
-                        <div class="section-header-title mb-3">
-                            <div class="section-icon-badge icon-purple"><i class="bi bi-file-earmark-text-fill"></i></div>
-                            <div>
-                                <h6 class="fw-bold text-dark mb-0">Información del Soporte Digital</h6>
-                                <span class="extra-small text-muted">Seleccione al productor y el tipo de documento legal o predial</span>
-                            </div>
-                        </div>
-
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="documentoAsociado" class="form-label-modern">Cédula o Código del Asociado <span class="text-danger">*</span></label>
-                                <div class="input-modern-wrapper">
-                                    <i class="bi bi-credit-card-2-front-fill input-icon"></i>
-                                    <InputText id="documentoAsociado" class="form-control form-control-modern" placeholder="Ej: 1045123890" @bind-Value="documentoModel.DocumentoAsociado" />
-                                </div>
-                                <ValidationMessage For="@(() => documentoModel.DocumentoAsociado)" class="validation-msg" />
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="tipoDocumento" class="form-label-modern">Tipo de Documento <span class="text-danger">*</span></label>
-                                <div class="input-modern-wrapper">
-                                    <i class="bi bi-file-earmark-richtext-fill input-icon"></i>
-                                    <InputSelect id="tipoDocumento" class="form-select form-control-modern" @bind-Value="documentoModel.TipoDocumento">
-                                        <option value="">Seleccione el tipo...</option>
-                                        <option value="CertificadoFinca">Certificado de Tradición y Libertad</option>
-                                        <option value="CedulaCiudadania">Cédula de Ciudadanía Digital</option>
-                                        <option value="RegistroBPA">Certificación Buenas Prácticas Agrícolas (BPA)</option>
-                                        <option value="AvalTecnico">Aval de Asistencia Técnica</option>
-                                    </InputSelect>
-                                </div>
-                                <ValidationMessage For="@(() => documentoModel.TipoDocumento)" class="validation-msg" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="section-divider my-4"></div>
-
-                    <!-- ZONA DE CARGA DE ARCHIVO -->
-                    <div class="upload-zone-modern p-4 text-center rounded-4 mb-4">
-                        <div class="upload-icon-box mx-auto mb-3">
-                            <i class="bi bi-cloud-arrow-up-fill fs-3 text-success"></i>
-                        </div>
-                        <label for="archivo" class="form-label fw-bold text-dark mb-1">Adjuntar Archivo Digitalizado (PDF / Imagen)</label>
-                        <p class="text-muted extra-small mb-3">Formatos admitidos: PDF, PNG, JPG (Máx. 10MB)</p>
-                        
-                        <div class="d-inline-block">
-                            <InputFile id="archivo" class="form-control form-control-sm" OnChange="CargarArchivo" accept=".pdf,.png,.jpg,.jpeg" />
-                        </div>
-                        <ValidationMessage For="@(() => documentoModel.ArchivoNombre)" class="validation-msg mt-2" />
-
-                        @if (!string.IsNullOrEmpty(documentoModel.ArchivoNombre))
+        <!-- NAVEGACIÓN DE PASOS (STEPPER DE 7 SECCIONES) -->
+        <nav class="ra-pasos" aria-label="Pasos del expediente institucional">
+            @for (int p = 1; p <= 7; p++)
+            {
+                var nPaso = p;
+                var activo = pasoActual == nPaso;
+                var completo = EsPasoCompleto(nPaso);
+                <button type="button"
+                        class="ra-paso @(activo ? "activo" : "") @(completo ? "completo" : "")"
+                        @onclick="() => IrAlPaso(nPaso)"
+                        title="@ObtenerNombrePaso(nPaso)">
+                    <span class="ra-paso-num">
+                        @if (completo && !activo)
                         {
-                            <div class="mt-3">
-                                <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill small fw-bold">
-                                    <i class="bi bi-file-earmark-check-fill me-1"></i> @documentoModel.ArchivoNombre (Cargado OK)
-                                </span>
+                            <svg class="ra-ico"><use href="#ico-check" /></svg>
+                        }
+                        else
+                        {
+                            <span>@nPaso</span>
+                        }
+                    </span>
+                    <span class="ra-paso-info">
+                        <span class="ra-paso-titulo">@ObtenerNombrePasoCorto(nPaso)</span>
+                        <span class="ra-paso-sub">Paso @nPaso</span>
+                    </span>
+                </button>
+            }
+        </nav>
+
+        <!-- ALERTA DE MENSAJE O VALIDACIÓN -->
+        @if (!string.IsNullOrWhiteSpace(mensajeAlerta))
+        {
+            <div class="ra-alerta @(esErrorAlerta ? "ra-alerta-error" : "ra-alerta-exito")" role="alert">
+                <i class="bi @(esErrorAlerta ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill") fs-5"></i>
+                <div class="flex-grow-1">
+                    <strong>@(esErrorAlerta ? "Atención requerida" : "Información")</strong>
+                    <div>@mensajeAlerta</div>
+                </div>
+                <button type="button" class="ra-alerta-cerrar" @onclick='() => mensajeAlerta = ""' aria-label="Cerrar">&times;</button>
+            </div>
+        }
+
+        <!-- PANEL PRINCIPAL DEL FORMULARIO -->
+        <section class="ra-panel">
+
+            <!-- =========================================================================================
+                 PASO 1: IDENTIFICACIÓN DE LA ASOCIACIÓN
+                 ========================================================================================= -->
+            @if (pasoActual == 1)
+            {
+                <div class="ra-seccion">
+                    <header class="ra-seccion-cab">
+                        <span class="ra-seccion-ico"><svg class="ra-ico"><use href="#ico-escudo" /></svg></span>
+                        <div class="ra-seccion-texto">
+                            <span class="ra-kicker">Sección 1 de 7</span>
+                            <h2>Identificación de la Asociación</h2>
+                            <p>Razón social, NIT institucional, personería, grado y estado legal de la entidad.</p>
+                        </div>
+                        <span class="ra-estado @(EsPasoCompleto(1) ? "ra-estado-ok" : "")">
+                            @(EsPasoCompleto(1) ? "Completo" : "Pendiente")
+                        </span>
+                    </header>
+
+                    <div class="ra-body">
+                        <div class="ra-grid">
+                            <div class="ra-campo ra-grid-full">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="txt-nombre-legal">
+                                        Nombre legal completo
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                    <span class="ra-hint">Razón social formal registrada en estatutos y personería jurídica.</span>
+                                </div>
+                                <input id="txt-nombre-legal"
+                                       type="text"
+                                       class="ra-input @(TieneError("NombreLegal") ? "ra-input-error" : "")"
+                                       placeholder="Ej.: Asociación Agropecuaria de Urabá"
+                                       @bind="modelo.NombreLegal"
+                                       @bind:after='() => ValidarCampo("NombreLegal")' />
+                                @if (TieneError("NombreLegal"))
+                                {
+                                    <span class="ra-error-campo">@ObtenerError("NombreLegal")</span>
+                                }
+                            </div>
+
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="txt-sigla">
+                                        Sigla o acrónimo
+                                        <span class="ra-badge-opc">Opcional</span>
+                                    </label>
+                                    <span class="ra-hint">Abreviatura reconocida para comunicaciones.</span>
+                                </div>
+                                <input id="txt-sigla"
+                                       type="text"
+                                       maxlength="20"
+                                       class="ra-input @(TieneError("Sigla") ? "ra-input-error" : "")"
+                                       placeholder="Ej.: ASOAGRO"
+                                       @bind="modelo.Sigla"
+                                       @bind:after='() => ValidarCampo("Sigla")' />
+                                @if (TieneError("Sigla"))
+                                {
+                                    <span class="ra-error-campo">@ObtenerError("Sigla")</span>
+                                }
+                            </div>
+
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="sel-tipo-org">
+                                        Tipo de organización
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                    <span class="ra-hint">Naturaleza jurídica según Ley 2219 de 2022.</span>
+                                </div>
+                                <select id="sel-tipo-org" class="ra-select" @bind="modelo.TipoOrganizacion">
+                                    <option value="Asociación campesina">Asociación campesina</option>
+                                    <option value="Asociación agropecuaria">Asociación agropecuaria</option>
+                                    <option value="Asociación de mujeres rurales">Asociación de mujeres rurales</option>
+                                    <option value="Cooperativa agropecuaria">Cooperativa agropecuaria</option>
+                                    <option value="Organización comunitaria de productores">Organización comunitaria de productores</option>
+                                    <option value="Otra categoría asociativa">Otra categoría asociativa</option>
+                                </select>
+                            </div>
+
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="sel-ambito">
+                                        Ámbito territorial
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                    <span class="ra-hint">Jurisdicción de cobertura estatutaria.</span>
+                                </div>
+                                <select id="sel-ambito" class="ra-select" @bind="modelo.Ambito" @bind:after="OnAmbitoCambiado">
+                                    <option value="Municipal">Municipal</option>
+                                    <option value="Distrital">Distrital</option>
+                                    <option value="Departamental">Departamental</option>
+                                    <option value="Regional">Regional</option>
+                                    <option value="Nacional">Nacional</option>
+                                </select>
+                            </div>
+
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="sel-grado">
+                                        Grado de la organización
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                    <span class="ra-hint">Nivel de articulación federada.</span>
+                                </div>
+                                <select id="sel-grado" class="ra-select" @bind="modelo.GradoOrganizacion">
+                                    <option value="Primer grado (Asociación de base)">Primer grado (Asociación de base)</option>
+                                    <option value="Segundo grado (Federación o unión)">Segundo grado (Federación o unión de asociaciones)</option>
+                                    <option value="Tercer grado (Confederación nacional)">Tercer grado (Confederación nacional)</option>
+                                </select>
+                            </div>
+
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="txt-nit">
+                                        NIT institucional
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                    @if (!string.IsNullOrWhiteSpace(modelo.Nit))
+                                    {
+                                        <span class="badge bg-light text-dark border">DV DIAN: @CalcularDigitoVerificacionDian(modelo.Nit)</span>
+                                    }
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <input id="txt-nit"
+                                           type="text"
+                                           maxlength="10"
+                                           class="ra-input @(TieneError("Nit") ? "ra-input-error" : "")"
+                                           placeholder="Ej.: 900543210 (solo dígitos, no cédula)"
+                                           @bind="modelo.Nit"
+                                           @bind:after="OnNitCambiado" />
+                                    <input type="text"
+                                           style="width: 50px; text-align: center;"
+                                           class="ra-input bg-light"
+                                           placeholder="DV"
+                                           readonly
+                                           value="@modelo.DigitoVerificacion"
+                                           title="Dígito de verificación DIAN (Módulo 11)" />
+                                </div>
+                                <span class="ra-hint">Número de Identificación Tributaria asignado a la persona jurídica.</span>
+                                @if (TieneError("Nit"))
+                                {
+                                    <span class="ra-error-campo">@ObtenerError("Nit")</span>
+                                }
+                            </div>
+
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="txt-fecha-const">
+                                        Fecha de constitución
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                    <span class="ra-hint">Fecha de asamblea fundacional (no futura).</span>
+                                </div>
+                                <input id="txt-fecha-const"
+                                       type="date"
+                                       max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                       class="ra-input @(TieneError("FechaConstitucion") ? "ra-input-error" : "")"
+                                       @bind="modelo.FechaConstitucion"
+                                       @bind:after='() => ValidarCampo("FechaConstitucion")' />
+                                @if (TieneError("FechaConstitucion"))
+                                {
+                                    <span class="ra-error-campo">@ObtenerError("FechaConstitucion")</span>
+                                }
+                            </div>
+
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="sel-estado-asoc">
+                                        Estado institucional
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                    <span class="ra-hint">Condición operativa de la personería.</span>
+                                </div>
+                                <select id="sel-estado-asoc" class="ra-select" @bind="modelo.Estado">
+                                    <option value="Activa">Activa</option>
+                                    <option value="En actualización">En actualización</option>
+                                    <option value="Suspendida">Suspendida</option>
+                                    <option value="Disuelta">Disuelta</option>
+                                    <option value="En liquidación">En liquidación</option>
+                                </select>
+                            </div>
+
+                            <div class="ra-campo ra-grid-full">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="txt-excepciones">
+                                        Excepciones o justificación de identificación
+                                        <span class="ra-badge-opc">Opcional</span>
+                                    </label>
+                                    <span class="ra-hint">Explica cualquier régimen normativo excepcional o exención aplicable.</span>
+                                </div>
+                                <textarea id="txt-excepciones"
+                                          class="ra-textarea"
+                                          placeholder="Ej.: Organización de reciente constitución en trámite de inscripción ante autoridad especial..."
+                                          @bind="modelo.ExcepcionesIdentificacion"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- =========================================================================================
+                 PASO 2: DOMICILIO Y CONTACTO INSTITUCIONAL
+                 ========================================================================================= -->
+            @if (pasoActual == 2)
+            {
+                <div class="ra-seccion">
+                    <header class="ra-seccion-cab">
+                        <span class="ra-seccion-ico"><svg class="ra-ico"><use href="#ico-mapa" /></svg></span>
+                        <div class="ra-seccion-texto">
+                            <span class="ra-kicker">Sección 2 de 7</span>
+                            <h2>Domicilio y Contacto Institucional</h2>
+                            <p>Sede principal de la asociación, canales oficiales de notificación y contacto formal.</p>
+                        </div>
+                        <span class="ra-estado @(EsPasoCompleto(2) ? "ra-estado-ok" : "")">
+                            @(EsPasoCompleto(2) ? "Completo" : "Pendiente")
+                        </span>
+                    </header>
+
+                    <div class="ra-body">
+                        <div class="ra-grid">
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="txt-departamento">
+                                        Departamento
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                    <span class="ra-hint">Departamento de domicilio legal.</span>
+                                </div>
+                                <input id="txt-departamento"
+                                       type="text"
+                                       class="ra-input"
+                                       placeholder="Ej.: Antioquia"
+                                       @bind="modelo.Departamento" />
+                            </div>
+
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="sel-municipio">
+                                        Municipio
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                    <span class="ra-hint">Municipio sede principal.</span>
+                                </div>
+                                <select id="sel-municipio" class="ra-select" @bind="modelo.Municipio">
+                                    <optgroup label="Subregión de Urabá Antioqueño">
+                                        <option value="Apartadó">Apartadó</option>
+                                        <option value="Turbo">Turbo</option>
+                                        <option value="Carepa">Carepa</option>
+                                        <option value="Chigorodó">Chigorodó</option>
+                                        <option value="Necoclí">Necoclí</option>
+                                        <option value="San Pedro de Urabá">San Pedro de Urabá</option>
+                                        <option value="San Juan de Urabá">San Juan de Urabá</option>
+                                        <option value="Arboletes">Arboletes</option>
+                                        <option value="Mutatá">Mutatá</option>
+                                        <option value="Murindó">Murindó</option>
+                                        <option value="Vigía del Fuerte">Vigía del Fuerte</option>
+                                    </optgroup>
+                                    <optgroup label="Otras Regiones">
+                                        <option value="Medellín">Medellín</option>
+                                        <option value="Dabeiba">Dabeiba</option>
+                                        <option value="Acandí">Acandí (Chocó)</option>
+                                        <option value="Unguía">Unguía (Chocó)</option>
+                                        <option value="Otro municipio">Otro municipio</option>
+                                    </optgroup>
+                                </select>
+                            </div>
+
+                            <div class="ra-campo ra-grid-full">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="txt-dir-principal">
+                                        Dirección principal
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                    <span class="ra-hint">Ubicación física de la sede u oficina de atención de la asociación.</span>
+                                </div>
+                                <input id="txt-dir-principal"
+                                       type="text"
+                                       class="ra-input @(TieneError("DireccionPrincipal") ? "ra-input-error" : "")"
+                                       placeholder="Ej.: Carrera 100 # 98-45, Barrio Ortíz / Casa Campesina"
+                                       @bind="modelo.DireccionPrincipal"
+                                       @bind:after='() => ValidarCampo("DireccionPrincipal")' />
+                                @if (TieneError("DireccionPrincipal"))
+                                {
+                                    <span class="ra-error-campo">@ObtenerError("DireccionPrincipal")</span>
+                                }
+                            </div>
+
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="txt-correo-inst">
+                                        Correo institucional
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                    <span class="ra-hint">Canal oficial para notificaciones y convocatorias.</span>
+                                </div>
+                                <input id="txt-correo-inst"
+                                       type="email"
+                                       class="ra-input @(TieneError("CorreoInstitucional") ? "ra-input-error" : "")"
+                                       placeholder="Ej.: secretaria@asoagro-uraba.org"
+                                       @bind="modelo.CorreoInstitucional"
+                                       @bind:after='() => ValidarCampo("CorreoInstitucional")' />
+                                @if (TieneError("CorreoInstitucional"))
+                                {
+                                    <span class="ra-error-campo">@ObtenerError("CorreoInstitucional")</span>
+                                }
+                            </div>
+
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="txt-tel-inst">
+                                        Teléfono institucional
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                    <span class="ra-hint">Celular (10 dígitos) o teléfono fijo con indicativo.</span>
+                                </div>
+                                <input id="txt-tel-inst"
+                                       type="tel"
+                                       class="ra-input @(TieneError("TelefonoContacto") ? "ra-input-error" : "")"
+                                       placeholder="Ej.: 3104509876 o (604) 8281234"
+                                       @bind="modelo.TelefonoContacto"
+                                       @bind:after='() => ValidarCampo("TelefonoContacto")' />
+                                @if (TieneError("TelefonoContacto"))
+                                {
+                                    <span class="ra-error-campo">@ObtenerError("TelefonoContacto")</span>
+                                }
+                            </div>
+
+                            <div class="ra-campo ra-grid-full">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="chk-notif-misma"
+                                           checked="@modelo.DireccionNotificacionesEsMisma"
+                                           @onchange="OnToggleNotificacionesEsMisma" />
+                                    <label class="form-check-label fw-bold" for="chk-notif-misma">
+                                        La dirección de notificaciones es la misma dirección principal
+                                    </label>
+                                </div>
+                                @if (!modelo.DireccionNotificacionesEsMisma)
+                                {
+                                    <div class="ra-campo mt-2">
+                                        <label class="ra-label" for="txt-dir-notif">
+                                            Dirección para notificaciones
+                                            <span class="ra-badge-req">Obligatorio</span>
+                                        </label>
+                                        <input id="txt-dir-notif"
+                                               type="text"
+                                               class="ra-input"
+                                               placeholder="Ej.: Apartado Aéreo 102 / Calle 96 # 102-15"
+                                               @bind="modelo.DireccionNotificaciones" />
+                                    </div>
+                                }
+                            </div>
+
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label" for="txt-sitio-web">
+                                        Sitio web o portal oficial
+                                        <span class="ra-badge-opc">Opcional</span>
+                                    </label>
+                                    <span class="ra-hint">Dirección web institucional.</span>
+                                </div>
+                                <input id="txt-sitio-web"
+                                       type="url"
+                                       class="ra-input"
+                                       placeholder="Ej.: https://asoagro-uraba.org"
+                                       @bind="modelo.SitioWeb" />
+                            </div>
+
+                            <div class="ra-subtarjeta ra-grid-full">
+                                <h4 class="ra-subtarjeta-titulo">
+                                    <i class="bi bi-person-lines-fill"></i> Persona de Contacto Institucional (Opcional)
+                                </h4>
+                                <p class="small text-muted mb-2">
+                                    Datos exclusivamente de contacto para trámites oficiales de la asociación. No constituyen expediente personal de asociado ni requieren cédula.
+                                </p>
+                                <div class="ra-grid">
+                                    <div class="ra-campo">
+                                        <label class="ra-label" for="txt-contacto-nombre">
+                                            Nombre completo del enlace
+                                            <span class="ra-badge-opc">Opcional</span>
+                                        </label>
+                                        <input id="txt-contacto-nombre"
+                                               type="text"
+                                               class="ra-input"
+                                               placeholder="Ej.: Karen Argumedo"
+                                               @bind="modelo.ContactoNombre" />
+                                    </div>
+                                    <div class="ra-campo">
+                                        <label class="ra-label" for="txt-contacto-cargo">
+                                            Cargo en la organización
+                                            <span class="ra-badge-opc">Opcional</span>
+                                        </label>
+                                        <input id="txt-contacto-cargo"
+                                               type="text"
+                                               class="ra-input"
+                                               placeholder="Ej.: Secretaria General / Coordinadora Administrativa"
+                                               @bind="modelo.ContactoCargo" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- =========================================================================================
+                 PASO 3: REGISTRO LEGAL Y CONSTITUCIÓN (LEY 2219 DE 2022)
+                 ========================================================================================= -->
+            @if (pasoActual == 3)
+            {
+                <div class="ra-seccion">
+                    <header class="ra-seccion-cab">
+                        <span class="ra-seccion-ico"><svg class="ra-ico"><use href="#ico-doc" /></svg></span>
+                        <div class="ra-seccion-texto">
+                            <span class="ra-kicker">Sección 3 de 7</span>
+                            <h2>Registro Legal y Constitución (Ley 2219 de 2022)</h2>
+                            <p>Inscripción formal, matrícula, soporte RUES y elementos estatutarios pertinentes.</p>
+                        </div>
+                        <span class="ra-estado @(EsPasoCompleto(3) ? "ra-estado-ok" : "")">
+                            @(EsPasoCompleto(3) ? "Completo" : "Pendiente")
+                        </span>
+                    </header>
+
+                    <div class="ra-body">
+                        <!-- Datos de Registro Oficial -->
+                        <div class="ra-subtarjeta">
+                            <h4 class="ra-subtarjeta-titulo">
+                                <i class="bi bi-bank"></i> Datos de Inscripción Oficial
+                            </h4>
+                            <div class="ra-grid">
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Entidad donde está inscrita
+                                            <span class="ra-badge-req">Obligatorio</span>
+                                        </label>
+                                        <span class="ra-hint">Cámara de Comercio o entidad competente.</span>
+                                    </div>
+                                    <input type="text"
+                                           class="ra-input @(TieneError("EntidadInscripcion") ? "ra-input-error" : "")"
+                                           placeholder="Ej.: Cámara de Comercio de Urabá"
+                                           @bind="modelo.EntidadInscripcion"
+                                           @bind:after='() => ValidarCampo("EntidadInscripcion")' />
+                                    @if (TieneError("EntidadInscripcion"))
+                                    {
+                                        <span class="ra-error-campo">@ObtenerError("EntidadInscripcion")</span>
+                                    }
+                                </div>
+
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Número de matrícula o radicado
+                                            <span class="ra-badge-req">Obligatorio</span>
+                                        </label>
+                                        <span class="ra-hint">Identificador oficial en el registro público.</span>
+                                    </div>
+                                    <input type="text"
+                                           class="ra-input @(TieneError("NumeroRegistro") ? "ra-input-error" : "")"
+                                           placeholder="Ej.: 00028471-03"
+                                           @bind="modelo.NumeroRegistro"
+                                           @bind:after='() => ValidarCampo("NumeroRegistro")' />
+                                    @if (TieneError("NumeroRegistro"))
+                                    {
+                                        <span class="ra-error-campo">@ObtenerError("NumeroRegistro")</span>
+                                    }
+                                </div>
+
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Fecha de inscripción en registro
+                                            <span class="ra-badge-req">Obligatorio</span>
+                                        </label>
+                                        <span class="ra-hint">Fecha oficial de expedición de matrícula.</span>
+                                    </div>
+                                    <input type="date"
+                                           max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                           class="ra-input"
+                                           @bind="modelo.FechaInscripcion" />
+                                </div>
+
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Cámara de Comercio y número RUES
+                                            <span class="ra-badge-opc">Opcional</span>
+                                        </label>
+                                        <span class="ra-hint">Código único de registro empresarial.</span>
+                                    </div>
+                                    <input type="text"
+                                           class="ra-input"
+                                           placeholder="Ej.: RUES CCU-984712"
+                                           @bind="modelo.NumeroRues" />
+                                </div>
+
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Autoridad de inspección, vigilancia y control
+                                            <span class="ra-badge-opc">Opcional</span>
+                                        </label>
+                                        <span class="ra-hint">Entidad estatal competente (ej. Gobernación, MinAgricultura).</span>
+                                    </div>
+                                    <input type="text"
+                                           class="ra-input"
+                                           placeholder="Ej.: Gobernación de Antioquia / MinAgricultura"
+                                           @bind="modelo.AutoridadVigilancia" />
+                                </div>
+
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Fecha de renovación de matrícula
+                                            <span class="ra-badge-opc">Opcional</span>
+                                        </label>
+                                        <span class="ra-hint">Generará alerta anual de renovación mercantil.</span>
+                                    </div>
+                                    <input type="date" class="ra-input" @bind="modelo.FechaRenovacionMatricula" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Elementos pertinentes Ley 2219 de 2022 -->
+                        <div class="ra-subtarjeta">
+                            <h4 class="ra-subtarjeta-titulo">
+                                <i class="bi bi-file-earmark-check"></i> Elementos Constitutivos (Ley 2219 de 2022)
+                            </h4>
+                            <div class="ra-grid">
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Fecha de asamblea fundacional
+                                            <span class="ra-badge-req">Obligatorio</span>
+                                        </label>
+                                    </div>
+                                    <input type="date" class="ra-input" @bind="modelo.FechaAsambleaConstitucion" />
+                                </div>
+
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Aprobación de estatutos
+                                            <span class="ra-badge-req">Obligatorio</span>
+                                        </label>
+                                    </div>
+                                    <div class="d-flex gap-3 align-items-center mt-2">
+                                        <label class="small"><input type="radio" name="aprob-est" checked="@modelo.AprobacionEstatutos" @onchange="() => modelo.AprobacionEstatutos = true" /> Sí, aprobados en asamblea</label>
+                                        <label class="small"><input type="radio" name="aprob-est" checked="@(!modelo.AprobacionEstatutos)" @onchange="() => modelo.AprobacionEstatutos = false" /> Pendiente de protocolización</label>
+                                    </div>
+                                </div>
+
+                                <div class="ra-campo ra-grid-full">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Cuotas iniciales de sostenimiento
+                                            <span class="ra-badge-opc">Opcional</span>
+                                        </label>
+                                        <span class="ra-hint">Acuerdos económicos fijados por fundadores en asamblea.</span>
+                                    </div>
+                                    <div class="d-flex gap-3 align-items-center mb-2">
+                                        <label class="small"><input type="radio" name="cuotas-acord" checked="@modelo.CuotasInicialesAcordadas" @onchange="() => modelo.CuotasInicialesAcordadas = true" /> Sí acordadas</label>
+                                        <label class="small"><input type="radio" name="cuotas-acord" checked="@(!modelo.CuotasInicialesAcordadas)" @onchange="() => modelo.CuotasInicialesAcordadas = false" /> No acordadas inicialmente</label>
+                                    </div>
+                                    @if (modelo.CuotasInicialesAcordadas)
+                                    {
+                                        <input type="text"
+                                               class="ra-input"
+                                               placeholder="Ej.: Cuota de ingreso $50.000 y sostenimiento mensual $20.000"
+                                               @bind="modelo.DetalleCuotasIniciales" />
+                                    }
+                                </div>
+
+                                <div class="ra-campo ra-grid-full">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Reglas de autogobierno y autocontrol en estatutos
+                                            <span class="ra-badge-req">Obligatorio</span>
+                                        </label>
+                                        <span class="ra-hint">Mecanismos de toma de decisiones, mayorías y comités de control social.</span>
+                                    </div>
+                                    <textarea class="ra-textarea"
+                                              placeholder="Ej.: Asamblea general ordinaria anual con quórum del 50%+1; comité de control social de 3 miembros..."
+                                              @bind="modelo.ReglasAutogobierno"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Carga documental independiente del Paso 3 -->
+                        <h4 class="mt-2 mb-2 fw-bold text-dark fs-6">Soportes Documentales de Constitución</h4>
+                        <div class="d-flex flex-column gap-3">
+                            @RenderCardDocumento("DOC_ACTA_CONST", "Acta de Constitución Firmada", "Acta original firmada por los asociados fundadores con la declaración de constitución.")
+                            @RenderCardDocumento("DOC_ESTATUTOS", "Estatutos Vigentes Aprobados", "Texto estatutario completo y formalmente vigente de la asociación.")
+                            @RenderCardDocumento("DOC_CERT_CONST", "Constancia o Certificado de Inscripción de la Constitución", "Certificado de personería jurídica emitido por la autoridad competente.")
+                            @RenderCardDocumento("DOC_CERT_REPRESENTACION", "Certificado de Existencia y Representación Legal Vigente", "Certificado de Cámara de Comercio con expedición reciente para trámites y convenios.")
+                            @RenderCardDocumento("DOC_REFORMAS_EST", "Reformas Estatutarias y Actas de Aprobación", "Actas y textos de modificaciones posteriores a los estatutos fundacionales.")
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- =========================================================================================
+                 PASO 4: REPRESENTACIÓN Y GOBIERNO INSTITUCIONAL
+                 ========================================================================================= -->
+            @if (pasoActual == 4)
+            {
+                <div class="ra-seccion">
+                    <header class="ra-seccion-cab">
+                        <span class="ra-seccion-ico"><svg class="ra-ico"><use href="#ico-usuario" /></svg></span>
+                        <div class="ra-seccion-texto">
+                            <span class="ra-kicker">Sección 4 de 7</span>
+                            <h2>Representación y Gobierno Institucional</h2>
+                            <p>Cargos directivos vigentes, periodos estatutarios y soportes de nombramiento.</p>
+                        </div>
+                        <span class="ra-estado @(EsPasoCompleto(4) ? "ra-estado-ok" : "")">
+                            @(EsPasoCompleto(4) ? "Completo" : "Pendiente")
+                        </span>
+                    </header>
+
+                    <div class="ra-body">
+                        <!-- Representante Legal -->
+                        <div class="ra-subtarjeta">
+                            <h4 class="ra-subtarjeta-titulo">
+                                <i class="bi bi-person-badge"></i> Representación Legal Vigente
+                            </h4>
+                            <div class="ra-grid">
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Nombre del Representante Legal
+                                            <span class="ra-badge-req">Obligatorio</span>
+                                        </label>
+                                        <span class="ra-hint">Nombre de quien ostenta la representación jurídica.</span>
+                                    </div>
+                                    <input type="text"
+                                           class="ra-input @(TieneError("RepLegalNombre") ? "ra-input-error" : "")"
+                                           placeholder="Ej.: Manuela Andrea Mosquera"
+                                           @bind="modelo.RepLegalNombre"
+                                           @bind:after='() => ValidarCampo("RepLegalNombre")' />
+                                    @if (TieneError("RepLegalNombre"))
+                                    {
+                                        <span class="ra-error-campo">@ObtenerError("RepLegalNombre")</span>
+                                    }
+                                </div>
+
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Cargo formal
+                                            <span class="ra-badge-req">Obligatorio</span>
+                                        </label>
+                                    </div>
+                                    <input type="text" class="ra-input" placeholder="Ej.: Representante Legal / Directora" @bind="modelo.RepLegalCargo" />
+                                </div>
+
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Documento de contacto
+                                            <span class="ra-badge-opc">Opcional</span>
+                                        </label>
+                                    </div>
+                                    <input type="text" class="ra-input" placeholder="Ej.: 1045123890" @bind="modelo.RepLegalDocumento" />
+                                </div>
+
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Fecha de nombramiento / elección
+                                            <span class="ra-badge-req">Obligatorio</span>
+                                        </label>
+                                    </div>
+                                    <input type="date" class="ra-input" @bind="modelo.RepLegalFechaNombramiento" />
+                                </div>
+
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Inicio del periodo
+                                            <span class="ra-badge-req">Obligatorio</span>
+                                        </label>
+                                    </div>
+                                    <input type="date" class="ra-input" @bind="modelo.RepLegalPeriodoInicio" />
+                                </div>
+
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Fin del periodo (Vencimiento)
+                                            <span class="ra-badge-req">Obligatorio</span>
+                                        </label>
+                                        <span class="ra-hint">Alimentará las alertas de renovación institucional.</span>
+                                    </div>
+                                    <input type="date"
+                                           class="ra-input @(TieneError("RepLegalPeriodoFin") ? "ra-input-error" : "")"
+                                           @bind="modelo.RepLegalPeriodoFin"
+                                           @bind:after='() => ValidarCampo("RepLegalPeriodoFin")' />
+                                    @if (TieneError("RepLegalPeriodoFin"))
+                                    {
+                                        <span class="ra-error-campo">@ObtenerError("RepLegalPeriodoFin")</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Junta Directiva -->
+                        <div class="ra-subtarjeta">
+                            <h4 class="ra-subtarjeta-titulo">
+                                <i class="bi bi-people"></i> Integrantes de la Junta Directiva
+                            </h4>
+                            <div class="ra-grid">
+                                <div class="ra-campo">
+                                    <label class="ra-label">Presidente(a) de Junta</label>
+                                    <input type="text" class="ra-input" placeholder="Ej.: Carlos Julio Ramírez" @bind="modelo.JuntaPresidente" />
+                                </div>
+                                <div class="ra-campo">
+                                    <label class="ra-label">Vicepresidente(a)</label>
+                                    <input type="text" class="ra-input" placeholder="Ej.: María Elena Mendoza" @bind="modelo.JuntaVicepresidente" />
+                                </div>
+                                <div class="ra-campo">
+                                    <label class="ra-label">Secretario(a)</label>
+                                    <input type="text" class="ra-input" placeholder="Ej.: Karen Argumedo" @bind="modelo.JuntaSecretario" />
+                                </div>
+                                <div class="ra-campo">
+                                    <label class="ra-label">Tesorero(a)</label>
+                                    <input type="text" class="ra-input" placeholder="Ej.: Gabriel Restrepo" @bind="modelo.JuntaTesorero" />
+                                </div>
+                                <div class="ra-campo ra-grid-full">
+                                    <label class="ra-label">Periodo estatutario de la Junta Directiva</label>
+                                    <input type="text" class="ra-input" placeholder="Ej.: Periodo ordinario 2024 - 2026 (2 años)" @bind="modelo.JuntaPeriodo" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fiscal o Revisor Fiscal -->
+                        <div class="ra-subtarjeta">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h4 class="ra-subtarjeta-titulo mb-0 border-0 p-0">
+                                    <i class="bi bi-shield-check"></i> Fiscal o Revisor Fiscal
+                                </h4>
+                                <div class="form-check form-switch mb-0">
+                                    <input class="form-check-input" type="checkbox" id="chk-fiscal-aplica" checked="@modelo.FiscalAplica" @onchange="OnToggleFiscalAplica" />
+                                    <label class="form-check-label small fw-bold" for="chk-fiscal-aplica">
+                                        @(modelo.FiscalAplica ? "Aplica a la asociación" : "Marcar como No aplica")
+                                    </label>
+                                </div>
+                            </div>
+
+                            @if (modelo.FiscalAplica)
+                            {
+                                <div class="ra-grid">
+                                    <div class="ra-campo">
+                                        <label class="ra-label">Tipo de órgano de control</label>
+                                        <select class="ra-select" @bind="modelo.FiscalTipo">
+                                            <option value="Fiscal principal (Asociado)">Fiscal principal (Elegido en asamblea)</option>
+                                            <option value="Revisor fiscal con matrícula">Revisor fiscal con matrícula profesional</option>
+                                            <option value="Comité de Control Social">Comité de Control Social</option>
+                                        </select>
+                                    </div>
+                                    <div class="ra-campo">
+                                        <label class="ra-label">Nombre del fiscal / firma contable</label>
+                                        <input type="text" class="ra-input" placeholder="Ej.: Claudia Patricia Henao" @bind="modelo.FiscalNombre" />
+                                    </div>
+                                    <div class="ra-campo">
+                                        <label class="ra-label">Periodo de vigencia</label>
+                                        <input type="text" class="ra-input" placeholder="Ej.: 2024 - 2026" @bind="modelo.FiscalPeriodo" />
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="ra-campo">
+                                    <label class="ra-label">Motivo o justificación de por qué no aplica <span class="ra-badge-req">Obligatorio</span></label>
+                                    <input type="text"
+                                           class="ra-input"
+                                           placeholder="Ej.: Por tipología asociativa y estatutos, el control lo ejerce directamente la asamblea."
+                                           @bind="modelo.FiscalMotivoNoAplica" />
+                                </div>
+                            }
+                        </div>
+
+                        <!-- Soportes Documentales del Paso 4 -->
+                        <h4 class="mt-2 mb-2 fw-bold text-dark fs-6">Soportes Documentales de Nombramiento</h4>
+                        <div class="d-flex flex-column gap-3">
+                            @RenderCardDocumento("DOC_ACTA_ELECCION", "Acta o Documento de Nombramiento", "Acta de asamblea donde se eligió el Representante Legal y los dignatarios vigentes.")
+                            @RenderCardDocumento("DOC_ACEPTACION_CARGOS", "Constancias de Aceptación del Cargo", "Cartas suscritas de aceptación de funciones por los dignatarios electos.")
+                            @RenderCardDocumento("DOC_SOPORTE_INSCRIPCION_NOMB", "Soporte de Inscripción del Nombramiento", "Constancia de radicación e inscripción ante la Cámara de Comercio.")
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- =========================================================================================
+                 PASO 5: IDENTIFICACIÓN TRIBUTARIA
+                 ========================================================================================= -->
+            @if (pasoActual == 5)
+            {
+                <div class="ra-seccion">
+                    <header class="ra-seccion-cab">
+                        <span class="ra-seccion-ico"><svg class="ra-ico"><use href="#ico-alerta" /></svg></span>
+                        <div class="ra-seccion-texto">
+                            <span class="ra-kicker">Sección 5 de 7</span>
+                            <h2>Identificación Tributaria y Régimen Fiscal</h2>
+                            <p>RUT institucional, responsabilidades tributarias confirmadas y trámite de Régimen Tributario Especial.</p>
+                        </div>
+                        <span class="ra-estado @(EsPasoCompleto(5) ? "ra-estado-ok" : "")">
+                            @(EsPasoCompleto(5) ? "Completo" : "Pendiente")
+                        </span>
+                    </header>
+
+                    <div class="ra-body">
+                        <div class="ra-grid">
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label">
+                                        Estado de inscripción en el RUT
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                </div>
+                                <select class="ra-select" @bind="modelo.RutEstado">
+                                    <option value="Inscrita y activa">Inscrita y activa ante DIAN</option>
+                                    <option value="Pendiente / En trámite">Pendiente / En trámite de asignación</option>
+                                    <option value="No aplica">No aplica</option>
+                                </select>
+                            </div>
+
+                            @if (modelo.RutEstado == "No aplica")
+                            {
+                                <div class="ra-campo ra-grid-full">
+                                    <label class="ra-label">Justificación de no aplicación del RUT <span class="ra-badge-req">Obligatorio</span></label>
+                                    <input type="text" class="ra-input" placeholder="Explique la razón legal o tributaria" @bind="modelo.RutEstadoMotivo" />
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="ra-campo">
+                                    <div class="ra-label-fila">
+                                        <label class="ra-label">
+                                            Fecha de expedición o actualización del RUT
+                                            <span class="ra-badge-req">Obligatorio</span>
+                                        </label>
+                                    </div>
+                                    <input type="date" class="ra-input" @bind="modelo.RutFechaActualizacion" />
+                                </div>
+                            }
+
+                            <div class="ra-campo">
+                                <div class="ra-label-fila">
+                                    <label class="ra-label">
+                                        Régimen tributario en el RUT
+                                        <span class="ra-badge-req">Obligatorio</span>
+                                    </label>
+                                </div>
+                                <select class="ra-select" @bind="modelo.RegimenTributario" @bind:after="OnRegimenTributarioCambiado">
+                                    <option value="Régimen Ordinario">Régimen Ordinario de Renta</option>
+                                    <option value="Régimen Tributario Especial (RTE)">Régimen Tributario Especial (RTE - DIAN)</option>
+                                    <option value="No contribuyente de renta">No contribuyente de renta</option>
+                                    <option value="Otro régimen">Otro régimen</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Responsabilidades Tributarias Confirmadas (Casilla 53) -->
+                        <div class="ra-subtarjeta">
+                            <h4 class="ra-subtarjeta-titulo">
+                                <i class="bi bi-card-checklist"></i> Responsabilidades Tributarias Confirmadas en el RUT (Casilla 53)
+                            </h4>
+                            <p class="small text-muted mb-2">Seleccione únicamente los códigos que figuran expresamente en el RUT vigente de la asociación:</p>
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var resp in catalogoResponsabilidades)
+                                {
+                                    var checkedVal = modelo.ResponsabilidadesTributarias.Contains(resp);
+                                    <label class="btn btn-sm @(checkedVal ? "btn-success" : "btn-outline-secondary") d-flex align-items-center gap-1.5" style="border-radius: 6px;">
+                                        <input type="checkbox"
+                                               class="d-none"
+                                               checked="@checkedVal"
+                                               @onchange="(e) => ToggleResponsabilidad(resp, (bool?)e.Value ?? false)" />
+                                        <i class="bi @(checkedVal ? "bi-check-square-fill" : "bi-square")"></i>
+                                        <span>@resp</span>
+                                    </label>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Bloque de Régimen Tributario Especial (RTE) -->
+                        @if (modelo.RegimenTributario == "Régimen Tributario Especial (RTE)")
+                        {
+                            <div class="ra-subtarjeta border-success bg-white">
+                                <h4 class="ra-subtarjeta-titulo text-success">
+                                    <i class="bi bi-award"></i> Actualización Anual Régimen Tributario Especial (DIAN)
+                                </h4>
+                                <div class="ra-grid">
+                                    <div class="ra-campo">
+                                        <label class="ra-label">Estado de la actualización ante DIAN</label>
+                                        <select class="ra-select" @bind="modelo.RteEstadoDian">
+                                            <option value="Permanencia anual confirmada">Permanencia anual confirmada</option>
+                                            <option value="Solicitud de actualización radicada">Solicitud de actualización radicada</option>
+                                            <option value="Calificación inicial en trámite">Calificación inicial en trámite</option>
+                                        </select>
+                                    </div>
+                                    <div class="ra-campo">
+                                        <label class="ra-label">Fecha de última radicación DIAN</label>
+                                        <input type="date" class="ra-input" @bind="modelo.RteUltimaActualizacion" />
+                                    </div>
+                                    <div class="ra-campo">
+                                        <label class="ra-label">Fecha límite próxima renovación anual RTE</label>
+                                        <input type="date" class="ra-input" @bind="modelo.RteFechaLimiteRenovacion" />
+                                        <span class="ra-hint">Plazo legal DIAN: Generalmente 30 de junio de cada año.</span>
+                                    </div>
+                                </div>
                             </div>
                         }
-                    </div>
 
-                    <!-- BOTÓN DE ENVÍO -->
-                    <div class="d-flex justify-content-end pt-3 border-top">
-                        <button type="submit" class="btn btn-asoagro-submit d-flex align-items-center gap-2">
-                            <i class="bi bi-cloud-upload-fill fs-5"></i>
-                            <span>Subir y Registrar Soporte</span>
-                        </button>
+                        <!-- Carga Documental Fiscal -->
+                        <h4 class="mt-2 mb-2 fw-bold text-dark fs-6">Soportes Documentales Fiscales</h4>
+                        <div class="d-flex flex-column gap-3">
+                            @RenderCardDocumento("DOC_RUT", "Archivo del RUT Actualizado", "Copia digitalizada en PDF expedida por la DIAN con fecha reciente.")
+                            @RenderCardDocumento("DOC_DECLARACION_RENTA", "Declaración de Renta e Ingresos", "Formulario 110 con acuse de recibo de la DIAN del último año gravable.")
+                            @RenderCardDocumento("DOC_ESTADOS_FINANCIEROS", "Estados Financieros Certificados con Dictamen", "Balance y Estado de Resultados dictaminados por contador o revisor fiscal.")
+                            @if (modelo.RegimenTributario == "Régimen Tributario Especial (RTE)")
+                            {
+                                @RenderCardDocumento("DOC_SOPORTES_RTE", "Memoria Económica y Soportes DIAN - RTE", "Acta de asamblea con destinación de excedentes y soportes web DIAN.")
+                            }
+                        </div>
                     </div>
-
                 </div>
-            </div>
+            }
 
-            <!-- COLUMNA DERECHA: TARJETA INFORMATIVA DE CUMPLIMIENTO -->
-            <div class="col-lg-4">
-                <div class="sticky-top" style="top: 20px;">
-                    <div class="info-sidebar-card p-4 rounded-4">
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                            <div class="sidebar-icon-box">
-                                <i class="bi bi-shield-exclamation text-warning"></i>
+            <!-- =========================================================================================
+                 PASO 6: ACTAS Y DOCUMENTACIÓN INSTITUCIONAL RECURRENTE
+                 ========================================================================================= -->
+            @if (pasoActual == 6)
+            {
+                <div class="ra-seccion">
+                    <header class="ra-seccion-cab">
+                        <span class="ra-seccion-ico"><svg class="ra-ico"><use href="#ico-lista" /></svg></span>
+                        <div class="ra-seccion-texto">
+                            <span class="ra-kicker">Sección 6 de 7</span>
+                            <h2>Actas y Documentación Institucional Recurrente</h2>
+                            <p>Asambleas generales ordinarias, extraordinarias, juntas directivas y aprobación de informes periódicos.</p>
+                        </div>
+                        <span class="ra-estado @(EsPasoCompleto(6) ? "ra-estado-ok" : "")">
+                            @(EsPasoCompleto(6) ? "Completo" : "Pendiente")
+                        </span>
+                    </header>
+
+                    <div class="ra-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h4 class="fw-bold text-dark mb-0 fs-6">Registro de Actas y Decisiones Colectivas</h4>
+                                <span class="small text-muted">Registre cada acta según la periodicidad aprobada por los estatutos de la asociación.</span>
                             </div>
-                            <h6 class="fw-bold text-dark mb-0 small">Importancia del Repositorio</h6>
+                            <button type="button" class="ra-btn ra-btn-secundario py-1" @onclick="AgregarNuevaActaRecurrente">
+                                <i class="bi bi-plus-lg"></i> Agregar otra acta
+                            </button>
                         </div>
-                        <p class="text-muted small" style="line-height: 1.5;">
-                            De acuerdo con los lineamientos de FAAUA, tener los soportes prediales y certificados BPA digitalizados evita que las asociaciones de base queden fuera de convocatorias por documentos vencidos.
-                        </p>
-                        <div class="alert-box-mini p-3 rounded-3 mt-3">
-                            <span class="d-block extra-small fw-bold text-success mb-1">
-                                <i class="bi bi-bell-fill me-1"></i> Alertas Automáticas
-                            </span>
-                            <span class="extra-small text-muted">El sistema notificará con antelación las fechas de vencimiento de los documentos registrados.</span>
+
+                        <div class="d-flex flex-column gap-3 mt-2">
+                            @for (int i = 0; i < listaActasRecurrentes.Count; i++)
+                            {
+                                var indexActa = i;
+                                var acta = listaActasRecurrentes[indexActa];
+                                <div class="ra-subtarjeta bg-white">
+                                    <div class="d-flex justify-content-between align-items-center border-bottom pb-2">
+                                        <strong class="text-success"><i class="bi bi-journal-text me-1"></i> Acta #@(indexActa + 1)</strong>
+                                        @if (listaActasRecurrentes.Count > 1)
+                                        {
+                                            <button type="button" class="btn btn-outline-danger btn-sm py-0" @onclick="() => EliminarActaRecurrente(indexActa)">
+                                                <i class="bi bi-trash"></i> Quitar acta
+                                            </button>
+                                        }
+                                    </div>
+                                    <div class="ra-grid">
+                                        <div class="ra-campo">
+                                            <label class="ra-label">
+                                                Tipo de sesión o acta
+                                                <span class="ra-badge-req">Obligatorio</span>
+                                            </label>
+                                            <select class="ra-select" @bind="acta.TipoDocumento">
+                                                <option value="Acta de Asamblea General Ordinaria">Acta de Asamblea General Ordinaria</option>
+                                                <option value="Acta de Asamblea General Extraordinaria">Acta de Asamblea General Extraordinaria</option>
+                                                <option value="Acta de Reunión de Junta Directiva">Acta de Reunión de Junta Directiva</option>
+                                                <option value="Acta de Aprobación de Estados Financieros y Presupuesto">Acta de Aprobación de Estados Financieros y Presupuesto</option>
+                                                <option value="Acta de Fijación de Cuotas de Sostenimiento">Acta de Fijación de Cuotas de Sostenimiento</option>
+                                                <option value="Informe Anual de Gestión Institucional">Informe Anual de Gestión Institucional</option>
+                                                <option value="Acta de Reforma Estatutaria">Acta de Reforma Estatutaria</option>
+                                                <option value="Acta de Elección de Dignatarios">Acta de Elección de Dignatarios</option>
+                                            </select>
+                                        </div>
+                                        <div class="ra-campo">
+                                            <label class="ra-label">
+                                                Número de acta / radicado
+                                                <span class="ra-badge-req">Obligatorio</span>
+                                            </label>
+                                            <input type="text" class="ra-input" placeholder="Ej.: Acta No. 018" @bind="acta.NumeroReferencia" />
+                                        </div>
+                                        <div class="ra-campo">
+                                            <label class="ra-label">
+                                                Fecha de asamblea / aprobación
+                                                <span class="ra-badge-req">Obligatorio</span>
+                                            </label>
+                                            <input type="date" class="ra-input" @bind="acta.FechaEmision" />
+                                        </div>
+                                        <div class="ra-campo">
+                                            <label class="ra-label">
+                                                Periodo al que corresponde
+                                                <span class="ra-badge-req">Obligatorio</span>
+                                            </label>
+                                            <input type="text" class="ra-input" placeholder="Ej.: Ejercicio 2025" @bind="acta.Periodo" />
+                                        </div>
+                                        <div class="ra-campo">
+                                            <label class="ra-label">
+                                                Frecuencia establecida en estatutos
+                                                <span class="ra-badge-req">Obligatorio</span>
+                                            </label>
+                                            <select class="ra-select" @bind="acta.EntidadEmisora">
+                                                <option value="Anual ordinaria">Anual ordinaria</option>
+                                                <option value="Semestral">Semestral</option>
+                                                <option value="Trimestral">Trimestral</option>
+                                                <option value="Mensual">Mensual</option>
+                                                <option value="Extraordinaria">Extraordinaria</option>
+                                            </select>
+                                        </div>
+                                        <div class="ra-campo ra-grid-full">
+                                            <label class="ra-label">Resumen de decisiones aprobadas</label>
+                                            <input type="text" class="ra-input" placeholder="Ej.: Aprobación unánime de presupuesto y balance anual..." @bind="acta.Observaciones" />
+                                        </div>
+
+                                        <!-- Subir archivo de esta acta -->
+                                        <div class="ra-campo ra-grid-full">
+                                            <label class="ra-label">Archivo digitalizado del acta (PDF, JPG, PNG)</label>
+                                            @if (!string.IsNullOrWhiteSpace(acta.ArchivoNombre))
+                                            {
+                                                <div class="ra-archivo-box">
+                                                    <div class="ra-archivo-info">
+                                                        <span class="ra-archivo-ico"><i class="bi bi-file-earmark-pdf"></i></span>
+                                                        <div class="ra-archivo-nombres">
+                                                            <strong>@acta.ArchivoNombre</strong>
+                                                            <small>@FormatearBytes(acta.TamanoBytes)</small>
+                                                        </div>
+                                                    </div>
+                                                    <button type="button" class="ra-archivo-btn-quitar" @onclick="() => QuitarArchivoActa(indexActa)">
+                                                        <i class="bi bi-x-circle"></i> Quitar
+                                                    </button>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                <InputFile class="ra-input py-1" OnChange="(e) => OnSubirArchivoActa(e, indexActa)" accept=".pdf,.png,.jpg,.jpeg" />
+                                                <span class="ra-hint">Límite: hasta 10 MB por archivo.</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </div>
                 </div>
-            </div>
+            }
 
-        </div>
-    </EditForm>
+            <!-- =========================================================================================
+                 PASO 7: OTROS DOCUMENTOS Y REVISIÓN FINAL (RESUMEN + DESCARGA PDF)
+                 ========================================================================================= -->
+            @if (pasoActual == 7)
+            {
+                <div class="ra-seccion">
+                    <header class="ra-seccion-cab">
+                        <span class="ra-seccion-ico"><svg class="ra-ico"><use href="#ico-check" /></svg></span>
+                        <div class="ra-seccion-texto">
+                            <span class="ra-kicker">Sección 7 de 7</span>
+                            <h2>Otros Documentos Sectoriales y Revisión Final</h2>
+                            <p>Soportes de convocatorias, permisos sectoriales, descarga de resumen en PDF y radicación oficial.</p>
+                        </div>
+                        <span class="ra-estado ra-estado-ok">Revisión Final</span>
+                    </header>
+
+                    <div class="ra-body">
+                        <!-- Bloque de Documentos Sectoriales -->
+                        <h4 class="fw-bold text-dark mb-2 fs-6">Soportes Sectoriales y Convocatorias</h4>
+                        <div class="d-flex flex-column gap-3 mb-4">
+                            @RenderCardDocumento("DOC_REGISTRO_ICA", "Certificado Fitosanitario / Registro ICA", "Certificación de sanidad vegetal, predio exportador o registro sanitario ante el ICA.")
+                            @RenderCardDocumento("DOC_AVAL_MINAGRO", "Aval Institucional ante MinAgricultura o ADR", "Constancia de registro en el Sistema Nacional de Asociaciones Agropecuarias o ADR.")
+                            @RenderCardDocumento("DOC_PERMISO_CORPOURABA", "Permiso Ambiental / Concesión Corpouraba", "Permisos de aprovechamiento o registros ambientales regionales si aplican.")
+                            @RenderCardDocumento("DOC_AVAL_BPA_GREMIAL", "Certificación Colectiva de Buenas Prácticas Agrícolas (BPA)", "Aval grupal o acompañamiento técnico en BPA para convocatorias de exportación.")
+                            @RenderCardDocumento("DOC_CONVENIOS_PROYECTOS", "Documentos para Convocatorias y Convenios", "Propuestas, cartas de intención o convenios suscritos por la entidad.")
+
+                            <!-- Documento libre / personalizado -->
+                            <div class="ra-subtarjeta bg-white">
+                                <h4 class="ra-subtarjeta-titulo">
+                                    <i class="bi bi-file-earmark-plus"></i> Otro Documento Legal o Institucional Personalizado
+                                </h4>
+                                <div class="ra-grid">
+                                    <div class="ra-campo">
+                                        <label class="ra-label">Nombre del documento <span class="ra-badge-opc">Opcional</span></label>
+                                        <input type="text" class="ra-input" placeholder="Ej.: Contrato de comodato de sede institucional" @bind="docPersonalizado.Titulo" />
+                                    </div>
+                                    <div class="ra-campo">
+                                        <label class="ra-label">Entidad que lo expide</label>
+                                        <input type="text" class="ra-input" placeholder="Ej.: Alcaldía Municipal de Apartadó" @bind="docPersonalizado.EntidadEmisora" />
+                                    </div>
+                                    <div class="ra-campo">
+                                        <label class="ra-label">Fecha de emisión</label>
+                                        <input type="date" class="ra-input" @bind="docPersonalizado.FechaEmision" />
+                                    </div>
+                                    <div class="ra-campo">
+                                        <label class="ra-label">Fecha de vencimiento (si tiene)</label>
+                                        <input type="date" class="ra-input" @bind="docPersonalizado.FechaVencimiento" />
+                                    </div>
+                                    <div class="ra-campo ra-grid-full">
+                                        <label class="ra-label">Archivo digitalizado</label>
+                                        @if (!string.IsNullOrWhiteSpace(docPersonalizado.ArchivoNombre))
+                                        {
+                                            <div class="ra-archivo-box">
+                                                <div class="ra-archivo-info">
+                                                    <span class="ra-archivo-ico"><i class="bi bi-file-earmark-check"></i></span>
+                                                    <div class="ra-archivo-nombres">
+                                                        <strong>@docPersonalizado.ArchivoNombre</strong>
+                                                        <small>@FormatearBytes(docPersonalizado.TamanoBytes)</small>
+                                                    </div>
+                                                </div>
+                                                <button type="button" class="ra-archivo-btn-quitar" @onclick="() => { docPersonalizado.ArchivoNombre = null; docPersonalizado.ArchivoContenido = null; }">
+                                                    <i class="bi bi-x-circle"></i> Quitar
+                                                </button>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <InputFile class="ra-input py-1" OnChange="OnSubirArchivoPersonalizado" accept=".pdf,.png,.jpg,.jpeg" />
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ========================================================
+                             RESUMEN EDITABLE COMPLETO ANTES DE CONFIRMAR
+                             ======================================================== -->
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="fw-bold text-dark mb-0 fs-5"><i class="bi bi-card-checklist me-1 text-success"></i> Resumen del Expediente Institucional</h4>
+                            <button type="button" class="ra-btn ra-btn-pdf shadow-sm" @onclick="DescargarResumenPdf">
+                                <i class="bi bi-file-earmark-pdf-fill fs-5"></i>
+                                <span>Descargar resumen en PDF</span>
+                            </button>
+                        </div>
+
+                        <!-- Tarjeta 1: Identificación y Domicilio -->
+                        <div class="ra-resumen-card mb-3">
+                            <div class="ra-resumen-card-header">
+                                <h3><i class="bi bi-building"></i> Asociación y Personería Jurídica</h3>
+                                <button type="button" class="ra-resumen-btn-editar" @onclick="() => IrAlPaso(1)">Editar Paso 1</button>
+                            </div>
+                            <div class="ra-resumen-grid">
+                                <div class="ra-resumen-item">
+                                    <span class="ra-resumen-etiqueta">Razón Social</span>
+                                    <span class="ra-resumen-valor">@(string.IsNullOrWhiteSpace(modelo.NombreLegal) ? "No indicada" : modelo.NombreLegal) @(string.IsNullOrWhiteSpace(modelo.Sigla) ? "" : $"({modelo.Sigla})")</span>
+                                </div>
+                                <div class="ra-resumen-item">
+                                    <span class="ra-resumen-etiqueta">NIT Institucional</span>
+                                    <span class="ra-resumen-valor">@(string.IsNullOrWhiteSpace(modelo.Nit) ? "En trámite" : $"{modelo.Nit}-{modelo.DigitoVerificacion}") · Matrícula: @(string.IsNullOrWhiteSpace(modelo.NumeroRegistro) ? "Pendiente" : modelo.NumeroRegistro)</span>
+                                </div>
+                                <div class="ra-resumen-item">
+                                    <span class="ra-resumen-etiqueta">Tipo y Grado</span>
+                                    <span class="ra-resumen-valor">@modelo.TipoOrganizacion · @modelo.GradoOrganizacion</span>
+                                </div>
+                                <div class="ra-resumen-item">
+                                    <span class="ra-resumen-etiqueta">Ámbito y Estado</span>
+                                    <span class="ra-resumen-valor text-success fw-bold">@modelo.Ambito · @modelo.Estado</span>
+                                </div>
+                                <div class="ra-resumen-item">
+                                    <span class="ra-resumen-etiqueta">Sede y Municipio</span>
+                                    <span class="ra-resumen-valor">@modelo.DireccionPrincipal, @modelo.Municipio (@modelo.Departamento)</span>
+                                </div>
+                                <div class="ra-resumen-item">
+                                    <span class="ra-resumen-etiqueta">Canales Oficiales</span>
+                                    <span class="ra-resumen-valor">@modelo.CorreoInstitucional · Tel. @modelo.TelefonoContacto</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tarjeta 2: Órganos Directivos y Régimen Fiscal -->
+                        <div class="ra-resumen-card mb-3">
+                            <div class="ra-resumen-card-header">
+                                <h3><i class="bi bi-diagram-3"></i> Representación Legal y Régimen Fiscal</h3>
+                                <button type="button" class="ra-resumen-btn-editar" @onclick="() => IrAlPaso(4)">Editar Órganos</button>
+                            </div>
+                            <div class="ra-resumen-grid">
+                                <div class="ra-resumen-item">
+                                    <span class="ra-resumen-etiqueta">Representante Legal</span>
+                                    <span class="ra-resumen-valor">@(string.IsNullOrWhiteSpace(modelo.RepLegalNombre) ? "No indicado" : modelo.RepLegalNombre) · Vence: @(modelo.RepLegalPeriodoFin?.ToString("dd/MM/yyyy") ?? "No indicada")</span>
+                                </div>
+                                <div class="ra-resumen-item">
+                                    <span class="ra-resumen-etiqueta">Presidente de Junta</span>
+                                    <span class="ra-resumen-valor">@(string.IsNullOrWhiteSpace(modelo.JuntaPresidente) ? "No especificado" : modelo.JuntaPresidente)</span>
+                                </div>
+                                <div class="ra-resumen-item">
+                                    <span class="ra-resumen-etiqueta">Órgano de Control</span>
+                                    <span class="ra-resumen-valor">@(modelo.FiscalAplica ? $"{modelo.FiscalTipo}: {modelo.FiscalNombre}" : $"No aplica: {modelo.FiscalMotivoNoAplica}")</span>
+                                </div>
+                                <div class="ra-resumen-item">
+                                    <span class="ra-resumen-etiqueta">Régimen y RUT</span>
+                                    <span class="ra-resumen-valor">@modelo.RegimenTributario · Estado RUT: @modelo.RutEstado</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tarjeta 3: Inventario de Documentos -->
+                        <div class="ra-resumen-card mb-3">
+                            <div class="ra-resumen-card-header">
+                                <h3><i class="bi bi-folder-check"></i> Inventario de Documentos del Expediente</h3>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                    @ContarDocumentosAdjuntos() archivos digitalizados
+                                </span>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="ra-resumen-tabla">
+                                    <thead>
+                                        <tr>
+                                            <th>Documento Institucional</th>
+                                            <th>Condición / Estado</th>
+                                            <th>Archivo Cargado</th>
+                                            <th>Vigencia / Observación</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var doc in catalogoDocumentosConfigurados.Values)
+                                        {
+                                            <tr>
+                                                <td class="fw-bold">@doc.TipoDocumento</td>
+                                                <td>
+                                                    @if (doc.EstadoRequisito == "No aplica")
+                                                    {
+                                                        <span class="badge bg-light text-muted border">No aplica</span>
+                                                    }
+                                                    else if (!string.IsNullOrWhiteSpace(doc.ArchivoNombre))
+                                                    {
+                                                        <span class="badge bg-success">Digitalizado</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="badge bg-warning text-dark">Pendiente de archivo</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (!string.IsNullOrWhiteSpace(doc.ArchivoNombre))
+                                                    {
+                                                        <span class="text-truncate d-inline-block" style="max-width: 200px;">@doc.ArchivoNombre</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="text-muted small">Sin archivo</span>
+                                                    }
+                                                </td>
+                                                <td>
+                                                    @if (doc.EstadoRequisito == "No aplica")
+                                                    {
+                                                        <span class="text-muted small">Motivo: @doc.MotivoNoAplica</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        @(doc.FechaVencimiento.HasValue ? doc.FechaVencimiento.Value.ToString("dd/MM/yyyy") : "Sin vencimiento / Vigente")
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+
+                                        <!-- Actas registradas -->
+                                        @foreach (var acta in listaActasRecurrentes)
+                                        {
+                                            <tr>
+                                                <td class="fw-bold">@acta.TipoDocumento (@acta.NumeroReferencia)</td>
+                                                <td><span class="badge bg-info text-dark">Acta periódica</span></td>
+                                                <td>@(string.IsNullOrWhiteSpace(acta.ArchivoNombre) ? "Sin archivo" : acta.ArchivoNombre)</td>
+                                                <td>Celebrada el @(acta.FechaEmision?.ToString("dd/MM/yyyy") ?? "-") · @acta.Periodo</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Nota de Descargo y Auditoría -->
+                        <div class="alert alert-light border small text-muted d-flex align-items-center gap-2 mb-0">
+                            <i class="bi bi-info-circle text-primary fs-5"></i>
+                            <div>
+                                Este reporte y expediente es generado por el Sistema de Información ASOAGRO (FAAUA).
+                                No reemplaza certificados oficiales de autoridades competentes ni constituye asesoría legal.
+                                Responsable: <strong>@usuarioActualNombre</strong> · Fecha de radicación: <strong>@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</strong>.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- =========================================================================================
+                 BOTONES DE ACCIÓN: ANTERIOR / CONTINUAR / GUARDAR
+                 ========================================================================================= -->
+            <footer class="ra-acciones">
+                <div class="ra-acciones-izq">
+                    @if (pasoActual > 1)
+                    {
+                        <button type="button" class="ra-btn ra-btn-secundario" @onclick="PasoAnterior">
+                            <i class="bi bi-arrow-left"></i> Anterior
+                        </button>
+                    }
+                    <button type="button" class="ra-btn ra-btn-secundario" @onclick="GuardarBorrador">
+                        <i class="bi bi-save"></i> Guardar borrador
+                    </button>
+                </div>
+
+                <div class="ra-acciones-der">
+                    @if (pasoActual < 7)
+                    {
+                        <button type="button" class="ra-btn ra-btn-primario" @onclick="PasoSiguiente">
+                            Continuar al Paso @(pasoActual + 1) <i class="bi bi-arrow-right"></i>
+                        </button>
+                    }
+                    else
+                    {
+                        <button type="button" class="ra-btn ra-btn-guardar" @onclick="FinalizarYArchivarExpediente" disabled="@guardando">
+                            @if (guardando)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1"></span>
+                                <span>Archivando expediente...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-check-all fs-5 me-1"></i>
+                                <span>Archivar Expediente Institucional</span>
+                            }
+                        </button>
+                    }
+                </div>
+            </footer>
+        </section>
+    </div>
 </div>
 
-@code {
-    private DocumentoModel documentoModel = new();
-    private string mensajeExito = string.Empty;
+<!-- =========================================================================================
+     MODAL DE CONFIRMACIÓN CORREGIDO (CENTRADO, SIN CORTES, RESPONSIVE)
+     ========================================================================================= -->
+@if (registroExitoso && expedienteGuardado is not null)
+{
+    <div class="ra-modal-velo" role="dialog" aria-modal="true" @onclick="CerrarModalExito">
+        <article class="ra-exito-modal" @onclick:stopPropagation="true">
+            <button type="button" class="ra-exito-cerrar" title="Cerrar ventana" @onclick="CerrarModalExito">&times;</button>
 
-    private void CargarArchivo(InputFileChangeEventArgs e)
+            <div class="ra-exito-icono">
+                <i class="bi bi-check-lg"></i>
+            </div>
+
+            <h2 class="ra-exito-titulo">¡Expediente Institucional Radicado con Éxito!</h2>
+            <p class="ra-exito-subtitulo">
+                La documentación de <strong>@expedienteGuardado.NombreLegal</strong> ha quedado formalmente archivada bajo custodia de la Secretaría de FAAUA.
+            </p>
+
+            <div class="ra-exito-resumen-compacto">
+                <div class="ra-exito-fila-dato">
+                    <span class="ra-exito-fila-etiqueta">NIT Institucional</span>
+                    <strong class="ra-exito-fila-valor">@(string.IsNullOrWhiteSpace(expedienteGuardado.Nit) ? "En trámite" : $"{expedienteGuardado.Nit}-{expedienteGuardado.DigitoVerificacion}")</strong>
+                </div>
+                <div class="ra-exito-fila-dato">
+                    <span class="ra-exito-fila-etiqueta">Tipo y Ubicación</span>
+                    <strong class="ra-exito-fila-valor">@expedienteGuardado.TipoOrganizacion · @expedienteGuardado.Municipio</strong>
+                </div>
+                <div class="ra-exito-fila-dato">
+                    <span class="ra-exito-fila-etiqueta">Representante Legal</span>
+                    <strong class="ra-exito-fila-valor">@expedienteGuardado.RepLegalNombre</strong>
+                </div>
+                <div class="ra-exito-fila-dato">
+                    <span class="ra-exito-fila-etiqueta">Soportes Vinculados</span>
+                    <strong class="ra-exito-fila-valor">@totalDocumentosArchivados archivos custodiados</strong>
+                </div>
+                <div class="ra-exito-fila-dato">
+                    <span class="ra-exito-fila-etiqueta">Estado del Expediente</span>
+                    <strong class="ra-exito-fila-valor text-success">@expedienteGuardado.Estado · Sincronizado</strong>
+                </div>
+            </div>
+
+            <div class="ra-exito-acciones">
+                <button type="button" class="ra-exito-btn-ficha" @onclick="IrAEstadoExpediente">
+                    <i class="bi bi-folder2-open me-2"></i>
+                    <span>Consultar expediente</span>
+                </button>
+                <button type="button" class="ra-exito-btn-pdf" @onclick="DescargarResumenPdf">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Descargar Resumen en PDF
+                </button>
+                <button type="button" class="ra-exito-btn-nuevo" @onclick="RegistrarOtraAsociacion">
+                    <i class="bi bi-plus-circle me-1"></i> Registrar otra asociación
+                </button>
+            </div>
+        </article>
+    </div>
+}
+
+@code {
+    private int pasoActual = 1;
+    private bool guardando = false;
+    private bool registroExitoso = false;
+    private string mensajeAlerta = string.Empty;
+    private bool esErrorAlerta = false;
+
+    private string usuarioActualNombre = "Secretaría FAAUA";
+
+    // Al iniciar, los campos inician completamente vacíos (sin datos precargados ficticios)
+    private AsociacionInstitucional modelo = new()
     {
-        var archivo = e.File;
-        if (archivo != null)
+        NombreLegal = "",
+        Sigla = "",
+        Nit = "",
+        DigitoVerificacion = "",
+        TipoOrganizacion = "Asociación campesina",
+        Ambito = "Municipal",
+        GradoOrganizacion = "Primer grado (Asociación de base)",
+        Estado = "Activa",
+        Departamento = "Antioquia",
+        Municipio = "Apartadó",
+        DireccionPrincipal = "",
+        CorreoInstitucional = "",
+        TelefonoContacto = "",
+        DireccionNotificacionesEsMisma = true,
+        DireccionNotificaciones = "",
+        SitioWeb = "",
+        ContactoNombre = "",
+        ContactoCargo = "",
+        EntidadInscripcion = "",
+        NumeroRegistro = "",
+        NumeroRues = "",
+        AutoridadVigilancia = "",
+        RepLegalNombre = "",
+        RepLegalCargo = "Representante Legal",
+        RepLegalDocumento = "",
+        JuntaPresidente = "",
+        JuntaVicepresidente = "",
+        JuntaSecretario = "",
+        JuntaTesorero = "",
+        JuntaPeriodo = "",
+        FiscalAplica = true,
+        FiscalNombre = "",
+        FiscalMotivoNoAplica = "",
+        RutEstado = "Inscrita y activa",
+        RegimenTributario = "Régimen Ordinario"
+    };
+
+    private AsociacionInstitucional? expedienteGuardado;
+    private int totalDocumentosArchivados = 0;
+
+    private Dictionary<string, DocumentoItemInstitucional> catalogoDocumentosConfigurados = new();
+    private List<DocumentoItemInstitucional> listaActasRecurrentes = new();
+    private DocumentoItemInstitucional docPersonalizado = new()
+    {
+        Clave = "DOC_PERSONALIZADO",
+        TipoDocumento = "Otro Documento Legal o Institucional",
+        Titulo = "",
+        EstadoRequisito = "Aplica"
+    };
+
+    private Dictionary<string, string> erroresValidacion = new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly string[] catalogoResponsabilidades = new[]
+    {
+        "05 - Renta Régimen Ordinario",
+        "04 - Régimen Tributario Especial (RTE)",
+        "07 - Retención en la Fuente",
+        "48 - Impuesto sobre las Ventas (IVA)",
+        "14 - Informante de Exógena",
+        "52 - Facturador Electrónico",
+        "42 - Obligado a llevar contabilidad",
+        "49 - No responsable de IVA"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        usuarioActualNombre = authState.User.Identity?.Name 
+            ?? authState.User.FindFirst(ClaimTypes.Email)?.Value 
+            ?? "Secretaría FAAUA";
+
+        InicializarDocumentosConfigurados();
+    }
+
+    private void InicializarDocumentosConfigurados()
+    {
+        catalogoDocumentosConfigurados = new Dictionary<string, DocumentoItemInstitucional>(StringComparer.OrdinalIgnoreCase)
         {
-            documentoModel.ArchivoNombre = archivo.Name;
+            // Paso 3: Constitución y Estatutos
+            ["DOC_ACTA_CONST"] = new() { Clave = "DOC_ACTA_CONST", CategoriaSeccion = "Constitución", TipoDocumento = "Acta de Constitución Firmada", Titulo = "Acta de Constitución", EstadoRequisito = "Obligatorio" },
+            ["DOC_ESTATUTOS"] = new() { Clave = "DOC_ESTATUTOS", CategoriaSeccion = "Constitución", TipoDocumento = "Estatutos Vigentes de la Asociación", Titulo = "Estatutos Vigentes Aprobados", EstadoRequisito = "Obligatorio" },
+            ["DOC_CERT_CONST"] = new() { Clave = "DOC_CERT_CONST", CategoriaSeccion = "Constitución", TipoDocumento = "Constancia o Certificado de Inscripción de la Constitución", Titulo = "Certificado de Inscripción", EstadoRequisito = "Obligatorio" },
+            ["DOC_CERT_REPRESENTACION"] = new() { Clave = "DOC_CERT_REPRESENTACION", CategoriaSeccion = "Constitución", TipoDocumento = "Certificado de Existencia y Representación Legal Vigente", Titulo = "Certificado de Existencia y Representación", EstadoRequisito = "Obligatorio", FechaVencimiento = DateTime.Today.AddDays(30) },
+            ["DOC_REFORMAS_EST"] = new() { Clave = "DOC_REFORMAS_EST", CategoriaSeccion = "Constitución", TipoDocumento = "Reformas Estatutarias y Actas de Aprobación", Titulo = "Reformas Estatutarias", EstadoRequisito = "Aplica" },
+
+            // Paso 4: Órganos de Gobierno
+            ["DOC_ACTA_ELECCION"] = new() { Clave = "DOC_ACTA_ELECCION", CategoriaSeccion = "Órganos", TipoDocumento = "Acta o Documento de Nombramiento", Titulo = "Acta de Elección de Directivos", EstadoRequisito = "Obligatorio" },
+            ["DOC_ACEPTACION_CARGOS"] = new() { Clave = "DOC_ACEPTACION_CARGOS", CategoriaSeccion = "Órganos", TipoDocumento = "Constancias de Aceptación del Cargo", Titulo = "Aceptación de Cargos", EstadoRequisito = "Aplica" },
+            ["DOC_SOPORTE_INSCRIPCION_NOMB"] = new() { Clave = "DOC_SOPORTE_INSCRIPCION_NOMB", CategoriaSeccion = "Órganos", TipoDocumento = "Soporte de Inscripción del Nombramiento", Titulo = "Inscripción en Registro", EstadoRequisito = "Aplica" },
+
+            // Paso 5: Fiscal y Tributario
+            ["DOC_RUT"] = new() { Clave = "DOC_RUT", CategoriaSeccion = "Fiscal", TipoDocumento = "Archivo del RUT Actualizado", Titulo = "RUT Actualizado", EstadoRequisito = "Obligatorio" },
+            ["DOC_DECLARACION_RENTA"] = new() { Clave = "DOC_DECLARACION_RENTA", CategoriaSeccion = "Fiscal", TipoDocumento = "Declaración de Renta e Ingresos Institucionales", Titulo = "Declaración de Renta", EstadoRequisito = "Aplica" },
+            ["DOC_ESTADOS_FINANCIEROS"] = new() { Clave = "DOC_ESTADOS_FINANCIEROS", CategoriaSeccion = "Fiscal", TipoDocumento = "Estados Financieros Certificados con Dictamen", Titulo = "Estados Financieros", EstadoRequisito = "Aplica" },
+            ["DOC_SOPORTES_RTE"] = new() { Clave = "DOC_SOPORTES_RTE", CategoriaSeccion = "Fiscal", TipoDocumento = "Memoria Económica y Soportes DIAN - RTE", Titulo = "Soportes RTE DIAN", EstadoRequisito = "Aplica" },
+
+            // Paso 7: Sectoriales
+            ["DOC_REGISTRO_ICA"] = new() { Clave = "DOC_REGISTRO_ICA", CategoriaSeccion = "Sectorial", TipoDocumento = "Certificado Fitosanitario / Registro ICA", Titulo = "Registro ICA", EstadoRequisito = "Aplica" },
+            ["DOC_AVAL_MINAGRO"] = new() { Clave = "DOC_AVAL_MINAGRO", CategoriaSeccion = "Sectorial", TipoDocumento = "Aval Institucional ante MinAgricultura o ADR", Titulo = "Registro MinAgricultura / ADR", EstadoRequisito = "Pendiente" },
+            ["DOC_PERMISO_CORPOURABA"] = new() { Clave = "DOC_PERMISO_CORPOURABA", CategoriaSeccion = "Sectorial", TipoDocumento = "Permiso Ambiental / Concesión Corpouraba", Titulo = "Permiso Ambiental", EstadoRequisito = "Aplica" },
+            ["DOC_AVAL_BPA_GREMIAL"] = new() { Clave = "DOC_AVAL_BPA_GREMIAL", CategoriaSeccion = "Sectorial", TipoDocumento = "Certificación Colectiva de Buenas Prácticas Agrícolas (BPA)", Titulo = "Certificación BPA", EstadoRequisito = "Aplica" },
+            ["DOC_CONVENIOS_PROYECTOS"] = new() { Clave = "DOC_CONVENIOS_PROYECTOS", CategoriaSeccion = "Sectorial", TipoDocumento = "Documentos para Convocatorias y Convenios", Titulo = "Convocatorias y Convenios", EstadoRequisito = "Pendiente" }
+        };
+
+        if (!listaActasRecurrentes.Any())
+        {
+            listaActasRecurrentes.Add(new DocumentoItemInstitucional
+            {
+                Clave = "ACTA_1",
+                CategoriaSeccion = "Actas",
+                TipoDocumento = "Acta de Asamblea General Ordinaria",
+                NumeroReferencia = "",
+                FechaEmision = DateTime.Today.AddMonths(-2),
+                Periodo = DateTime.Today.Year.ToString(),
+                EntidadEmisora = "Anual ordinaria",
+                EstadoRequisito = "Obligatorio"
+            });
         }
     }
 
-    private void GuardarDocumento()
+    private void OnNitCambiado()
     {
-        mensajeExito = $"¡Soporte '{documentoModel.TipoDocumento}' registrado con éxito para la cédula {documentoModel.DocumentoAsociado}!";
-        documentoModel = new();
+        if (!string.IsNullOrWhiteSpace(modelo.Nit))
+        {
+            modelo.Nit = Regex.Replace(modelo.Nit, "[^0-9]", "");
+            modelo.DigitoVerificacion = CalcularDigitoVerificacionDian(modelo.Nit);
+        }
+        else
+        {
+            modelo.DigitoVerificacion = string.Empty;
+        }
+        ValidarCampo("Nit");
     }
 
-    public class DocumentoModel
+    private void OnAmbitoCambiado()
     {
-        [Required(ErrorMessage = "El documento o cédula del asociado es obligatorio.")]
-        public string DocumentoAsociado { get; set; } = string.Empty;
+        if (modelo.Ambito == "Municipal" || modelo.Ambito == "Distrital")
+        {
+            modelo.GradoOrganizacion = "Primer grado (Asociación de base)";
+        }
+        else if (modelo.Ambito == "Regional" || modelo.Ambito == "Departamental")
+        {
+            if (modelo.GradoOrganizacion.Contains("Tercer"))
+            {
+                modelo.GradoOrganizacion = "Segundo grado (Federación o unión)";
+            }
+        }
+    }
 
-        [Required(ErrorMessage = "Debe seleccionar el tipo de documento.")]
-        public string TipoDocumento { get; set; } = string.Empty;
+    private void OnToggleNotificacionesEsMisma(ChangeEventArgs e)
+    {
+        modelo.DireccionNotificacionesEsMisma = (bool?)e.Value ?? true;
+        if (modelo.DireccionNotificacionesEsMisma)
+        {
+            modelo.DireccionNotificaciones = string.Empty;
+        }
+    }
 
-        [Required(ErrorMessage = "Debe adjuntar un archivo digitalizado.")]
-        public string ArchivoNombre { get; set; } = string.Empty;
+    private void OnRegimenTributarioCambiado()
+    {
+        if (modelo.RegimenTributario == "Régimen Tributario Especial (RTE)")
+        {
+            modelo.RteConfirmado = true;
+            if (modelo.RteFechaLimiteRenovacion == null)
+            {
+                modelo.RteFechaLimiteRenovacion = new DateTime(DateTime.Today.Year, 6, 30);
+            }
+        }
+        else
+        {
+            modelo.RteConfirmado = false;
+        }
+    }
+
+    public static string CalcularDigitoVerificacionDian(string nit)
+    {
+        if (string.IsNullOrWhiteSpace(nit)) return "";
+        var nitLimpio = Regex.Replace(nit, "[^0-9]", "");
+        if (nitLimpio.Length == 0) return "";
+
+        int[] pesos = { 71, 67, 59, 53, 47, 43, 41, 37, 29, 23, 19, 17, 13, 7, 3 };
+        int suma = 0;
+        int len = nitLimpio.Length;
+
+        for (int i = 0; i < len; i++)
+        {
+            var digito = nitLimpio[len - 1 - i] - '0';
+            suma += digito * pesos[15 - 1 - i];
+        }
+
+        int residuo = suma % 11;
+        if (residuo == 0) return "0";
+        if (residuo == 1) return "1";
+        return (11 - residuo).ToString();
+    }
+
+    private void ToggleResponsabilidad(string resp, bool check)
+    {
+        if (check && !modelo.ResponsabilidadesTributarias.Contains(resp))
+        {
+            modelo.ResponsabilidadesTributarias.Add(resp);
+        }
+        else if (!check && modelo.ResponsabilidadesTributarias.Contains(resp))
+        {
+            modelo.ResponsabilidadesTributarias.Remove(resp);
+        }
+    }
+
+    private void OnToggleFiscalAplica(ChangeEventArgs e)
+    {
+        modelo.FiscalAplica = (bool?)e.Value ?? false;
+        if (!modelo.FiscalAplica && string.IsNullOrWhiteSpace(modelo.FiscalMotivoNoAplica))
+        {
+            modelo.FiscalMotivoNoAplica = "Por tipología asociativa no se exige revisor fiscal.";
+        }
+    }
+
+    private void AgregarNuevaActaRecurrente()
+    {
+        listaActasRecurrentes.Add(new DocumentoItemInstitucional
+        {
+            Clave = $"ACTA_{listaActasRecurrentes.Count + 1}",
+            CategoriaSeccion = "Actas",
+            TipoDocumento = "Acta de Reunión de Junta Directiva",
+            NumeroReferencia = "",
+            FechaEmision = DateTime.Today,
+            Periodo = DateTime.Today.Year.ToString(),
+            EntidadEmisora = "Reunión ordinaria",
+            EstadoRequisito = "Aplica"
+        });
+    }
+
+    private void EliminarActaRecurrente(int index)
+    {
+        if (index >= 0 && index < listaActasRecurrentes.Count)
+        {
+            listaActasRecurrentes.RemoveAt(index);
+        }
+    }
+
+    private async Task OnSubirArchivoActa(InputFileChangeEventArgs e, int indexActa)
+    {
+        if (indexActa < 0 || indexActa >= listaActasRecurrentes.Count) return;
+        var archivo = e.File;
+        if (archivo == null || archivo.Size == 0)
+        {
+            mensajeAlerta = "El archivo seleccionado está vacío o no es válido.";
+            esErrorAlerta = true;
+            return;
+        }
+
+        var ext = Path.GetExtension(archivo.Name).ToLowerInvariant();
+        if (ext is not (".pdf" or ".jpg" or ".jpeg" or ".png"))
+        {
+            mensajeAlerta = "Solo se permiten archivos en formato PDF, JPG o PNG.";
+            esErrorAlerta = true;
+            return;
+        }
+
+        if (archivo.Size > 10 * 1024 * 1024)
+        {
+            mensajeAlerta = $"El archivo '{archivo.Name}' excede el límite de 10 MB.";
+            esErrorAlerta = true;
+            return;
+        }
+
+        try
+        {
+            using var ms = new MemoryStream();
+            await archivo.OpenReadStream(10 * 1024 * 1024).CopyToAsync(ms);
+            var acta = listaActasRecurrentes[indexActa];
+            acta.ArchivoNombre = archivo.Name;
+            acta.ArchivoContenido = ms.ToArray();
+            acta.TamanoBytes = archivo.Size;
+            acta.ArchivoTipoMime = archivo.ContentType;
+            mensajeAlerta = $"Archivo '{archivo.Name}' cargado correctamente para el acta.";
+            esErrorAlerta = false;
+        }
+        catch (Exception ex)
+        {
+            mensajeAlerta = $"Error al leer el archivo: {ex.Message}";
+            esErrorAlerta = true;
+        }
+    }
+
+    private void QuitarArchivoActa(int indexActa)
+    {
+        if (indexActa >= 0 && indexActa < listaActasRecurrentes.Count)
+        {
+            var acta = listaActasRecurrentes[indexActa];
+            acta.ArchivoNombre = null;
+            acta.ArchivoContenido = null;
+            acta.TamanoBytes = 0;
+        }
+    }
+
+    private async Task OnSubirArchivoConfigurado(InputFileChangeEventArgs e, string clave)
+    {
+        if (!catalogoDocumentosConfigurados.TryGetValue(clave, out var docItem)) return;
+        var archivo = e.File;
+        if (archivo == null || archivo.Size == 0)
+        {
+            mensajeAlerta = "El archivo seleccionado está vacío o es inválido.";
+            esErrorAlerta = true;
+            return;
+        }
+
+        var ext = Path.GetExtension(archivo.Name).ToLowerInvariant();
+        if (ext is not (".pdf" or ".jpg" or ".jpeg" or ".png"))
+        {
+            mensajeAlerta = "Solo se admiten documentos en formato PDF, JPG o PNG.";
+            esErrorAlerta = true;
+            return;
+        }
+
+        if (archivo.Size > 10 * 1024 * 1024)
+        {
+            mensajeAlerta = $"El archivo '{archivo.Name}' excede el límite de 10 MB.";
+            esErrorAlerta = true;
+            return;
+        }
+
+        try
+        {
+            using var ms = new MemoryStream();
+            await archivo.OpenReadStream(10 * 1024 * 1024).CopyToAsync(ms);
+            docItem.ArchivoNombre = archivo.Name;
+            docItem.ArchivoContenido = ms.ToArray();
+            docItem.TamanoBytes = archivo.Size;
+            docItem.ArchivoTipoMime = archivo.ContentType;
+            if (docItem.EstadoRequisito == "No aplica") docItem.EstadoRequisito = "Aplica";
+            mensajeAlerta = $"Archivo '{archivo.Name}' cargado en '{docItem.TipoDocumento}'.";
+            esErrorAlerta = false;
+        }
+        catch (Exception ex)
+        {
+            mensajeAlerta = $"Error al leer el archivo: {ex.Message}";
+            esErrorAlerta = true;
+        }
+    }
+
+    private void QuitarArchivoConfigurado(string clave)
+    {
+        if (catalogoDocumentosConfigurados.TryGetValue(clave, out var docItem))
+        {
+            docItem.ArchivoNombre = null;
+            docItem.ArchivoContenido = null;
+            docItem.TamanoBytes = 0;
+        }
+    }
+
+    private async Task OnSubirArchivoPersonalizado(InputFileChangeEventArgs e)
+    {
+        var archivo = e.File;
+        if (archivo == null || archivo.Size == 0) return;
+
+        var ext = Path.GetExtension(archivo.Name).ToLowerInvariant();
+        if (ext is not (".pdf" or ".jpg" or ".jpeg" or ".png"))
+        {
+            mensajeAlerta = "Solo se permiten formatos PDF, JPG y PNG.";
+            esErrorAlerta = true;
+            return;
+        }
+
+        try
+        {
+            using var ms = new MemoryStream();
+            await archivo.OpenReadStream(10 * 1024 * 1024).CopyToAsync(ms);
+            docPersonalizado.ArchivoNombre = archivo.Name;
+            docPersonalizado.ArchivoContenido = ms.ToArray();
+            docPersonalizado.TamanoBytes = archivo.Size;
+            docPersonalizado.ArchivoTipoMime = archivo.ContentType;
+            mensajeAlerta = $"Archivo '{archivo.Name}' cargado en soportes personalizados.";
+            esErrorAlerta = false;
+        }
+        catch (Exception ex)
+        {
+            mensajeAlerta = $"Error al cargar archivo: {ex.Message}";
+            esErrorAlerta = true;
+        }
+    }
+
+    private RenderFragment RenderCardDocumento(string clave, string titulo, string descripcion) => __builder =>
+    {
+        if (!catalogoDocumentosConfigurados.TryGetValue(clave, out var docItem)) return;
+
+        <div class="ra-doc-card @(docItem.EstadoRequisito == "No aplica" ? "no-aplica" : "")">
+            <div class="ra-doc-cab">
+                <div class="ra-doc-cab-izq">
+                    <span class="badge @(docItem.EstadoRequisito == "Obligatorio" ? "bg-danger-subtle text-danger border border-danger-subtle" : docItem.EstadoRequisito == "No aplica" ? "bg-secondary-subtle text-secondary" : "bg-success-subtle text-success")">
+                        @docItem.EstadoRequisito
+                    </span>
+                    <h5 class="ra-doc-titulo">@titulo</h5>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <label class="small text-muted mb-0 fw-bold">Estado del requisito:</label>
+                    <select class="ra-doc-estado-select" value="@docItem.EstadoRequisito" @onchange='(e) => OnCambiarEstadoRequisito(clave, e.Value?.ToString() ?? "Aplica")'>
+                        <option value="Obligatorio">Obligatorio</option>
+                        <option value="Aplica">Aplica</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="No aplica">No aplica</option>
+                    </select>
+                </div>
+            </div>
+
+            <p class="small text-muted mb-0">@descripcion</p>
+
+            @if (docItem.EstadoRequisito != "No aplica")
+            {
+                <div class="ra-grid mt-1">
+                    <div class="ra-campo">
+                        <label class="ra-label">Fecha de expedición / emisión</label>
+                        <input type="date" class="ra-input py-1" @bind="docItem.FechaEmision" />
+                    </div>
+
+                    <div class="ra-campo">
+                        <label class="ra-label">Fecha de vencimiento / renovación <span class="ra-hint">(dejar vacío si no caduca)</span></label>
+                        <input type="date" class="ra-input py-1" @bind="docItem.FechaVencimiento" />
+                    </div>
+
+                    <div class="ra-campo">
+                        <label class="ra-label">Número de referencia / radicado</label>
+                        <input type="text" class="ra-input py-1" placeholder="Ej.: Radicado No. 048-2025" @bind="docItem.NumeroReferencia" />
+                    </div>
+
+                    <div class="ra-campo ra-grid-full">
+                        <label class="ra-label">
+                            Archivo digitalizado (PDF, JPG, PNG - Máx. 10 MB)
+                            @if (docItem.EstadoRequisito == "Obligatorio")
+                            {
+                                <span class="ra-badge-req">Obligatorio</span>
+                            }
+                            else
+                            {
+                                <span class="ra-badge-opc">Opcional</span>
+                            }
+                        </label>
+                        @if (!string.IsNullOrWhiteSpace(docItem.ArchivoNombre))
+                        {
+                            <div class="ra-archivo-box">
+                                <div class="ra-archivo-info">
+                                    <span class="ra-archivo-ico"><i class="bi bi-file-earmark-check"></i></span>
+                                    <div class="ra-archivo-nombres">
+                                        <strong>@docItem.ArchivoNombre</strong>
+                                        <small>@FormatearBytes(docItem.TamanoBytes)</small>
+                                    </div>
+                                </div>
+                                <button type="button" class="ra-archivo-btn-quitar" @onclick="() => QuitarArchivoConfigurado(clave)">
+                                    <i class="bi bi-x-circle"></i> Quitar archivo
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <InputFile class="ra-input py-1" OnChange="(e) => OnSubirArchivoConfigurado(e, clave)" accept=".pdf,.png,.jpg,.jpeg" />
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="ra-campo mt-1">
+                    <label class="ra-label">Motivo o justificación de por qué No Aplica <span class="ra-badge-req">Obligatorio</span></label>
+                    <input type="text"
+                           class="ra-input"
+                           placeholder="Ej.: La asociación no cuenta con reformas estatutarias posteriores a su constitución."
+                           @bind="docItem.MotivoNoAplica" />
+                </div>
+            }
+        </div>
+    };
+
+    private void OnCambiarEstadoRequisito(string clave, string nuevoEstado)
+    {
+        if (catalogoDocumentosConfigurados.TryGetValue(clave, out var docItem))
+        {
+            docItem.EstadoRequisito = nuevoEstado;
+            if (nuevoEstado == "No aplica" && string.IsNullOrWhiteSpace(docItem.MotivoNoAplica))
+            {
+                docItem.MotivoNoAplica = "No aplica según la naturaleza jurídica o actividades de la asociación.";
+            }
+        }
+    }
+
+    private void ValidarCampo(string campo)
+    {
+        erroresValidacion.Remove(campo);
+
+        switch (campo)
+        {
+            case "NombreLegal":
+                if (string.IsNullOrWhiteSpace(modelo.NombreLegal))
+                {
+                    erroresValidacion["NombreLegal"] = "El nombre legal completo de la asociación es obligatorio.";
+                }
+                else
+                {
+                    var limpio = modelo.NombreLegal.Trim();
+                    if (limpio.Length < 4)
+                        erroresValidacion["NombreLegal"] = "Debe tener al menos 4 caracteres.";
+                    else if (Regex.IsMatch(limpio, @"^\d+$"))
+                        erroresValidacion["NombreLegal"] = "No puede consistir únicamente en números.";
+                    else if (limpio.ToLowerInvariant().Contains("ejemplo") || limpio.ToLowerInvariant().Contains("test"))
+                        erroresValidacion["NombreLegal"] = "No se permiten textos de ejemplo ficticios como nombre real.";
+                }
+                break;
+
+            case "Sigla":
+                if (!string.IsNullOrWhiteSpace(modelo.Sigla) && modelo.Sigla.Trim().Length > 20)
+                {
+                    erroresValidacion["Sigla"] = "La sigla no debe exceder 20 caracteres.";
+                }
+                break;
+
+            case "Nit":
+                if (!string.IsNullOrWhiteSpace(modelo.Nit))
+                {
+                    var soloNums = Regex.Replace(modelo.Nit, "[^0-9]", "");
+                    if (soloNums.Length < 9 || soloNums.Length > 10)
+                        erroresValidacion["Nit"] = "El NIT debe tener entre 9 y 10 dígitos numéricos.";
+                    else if (new string(soloNums[0], soloNums.Length) == soloNums)
+                        erroresValidacion["Nit"] = "El NIT no puede ser una secuencia repetida del mismo dígito.";
+                }
+                else
+                {
+                    erroresValidacion["Nit"] = "El NIT institucional es obligatorio.";
+                }
+                break;
+
+            case "FechaConstitucion":
+                if (modelo.FechaConstitucion == null)
+                    erroresValidacion["FechaConstitucion"] = "La fecha de constitución es obligatoria.";
+                else if (modelo.FechaConstitucion.Value.Date > DateTime.Today)
+                    erroresValidacion["FechaConstitucion"] = "La fecha de constitución no puede ser una fecha futura.";
+                break;
+
+            case "DireccionPrincipal":
+                if (string.IsNullOrWhiteSpace(modelo.DireccionPrincipal) || modelo.DireccionPrincipal.Trim().Length < 5)
+                    erroresValidacion["DireccionPrincipal"] = "La dirección de la sede principal es obligatoria (mínimo 5 caracteres).";
+                break;
+
+            case "CorreoInstitucional":
+                if (string.IsNullOrWhiteSpace(modelo.CorreoInstitucional))
+                {
+                    erroresValidacion["CorreoInstitucional"] = "El correo institucional es obligatorio.";
+                }
+                else
+                {
+                    var correo = modelo.CorreoInstitucional.Trim();
+                    if (correo.Contains(" ") || !Regex.IsMatch(correo, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+                    {
+                        erroresValidacion["CorreoInstitucional"] = "Indique un correo electrónico válido (ej.: secretaria@asoagro-uraba.org).";
+                    }
+                }
+                break;
+
+            case "TelefonoContacto":
+                if (string.IsNullOrWhiteSpace(modelo.TelefonoContacto))
+                {
+                    erroresValidacion["TelefonoContacto"] = "El teléfono institucional es obligatorio.";
+                }
+                else
+                {
+                    var soloDigitos = Regex.Replace(modelo.TelefonoContacto, "[^0-9]", "");
+                    if (soloDigitos.Length < 7 || soloDigitos.Length > 10)
+                    {
+                        erroresValidacion["TelefonoContacto"] = "Indique un número celular de 10 dígitos o fijo de 7 dígitos.";
+                    }
+                }
+                break;
+
+            case "EntidadInscripcion":
+                if (string.IsNullOrWhiteSpace(modelo.EntidadInscripcion))
+                    erroresValidacion["EntidadInscripcion"] = "Debe indicar la entidad de inscripción (ej.: Cámara de Comercio de Urabá).";
+                break;
+
+            case "NumeroRegistro":
+                if (string.IsNullOrWhiteSpace(modelo.NumeroRegistro))
+                    erroresValidacion["NumeroRegistro"] = "El número de matrícula o radicado es obligatorio.";
+                break;
+
+            case "RepLegalNombre":
+                if (string.IsNullOrWhiteSpace(modelo.RepLegalNombre) || modelo.RepLegalNombre.Trim().Length < 4)
+                    erroresValidacion["RepLegalNombre"] = "El nombre del Representante Legal es obligatorio.";
+                break;
+
+            case "RepLegalPeriodoFin":
+                if (modelo.RepLegalPeriodoInicio.HasValue && modelo.RepLegalPeriodoFin.HasValue)
+                {
+                    if (modelo.RepLegalPeriodoFin.Value < modelo.RepLegalPeriodoInicio.Value)
+                    {
+                        erroresValidacion["RepLegalPeriodoFin"] = "El fin del periodo no puede ser anterior al inicio.";
+                    }
+                }
+                break;
+        }
+    }
+
+    private bool TieneError(string campo) => erroresValidacion.ContainsKey(campo);
+    private string ObtenerError(string campo) => erroresValidacion.TryGetValue(campo, out var err) ? err : string.Empty;
+
+    private bool ValidarPasoActual(int paso)
+    {
+        erroresValidacion.Clear();
+
+        switch (paso)
+        {
+            case 1:
+                ValidarCampo("NombreLegal");
+                ValidarCampo("Nit");
+                ValidarCampo("FechaConstitucion");
+                break;
+
+            case 2:
+                ValidarCampo("DireccionPrincipal");
+                ValidarCampo("CorreoInstitucional");
+                ValidarCampo("TelefonoContacto");
+                break;
+
+            case 3:
+                ValidarCampo("EntidadInscripcion");
+                ValidarCampo("NumeroRegistro");
+                foreach (var doc in catalogoDocumentosConfigurados.Values.Where(d => d.CategoriaSeccion == "Constitución"))
+                {
+                    if (doc.EstadoRequisito == "No aplica" && string.IsNullOrWhiteSpace(doc.MotivoNoAplica))
+                    {
+                        mensajeAlerta = $"Debe indicar el motivo por el cual '{doc.TipoDocumento}' no aplica.";
+                        esErrorAlerta = true;
+                        return false;
+                    }
+                }
+                break;
+
+            case 4:
+                ValidarCampo("RepLegalNombre");
+                ValidarCampo("RepLegalPeriodoFin");
+                if (!modelo.FiscalAplica && string.IsNullOrWhiteSpace(modelo.FiscalMotivoNoAplica))
+                {
+                    mensajeAlerta = "Debe justificar el motivo por el cual no aplica el cargo de Fiscal / Revisor Fiscal.";
+                    esErrorAlerta = true;
+                    return false;
+                }
+                break;
+
+            case 5:
+                if (modelo.RutEstado == "No aplica" && string.IsNullOrWhiteSpace(modelo.RutEstadoMotivo))
+                {
+                    mensajeAlerta = "Debe indicar la justificación de no aplicación del RUT.";
+                    esErrorAlerta = true;
+                    return false;
+                }
+                break;
+
+            case 6:
+                if (!listaActasRecurrentes.Any())
+                {
+                    mensajeAlerta = "Debe registrar al menos un acta institucional o asamblea.";
+                    esErrorAlerta = true;
+                    return false;
+                }
+                break;
+        }
+
+        if (erroresValidacion.Any())
+        {
+            mensajeAlerta = "Por favor corrija los campos requeridos marcados en rojo antes de continuar.";
+            esErrorAlerta = true;
+            return false;
+        }
+
+        mensajeAlerta = string.Empty;
+        esErrorAlerta = false;
+        return true;
+    }
+
+    private void IrAlPaso(int pasoDestino)
+    {
+        if (pasoDestino < pasoActual || ValidarPasoActual(pasoActual))
+        {
+            pasoActual = pasoDestino;
+        }
+    }
+
+    private void PasoSiguiente()
+    {
+        if (ValidarPasoActual(pasoActual) && pasoActual < 7)
+        {
+            pasoActual++;
+        }
+    }
+
+    private void PasoAnterior()
+    {
+        if (pasoActual > 1)
+        {
+            pasoActual--;
+        }
+    }
+
+    private void GuardarBorrador()
+    {
+        modelo.ActualizadoPor = usuarioActualNombre;
+        DocumentoService.GuardarAsociacionInstitucional(modelo, ObtenerTodosLosDocumentosParaGuardar());
+        mensajeAlerta = "Borrador institucional guardado en el sistema. Puede continuar completándolo en cualquier momento.";
+        esErrorAlerta = false;
+    }
+
+    private async Task FinalizarYArchivarExpediente()
+    {
+        if (!ValidarPasoActual(1) || !ValidarPasoActual(2) || !ValidarPasoActual(3) || !ValidarPasoActual(4))
+        {
+            return;
+        }
+
+        guardando = true;
+        mensajeAlerta = string.Empty;
+
+        try
+        {
+            modelo.ActualizadoPor = usuarioActualNombre;
+            var documentosParaGuardar = ObtenerTodosLosDocumentosParaGuardar();
+
+            DocumentoService.GuardarAsociacionInstitucional(modelo, documentosParaGuardar);
+
+            totalDocumentosArchivados = documentosParaGuardar.Count(d => d.Aplica && !string.IsNullOrWhiteSpace(d.ArchivoNombre));
+
+            // Notificación institucional para directivos
+            Notificaciones.Publicar(new Notificacion
+            {
+                Titulo = $"Expediente institucional radicado: {modelo.NombreLegal}",
+                Descripcion = $"Secretaría ({usuarioActualNombre}) radicó el expediente legal y estatutario de {modelo.NombreLegal} con {totalDocumentosArchivados} soportes archivados.",
+                Etiqueta = "Secretaría",
+                Enlace = $"/consultar-estado-documentos?asoc={Uri.EscapeDataString(modelo.NombreLegal)}",
+                Icono = "check",
+                Categoria = CategoriaNotificacion.Documentos,
+                Nivel = NivelNotificacion.Informativa,
+                RolesDestino = new[] { "Directora", "Presidenta", "Secretaria", "Tesorero" },
+                RolesEnlace = new[] { "Secretaria", "Tesorero", "Directora", "Presidenta" }
+            });
+
+            expedienteGuardado = modelo;
+            registroExitoso = true;
+        }
+        catch (Exception ex)
+        {
+            mensajeAlerta = $"Error al archivar el expediente institucional: {ex.Message}";
+            esErrorAlerta = true;
+        }
+        finally
+        {
+            guardando = false;
+        }
+    }
+
+    private async Task DescargarResumenPdf()
+    {
+        try
+        {
+            var pdfBytes = ExpedienteAsociacionPdfGenerator.GenerarResumenPdf(
+                modelo,
+                ObtenerTodosLosDocumentosParaGuardar(),
+                usuarioActualNombre,
+                DateTime.Now);
+
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var nombrePdf = $"Expediente_Institucional_{Regex.Replace(modelo.NombreLegal, @"[^a-zA-Z0-9]", "_")}.pdf";
+            await JS.InvokeVoidAsync("descargarArchivoBase64", nombrePdf, "application/pdf", base64);
+        }
+        catch (Exception ex)
+        {
+            mensajeAlerta = $"Error al generar el PDF del expediente: {ex.Message}";
+            esErrorAlerta = true;
+        }
+    }
+
+    private List<DocumentoItemInstitucional> ObtenerTodosLosDocumentosParaGuardar()
+    {
+        var lista = catalogoDocumentosConfigurados.Values.ToList();
+        lista.AddRange(listaActasRecurrentes);
+
+        if (!string.IsNullOrWhiteSpace(docPersonalizado.Titulo) && (!string.IsNullOrWhiteSpace(docPersonalizado.ArchivoNombre) || docPersonalizado.FechaEmision.HasValue))
+        {
+            lista.Add(docPersonalizado);
+        }
+
+        return lista;
+    }
+
+    private int ContarDocumentosAdjuntos()
+    {
+        return ObtenerTodosLosDocumentosParaGuardar().Count(d => d.Aplica && !string.IsNullOrWhiteSpace(d.ArchivoNombre));
+    }
+
+    private bool EsPasoCompleto(int paso)
+    {
+        return paso switch
+        {
+            1 => !string.IsNullOrWhiteSpace(modelo.NombreLegal) && !string.IsNullOrWhiteSpace(modelo.Nit) && modelo.FechaConstitucion.HasValue,
+            2 => !string.IsNullOrWhiteSpace(modelo.DireccionPrincipal) && !string.IsNullOrWhiteSpace(modelo.CorreoInstitucional) && !string.IsNullOrWhiteSpace(modelo.TelefonoContacto),
+            3 => !string.IsNullOrWhiteSpace(modelo.EntidadInscripcion) && !string.IsNullOrWhiteSpace(modelo.NumeroRegistro),
+            4 => !string.IsNullOrWhiteSpace(modelo.RepLegalNombre) && modelo.RepLegalPeriodoFin.HasValue,
+            5 => !string.IsNullOrWhiteSpace(modelo.RutEstado),
+            6 => listaActasRecurrentes.Any(a => !string.IsNullOrWhiteSpace(a.NumeroReferencia)),
+            7 => registroExitoso,
+            _ => false
+        };
+    }
+
+    private int CalcularPorcentajeAvance()
+    {
+        if (registroExitoso) return 100;
+        int puntos = 0;
+        if (!string.IsNullOrWhiteSpace(modelo.NombreLegal)) puntos += 20;
+        if (!string.IsNullOrWhiteSpace(modelo.Nit)) puntos += 15;
+        if (!string.IsNullOrWhiteSpace(modelo.DireccionPrincipal)) puntos += 15;
+        if (!string.IsNullOrWhiteSpace(modelo.EntidadInscripcion)) puntos += 15;
+        if (!string.IsNullOrWhiteSpace(modelo.RepLegalNombre)) puntos += 15;
+        if (!string.IsNullOrWhiteSpace(modelo.RutEstado)) puntos += 10;
+        if (catalogoDocumentosConfigurados.Values.Any(d => !string.IsNullOrWhiteSpace(d.ArchivoNombre))) puntos += 10;
+        return Math.Min(100, Math.Max(10, puntos));
+    }
+
+    private string ObtenerNombrePaso(int paso) => paso switch
+    {
+        1 => "Identificación de la Asociación",
+        2 => "Domicilio y Contacto Oficial",
+        3 => "Registro Legal y Constitución",
+        4 => "Representación y Gobierno",
+        5 => "Identificación Tributaria",
+        6 => "Actas Institucionales Recurrentes",
+        7 => "Otros Documentos y Revisión Final",
+        _ => ""
+    };
+
+    private string ObtenerNombrePasoCorto(int paso) => paso switch
+    {
+        1 => "Identificación",
+        2 => "Domicilio",
+        3 => "Constitución",
+        4 => "Gobierno",
+        5 => "Tributario",
+        6 => "Actas",
+        7 => "Revisión",
+        _ => ""
+    };
+
+    private static string FormatearBytes(long bytes)
+    {
+        if (bytes <= 0) return "0 KB";
+        if (bytes < 1024) return $"{bytes} B";
+        var kb = bytes / 1024.0;
+        if (kb < 1024) return $"{kb:0.#} KB";
+        var mb = kb / 1024.0;
+        return $"{mb:0.##} MB";
+    }
+
+    private void CerrarModalExito()
+    {
+        registroExitoso = false;
+    }
+
+    private void IrAEstadoExpediente()
+    {
+        var nombre = modelo.NombreLegal;
+        Navigation.NavigateTo($"/consultar-estado-documentos?asoc={Uri.EscapeDataString(nombre)}");
+    }
+
+    private void RegistrarOtraAsociacion()
+    {
+        modelo = new AsociacionInstitucional
+        {
+            NombreLegal = "",
+            Sigla = "",
+            Nit = "",
+            DigitoVerificacion = "",
+            TipoOrganizacion = "Asociación campesina",
+            Ambito = "Municipal",
+            GradoOrganizacion = "Primer grado (Asociación de base)",
+            Estado = "Activa",
+            Departamento = "Antioquia",
+            Municipio = "Apartadó",
+            DireccionPrincipal = "",
+            CorreoInstitucional = "",
+            TelefonoContacto = "",
+            DireccionNotificacionesEsMisma = true,
+            DireccionNotificaciones = "",
+            SitioWeb = "",
+            ContactoNombre = "",
+            ContactoCargo = "",
+            EntidadInscripcion = "",
+            NumeroRegistro = "",
+            NumeroRues = "",
+            AutoridadVigilancia = "",
+            RepLegalNombre = "",
+            RepLegalCargo = "Representante Legal",
+            RepLegalDocumento = "",
+            JuntaPresidente = "",
+            JuntaVicepresidente = "",
+            JuntaSecretario = "",
+            JuntaTesorero = "",
+            JuntaPeriodo = "",
+            FiscalAplica = true,
+            FiscalNombre = "",
+            FiscalMotivoNoAplica = "",
+            RutEstado = "Inscrita y activa",
+            RegimenTributario = "Régimen Ordinario"
+        };
+        expedienteGuardado = null;
+        registroExitoso = false;
+        pasoActual = 1;
+        docPersonalizado = new DocumentoItemInstitucional
+        {
+            Clave = "DOC_PERSONALIZADO",
+            TipoDocumento = "Otro Documento Legal o Institucional",
+            EstadoRequisito = "Aplica"
+        };
+        InicializarDocumentosConfigurados();
     }
 }

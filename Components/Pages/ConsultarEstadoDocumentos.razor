@@ -1,171 +1,515 @@
 @page "/consultar-estado-documentos"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Tesorero")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Directora,Director,Presidenta,Presidente")]
 @rendermode InteractiveServer
+@using System.Text.RegularExpressions
+@using Asoagro.Models
+@using Asoagro.Services
+@inject IDocumentoAsociacionService DocumentoService
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
 
-<PageTitle>Consultar Estado de Documentación</PageTitle>
+<PageTitle>Estado de Documentación por Asociación · Asoagro & FAAUA</PageTitle>
 
-<div class="container mt-4">
-    <div class="d-flex align-items-center mb-4">
-        <h3 class="fw-bold mb-0 text-primary">
-            <span class="bi bi-file-earmark-check-fill me-2"></span>Estado de Documentación por Asociado
-        </h3>
+<div class="asoagro-documentos-wrapper container-fluid px-0 pb-5">
+
+    <!-- HERO PANEL INSTITUCIONAL -->
+    <div class="asoagro-hero-banner p-4 p-md-5 mb-4 position-relative overflow-hidden rounded-4">
+        <div class="hero-bg-shapes"></div>
+        <div class="row align-items-center position-relative" style="z-index: 2;">
+            <div class="col-lg-8">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <span class="badge-agri-pill">
+                        <i class="bi bi-folder-fill me-1"></i> FAAUA · Secretaría General
+                    </span>
+                    <span class="badge-agri-pill-sub">
+                        <i class="bi bi-file-earmark-ruled me-1"></i> Expedientes Institucionales
+                    </span>
+                </div>
+                <h1 class="fw-extrabold text-white mb-2 tracking-tight" style="font-size: 1.85rem; font-weight: 800;">
+                    Estado de Documentación por Asociación
+                </h1>
+                <p class="text-white-50 mb-0 small" style="max-width: 650px; line-height: 1.6;">
+                    Supervisa el expediente documental de cada entidad base: soportes custodiados, documentos faltantes para elegibilidad, fechas de vencimiento y descarga de archivos oficiales.
+                </p>
+            </div>
+            
+            <div class="col-lg-4 mt-4 mt-lg-0 text-lg-end">
+                <div class="d-flex flex-column gap-2 align-items-lg-end">
+                    <a href="registrar-documentos" class="btn btn-success fw-bold px-4 py-2 shadow-sm rounded-pill d-inline-flex align-items-center gap-2">
+                        <i class="bi bi-cloud-plus-fill fs-5"></i>
+                        <span>Registrar Nuevo Documento</span>
+                    </a>
+                    <a href="alertas-documentos" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                        <i class="bi bi-bell-fill me-1 text-warning"></i> Ver Alertas de Vencimiento (@TotalAlertas)
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Buscador Compacto -->
-    <div class="card shadow-sm mb-4 border-0 rounded-3">
-        <div class="card-body p-3">
-            <div class="row g-2 align-items-center">
-                <div class="col-md-7">
-                    <label class="form-label fw-bold small text-muted mb-1">Buscar Asociado</label>
-                    <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control border-start-0 ps-0" placeholder="Ingrese Cédula o Nombre completo..." @bind="criterioBusqueda" />
+    <!-- PANEL DE SELECCIÓN Y FILTROS -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 p-md-4 bg-white">
+        <div class="row g-3 align-items-end">
+            <!-- Selector de Asociación -->
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label fw-bold small text-dark mb-1">
+                    <i class="bi bi-building me-1 text-success"></i> Asociación a Consultar:
+                </label>
+                <select class="form-select" value="@asociacionFiltro" @onchange="OnCambioAsociacion">
+                    <option value="">-- Todas las asociaciones federadas --</option>
+                    @foreach (var asoc in listaAsociaciones)
+                    {
+                        <option value="@asoc">@asoc</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Búsqueda por texto -->
+            <div class="col-lg-3 col-md-6">
+                <label class="form-label fw-bold small text-dark mb-1">
+                    <i class="bi bi-search me-1 text-success"></i> Buscar por detalle:
+                </label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text"
+                           class="form-control border-start-0 ps-0"
+                           placeholder="Ej. RUT, Cámara de Comercio, ICA..."
+                           @bind="textoBusqueda"
+                           @bind:event="oninput" />
+                    @if (!string.IsNullOrWhiteSpace(textoBusqueda))
+                    {
+                        <button class="btn btn-outline-secondary border-start-0" type="button" @onclick="() => textoBusqueda = string.Empty">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <!-- Filtro por Estado -->
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label fw-bold small text-dark mb-1">
+                    <i class="bi bi-funnel me-1 text-success"></i> Estado:
+                </label>
+                <select class="form-select" @bind="filtroEstado">
+                    <option value="Todos">Todos los estados</option>
+                    <option value="Vigente">Vigentes</option>
+                    <option value="Por vencer">Por vencer</option>
+                    <option value="Vencido">Vencidos</option>
+                </select>
+            </div>
+
+            <!-- Filtro por Tipo -->
+            <div class="col-lg-2 col-md-4">
+                <label class="form-label fw-bold small text-dark mb-1">
+                    <i class="bi bi-tag me-1 text-success"></i> Tipo:
+                </label>
+                <select class="form-select" @bind="filtroTipo">
+                    <option value="">Todos los tipos</option>
+                    @foreach (var tipo in catalogoTipos)
+                    {
+                        <option value="@tipo">@tipo</option>
+                    }
+                </select>
+            </div>
+
+            <!-- Botón Consultar Expediente -->
+            <div class="col-lg-2 col-md-4 d-flex">
+                <button type="button" class="btn-consultar-expediente w-100" @onclick="EjecutarConsultaExpediente">
+                    <i class="bi bi-folder2-open"></i>
+                    <span>Consultar expediente</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- RESUMEN DEL EXPEDIENTE (Si hay asociación seleccionada) -->
+    @if (!string.IsNullOrWhiteSpace(asociacionFiltro))
+    {
+        var expediente = DocumentoService.ObtenerExpediente(asociacionFiltro);
+        
+        <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden border-top border-4 border-success">
+            <div class="card-body p-4">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3 pb-3 border-bottom">
+                    <div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success-subtle text-success px-2.5 py-1 rounded-pill fw-bold">Entidad Base</span>
+                            <h4 class="fw-bold text-dark mb-0">@expediente.NombreAsociacion</h4>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(expediente.NitAsociacion))
+                        {
+                            <span class="text-muted small mt-1 d-block"><i class="bi bi-card-text me-1"></i> NIT: @expediente.NitAsociacion</span>
+                        }
+                    </div>
+
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                        <button type="button" class="btn-consultar-expediente" @onclick="() => DescargarExpedientePdf(expediente.NombreAsociacion)">
+                            <i class="bi bi-file-earmark-pdf-fill"></i>
+                            <span>Consultar expediente (PDF)</span>
+                        </button>
+                        <a href="@($"/registrar-documentos")" class="btn btn-outline-success fw-bold d-inline-flex align-items-center gap-1.5 py-2 px-3 rounded-pill">
+                            <i class="bi bi-plus-circle-fill"></i> Adjuntar Documento
+                        </a>
                     </div>
                 </div>
-                <div class="col-md-3 d-flex align-items-end mt-3 mt-md-0">
-                    <button class="btn btn-primary w-100 fw-semibold" @onclick="EjecutarBusqueda">
-                        <i class="bi bi-search me-1"></i> Buscar
-                    </button>
+
+                <!-- Métricas de estado del expediente (4 tarjetas perfectamente alineadas) -->
+                <div class="ced-metricas-grid">
+                    <div class="ced-metrica-card ced-metrica-registrados">
+                        <span class="ced-metrica-titulo">Documentos Registrados</span>
+                        <strong class="ced-metrica-valor">@expediente.TotalRegistrados</strong>
+                    </div>
+
+                    <div class="ced-metrica-card ced-metrica-vigentes">
+                        <span class="ced-metrica-titulo">Al Día / Vigentes</span>
+                        <strong class="ced-metrica-valor">@expediente.Vigentes</strong>
+                    </div>
+
+                    <div class="ced-metrica-card ced-metrica-porvencer">
+                        <span class="ced-metrica-titulo">Por Vencer (&le; 30d)</span>
+                        <strong class="ced-metrica-valor">@expediente.PorVencer</strong>
+                    </div>
+
+                    <div class="ced-metrica-card ced-metrica-vencidos">
+                        <span class="ced-metrica-titulo">Vencidos</span>
+                        <strong class="ced-metrica-valor">@expediente.Vencidos</strong>
+                    </div>
                 </div>
-                <div class="col-md-2 d-flex align-items-end mt-3 mt-md-0">
-                    <button class="btn btn-outline-secondary btn-sm w-100 py-2" @onclick="LimpiarFiltro" title="Limpiar búsqueda">
-                        <i class="bi bi-x-lg me-1"></i> Limpiar
-                    </button>
-                </div>
+
+                <!-- Documentos Faltantes -->
+                @if (expediente.DocumentosFaltantes.Any())
+                {
+                    <div class="alert alert-warning border-0 rounded-3 p-3 mb-0">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-exclamation-diamond-fill fs-5 text-warning-emphasis mt-0.5"></i>
+                            <div class="w-100">
+                                <strong class="text-warning-emphasis d-block mb-1">
+                                    Documentos faltantes para completar el expediente legal (@expediente.DocumentosFaltantes.Count pendientes):
+                                </strong>
+                                <div class="d-flex flex-wrap gap-2 mt-2">
+                                    @foreach (var faltante in expediente.DocumentosFaltantes)
+                                    {
+                                        <span class="badge bg-white text-dark border border-warning-subtle px-3 py-2 rounded-pill small fw-semibold d-inline-flex align-items-center gap-1.5 shadow-xs">
+                                            <i class="bi bi-file-earmark-x text-danger"></i> @faltante
+                                        </span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-success border-0 rounded-3 p-2.5 mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+                        <span class="small fw-semibold text-success-emphasis">
+                            ¡Expediente institucional completo! La asociación cuenta con los documentos legales fundamentales registrados.
+                        </span>
+                    </div>
+                }
             </div>
         </div>
+    }
+
+    <!-- TABLA DE DOCUMENTOS ENCONTRADOS -->
+    <div class="ced-tabla-card mb-4">
+        <div class="ced-tabla-header">
+            <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                <i class="bi bi-archive-fill text-success"></i>
+                <span>Documentos Registrados</span>
+                <span class="badge bg-success-subtle text-success rounded-pill fw-bold">@DocumentosFiltrados.Count()</span>
+            </h6>
+
+            @if (DocumentosFiltrados.Any())
+            {
+                <small class="text-muted">Ordenados del más reciente al más antiguo</small>
+            }
+        </div>
+
+        @if (!DocumentosFiltrados.Any())
+        {
+            <div class="p-5 text-center">
+                <div class="mb-3 text-muted">
+                    <i class="bi bi-folder2-open display-4 opacity-50"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">No se encontraron documentos</h5>
+                <p class="text-muted small mb-3">
+                    @(string.IsNullOrWhiteSpace(asociacionFiltro) 
+                        ? "Aún no se han registrado documentos institucionales con los filtros seleccionados." 
+                        : $"No hay registros para {asociacionFiltro} con los criterios indicados.")
+                </p>
+                <a href="registrar-documentos" class="btn btn-sm btn-success fw-bold px-3 py-2 rounded-pill">
+                    <i class="bi bi-plus-circle me-1"></i> Registrar Primer Documento
+                </a>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="ced-tabla">
+                    <colgroup>
+                        <col style="width: 24%;" />
+                        <col style="width: 27%;" />
+                        <col style="width: 12%;" />
+                        <col style="width: 13%;" />
+                        <col style="width: 12%;" />
+                        <col style="width: 12%;" />
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th class="ps-4">Asociación titular</th>
+                            <th>Documento y detalle</th>
+                            <th>Emisión</th>
+                            <th>Vencimiento</th>
+                            <th class="text-center">Estado / vigencia</th>
+                            <th class="text-center pe-4">Archivo soporte</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var doc in DocumentosFiltrados)
+                        {
+                            var estado = doc.EstadoCalculado;
+                            var dias = doc.DiasRestantes;
+
+                            <tr>
+                                <td class="ps-4">
+                                    <div class="ced-asoc-bloque">
+                                        <div class="ced-asoc-avatar">
+                                            @ObtenerInicialesAsociacion(doc.NombreAsociacion)
+                                        </div>
+                                        <div class="ced-asoc-info">
+                                            <strong class="ced-asoc-nombre" title="@doc.NombreAsociacion">@doc.NombreAsociacion</strong>
+                                            @if (!string.IsNullOrWhiteSpace(doc.NitAsociacion))
+                                            {
+                                                <span class="ced-asoc-nit">NIT: @doc.NitAsociacion</span>
+                                            }
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    <span class="ced-doc-tipo-badge">
+                                        @doc.TipoDocumento
+                                    </span>
+                                    <strong class="ced-doc-titulo">@doc.Titulo</strong>
+                                    @if (!string.IsNullOrWhiteSpace(doc.Observaciones))
+                                    {
+                                        <p class="ced-doc-obs" title="@doc.Observaciones">
+                                            @doc.Observaciones
+                                        </p>
+                                    }
+                                </td>
+
+                                <td>
+                                    <span class="ced-fecha-txt">@doc.FechaEmision.ToString("dd/MM/yyyy")</span>
+                                </td>
+
+                                <td>
+                                    @if (doc.FechaVencimiento.HasValue)
+                                    {
+                                        <span class="ced-fecha-txt @(dias < 0 ? "text-danger fw-bold" : dias <= 30 ? "text-warning-emphasis fw-bold" : "")">
+                                            @doc.FechaVencimiento.Value.ToString("dd/MM/yyyy")
+                                        </span>
+                                        @if (dias < 0)
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger extra-small mt-1 d-inline-block">Vencido hace @Math.Abs(dias.Value) d</span>
+                                        }
+                                        else if (dias <= 30)
+                                        {
+                                            <span class="badge bg-warning-subtle text-warning-emphasis extra-small mt-1 d-inline-block">Vence en @dias d</span>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted extra-small">No expira</span>
+                                    }
+                                </td>
+
+                                <td class="text-center">
+                                    @if (estado == "Vigente")
+                                    {
+                                        <span class="ced-badge-vigente">
+                                            <i class="bi bi-shield-check"></i> Vigente
+                                        </span>
+                                    }
+                                    else if (estado == "Por vencer")
+                                    {
+                                        <span class="ced-badge-por-vencer">
+                                            <i class="bi bi-exclamation-triangle-fill"></i> Por vencer
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="ced-badge-vencido">
+                                            <i class="bi bi-x-circle-fill"></i> Vencido
+                                        </span>
+                                    }
+                                </td>
+
+                                <td class="text-center pe-4">
+                                    @if (!string.IsNullOrWhiteSpace(doc.ArchivoNombre))
+                                    {
+                                        <button type="button"
+                                                class="ced-btn-descargar"
+                                                title="Descargar soporte @doc.ArchivoNombre"
+                                                @onclick="() => DescargarArchivo(doc)">
+                                            <i class="bi bi-file-earmark-arrow-down-fill"></i>
+                                            <span>Descargar</span>
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="ced-sin-soporte">Sin soporte</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
     </div>
 
-    <!-- Resultados -->
-    @if (asociadoEncontrado != null)
-    {
-        <div class="card shadow-sm border-0 mb-4">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                <div>
-                    <h5 class="fw-bold mb-0">@asociadoEncontrado.NombreCompleto</h5>
-                    <small class="text-muted">Cédula: @asociadoEncontrado.Cedula | Finca: @asociadoEncontrado.FincaVereda</small>
-                </div>
-                <span class="badge bg-info text-dark">@asociadoEncontrado.CultivoPrincipal</span>
-            </div>
-            <div class="card-body">
-                <h6 class="fw-bold mb-3">Documentos Registrados:</h6>
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle">
-                        <thead class="table-light">
-                            <tr>
-                                <th>Tipo de Documento</th>
-                                <th>Fecha de Emisión</th>
-                                <th>Fecha de Vencimiento</th>
-                                <th>Estado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var doc in asociadoEncontrado.Documentos)
-                            {
-                                <tr>
-                                    <td class="fw-semibold">@doc.TipoDocumento</td>
-                                    <td>@doc.FechaEmision.ToString("dd/MM/yyyy")</td>
-                                    <td>@(doc.FechaVencimiento.HasValue ? doc.FechaVencimiento.Value.ToString("dd/MM/yyyy") : "N/A")</td>
-                                    <td>
-                                        <span class="badge @ObtenerClaseBadge(doc.Estado)">
-                                            @doc.Estado
-                                        </span>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    }
-    else if (busquedaRealizada)
-    {
-        <div class="alert alert-warning text-center shadow-sm">
-            <i class="bi bi-exclamation-triangle me-2"></i> No se encontró ningún asociado registrado con el criterio "<strong>@criterioBusqueda</strong>".
-        </div>
-    }
-    else
-    {
-        <div class="alert alert-info text-center shadow-sm">
-            <i class="bi bi-info-circle me-2"></i> Ingrese un nombre o cédula en el buscador y presione <strong>Buscar</strong> para consultar los documentos del asociado.
-        </div>
-    }
 </div>
 
 @code {
-    private string criterioBusqueda = "";
-    private bool busquedaRealizada = false;
-    private AsociadoConDocumentos? asociadoEncontrado;
+    [SupplyParameterFromQuery(Name = "asoc")]
+    public string? AsocParam { get; set; }
 
-    private class DocumentoEstado
-    {
-        public string TipoDocumento { get; set; } = "";
-        public DateTime FechaEmision { get; set; }
-        public DateTime? FechaVencimiento { get; set; }
-        public string Estado { get; set; } = "Vigente";
-    }
+    private string asociacionFiltro = string.Empty;
+    private string textoBusqueda = string.Empty;
+    private string filtroEstado = "Todos";
+    private string filtroTipo = string.Empty;
 
-    private class AsociadoConDocumentos
+    private List<string> listaAsociaciones = new();
+    private List<string> catalogoTipos = new();
+
+    private int TotalAlertas => DocumentoService.ObtenerAlertas(DateTime.Today).Count;
+
+    protected override void OnInitialized()
     {
-        public string Cedula { get; set; } = "";
-        public string NombreCompleto { get; set; } = "";
-        public string FincaVereda { get; set; } = "";
-        public string CultivoPrincipal { get; set; } = "";
-        public List<DocumentoEstado> Documentos { get; set; } = new();
-    }
- 
-    private List<AsociadoConDocumentos> listaAsociados = new()
-    {
-        new AsociadoConDocumentos
+        listaAsociaciones = DocumentoService.ObtenerAsociaciones().ToList();
+        catalogoTipos = DocumentoService.ObtenerCatalogoTiposDocumentos().ToList();
+
+        if (!string.IsNullOrWhiteSpace(AsocParam))
         {
-            Cedula = "1012345678",
-            NombreCompleto = "Juan Pérez",
-            FincaVereda = "Finca La Esperanza - Vereda Central",
-            CultivoPrincipal = "Cacao",
-            Documentos = new List<DocumentoEstado>
+            asociacionFiltro = AsocParam;
+        }
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrWhiteSpace(AsocParam) && asociacionFiltro != AsocParam)
+        {
+            asociacionFiltro = AsocParam;
+        }
+    }
+
+    private void OnCambioAsociacion(ChangeEventArgs e)
+    {
+        asociacionFiltro = e.Value?.ToString() ?? "";
+    }
+
+    private IEnumerable<DocumentoAsociacion> DocumentosFiltrados
+    {
+        get
+        {
+            var docs = DocumentoService.ObtenerTodos();
+
+            if (!string.IsNullOrWhiteSpace(asociacionFiltro))
             {
-                new DocumentoEstado { TipoDocumento = "Cédula de Ciudadanía", FechaEmision = new DateTime(2015, 5, 10), FechaVencimiento = null, Estado = "Vigente" },
-                new DocumentoEstado { TipoDocumento = "Certificación BPA", FechaEmision = new DateTime(2023, 1, 15), FechaVencimiento = new DateTime(2025, 1, 15), Estado = "Vencido" },
-                new DocumentoEstado { TipoDocumento = "Uso de Suelo", FechaEmision = new DateTime(2024, 6, 1), FechaVencimiento = new DateTime(2026, 11, 1), Estado = "Próximo a Vencer" }
+                var filtroNorm = asociacionFiltro.Trim();
+                docs = docs.Where(d => 
+                    string.Equals(d.NombreAsociacion.Trim(), filtroNorm, StringComparison.OrdinalIgnoreCase) ||
+                    d.NombreAsociacion.Contains(filtroNorm, StringComparison.OrdinalIgnoreCase) ||
+                    filtroNorm.Contains(d.NombreAsociacion.Trim(), StringComparison.OrdinalIgnoreCase)).ToList();
             }
-        },
-        new AsociadoConDocumentos
-        {
-            Cedula = "1098765432",
-            NombreCompleto = "María Rodríguez",
-            FincaVereda = "Finca El Porvenir - Vereda La Selva",
-            CultivoPrincipal = "Plátano",
-            Documentos = new List<DocumentoEstado>
+
+            if (!string.IsNullOrWhiteSpace(filtroTipo))
             {
-                new DocumentoEstado { TipoDocumento = "Cédula de Ciudadanía", FechaEmision = new DateTime(2018, 3, 20), FechaVencimiento = null, Estado = "Vigente" },
-                new DocumentoEstado { TipoDocumento = "Registro RUT", FechaEmision = new DateTime(2022, 8, 10), FechaVencimiento = new DateTime(2027, 8, 10), Estado = "Vigente" }
+                docs = docs.Where(d => string.Equals(d.TipoDocumento, filtroTipo, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            if (filtroEstado != "Todos")
+            {
+                docs = docs.Where(d => string.Equals(d.EstadoCalculado, filtroEstado, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+
+            if (!string.IsNullOrWhiteSpace(textoBusqueda))
+            {
+                var term = textoBusqueda.Trim().ToLowerInvariant();
+                docs = docs.Where(d =>
+                    d.NombreAsociacion.ToLowerInvariant().Contains(term) ||
+                    d.TipoDocumento.ToLowerInvariant().Contains(term) ||
+                    d.Titulo.ToLowerInvariant().Contains(term) ||
+                    d.Observaciones.ToLowerInvariant().Contains(term) ||
+                    d.ArchivoNombre.ToLowerInvariant().Contains(term)).ToList();
+            }
+
+            return docs;
+        }
+    }
+
+    private static string ObtenerInicialesAsociacion(string nombre)
+    {
+        if (string.IsNullOrWhiteSpace(nombre)) return "AS";
+        var partes = nombre.Trim().Split(new[] { ' ', '-' }, StringSplitOptions.RemoveEmptyEntries);
+        if (partes.Length == 1) return partes[0][..Math.Min(2, partes[0].Length)].ToUpperInvariant();
+        return $"{partes[0][0]}{partes[1][0]}".ToUpperInvariant();
+    }
+
+    private async Task DescargarArchivo(DocumentoAsociacion doc)
+    {
+        if (doc.ArchivoContenido != null && doc.ArchivoContenido.Length > 0)
+        {
+            var base64 = Convert.ToBase64String(doc.ArchivoContenido);
+            await JS.InvokeVoidAsync("descargarArchivoBase64", doc.ArchivoNombre, doc.ArchivoTipoMime, base64);
+        }
+        else
+        {
+            // Generar documento formal informativo de respaldo si fue registrado sin binario directo
+            var textoInfo = $"DOCUMENTO INSTITUCIONAL FAAUA\nAsociación: {doc.NombreAsociacion}\nNIT: {doc.NitAsociacion}\nTipo: {doc.TipoDocumento}\nTítulo: {doc.Titulo}\nFecha Emisión: {doc.FechaEmision:dd/MM/yyyy}\nVencimiento: {(doc.FechaVencimiento.HasValue ? doc.FechaVencimiento.Value.ToString("dd/MM/yyyy") : "N/A")}\nRegistrado por: {doc.RegistradoPor}\nFecha Registro: {doc.FechaRegistro:dd/MM/yyyy HH:mm}\nObservaciones: {doc.Observaciones}\nArchivo Original: {doc.ArchivoNombre}";
+            var bytes = System.Text.Encoding.UTF8.GetBytes(textoInfo);
+            var base64 = Convert.ToBase64String(bytes);
+            await JS.InvokeVoidAsync("descargarArchivoBase64", $"{doc.ArchivoNombre}.txt", "text/plain", base64);
+        }
+    }
+
+    private void EjecutarConsultaExpediente()
+    {
+        if (string.IsNullOrWhiteSpace(asociacionFiltro) && !string.IsNullOrWhiteSpace(textoBusqueda))
+        {
+            var match = listaAsociaciones.FirstOrDefault(a => a.Contains(textoBusqueda.Trim(), StringComparison.OrdinalIgnoreCase));
+            if (match != null)
+            {
+                asociacionFiltro = match;
             }
         }
-    };
-
-    private void EjecutarBusqueda()
-    {
-        if (string.IsNullOrWhiteSpace(criterioBusqueda)) return;
-
-        busquedaRealizada = true;
-        asociadoEncontrado = listaAsociados.FirstOrDefault(a =>
-            a.Cedula.Contains(criterioBusqueda, StringComparison.OrdinalIgnoreCase) ||
-            a.NombreCompleto.Contains(criterioBusqueda, StringComparison.OrdinalIgnoreCase));
+        else if (string.IsNullOrWhiteSpace(asociacionFiltro) && listaAsociaciones.Any())
+        {
+            asociacionFiltro = listaAsociaciones.First();
+        }
     }
 
-    private void LimpiarFiltro()
+    private async Task DescargarExpedientePdf(string nombreAsoc)
     {
-        criterioBusqueda = "";
-        busquedaRealizada = false;
-        asociadoEncontrado = null;
+        try
+        {
+            var expediente = DocumentoService.ObtenerExpediente(nombreAsoc);
+            var asoc = new AsociacionInstitucional
+            {
+                NombreLegal = expediente.NombreAsociacion,
+                Nit = expediente.NitAsociacion,
+                Estado = expediente.TotalRegistrados > 0 ? "Activa" : "En actualización"
+            };
+            var docs = DocumentoService.ObtenerPorAsociacion(nombreAsoc).ToList();
+            var pdfBytes = ExpedienteAsociacionPdfGenerator.GenerarResumenPdf(asoc, docs, "Secretaría FAAUA");
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var nombreLimpio = Regex.Replace(nombreAsoc, @"[^a-zA-Z0-9]", "_");
+            await JS.InvokeVoidAsync("descargarArchivoBase64", $"Expediente_{nombreLimpio}.pdf", "application/pdf", base64);
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"No fue posible generar el expediente PDF: {ex.Message}");
+        }
     }
-
-    private string ObtenerClaseBadge(string estado) => estado switch
-    {
-        "Vigente" => "bg-success",
-        "Próximo a Vencer" => "bg-warning text-dark",
-        "Vencido" => "bg-danger",
-        _ => "bg-secondary"
-    };
 }

@@ -1,0 +1,203 @@
+/* ==========================================================================
+   ALERTAS DE VENCIMIENTO DE DOCUMENTOS — ASOAGRO (FAAUA)
+   ========================================================================== */
+
+/* HERO BANNER INSTITUCIONAL: Alto contraste, verde corporativo oscuro y tipografía nítida */
+.asoagro-hero-banner {
+    position: relative;
+    background: radial-gradient(circle at 100% 0%, rgba(232, 197, 107, 0.25), transparent 16rem),
+                linear-gradient(135deg, #0b2e1c 0%, #17603a 100%);
+    box-shadow: 0 20px 40px -20px rgba(11, 46, 28, 0.5);
+    color: #ffffff !important;
+}
+
+.hero-bg-shapes {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='220' viewBox='0 0 260 220'%3E%3Cg fill='none' stroke='%23b9e77a' stroke-opacity='.08' stroke-width='1.2'%3E%3Cpath d='M-10 44C40 14 90 76 140 46S220 12 270 40'/%3E%3Cpath d='M-10 118C40 88 90 150 140 120S220 86 270 114'/%3E%3Cpath d='M-10 192C40 162 90 224 140 194S220 160 270 188'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 260px 220px;
+}
+
+.asoagro-hero-banner h1 {
+    color: #ffffff !important;
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1.2;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+.asoagro-hero-banner p {
+    color: #edf7e9 !important;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.badge-agri-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(185, 231, 122, 0.18);
+    border: 1px solid rgba(185, 231, 122, 0.4);
+    color: #b9e77a;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.badge-agri-pill-sub {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 0.74rem;
+    font-weight: 600;
+}
+
+/* Panel de estadísticas hero (Umbrales y Alertas activas) */
+.hero-stats-glass {
+    background: rgba(0, 0, 0, 0.26) !important;
+    border: 1.5px solid rgba(255, 255, 255, 0.22) !important;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.hero-stats-glass .alerta-indicador-label {
+    color: #ffffff !important;
+    font-size: 0.8rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em;
+}
+
+.hero-stats-glass .alerta-contador {
+    color: #b9e77a !important;
+    font-size: 1.75rem !important;
+    font-weight: 800 !important;
+    line-height: 1;
+}
+
+.hero-stats-glass .badge-umbrales {
+    background: #e8c56b !important;
+    color: #0b2e1c !important;
+    font-weight: 800 !important;
+    font-size: 0.74rem !important;
+    padding: 0.35rem 0.65rem;
+    border-radius: 6px;
+    letter-spacing: 0.02em;
+}
+
+/* ==========================================================================
+   TABLA DE ALERTAS Y BOTONES DE ACCIÓN
+   ========================================================================== */
+
+/* Encabezados de la franja verde con alto contraste */
+.alerta-tabla thead,
+.table thead {
+    background: linear-gradient(105deg, #0b2e1c 0%, #17603a 100%) !important;
+}
+
+.alerta-tabla thead th,
+.table thead th,
+th.alerta-th {
+    height: 52px;
+    padding: 0.85rem 1.15rem !important;
+    background: transparent !important;
+    color: #ffffff !important; /* Blanco puro para máximo contraste */
+    font-size: 0.76rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.065em !important;
+    text-transform: uppercase !important;
+    vertical-align: middle !important;
+    border: none !important;
+    white-space: nowrap !important;
+}
+
+.table tbody tr {
+    transition: background-color 0.15s ease;
+}
+
+.table tbody tr:hover {
+    background-color: #f1f8ed;
+}
+
+/* BOTONES "VER" Y "ACTUALIZAR" */
+.alerta-acciones-fila {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.65rem; /* Separación limpia y uniforme */
+    white-space: nowrap;
+}
+
+.alerta-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    height: 38px; /* Mismo alto exacto */
+    min-height: 38px;
+    padding: 0 1rem;
+    border-radius: 8px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.16s ease;
+    box-sizing: border-box;
+    text-decoration: none;
+    line-height: 1;
+    white-space: nowrap;
+}
+
+/* Botón Ver: Fondo blanco con borde sutil */
+.alerta-btn-ver {
+    background: #ffffff;
+    color: #334155;
+    border: 1.5px solid #cbd5e1;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.alerta-btn-ver:hover {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #94a3b8;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Botón Actualizar: Verde Asoagro corporativo */
+.alerta-btn-actualizar {
+    background: #17603a;
+    color: #ffffff !important;
+    border: 1.5px solid #17603a;
+    box-shadow: 0 2px 6px rgba(23, 96, 58, 0.22);
+}
+
+.alerta-btn-actualizar:hover {
+    background: #0b2e1c;
+    border-color: #0b2e1c;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(11, 46, 28, 0.32);
+}
+
+@media (max-width: 767px) {
+    .alerta-acciones-fila {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.45rem;
+        width: 100%;
+        min-width: 110px;
+    }
+
+    .alerta-btn {
+        width: 100%;
+        height: 36px;
+        min-height: 36px;
+    }
+}
+

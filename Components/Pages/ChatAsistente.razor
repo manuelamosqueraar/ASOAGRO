@@ -18,18 +18,6 @@
         </defs>
     </svg>
 
-    @if (burbujaVisible && !abierto)
-    {
-        <div class="asist-burbuja" role="status">
-            <button type="button" class="asist-burbuja-texto" @onclick="AlternarPanel">
-                <span class="asist-avatar-sm"><svg class="asist-ico"><use href="#asist-brote" /></svg></span>
-                <span>¡Bienvenido a ASOAGRO! ¿Cómo podemos ayudarte?</span>
-            </button>
-            <button type="button" class="asist-burbuja-cerrar" @onclick="CerrarBurbuja" aria-label="Cerrar mensaje">
-                <svg class="asist-ico"><use href="#asist-x" /></svg>
-            </button>
-        </div>
-    }
 
     @if (abierto)
     {
@@ -244,7 +232,6 @@
 
     private readonly CancellationTokenSource _cts = new();
     private bool abierto;
-    private bool burbujaVisible;
     private bool escribiendo;
     private string vista = "inicio";
     private string textoPregunta = "";
@@ -272,30 +259,10 @@
          "¡Hola! Cuéntame qué necesitas y te indico la sección correcta."),
     };
 
-    protected override void OnAfterRender(bool firstRender)
-    {
-        if (firstRender)
-            _ = MostrarBurbujaAsync();
-    }
-
-    private async Task MostrarBurbujaAsync()
-    {
-        try
-        {
-            await Task.Delay(2500, _cts.Token);
-            burbujaVisible = true;
-            await InvokeAsync(StateHasChanged);
-        }
-        catch (OperationCanceledException) { }
-    }
-
     private void AlternarPanel()
     {
         abierto = !abierto;
-        burbujaVisible = false;
     }
-
-    private void CerrarBurbuja() => burbujaVisible = false;
 
     private void CerrarPanel() => abierto = false;
 

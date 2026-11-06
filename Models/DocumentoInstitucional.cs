@@ -39,6 +39,19 @@ public class DocumentoInstitucional
 
     // Código corto para identificar el registro. Ejemplo: ACT-3F2A9C1B
     public string Codigo => "ACT-" + Id.ToString("N")[..8].ToUpperInvariant();
+
+    // Compromisos derivados del acta o acuerdo institucional
+    public List<CompromisoActa> Compromisos { get; set; } = new();
+}
+
+public class CompromisoActa
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public string Descripcion { get; set; } = string.Empty;
+    public string Responsable { get; set; } = string.Empty;
+    public DateTime FechaLimite { get; set; } = DateTime.Today.AddDays(15);
+    public string Estado { get; set; } = "Pendiente"; // "Pendiente", "En curso", "Cumplido", "Atrasado"
+    public string? Observaciones { get; set; }
 }
 
 // Archivo con su huella SHA-256, que permite comprobar que no fue alterado

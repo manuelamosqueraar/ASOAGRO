@@ -57,6 +57,7 @@ public class InMemorySeguimientoAsociadoService(IAsociadoService asociadoService
         FechaGestion = seguimiento.FechaGestion,
         Descripcion = seguimiento.Descripcion,
         ProximaGestion = seguimiento.ProximaGestion,
+        HoraReunion = seguimiento.HoraReunion,
         GestionadoPor = seguimiento.GestionadoPor,
         Asociado = asociado
     };

@@ -5,7 +5,7 @@ namespace Asoagro.Services;
 public class AlertasSeguimientoWorker : BackgroundService
 {
     private static readonly TimeSpan Intervalo = TimeSpan.FromHours(1);
-    private static readonly string[] RolesDirectivos = ["Director"];
+    private static readonly string[] RolesDirectivos = ["Directora", "Director", "Presidenta", "Presidente"];
 
     private readonly ISeguimientoAsociadoService _seguimientos;
     private readonly NotificacionService _notificaciones;

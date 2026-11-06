@@ -1,0 +1,2338 @@
+@page "/gestion-financiera"
+@page "/gestion-financiera/{Seccion}"
+@page "/panel-tesorero"
+@page "/panel-tesorera"
+@page "/tesoreria"
+@page "/finanzas"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Tesorero,Tesorera,Directora,Director,Presidenta,Presidente,Secretaria,Secretaría,Administrador")]
+@rendermode InteractiveServer
+@implements IDisposable
+@using System.Globalization
+@using System.IO
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Asoagro.Models
+@using Asoagro.Services
+@inject IFinanzasService FinanzasService
+@inject IDocumentoAsociacionService DocumentoService
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Gestión Financiera Integral y Tesorería · ASOAGRO</PageTitle>
+
+<div class="container-fluid px-0 pb-5" style="font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+
+    <!-- HERO BANNER CON DISTINCIÓN DE ROL Y MODO -->
+    <div class="p-4 p-md-5 mb-4 position-relative overflow-hidden rounded-4 text-white" 
+         style="background: linear-gradient(135deg, #092615 0%, #114224 55%, #1e4d2b 100%); box-shadow: 0 10px 25px -5px rgba(17, 66, 36, 0.4);">
+        <div class="row align-items-center position-relative" style="z-index: 2;">
+            <div class="col-lg-8">
+                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+                    <span class="badge px-3 py-1.5 rounded-pill fw-bold" style="background: rgba(255, 255, 255, 0.95); color: #114224; font-size: 0.75rem;">
+                        <i class="bi bi-shield-check me-1"></i> FAAUA · Urabá Antioqueño
+                    </span>
+                    <span class="badge px-3 py-1.5 rounded-pill fw-bold" style="background: rgba(185, 231, 122, 0.25); color: #b9e77a; border: 1px solid rgba(185, 231, 122, 0.35); font-size: 0.75rem;">
+                        <i class="bi bi-arrow-repeat me-1"></i> Sincronización Multipanel Activa
+                    </span>
+                    <span class="badge px-3 py-1.5 rounded-pill fw-bold" style="background: @ColorBadgeModo; color: white; font-size: 0.75rem;">
+                        <i class="bi @IconoModo me-1"></i> @TextoModoRol
+                    </span>
+                </div>
+                <h1 class="fw-bolder mb-2 text-white" style="font-size: 1.85rem; letter-spacing: -0.02em;">
+                    Gestión Integral Financiera y Tesorería
+                </h1>
+                <p class="text-white-50 mb-0 small" style="max-width: 720px; line-height: 1.6;">
+                    Control y trazabilidad de costos, gastos, ingresos, ventas, cuotas, aportes, pagos, recaudos y cuentas por cobrar/pagar de las asociaciones de base. Administración documental y comprobantes internos conforme a la normatividad DIAN.
+                </p>
+            </div>
+
+            <div class="col-lg-4 mt-4 mt-lg-0 text-lg-end">
+                <div class="p-3 rounded-4 d-inline-block text-start w-100" style="max-width: 330px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px);">
+                    <div class="d-flex align-items-center gap-3 mb-2">
+                        <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 44px; height: 44px; background: #166534; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                            <i class="bi bi-person-badge fs-4"></i>
+                        </div>
+                        <div>
+                            <span class="d-block text-white-50" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Usuario en Sesión</span>
+                            <span class="fw-bold text-white small d-block text-truncate" style="max-width: 220px;">@nombreUsuario</span>
+                            <span class="badge bg-white text-dark mt-1" style="font-size: 0.65rem; font-weight: 700;">@rolActivo</span>
+                        </div>
+                    </div>
+                    <div class="pt-2 border-top border-white border-opacity-10 d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
+                        <span class="text-white-50">Alcance de Operación:</span>
+                        <span class="fw-bold text-white">@AlcancePermisoTexto</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MENSAJES DE ALERTA O FEEDBACK DE OPERACIONES -->
+    @if (!string.IsNullOrEmpty(mensajeFeedback))
+    {
+        <div class="alert @(esFeedbackExito ? "alert-success border-success" : "alert-danger border-danger") alert-dismissible fade show rounded-4 shadow-sm mb-4 d-flex align-items-center justify-content-between" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi @(esFeedbackExito ? "bi-check-circle-fill text-success" : "bi-exclamation-triangle-fill text-danger") fs-5"></i>
+                <span class="small fw-semibold">@mensajeFeedback</span>
+            </div>
+            <button type="button" class="btn-close small" @onclick="() => mensajeFeedback = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <!-- AVISO NORMATIVO DIAN INFORMATIVO (TRANSPARENCIA LEGAL) -->
+    <div class="alert alert-light border border-success-subtle rounded-4 p-3 mb-4 shadow-sm">
+        <div class="d-flex align-items-start gap-3">
+            <div class="p-2 bg-success-subtle text-success rounded-3 flex-shrink-0">
+                <i class="bi bi-info-circle-fill fs-5"></i>
+            </div>
+            <div class="small text-muted flex-grow-1">
+                <strong class="text-dark d-block mb-1">Control Interno Institucional y Cumplimiento Normativo DIAN</strong>
+                ASOAGRO es una herramienta asociativa de control financiero y trazabilidad operativa; no sustituye la contabilidad fiscal ni los sistemas de facturación electrónica habilitados ante la DIAN. En ventas, se valida si la asociación está obligada a expedir factura; en costos y gastos, se custodia la factura electrónica del proveedor o el documento soporte para adquisiciones a no obligados a facturar (Resolución DIAN). Los PDFs generados internamente se identifican como <em>comprobantes internos de operación</em>.
+            </div>
+        </div>
+    </div>
+
+    <!-- BARRA GLOBAL DE FILTROS Y ACCIÓN DE NUEVO MOVIMIENTO -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+        <div class="row g-3 align-items-center justify-content-between">
+            <div class="col-md-4 col-lg-4">
+                <label class="form-label text-muted small fw-bold mb-1" style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;">
+                    <i class="bi bi-building text-success me-1"></i> Filtrar por Asociación
+                </label>
+                <select class="form-select form-select-sm rounded-3 border-light-subtle shadow-none" @bind="filtroAsociacion" @bind:after="AplicarFiltros">
+                    <option value="">-- Todas las Asociaciones Base --</option>
+                    @foreach (var asoc in listaAsociaciones)
+                    {
+                        <option value="@asoc">@asoc</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4 col-lg-3">
+                <label class="form-label text-muted small fw-bold mb-1" style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;">
+                    <i class="bi bi-calendar3 text-success me-1"></i> Periodo Contable
+                </label>
+                <select class="form-select form-select-sm rounded-3 border-light-subtle shadow-none" @bind="filtroPeriodo" @bind:after="AplicarFiltros">
+                    <option value="">-- Todos los Periodos --</option>
+                    @foreach (var p in listaPeriodos)
+                    {
+                        <option value="@p">@p</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-4 col-lg-5 text-md-end mt-3 mt-md-0 d-flex flex-wrap align-items-center justify-content-md-end gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 shadow-none fw-semibold" @onclick="CargarDatosAsync" title="Sincronizar datos con servidor">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Actualizar
+                </button>
+
+                <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 shadow-none fw-semibold" @onclick="DescargarReportePdf" title="Descargar balance consolidado en PDF">
+                    <i class="bi bi-file-earmark-pdf-fill me-1"></i> Reporte PDF
+                </button>
+
+                @if (PuedeRegistrar)
+                {
+                    <button type="button" class="btn btn-success btn-sm rounded-pill px-3 py-1.5 shadow-sm fw-bold d-inline-flex align-items-center gap-1"
+                            style="background-color: #14532d; border-color: #14532d;"
+                            @onclick="AbrirModalNuevoMovimiento">
+                        <i class="bi bi-plus-circle-fill"></i> Nuevo Movimiento
+                    </button>
+                }
+                else
+                {
+                    <span class="badge bg-light text-muted border px-3 py-2 rounded-pill small" title="Supervisión directiva: consulta autorizada">
+                        <i class="bi bi-eye me-1"></i> Solo Consulta Directiva
+                    </span>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- PESTAÑAS PRINCIPALES DE GESTIÓN FINANCIERA (7 MÓDULOS) -->
+    <div class="d-flex flex-wrap gap-2 mb-4 border-bottom pb-2">
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(moduloActivo == "resumen" ? "btn-success" : "btn-light text-muted border")"
+                style="@(moduloActivo == "resumen" ? "background-color: #14532d; border-color: #14532d;" : "")"
+                @onclick='@(() => CambiarModulo("resumen"))'>
+            <i class="bi bi-pie-chart-fill me-1"></i> 1. Resumen Financiero
+        </button>
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(moduloActivo == "costos" ? "btn-success" : "btn-light text-muted border")"
+                style="@(moduloActivo == "costos" ? "background-color: #14532d; border-color: #14532d;" : "")"
+                @onclick='@(() => CambiarModulo("costos"))'>
+            <i class="bi bi-cart-dash-fill me-1"></i> 2. Costos y Gastos
+            <span class="badge bg-white text-dark ms-1">@conteoCostos</span>
+        </button>
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(moduloActivo == "ingresos" ? "btn-success" : "btn-light text-muted border")"
+                style="@(moduloActivo == "ingresos" ? "background-color: #14532d; border-color: #14532d;" : "")"
+                @onclick='@(() => CambiarModulo("ingresos"))'>
+            <i class="bi bi-cash-stack me-1"></i> 3. Ingresos y Ventas
+            <span class="badge bg-white text-dark ms-1">@conteoIngresos</span>
+        </button>
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(moduloActivo == "cobrar" ? "btn-success" : "btn-light text-muted border")"
+                style="@(moduloActivo == "cobrar" ? "background-color: #14532d; border-color: #14532d;" : "")"
+                @onclick='@(() => CambiarModulo("cobrar"))'>
+            <i class="bi bi-calendar-check-fill me-1"></i> 4. Cuentas por Cobrar
+            <span class="badge bg-white text-dark ms-1">@conteoCobrar</span>
+        </button>
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(moduloActivo == "pagar" ? "btn-success" : "btn-light text-muted border")"
+                style="@(moduloActivo == "pagar" ? "background-color: #14532d; border-color: #14532d;" : "")"
+                @onclick='@(() => CambiarModulo("pagar"))'>
+            <i class="bi bi-truck me-1"></i> 5. Cuentas por Pagar y Pagos
+            <span class="badge bg-white text-dark ms-1">@conteoPagar</span>
+        </button>
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(moduloActivo == "soportes" ? "btn-success" : "btn-light text-muted border")"
+                style="@(moduloActivo == "soportes" ? "background-color: #14532d; border-color: #14532d;" : "")"
+                @onclick='@(() => CambiarModulo("soportes"))'>
+            <i class="bi bi-folder-check me-1"></i> 6. Facturación y Soportes
+            <span class="badge bg-white text-dark ms-1">@conteoSoportes</span>
+        </button>
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(moduloActivo == "reportes" ? "btn-success" : "btn-light text-muted border")"
+                style="@(moduloActivo == "reportes" ? "background-color: #14532d; border-color: #14532d;" : "")"
+                @onclick='@(() => CambiarModulo("reportes"))'>
+            <i class="bi bi-file-earmark-bar-graph-fill me-1"></i> 7. Reportes y Balances
+        </button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MÓDULO 1: RESUMEN FINANCIERO -->
+    <!-- ========================================== -->
+    @if (moduloActivo == "resumen")
+    {
+        <div class="row g-3 mb-4">
+            <!-- Ingresos Reales -->
+            <div class="col-sm-6 col-xl">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Total Ingresos (COP)</span>
+                        <span class="p-2 rounded-3 bg-success-subtle text-success">
+                            <i class="bi bi-arrow-up-right-circle-fill fs-5"></i>
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <h2 class="fw-bold text-dark mb-0 fs-4">@FormatearCop(resumenActual.TotalIngresos)</h2>
+                    </div>
+                    <span class="text-success small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                        <i class="bi bi-check-circle-fill"></i> Ventas, cuotas y aportes validados
+                    </span>
+                </div>
+            </div>
+
+            <!-- Costos y Gastos Reales -->
+            <div class="col-sm-6 col-xl">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Costos y Gastos (COP)</span>
+                        <span class="p-2 rounded-3 bg-danger-subtle text-danger">
+                            <i class="bi bi-arrow-down-left-circle-fill fs-5"></i>
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <h2 class="fw-bold text-dark mb-0 fs-4">@FormatearCop(resumenActual.TotalCostosYGastos)</h2>
+                    </div>
+                    <span class="text-danger small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                        <i class="bi bi-dash-circle-fill"></i> Operación, insumos, fletes y jornales
+                    </span>
+                </div>
+            </div>
+
+            <!-- Cuentas por Cobrar -->
+            <div class="col-sm-6 col-xl">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Cuentas por Cobrar</span>
+                        <span class="p-2 rounded-3 bg-warning-subtle text-warning">
+                            <i class="bi bi-hourglass-split fs-5"></i>
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <h2 class="fw-bold text-dark mb-0 fs-4">@FormatearCop(resumenActual.TotalCuentasPorCobrar)</h2>
+                    </div>
+                    <span class="text-warning small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                        <i class="bi bi-clock-history"></i> Ventas y cuotas pendientes de recaudo
+                    </span>
+                </div>
+            </div>
+
+            <!-- Cuentas por Pagar -->
+            <div class="col-sm-6 col-xl">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Cuentas por Pagar</span>
+                        <span class="p-2 rounded-3 bg-secondary-subtle text-secondary">
+                            <i class="bi bi-receipt-cutoff fs-5"></i>
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <h2 class="fw-bold text-dark mb-0 fs-4">@FormatearCop(resumenActual.TotalCuentasPorPagar)</h2>
+                    </div>
+                    <span class="text-muted small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                        <i class="bi bi-exclamation-circle"></i> Obligaciones a proveedores y fletes
+                    </span>
+                </div>
+            </div>
+
+            <!-- Saldo Neto Calculable -->
+            <div class="col-sm-6 col-xl">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Saldo Neto Calculable</span>
+                        <span class="p-2 rounded-3 @(resumenActual.SaldoNeto >= 0 ? "bg-success-subtle text-success" : "bg-danger-subtle text-danger")">
+                            <i class="bi @(resumenActual.SaldoNeto >= 0 ? "bi-wallet2" : "bi-graph-down-arrow") fs-5"></i>
+                        </span>
+                    </div>
+                    <div class="d-flex align-items-baseline gap-2">
+                        <h2 class="fw-bold @(resumenActual.SaldoNeto >= 0 ? "text-success" : "text-danger") mb-0 fs-4">
+                            @FormatearCop(resumenActual.SaldoNeto)
+                        </h2>
+                    </div>
+                    <span class="small mt-2 d-flex align-items-center gap-1 @(resumenActual.SaldoNeto >= 0 ? "text-success" : "text-danger")" style="font-size: 0.75rem;">
+                        <i class="bi bi-info-circle-fill"></i> Ingresos netos menos costos
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLA RESUMEN DE ÚLTIMOS MOVIMIENTOS -->
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+            <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
+                <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                    <i class="bi bi-clock-history text-success"></i>
+                    <span>Trazabilidad de Movimientos Financieros</span>
+                    <span class="badge bg-success-subtle text-success rounded-pill">@todosMovimientos.Count</span>
+                </h6>
+                <small class="text-muted">Mostrando movimientos de @(string.IsNullOrWhiteSpace(filtroAsociacion) ? "todas las asociaciones" : filtroAsociacion)</small>
+            </div>
+            @RenderTablaMovimientos(todosMovimientos)
+        </div>
+    }
+
+    <!-- ========================================== -->
+    <!-- MÓDULO 2: COSTOS Y GASTOS -->
+    <!-- ========================================== -->
+    @if (moduloActivo == "costos")
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+            <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom flex-wrap gap-2">
+                <div>
+                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-cart-dash-fill text-danger"></i>
+                        <span>Registro y Control de Costos y Gastos</span>
+                        <span class="badge bg-danger-subtle text-danger rounded-pill">@movimientosCostos.Count</span>
+                    </h6>
+                    <small class="text-muted">Detalla qué se pagó, a quién, para qué y de qué actividad asociativa proviene, con factura o documento soporte DIAN.</small>
+                </div>
+                @if (PuedeRegistrar)
+                {
+                    <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-bold" @onclick="@(() => AbrirModalNuevoMovimientoConTipo(TipoMovimientoFinanciero.CostoGasto))">
+                        <i class="bi bi-plus-lg me-1"></i> Registrar Costo o Gasto
+                    </button>
+                }
+            </div>
+            @RenderTablaMovimientos(movimientosCostos, mostrarDetalleGasto: true)
+        </div>
+    }
+
+    <!-- ========================================== -->
+    <!-- MÓDULO 3: INGRESOS Y VENTAS -->
+    <!-- ========================================== -->
+    @if (moduloActivo == "ingresos")
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+            <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom flex-wrap gap-2">
+                <div>
+                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-cash-stack text-success"></i>
+                        <span>Ingresos, Ventas, Cuotas y Aportes</span>
+                        <span class="badge bg-success-subtle text-success rounded-pill">@movimientosIngresos.Count</span>
+                    </h6>
+                    <small class="text-muted">Comercialización de cosechas, cuotas de asociados y aportes. Descarga de factura o comprobante de venta interna con su respectivo soporte.</small>
+                </div>
+                @if (PuedeRegistrar)
+                {
+                    <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold" @onclick="@(() => AbrirModalNuevoMovimientoConTipo(TipoMovimientoFinanciero.Ingreso))">
+                        <i class="bi bi-plus-lg me-1"></i> Registrar Ingreso o Venta
+                    </button>
+                }
+            </div>
+            @RenderTablaMovimientos(movimientosIngresos, esVenta: true)
+        </div>
+    }
+
+    <!-- ========================================== -->
+    <!-- MÓDULO 4: CUENTAS POR COBRAR               -->
+    <!-- ========================================== -->
+    @if (moduloActivo == "cobrar")
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+            <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom flex-wrap gap-2">
+                <div>
+                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar-check-fill text-warning"></i>
+                        <span>Cuentas por Cobrar y Seguimiento de Cartera</span>
+                        <span class="badge bg-warning-subtle text-dark rounded-pill">@movimientosCobrar.Count</span>
+                    </h6>
+                    <small class="text-muted">Control de cartera asociativa: ventas de cosecha a crédito, cuotas sociales de sostenimiento y aportes pendientes de recaudo.</small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-dark border px-3 py-2 rounded-pill small">
+                        <strong>Total Cartera Pendiente:</strong> @FormatearCop(resumenActual.TotalCuentasPorCobrar)
+                    </span>
+                    @if (PuedeRegistrar)
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3 fw-bold" @onclick="@(() => AbrirModalNuevoMovimientoConTipo(TipoMovimientoFinanciero.Ingreso))">
+                            <i class="bi bi-plus-lg me-1"></i> Registrar Venta / Cuota
+                        </button>
+                    }
+                </div>
+            </div>
+            @RenderTablaCuentasCobrar(movimientosCobrar)
+        </div>
+    }
+
+    <!-- ========================================== -->
+    <!-- MÓDULO 5: CUENTAS POR PAGAR Y PAGOS        -->
+    <!-- ========================================== -->
+    @if (moduloActivo == "pagar")
+    {
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+            <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom flex-wrap gap-2">
+                <div>
+                    <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-truck text-primary"></i>
+                        <span>Cuentas por Pagar, Liquidaciones y Obligaciones</span>
+                        <span class="badge bg-primary-subtle text-primary rounded-pill">@movimientosPagar.Count</span>
+                    </h6>
+                    <small class="text-muted">Obligaciones comerciales con proveedores de insumos agrícolas, transportadores, fletes y prestadores de asistencia técnica.</small>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-dark border px-3 py-2 rounded-pill small">
+                        <strong>Total Obligaciones Pendientes:</strong> @FormatearCop(resumenActual.TotalCuentasPorPagar)
+                    </span>
+                    @if (PuedeRegistrar)
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold" @onclick="@(() => AbrirModalNuevoMovimientoConTipo(TipoMovimientoFinanciero.PagoDespacho))">
+                            <i class="bi bi-plus-lg me-1"></i> Registrar Pago o Despacho
+                        </button>
+                    }
+                </div>
+            </div>
+            @RenderTablaCuentasPagar(movimientosPagar)
+        </div>
+    }
+
+    <!-- ========================================== -->
+    <!-- MÓDULO 6: FACTURACIÓN Y SOPORTES           -->
+    <!-- ========================================== -->
+    @if (moduloActivo == "soportes")
+    {
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-folder-check text-success"></i>
+                        <span>Facturación y Custodia Documental de Soportes</span>
+                        <span class="badge bg-success-subtle text-success rounded-pill">@movimientosSoportes.Count soportes</span>
+                    </h5>
+                    <small class="text-muted">Consulta de facturas electrónicas de venta, facturas de compras de proveedores, documentos soporte DIAN y comprobantes internos de ASOAGRO.</small>
+                </div>
+            </div>
+
+            <!-- DISTINCIÓN DE DOCUMENTOS DIAN -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="p-3 rounded-4 border bg-light h-100">
+                        <span class="badge bg-success text-white mb-2" style="font-size: 0.68rem;">FACTURAS DE VENTA</span>
+                        <strong class="d-block text-dark small">Expedición Comercial</strong>
+                        <p class="text-muted mb-0" style="font-size: 0.73rem;">Facturas electrónicas oficiales emitidas para clientes o exportadoras de fruta.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 rounded-4 border bg-light h-100">
+                        <span class="badge bg-primary text-white mb-2" style="font-size: 0.68rem;">FACTURAS PROVEEDORES</span>
+                        <strong class="d-block text-dark small">Compras y Suministros</strong>
+                        <p class="text-muted mb-0" style="font-size: 0.73rem;">Facturas recibidas de casas comerciales de agroquímicos, fertilizantes y maquinaria.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 rounded-4 border bg-light h-100">
+                        <span class="badge bg-info text-white mb-2" style="font-size: 0.68rem;">DOC. SOPORTE DIAN</span>
+                        <strong class="d-block text-dark small">No Obligados a Facturar</strong>
+                        <p class="text-muted mb-0" style="font-size: 0.73rem;">Documento soporte obligatorio para adquisiciones a pequeños productores campesinos.</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="p-3 rounded-4 border bg-light h-100">
+                        <span class="badge bg-secondary text-white mb-2" style="font-size: 0.68rem;">COMPROBANTES INTERNOS</span>
+                        <strong class="d-block text-dark small">Gestión Operativa ASOAGRO</strong>
+                        <p class="text-muted mb-0" style="font-size: 0.73rem;">Recibos asociativos de cuotas y desembolsos. <em>No constituyen factura electrónica DIAN.</em></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABLA DE SOPORTES Y FACTURAS -->
+            @RenderTablaFacturacionYSoportes(movimientosSoportes)
+        </div>
+    }
+
+    <!-- ========================================== -->
+    <!-- MÓDULO 7: REPORTES Y BALANCES              -->
+    <!-- ========================================== -->
+    @if (moduloActivo == "reportes")
+    {
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                <i class="bi bi-file-earmark-bar-graph-fill text-success"></i>
+                <span>Reportes Financieros por Asociación y Periodo</span>
+            </h5>
+            <p class="text-muted small mb-4">
+                Genera informes oficiales consolidados con análisis de ingresos, costos, estado de cartera, cuentas por pagar y saldos disponibles para revisión de Tesorería, Presidencia y Órganos de Control.
+            </p>
+
+            <div class="row g-3 p-3 bg-light rounded-4 mb-4 border">
+                <div class="col-md-4">
+                    <label class="form-label small fw-bold text-dark mb-1">Asociación:</label>
+                    <select class="form-select form-select-sm rounded-3 shadow-none" @bind="filtroAsociacion" @bind:after="AplicarFiltros">
+                        <option value="">-- Todas las asociaciones federadas --</option>
+                        @foreach (var a in listaAsociaciones)
+                        {
+                            <option value="@a">@a</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-dark mb-1">Periodo:</label>
+                    <select class="form-select form-select-sm rounded-3 shadow-none" @bind="filtroPeriodo" @bind:after="AplicarFiltros">
+                        <option value="">-- Todos los periodos --</option>
+                        @foreach (var p in listaPeriodos)
+                        {
+                            <option value="@p">@p</option>
+                        }
+                    </select>
+                </div>
+                <div class="col-md-5 d-flex align-items-end gap-2">
+                    <button type="button" class="btn btn-success btn-sm rounded-pill px-4 fw-bold" style="background-color: #14532d; border-color: #14532d;" @onclick="DescargarReportePdf">
+                        <i class="bi bi-file-earmark-pdf-fill me-1"></i> Exportar Balance (PDF)
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-semibold" @onclick="ExportarExcelCsv">
+                        <i class="bi bi-file-earmark-excel-fill me-1 text-success"></i> Exportar CSV / Excel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Previsualización del Resumen -->
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle small mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Concepto de Balance</th>
+                            <th class="text-end">Monto Total en COP</th>
+                            <th>Observaciones y Cumplimiento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="fw-bold text-success"><i class="bi bi-arrow-up-right me-1"></i> Total Ingresos Validados</td>
+                            <td class="text-end fw-bold text-success">@FormatearCop(resumenActual.TotalIngresos)</td>
+                            <td>Comercialización de producción, aportes y cuotas recibidas con soporte.</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-danger"><i class="bi bi-arrow-down-left me-1"></i> Total Costos y Gastos</td>
+                            <td class="text-end fw-bold text-danger">@FormatearCop(resumenActual.TotalCostosYGastos)</td>
+                            <td>Adquisición de insumos, fletes, mano de obra y sostenimiento operativo.</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-warning"><i class="bi bi-hourglass me-1"></i> Cuentas por Cobrar (Cartera)</td>
+                            <td class="text-end fw-bold text-warning">@FormatearCop(resumenActual.TotalCuentasPorCobrar)</td>
+                            <td>Ventas y cuotas pendientes de pago por parte de clientes o asociados.</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-bold text-secondary"><i class="bi bi-receipt me-1"></i> Cuentas por Pagar (Obligaciones)</td>
+                            <td class="text-end fw-bold text-secondary">@FormatearCop(resumenActual.TotalCuentasPorPagar)</td>
+                            <td>Obligaciones pendientes con proveedores de insumos y transportadores.</td>
+                        </tr>
+                        <tr class="table-success table-opacity-25">
+                            <td class="fw-bolder fs-6 text-dark"><i class="bi bi-wallet2 me-1"></i> Saldo Neto Calculable</td>
+                            <td class="text-end fw-bolder fs-6 @(resumenActual.SaldoNeto >= 0 ? "text-success" : "text-danger")">
+                                @FormatearCop(resumenActual.SaldoNeto)
+                            </td>
+                            <td class="fw-semibold">Resultado disponible para reinversión y fondos de reserva asociativos.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+</div>
+
+<!-- ========================================== -->
+<!-- COMPONENTE REUTILIZABLE DE TABLA           -->
+<!-- ========================================== -->
+@code {
+    private RenderFragment RenderTablaMovimientos(IEnumerable<MovimientoFinanciero> movimientos, bool mostrarDetalleGasto = false, bool esVenta = false) => __builder =>
+    {
+        if (!movimientos.Any())
+        {
+            <div class="p-5 text-center text-muted">
+                <i class="bi bi-inbox fs-1 d-block mb-2 text-muted"></i>
+                <p class="mb-0 small fw-semibold">No se encontraron movimientos registrados para este filtro o módulo.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.82rem; min-width: 980px;">
+                    <thead style="background: linear-gradient(105deg, #0b2e1c 0%, #17603a 100%) !important;">
+                        <tr>
+                            <th class="ps-4 py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Código / Fecha</th>
+                            <th class="py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Asociación / Proyecto</th>
+                            <th class="py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Tercero / Concepto</th>
+                            @if (mostrarDetalleGasto)
+                            {
+                                <th class="py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">¿Qué y Para Qué?</th>
+                            }
+                            <th class="py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Soporte Custodiado</th>
+                            <th class="py-3 text-end" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Valor (COP)</th>
+                            <th class="py-3 text-center" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Estado</th>
+                            <th class="pe-4 py-3 text-center" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var mov in movimientos)
+                        {
+                            var tieneSoporte = !string.IsNullOrWhiteSpace(mov.ArchivoNombre);
+                            var tienePago = !string.IsNullOrWhiteSpace(mov.ComprobantePagoNombre);
+
+                            <tr>
+                                <td class="ps-4 align-middle">
+                                    <strong class="text-dark d-block">@mov.CodigoReferencia</strong>
+                                    <small class="text-muted">@mov.FechaMovimiento.ToString("dd/MM/yyyy")</small>
+                                </td>
+                                <td class="align-middle">
+                                    <span class="fw-semibold text-dark d-block text-truncate" style="max-width: 240px;" title="@mov.NombreAsociacion">@mov.NombreAsociacion</span>
+                                    <small class="text-success fw-bold d-block text-truncate" style="max-width: 240px;"><i class="bi bi-tag-fill me-1"></i>@mov.ActividadOProyecto</small>
+                                </td>
+                                <td class="align-middle">
+                                    <span class="text-dark fw-bold d-block text-truncate" style="max-width: 220px;" title="@mov.BeneficiarioOProveedor">
+                                        @(string.IsNullOrWhiteSpace(mov.BeneficiarioOProveedor) ? "Sin tercero" : mov.BeneficiarioOProveedor)
+                                    </span>
+                                    <small class="text-muted d-block text-truncate" style="max-width: 220px;" title="@mov.Descripcion">@mov.Descripcion</small>
+                                </td>
+                                @if (mostrarDetalleGasto)
+                                {
+                                    <td class="align-middle">
+                                        <div class="small" style="max-width: 240px;">
+                                            <strong class="text-dark d-block text-truncate" title="@mov.QueSePago">@mov.QueSePago</strong>
+                                            <span class="text-muted d-block text-truncate" title="@mov.ParaQueSePago">@mov.ParaQueSePago</span>
+                                        </div>
+                                    </td>
+                                }
+                                <td class="align-middle">
+                                    <span class="badge bg-light text-dark border d-inline-block text-truncate" style="max-width: 170px;" title="@mov.TipoSoporte">
+                                        @mov.TipoSoporte
+                                    </span>
+                                    @if (!string.IsNullOrWhiteSpace(mov.ArchivoNombre))
+                                    {
+                                        <small class="text-success fw-semibold d-block text-truncate" style="max-width: 170px;" title="@mov.ArchivoNombre">
+                                            <i class="bi bi-paperclip me-1"></i>@mov.ArchivoNombre
+                                        </small>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted d-block font-italic">Sin archivo adjunto</small>
+                                    }
+                                </td>
+                                <td class="align-middle text-end">
+                                    <strong class="d-block @(mov.Tipo == TipoMovimientoFinanciero.Ingreso ? "text-success" : "text-danger")">
+                                        @FormatearCop(mov.Monto)
+                                    </strong>
+                                    @if (mov.SaldoPendiente > 0)
+                                    {
+                                        <small class="text-danger fw-bold d-block" title="Saldo pendiente">Pend: @FormatearCop(mov.SaldoPendiente)</small>
+                                    }
+                                </td>
+                                <td class="align-middle text-center">
+                                    <span class="badge rounded-pill @ObtenerClaseBadgeEstado(mov.Estado) px-2.5 py-1">
+                                        @mov.Estado
+                                    </span>
+                                </td>
+                                <td class="pe-4 align-middle text-center">
+                                    <div class="d-inline-flex align-items-center gap-1.5">
+                                        
+                                        <!-- 1. BOTÓN DESCARGAR SOPORTE PRINCIPAL DE LA OPERACIÓN -->
+                                        @if (tieneSoporte)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill py-1 px-2.5 fw-bold d-inline-flex align-items-center gap-1"
+                                                    style="font-size: 0.75rem;"
+                                                    title="Descargar archivo soporte: @mov.ArchivoNombre"
+                                                    @onclick="() => DescargarSoportePrincipalAsync(mov.Id)">
+                                                <i class="bi bi-file-earmark-arrow-down-fill"></i>
+                                                <span>Soporte</span>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-sm btn-light rounded-pill py-1 px-2 text-muted border"
+                                                    style="font-size: 0.75rem;"
+                                                    title="Este movimiento no cuenta con archivo de soporte adjunto"
+                                                    @onclick="() => MostrarAvisoSinSoporte(mov)">
+                                                <i class="bi bi-file-earmark-x text-muted"></i>
+                                                <span class="small">Sin soporte</span>
+                                            </button>
+                                        }
+
+                                        <!-- 2. BOTÓN COMPROBANTE INSTITUCIONAL ASOAGRO (PDF) -->
+                                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill py-1 px-2 fw-semibold"
+                                                style="font-size: 0.75rem;"
+                                                title="@(esVenta ? "Descargar Factura Interna / Comprobante de Venta PDF" : "Descargar Comprobante de Operación ASOAGRO PDF")"
+                                                @onclick="() => DescargarComprobanteIndividualPdf(mov.Id)">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </button>
+
+                                        <!-- 3. VER DETALLE COMPLETO Y COMPROBANTES -->
+                                        <button type="button" class="btn btn-light btn-sm rounded-pill py-1 px-2 border"
+                                                style="font-size: 0.75rem;"
+                                                title="Ver expediente documental completo de la operación"
+                                                @onclick="() => AbrirModalSoporte(mov)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+
+                                        <!-- 4. ACCIONES EXCLUSIVAS DE LA TESORERA -->
+                                        @if (EsTesorero && mov.Estado != EstadosMovimientoFinanciero.Anulado)
+                                        {
+                                            <!-- Validar / Aprobar -->
+                                            @if (mov.Estado == EstadosMovimientoFinanciero.PendienteRevision || mov.Estado == EstadosMovimientoFinanciero.Observado)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-success rounded-pill py-1 px-2"
+                                                        style="font-size: 0.75rem; background-color: #14532d; border-color: #14532d;"
+                                                        title="Validar y dar visto bueno contable de Tesorería"
+                                                        @onclick="() => ValidarMovimiento(mov.Id)">
+                                                    <i class="bi bi-check2"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-warning rounded-pill py-1 px-2 text-dark"
+                                                        style="font-size: 0.75rem;"
+                                                        title="Emitir observación formal o solicitar corrección"
+                                                        @onclick="() => AbrirModalObservacion(mov)">
+                                                    <i class="bi bi-chat-left-dots"></i>
+                                                </button>
+                                            }
+
+                                            <!-- Registrar Pago / Recaudo -->
+                                            @if (mov.Estado != EstadosMovimientoFinanciero.Pagado)
+                                            {
+                                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill py-1 px-2"
+                                                        style="font-size: 0.75rem;"
+                                                        title="Registrar pago, abono o recaudo con comprobante bancario"
+                                                        @onclick="() => AbrirModalPago(mov)">
+                                                    <i class="bi bi-cash"></i>
+                                                </button>
+                                            }
+
+                                            <!-- Editar / Corregir -->
+                                            <button type="button" class="btn btn-light btn-sm rounded-pill py-1 px-2 border"
+                                                    style="font-size: 0.75rem;"
+                                                    title="Editar o corregir datos de la operación"
+                                                    @onclick="() => AbrirModalEditar(mov)">
+                                                <i class="bi bi-pencil"></i>
+                                            </button>
+
+                                            <!-- Anular formalmente con motivo -->
+                                            <button type="button" class="btn btn-outline-danger btn-sm rounded-pill py-1 px-2"
+                                                    style="font-size: 0.75rem;"
+                                                    title="Anular con motivo justificado (sin borrado físico)"
+                                                    @onclick="() => AbrirModalAnular(mov)">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        }
+
+                                        <!-- 5. HISTORIAL DE AUDITORÍA (TRAZABILIDAD) -->
+                                        <button type="button" class="btn btn-light btn-sm rounded-pill py-1 px-2 border"
+                                                style="font-size: 0.75rem;"
+                                                title="Consultar historial de auditoría y trazabilidad"
+                                                @onclick="() => AbrirModalAuditoria(mov)">
+                                            <i class="bi bi-clock-history"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    };
+
+    private RenderFragment RenderTablaCuentasCobrar(IEnumerable<MovimientoFinanciero> movimientos) => __builder =>
+    {
+        if (!movimientos.Any())
+        {
+            <div class="p-5 text-center text-muted">
+                <i class="bi bi-check2-circle fs-1 d-block mb-2 text-success"></i>
+                <p class="mb-0 small fw-semibold">No hay saldos pendientes en cartera por cobrar. Todas las cuentas están al día.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.82rem; min-width: 980px;">
+                    <thead style="background: linear-gradient(105deg, #0b2e1c 0%, #17603a 100%) !important;">
+                        <tr>
+                            <th class="ps-4 py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Ref / Fecha</th>
+                            <th class="py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Asociación / Deudor</th>
+                            <th class="py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Concepto de Cartera</th>
+                            <th class="py-3 text-end" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Valor Total (COP)</th>
+                            <th class="py-3 text-end" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Abonos Realizados</th>
+                            <th class="py-3 text-end" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Saldo Pendiente</th>
+                            <th class="py-3 text-center" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Estado</th>
+                            <th class="pe-4 py-3 text-center" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var mov in movimientos)
+                        {
+                            var totalAbonado = Math.Max(0, mov.Monto - mov.SaldoPendiente);
+                            <tr>
+                                <td class="ps-4 align-middle">
+                                    <strong class="text-dark d-block">@mov.CodigoReferencia</strong>
+                                    <small class="text-muted">@mov.FechaMovimiento.ToString("dd/MM/yyyy")</small>
+                                </td>
+                                <td class="align-middle">
+                                    <span class="fw-semibold text-dark d-block text-truncate" style="max-width: 220px;">@mov.NombreAsociacion</span>
+                                    <small class="text-muted d-block text-truncate" style="max-width: 220px;">
+                                        <i class="bi bi-person me-1"></i>@(string.IsNullOrWhiteSpace(mov.BeneficiarioOProveedor) ? "Asociado o Cliente" : mov.BeneficiarioOProveedor)
+                                    </small>
+                                </td>
+                                <td class="align-middle">
+                                    <strong class="text-dark d-block text-truncate" style="max-width: 200px;">@mov.Subtipo</strong>
+                                    <small class="text-muted d-block text-truncate" style="max-width: 200px;">@mov.Descripcion</small>
+                                </td>
+                                <td class="align-middle text-end fw-bold text-dark">
+                                    @FormatearCop(mov.Monto)
+                                </td>
+                                <td class="align-middle text-end text-success fw-bold">
+                                    @FormatearCop(totalAbonado)
+                                </td>
+                                <td class="align-middle text-end fw-bolder text-danger">
+                                    @FormatearCop(mov.SaldoPendiente)
+                                </td>
+                                <td class="align-middle text-center">
+                                    <span class="badge rounded-pill @ObtenerClaseBadgeEstado(mov.Estado) px-2.5 py-1">
+                                        @mov.Estado
+                                    </span>
+                                </td>
+                                <td class="pe-4 align-middle text-center">
+                                    <div class="d-inline-flex align-items-center gap-1.5">
+                                        @if (EsTesorero && mov.SaldoPendiente > 0)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill py-1 px-2.5 fw-bold d-inline-flex align-items-center gap-1"
+                                                    style="font-size: 0.75rem;"
+                                                    title="Registrar abono o recaudo de este saldo"
+                                                    @onclick="() => AbrirModalPago(mov)">
+                                                <i class="bi bi-cash-coin"></i>
+                                                <span>Abonar</span>
+                                            </button>
+                                        }
+                                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill py-1 px-2"
+                                                style="font-size: 0.75rem;"
+                                                title="Descargar comprobante / factura de venta"
+                                                @onclick="() => DescargarComprobanteIndividualPdf(mov.Id)">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-light btn-sm rounded-pill py-1 px-2 border"
+                                                style="font-size: 0.75rem;"
+                                                title="Ver detalle"
+                                                @onclick="() => AbrirModalSoporte(mov)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    };
+
+    private RenderFragment RenderTablaCuentasPagar(IEnumerable<MovimientoFinanciero> movimientos) => __builder =>
+    {
+        if (!movimientos.Any())
+        {
+            <div class="p-5 text-center text-muted">
+                <i class="bi bi-check2-circle fs-1 d-block mb-2 text-success"></i>
+                <p class="mb-0 small fw-semibold">No se registran obligaciones comerciales pendientes de pago para el periodo.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.82rem; min-width: 980px;">
+                    <thead style="background: linear-gradient(105deg, #0b2e1c 0%, #17603a 100%) !important;">
+                        <tr>
+                            <th class="ps-4 py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Ref / Fecha</th>
+                            <th class="py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Asociación / Proveedor</th>
+                            <th class="py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Obligación / Concepto</th>
+                            <th class="py-3 text-end" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Valor Total (COP)</th>
+                            <th class="py-3 text-end" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Pagado / Abonado</th>
+                            <th class="py-3 text-end" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Saldo por Pagar</th>
+                            <th class="py-3 text-center" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Estado</th>
+                            <th class="pe-4 py-3 text-center" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var mov in movimientos)
+                        {
+                            var totalPagado = Math.Max(0, mov.Monto - mov.SaldoPendiente);
+                            <tr>
+                                <td class="ps-4 align-middle">
+                                    <strong class="text-dark d-block">@mov.CodigoReferencia</strong>
+                                    <small class="text-muted">@mov.FechaMovimiento.ToString("dd/MM/yyyy")</small>
+                                </td>
+                                <td class="align-middle">
+                                    <span class="fw-semibold text-dark d-block text-truncate" style="max-width: 220px;">@mov.NombreAsociacion</span>
+                                    <small class="text-muted d-block text-truncate" style="max-width: 220px;">
+                                        <i class="bi bi-shop me-1"></i>@(string.IsNullOrWhiteSpace(mov.BeneficiarioOProveedor) ? "Proveedor" : mov.BeneficiarioOProveedor)
+                                    </small>
+                                </td>
+                                <td class="align-middle">
+                                    <strong class="text-dark d-block text-truncate" style="max-width: 200px;">@mov.Subtipo</strong>
+                                    <small class="text-muted d-block text-truncate" style="max-width: 200px;">@mov.Descripcion</small>
+                                </td>
+                                <td class="align-middle text-end fw-bold text-dark">
+                                    @FormatearCop(mov.Monto)
+                                </td>
+                                <td class="align-middle text-end text-success fw-bold">
+                                    @FormatearCop(totalPagado)
+                                </td>
+                                <td class="align-middle text-end fw-bolder text-danger">
+                                    @FormatearCop(mov.SaldoPendiente)
+                                </td>
+                                <td class="align-middle text-center">
+                                    <span class="badge rounded-pill @ObtenerClaseBadgeEstado(mov.Estado) px-2.5 py-1">
+                                        @mov.Estado
+                                    </span>
+                                </td>
+                                <td class="pe-4 align-middle text-center">
+                                    <div class="d-inline-flex align-items-center gap-1.5">
+                                        @if (EsTesorero && mov.SaldoPendiente > 0)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-primary rounded-pill py-1 px-2.5 fw-bold d-inline-flex align-items-center gap-1"
+                                                    style="font-size: 0.75rem;"
+                                                    title="Registrar pago o desembolso a esta obligación"
+                                                    @onclick="() => AbrirModalPago(mov)">
+                                                <i class="bi bi-wallet2"></i>
+                                                <span>Pagar</span>
+                                            </button>
+                                        }
+                                        @if (!string.IsNullOrWhiteSpace(mov.ArchivoNombre))
+                                        {
+                                            <button type="button" class="btn btn-outline-success btn-sm rounded-pill py-1 px-2"
+                                                    style="font-size: 0.75rem;"
+                                                    title="Descargar factura soporte del proveedor: @mov.ArchivoNombre"
+                                                    @onclick="() => DescargarSoportePrincipalAsync(mov.Id)">
+                                                <i class="bi bi-file-earmark-arrow-down-fill"></i>
+                                            </button>
+                                        }
+                                        <button type="button" class="btn btn-light btn-sm rounded-pill py-1 px-2 border"
+                                                style="font-size: 0.75rem;"
+                                                title="Ver detalle"
+                                                @onclick="() => AbrirModalSoporte(mov)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    };
+
+    private RenderFragment RenderTablaFacturacionYSoportes(IEnumerable<MovimientoFinanciero> movimientos) => __builder =>
+    {
+        if (!movimientos.Any())
+        {
+            <div class="p-5 text-center text-muted">
+                <i class="bi bi-folder-x fs-1 d-block mb-2 text-muted"></i>
+                <p class="mb-0 small fw-semibold">No se registran documentos de facturación ni comprobantes adjuntos para los filtros seleccionados.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.82rem; min-width: 980px;">
+                    <thead style="background: linear-gradient(105deg, #0b2e1c 0%, #17603a 100%) !important;">
+                        <tr>
+                            <th class="ps-4 py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Clasificación Soporte</th>
+                            <th class="py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Ref / Factura</th>
+                            <th class="py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Asociación / Tercero</th>
+                            <th class="py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Fecha Emisión</th>
+                            <th class="py-3 text-end" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Monto Amparado (COP)</th>
+                            <th class="py-3" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Archivo Custodiado</th>
+                            <th class="pe-4 py-3 text-center" style="color: #ffffff !important; font-weight: 800; font-size: 0.74rem; text-transform: uppercase; border: none;">Descargas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var mov in movimientos)
+                        {
+                            var tieneArchivo = !string.IsNullOrWhiteSpace(mov.ArchivoNombre);
+                            var tienePago = !string.IsNullOrWhiteSpace(mov.ComprobantePagoNombre);
+
+                            <tr>
+                                <td class="ps-4 align-middle">
+                                    <span class="badge px-2.5 py-1 fw-bold rounded-pill" style="font-size: 0.72rem; background: @(mov.TipoSoporte == TiposSoporteFinanciero.FacturaVentaAsociacion ? "#dcfce7; color: #166534;" : mov.TipoSoporte == TiposSoporteFinanciero.DocumentoSoporteNoObligados ? "#e0f2fe; color: #075985;" : "#f3f4f6; color: #374151;"); border: 1px solid rgba(0,0,0,0.08);">
+                                        @mov.TipoSoporte
+                                    </span>
+                                </td>
+                                <td class="align-middle">
+                                    <strong class="text-dark d-block">
+                                        @(string.IsNullOrWhiteSpace(mov.NumeroFactura) ? mov.CodigoReferencia : mov.NumeroFactura)
+                                    </strong>
+                                    <small class="text-muted">Ref: @mov.CodigoReferencia</small>
+                                </td>
+                                <td class="align-middle">
+                                    <span class="fw-semibold text-dark d-block text-truncate" style="max-width: 220px;">@mov.NombreAsociacion</span>
+                                    <small class="text-muted d-block text-truncate" style="max-width: 220px;">
+                                        @(string.IsNullOrWhiteSpace(mov.BeneficiarioOProveedor) ? "Sin tercero" : mov.BeneficiarioOProveedor)
+                                    </small>
+                                </td>
+                                <td class="align-middle">
+                                    <span class="text-dark">@mov.FechaMovimiento.ToString("dd/MM/yyyy")</span>
+                                </td>
+                                <td class="align-middle text-end fw-bold @(mov.Tipo == TipoMovimientoFinanciero.Ingreso ? "text-success" : "text-danger")">
+                                    @FormatearCop(mov.Monto)
+                                </td>
+                                <td class="align-middle">
+                                    @if (tieneArchivo)
+                                    {
+                                        <span class="text-success fw-semibold d-block text-truncate" style="max-width: 180px;" title="@mov.ArchivoNombre">
+                                            <i class="bi bi-file-earmark-check-fill me-1"></i>@mov.ArchivoNombre
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small font-italic">Sin archivo adjunto</span>
+                                    }
+                                    @if (tienePago)
+                                    {
+                                        <span class="text-primary fw-semibold d-block text-truncate mt-0.5" style="max-width: 180px; font-size: 0.74rem;" title="@mov.ComprobantePagoNombre">
+                                            <i class="bi bi-receipt me-1"></i>@mov.ComprobantePagoNombre
+                                        </span>
+                                    }
+                                </td>
+                                <td class="pe-4 align-middle text-center">
+                                    <div class="d-inline-flex align-items-center gap-1.5">
+                                        @if (tieneArchivo)
+                                        {
+                                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill py-1 px-2.5 fw-bold d-inline-flex align-items-center gap-1"
+                                                    style="font-size: 0.74rem;"
+                                                    title="Descargar soporte oficial: @mov.ArchivoNombre"
+                                                    @onclick="() => DescargarSoportePrincipalAsync(mov.Id)">
+                                                <i class="bi bi-download"></i>
+                                                <span>Soporte</span>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <button type="button" class="btn btn-sm btn-light text-muted border rounded-pill py-1 px-2"
+                                                    style="font-size: 0.74rem;"
+                                                    title="No existe soporte adjunto"
+                                                    @onclick="() => MostrarAvisoSinSoporte(mov)">
+                                                <i class="bi bi-x-circle text-muted"></i>
+                                                <span>Sin archivo</span>
+                                            </button>
+                                        }
+
+                                        <!-- PDF Comprobante Interno ASOAGRO -->
+                                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill py-1 px-2"
+                                                style="font-size: 0.74rem;"
+                                                title="Descargar Comprobante Interno ASOAGRO (PDF)"
+                                                @onclick="() => DescargarComprobanteIndividualPdf(mov.Id)">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </button>
+
+                                        <!-- Ver expediente -->
+                                        <button type="button" class="btn btn-light btn-sm rounded-pill py-1 px-2 border"
+                                                style="font-size: 0.74rem;"
+                                                title="Ver detalle del movimiento"
+                                                @onclick="() => AbrirModalSoporte(mov)">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    };
+}
+
+<!-- ======================================================== -->
+<!-- MODALES INTERACTIVOS DE TESORERÍA                       -->
+<!-- ======================================================== -->
+
+<!-- 1. MODAL REGISTRAR / EDITAR MOVIMIENTO -->
+@if (mostrarModalNuevo)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header bg-success text-white rounded-top-4" style="background-color: #14532d !important;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi @(esEdicion ? "bi-pencil-square" : "bi-journal-plus") fs-5"></i>
+                        <h5 class="modal-title fw-bold fs-6 mb-0">@(esEdicion ? "Corregir Movimiento Financiero (Tesorería)" : "Registrar Operación Financiera")</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModales" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-4" style="max-height: 75vh; overflow-y: auto;">
+                    <form @onsubmit="GuardarMovimientoAsync">
+                        <div class="row g-3">
+                            <!-- Tipo de Operación -->
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-dark">Tipo de Operación *</label>
+                                <select class="form-select form-select-sm" @bind="nuevoTipo" @bind:after="OnCambioTipoOperacion">
+                                    <option value="@TipoMovimientoFinanciero.Ingreso">Ingreso / Venta / Aporte</option>
+                                    <option value="@TipoMovimientoFinanciero.CostoGasto">Costo / Gasto Operativo</option>
+                                    <option value="@TipoMovimientoFinanciero.PagoDespacho">Pago / Despacho / Flete</option>
+                                </select>
+                            </div>
+
+                            <!-- Asociación Titular -->
+                            <div class="col-md-8">
+                                <label class="form-label small fw-bold text-dark">Asociación Titular *</label>
+                                <select class="form-select form-select-sm" @bind="nuevaAsociacion">
+                                    @foreach (var asoc in listaAsociaciones)
+                                    {
+                                        <option value="@asoc">@asoc</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <!-- Subtipo / Categoría -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Categoría / Subtipo *</label>
+                                <select class="form-select form-select-sm" @bind="nuevoSubtipo">
+                                    @foreach (var sub in ObtenerSubtiposPorTipo(nuevoTipo))
+                                    {
+                                        <option value="@sub">@sub</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <!-- Actividad o Proyecto Relacionado -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Actividad o Proyecto Relacionado *</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="Ej. Línea Plátano Exportación, Proyecto Cacao, Gastos Sede..." @bind="nuevaActividadProyecto" />
+                            </div>
+
+                            <!-- Fecha y Valor en COP -->
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-dark">Fecha de la Operación *</label>
+                                <input type="date" class="form-control form-control-sm" @bind="nuevaFecha" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-dark">Valor en Pesos (COP) *</label>
+                                <input type="number" min="100" step="1000" class="form-control form-control-sm" placeholder="Monto total en COP" @bind="nuevoMonto" />
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-dark">Método de Pago *</label>
+                                <select class="form-select form-select-sm" @bind="nuevoMetodoPago">
+                                    @foreach (var mp in MetodosPagoFinanciero.Todos)
+                                    {
+                                        <option value="@mp">@mp</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <!-- Tercero Interviniente -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Tercero (Proveedor / Cliente / Asociado) *</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="Nombre completo o Razón Social" @bind="nuevoTercero" />
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-dark">NIT / Cédula del Tercero</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="Ej. 900.123.456-7" @bind="nuevoDocTercero" />
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-dark">Calidad del Tercero</label>
+                                <select class="form-select form-select-sm" @bind="nuevoTipoTercero">
+                                    <option value="Proveedor">Proveedor de bienes/servicios</option>
+                                    <option value="Cliente">Cliente / Comercializadora</option>
+                                    <option value="Asociado">Persona Asociada</option>
+                                    <option value="Transportador">Transportador / Flete</option>
+                                    <option value="Entidad">Entidad Financiera / Cooperativa</option>
+                                </select>
+                            </div>
+
+                            <!-- Origen o Motivo de la Operación -->
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-dark">Origen o Motivo de la Operación *</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="¿De qué necesidad, contrato o acuerdo asambleario proviene?" @bind="nuevoOrigenMotivo" />
+                            </div>
+
+                            <!-- Detalle específico para COSTOS Y GASTOS -->
+                            @if (nuevoTipo == TipoMovimientoFinanciero.CostoGasto)
+                            {
+                                <div class="col-12 p-3 bg-light rounded-3 border">
+                                    <strong class="small text-danger d-block mb-2"><i class="bi bi-cart-dash-fill me-1"></i> Detalle Obligatorio de Gasto / Desembolso:</strong>
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label small text-muted mb-1">¿Qué se pagó específicamente? *</label>
+                                            <input type="text" class="form-control form-control-sm" placeholder="Ej. 120 bultos de abono orgánico Lote C..." @bind="nuevoQueSePago" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small text-muted mb-1">¿Para qué se pagó? *</label>
+                                            <input type="text" class="form-control form-control-sm" placeholder="Ej. Mantenimiento de cultivos de 15 socios..." @bind="nuevoParaQueSePago" />
+                                        </div>
+                                        <div class="col-12">
+                                            <label class="form-label small text-muted mb-1">¿De qué actividad o necesidad asociativa proviene?</label>
+                                            <input type="text" class="form-control form-control-sm" placeholder="Ej. Acuerdo de asamblea general para renovación de parcelas..." @bind="nuevoActividadNecesidad" />
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            <!-- Descripción General -->
+                            <div class="col-12">
+                                <label class="form-label small fw-bold text-dark">Descripción Detallada *</label>
+                                <textarea class="form-control form-control-sm" rows="2" placeholder="Resumen claro y explicativo para consulta en auditoría..." @bind="nuevaDescripcion"></textarea>
+                            </div>
+
+                            <!-- Facturación y Soportes Documentales -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Tipo de Documento Soporte *</label>
+                                <select class="form-select form-select-sm" @bind="nuevoTipoSoporte">
+                                    @foreach (var ts in TiposSoporteFinanciero.Todos)
+                                    {
+                                        <option value="@ts">@ts</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">N° de Factura / Consecutivo Soporte</label>
+                                <input type="text" class="form-control form-control-sm" placeholder="Ej. FV-0042 o FE-99823 o DS-0015" @bind="nuevoNumeroFactura" />
+                            </div>
+
+                            <!-- Archivo de Soporte Principal (Selector de Archivo Real) -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Adjuntar Archivo de Soporte Principal (.pdf, .png, .jpg)</label>
+                                <InputFile class="form-control form-control-sm" OnChange="OnSeleccionarArchivoSoporte" accept=".pdf,.png,.jpg,.jpeg" />
+                                @if (!string.IsNullOrWhiteSpace(nuevoNombreSoporte))
+                                {
+                                    <small class="text-success fw-bold d-block mt-1">
+                                        <i class="bi bi-check-circle-fill me-1"></i> Archivo asignado: @nuevoNombreSoporte
+                                    </small>
+                                }
+                            </div>
+
+                            <!-- Comprobante de Pago Bancario Anexo -->
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold text-dark">Adjuntar Comprobante de Pago / Transferencia (Opcional)</label>
+                                <InputFile class="form-control form-control-sm" OnChange="OnSeleccionarComprobantePago" accept=".pdf,.png,.jpg,.jpeg" />
+                                @if (!string.IsNullOrWhiteSpace(nuevoComprobantePago))
+                                {
+                                    <small class="text-primary fw-bold d-block mt-1">
+                                        <i class="bi bi-receipt me-1"></i> Comprobante asignado: @nuevoComprobantePago
+                                    </small>
+                                }
+                            </div>
+
+                            @if (!EsTesorero)
+                            {
+                                <div class="col-12">
+                                    <div class="alert alert-info py-2 px-3 small mb-0 rounded-3">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Como <strong>@rolActivo</strong>, este registro quedará en estado <em>Pendiente de revisión</em> hasta que la <strong>Tesorera</strong> valide los soportes.
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer bg-light border-top-0 rounded-bottom-4 justify-content-between">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" @onclick="CerrarModales">Cancelar</button>
+                    <button type="button" class="btn btn-success btn-sm rounded-pill px-4 fw-bold" style="background-color: #14532d; border-color: #14532d;" @onclick="GuardarMovimientoAsync">
+                        <i class="bi bi-save me-1"></i> @(esEdicion ? "Guardar Corrección" : "Radicar Operación")
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 2. MODAL REGISTRAR PAGO / RECAUDO / ABONO -->
+@if (mostrarModalPago && movimientoSeleccionado != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header bg-primary text-white rounded-top-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-cash-coin fs-5"></i>
+                        <h5 class="modal-title fw-bold fs-6 mb-0">Registrar Pago o Recaudo (Tesorería)</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModales" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-2">
+                        Operación: <strong>@movimientoSeleccionado.CodigoReferencia</strong> — @movimientoSeleccionado.NombreAsociacion
+                    </p>
+                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small">Valor Total:</span>
+                            <strong class="text-dark">@FormatearCop(movimientoSeleccionado.Monto)</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted small">Valor ya pagado:</span>
+                            <span class="text-success fw-bold">@FormatearCop(movimientoSeleccionado.ValorPagado)</span>
+                        </div>
+                        <div class="d-flex justify-content-between border-top pt-1">
+                            <span class="text-muted small">Saldo Pendiente:</span>
+                            <strong class="text-danger">@FormatearCop(movimientoSeleccionado.SaldoPendiente)</strong>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Valor a Pagar / Abonar (COP) *</label>
+                        <input type="number" min="100" max="@movimientoSeleccionado.Monto" step="1000" class="form-control form-control-sm" @bind="montoPagoRegistro" />
+                        <small class="text-muted">Ingrese el valor total para liquidar o un monto menor para registrar abono parcial.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Adjuntar Comprobante Bancario de Pago</label>
+                        <InputFile class="form-control form-control-sm mb-1" OnChange="OnSeleccionarComprobantePagoModal" accept=".pdf,.png,.jpg,.jpeg" />
+                        <input type="text" class="form-control form-control-sm" placeholder="Nombre identificable del comprobante bancario" @bind="comprobantePagoTexto" />
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0 rounded-bottom-4">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" @onclick="CerrarModales">Cancelar</button>
+                    <button type="button" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold" @onclick="ConfirmarPagoAsync">
+                        <i class="bi bi-check-circle me-1"></i> Confirmar Pago
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 3. MODAL EMITIR OBSERVACIÓN -->
+@if (mostrarModalObservacion && movimientoSeleccionado != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header bg-warning text-dark rounded-top-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-exclamation-circle fs-5"></i>
+                        <h5 class="modal-title fw-bold fs-6 mb-0">Emitir Observación de Tesorería</h5>
+                    </div>
+                    <button type="button" class="btn-close" @onclick="CerrarModales" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <p class="small text-muted mb-2">
+                        Operación: <strong>@movimientoSeleccionado.CodigoReferencia</strong> (@movimientoSeleccionado.Descripcion)
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-dark">Nota de Corrección o Soporte Requerido *</label>
+                        <textarea class="form-control form-control-sm" rows="3" placeholder="Indique qué dato o documento soporte debe subsanarse..." @bind="textoObservacion"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0 rounded-bottom-4">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" @onclick="CerrarModales">Cancelar</button>
+                    <button type="button" class="btn btn-warning btn-sm rounded-pill px-4 fw-bold" @onclick="ConfirmarObservacionAsync">
+                        <i class="bi bi-send me-1"></i> Enviar Observación
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 4. MODAL ANULAR MOVIMIENTO CON MOTIVO OBLIGATORIO -->
+@if (mostrarModalAnular && movimientoSeleccionado != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header bg-danger text-white rounded-top-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-x-circle fs-5"></i>
+                        <h5 class="modal-title fw-bold fs-6 mb-0">Anulación Formal de Movimiento (Tesorería)</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModales" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-warning small mb-3">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                        <strong>Trazabilidad legal obligatoria:</strong> Los registros contables no se eliminan físicamente de la base de datos de ASOAGRO. La operación quedará en estado <strong>Anulado</strong> con su respectiva justificación y no sumará en los balances financieros.
+                    </div>
+                    <p class="small text-muted mb-2">
+                        Movimiento: <strong>@movimientoSeleccionado.CodigoReferencia</strong> — @movimientoSeleccionado.NombreAsociacion
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-danger">Motivo Obligatorio de Anulación *</label>
+                        <textarea class="form-control form-control-sm border-danger" rows="3" placeholder="Explique la causa justificada (ej. Duplicidad de comprobante de ingreso, anulación por rescisión de contrato comercial)..." @bind="textoMotivoAnulacion"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0 rounded-bottom-4">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" @onclick="CerrarModales">Cancelar</button>
+                    <button type="button" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold" @onclick="ConfirmarAnulacionAsync">
+                        <i class="bi bi-x-circle me-1"></i> Anular Definitivamente
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 5. MODAL HISTORIAL DE AUDITORÍA Y TRAZABILIDAD -->
+@if (mostrarModalAuditoria && movimientoSeleccionado != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header bg-dark text-white rounded-top-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-clock-history fs-5"></i>
+                        <h5 class="modal-title fw-bold fs-6 mb-0">Trazabilidad y Auditoría de Operación</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModales" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                        <div class="fw-bold text-dark">@movimientoSeleccionado.CodigoReferencia — @movimientoSeleccionado.Categoria</div>
+                        <div class="small text-muted">@movimientoSeleccionado.NombreAsociacion</div>
+                        <div class="fw-bold text-success mt-1">@FormatearCop(movimientoSeleccionado.Monto)</div>
+                    </div>
+
+                    <h6 class="fw-bold text-dark mb-2" style="font-size: 0.8rem;">Línea de Tiempo de Cambios:</h6>
+                    <div class="timeline" style="font-size: 0.8rem;">
+                        @if (movimientoSeleccionado.Auditoria.Any())
+                        {
+                            <ul class="list-unstyled mb-0 position-relative ps-3 border-start border-2 border-success">
+                                @foreach (var aud in movimientoSeleccionado.Auditoria)
+                                {
+                                    <li class="mb-3 position-relative">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle" style="font-size: 0.7rem;">@aud.Accion</span>
+                                            <span class="text-muted" style="font-size: 0.7rem;">@aud.Fecha.ToString("dd/MM/yyyy HH:mm")</span>
+                                        </div>
+                                        <div class="fw-semibold text-dark mt-1">@aud.Usuario (@aud.Rol)</div>
+                                        <div class="text-muted small">@aud.Detalle</div>
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <p class="text-muted small mb-0">No hay registros de auditoría adicionales para este movimiento.</p>
+                        }
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0 rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" @onclick="CerrarModales">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- 6. MODAL VISOR DE SOPORTE DIGITAL Y DESCARGAS -->
+@if (mostrarModalSoporte && movimientoSeleccionado != null)
+{
+    var tieneSoporteModal = !string.IsNullOrWhiteSpace(movimientoSeleccionado.ArchivoNombre);
+    var tienePagoModal = !string.IsNullOrWhiteSpace(movimientoSeleccionado.ComprobantePagoNombre);
+
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5); backdrop-filter: blur(4px);" role="dialog">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header bg-success text-white rounded-top-4" style="background-color: #14532d !important;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-folder-check fs-5"></i>
+                        <h5 class="modal-title fw-bold fs-6 mb-0">Expediente y Soportes Custodiados</h5>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModales" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <!-- Resumen de la Operación -->
+                    <div class="p-3 bg-light rounded-3 border mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold mb-1">
+                                    @movimientoSeleccionado.CodigoReferencia
+                                </span>
+                                <h6 class="fw-bold text-dark mb-0">@movimientoSeleccionado.Descripcion</h6>
+                                <small class="text-muted d-block">Asociación: @movimientoSeleccionado.NombreAsociacion</small>
+                            </div>
+                            <strong class="text-success fs-6">@FormatearCop(movimientoSeleccionado.Monto)</strong>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta 1: Archivo Soporte Principal -->
+                    <div class="p-3 rounded-3 border mb-3 @(tieneSoporteModal ? "bg-white" : "bg-light")">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <span class="small fw-bold text-dark">
+                                <i class="bi bi-file-earmark-check-fill text-success me-1"></i> Soporte Principal:
+                            </span>
+                            <span class="badge bg-secondary">@movimientoSeleccionado.TipoSoporte</span>
+                        </div>
+
+                        @if (tieneSoporteModal)
+                        {
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pt-2 border-top">
+                                <div>
+                                    <strong class="small text-dark d-block">@movimientoSeleccionado.ArchivoNombre</strong>
+                                    <small class="text-muted">Estado: Archivo verificado y custodiado</small>
+                                </div>
+                                <button type="button" class="btn btn-success btn-sm rounded-pill px-3 py-1 fw-bold"
+                                        style="background-color: #14532d; border-color: #14532d;"
+                                        @onclick="() => DescargarSoportePrincipalAsync(movimientoSeleccionado.Id)">
+                                    <i class="bi bi-download me-1"></i> Descargar Soporte
+                                </button>
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="alert alert-warning py-2 px-3 small mb-0 rounded-3">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                                Este registro no cuenta con un archivo o soporte documental adjunto en el sistema.
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Tarjeta 2: Comprobante de Pago Bancario (si aplica) -->
+                    @if (tienePagoModal)
+                    {
+                        <div class="p-3 bg-white rounded-3 border mb-3">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <span class="small fw-bold text-dark">
+                                    <i class="bi bi-receipt text-primary me-1"></i> Comprobante de Pago Anexo:
+                                </span>
+                                <span class="badge bg-primary-subtle text-primary">Transferencia / Consignación</span>
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pt-2 border-top">
+                                <div>
+                                    <strong class="small text-dark d-block">@movimientoSeleccionado.ComprobantePagoNombre</strong>
+                                    <small class="text-muted">Soporte bancario de liquidación</small>
+                                </div>
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 fw-bold"
+                                        @onclick="() => DescargarComprobantePagoAsync(movimientoSeleccionado.Id)">
+                                    <i class="bi bi-download me-1"></i> Descargar Pago
+                                </button>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Tarjeta 3: Comprobante Institucional ASOAGRO (PDF) -->
+                    <div class="p-3 bg-light rounded-3 border">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                            <div>
+                                <strong class="small text-dark d-block">Comprobante Oficial ASOAGRO (PDF)</strong>
+                                <small class="text-muted">Documento interno con aviso normativo DIAN y firmas</small>
+                            </div>
+                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 fw-semibold"
+                                    @onclick="() => DescargarComprobanteIndividualPdf(movimientoSeleccionado.Id)">
+                                <i class="bi bi-file-earmark-pdf-fill me-1"></i> Descargar PDF Oficial
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light border-top-0 rounded-bottom-4">
+                    <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" @onclick="CerrarModales">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private string nombreUsuario = "Usuario";
+    private string correoUsuario = "";
+    private string rolActivo = "Tesorero";
+
+    private bool EsTesorero => rolActivo.Equals("Tesorero", StringComparison.OrdinalIgnoreCase) || rolActivo.Equals("Tesorera", StringComparison.OrdinalIgnoreCase);
+    private bool EsAdmin => rolActivo.Equals("Directora", StringComparison.OrdinalIgnoreCase) || rolActivo.Equals("Director", StringComparison.OrdinalIgnoreCase) || rolActivo.Equals("Administrador", StringComparison.OrdinalIgnoreCase);
+    private bool EsPresidenta => rolActivo.Equals("Presidenta", StringComparison.OrdinalIgnoreCase) || rolActivo.Equals("Presidente", StringComparison.OrdinalIgnoreCase);
+    private bool EsSecretaria => rolActivo.Equals("Secretaria", StringComparison.OrdinalIgnoreCase) || rolActivo.Equals("Secretaría", StringComparison.OrdinalIgnoreCase);
+
+    private bool PuedeRegistrar => EsTesorero || EsAdmin;
+
+    [Parameter] public string? Seccion { get; set; }
+
+    private string moduloActivo = "resumen";
+    private string filtroAsociacion = "";
+    private string filtroPeriodo = "";
+
+    private List<string> listaAsociaciones = new();
+    private List<string> listaPeriodos = new();
+
+    private List<MovimientoFinanciero> todosMovimientos = new();
+    private List<MovimientoFinanciero> movimientosCostos = new();
+    private List<MovimientoFinanciero> movimientosIngresos = new();
+    private List<MovimientoFinanciero> movimientosPagos = new();
+    private List<MovimientoFinanciero> movimientosCobrar = new();
+    private List<MovimientoFinanciero> movimientosPagar = new();
+    private List<MovimientoFinanciero> movimientosSoportes = new();
+
+    private ResumenFinanciero resumenActual = new();
+
+    private int conteoCostos = 0;
+    private int conteoIngresos = 0;
+    private int conteoPagos = 0;
+    private int conteoCobrar = 0;
+    private int conteoPagar = 0;
+    private int conteoSoportes = 0;
+
+    // Modales y formularios
+    private bool mostrarModalNuevo = false;
+    private bool mostrarModalPago = false;
+    private bool mostrarModalObservacion = false;
+    private bool mostrarModalAnular = false;
+    private bool mostrarModalAuditoria = false;
+    private bool mostrarModalSoporte = false;
+
+    private bool esEdicion = false;
+    private MovimientoFinanciero? movimientoSeleccionado = null;
+
+    // Campos formulario
+    private TipoMovimientoFinanciero nuevoTipo = TipoMovimientoFinanciero.Ingreso;
+    private string nuevaAsociacion = "";
+    private string nuevoSubtipo = SubtiposMovimientoFinanciero.VentaProduccion;
+    private string nuevaActividadProyecto = "Línea Productiva de Plátano Exportación";
+    private DateTime nuevaFecha = DateTime.Today;
+    private decimal nuevoMonto = 0;
+    private string nuevoMetodoPago = MetodosPagoFinanciero.TransferenciaBancaria;
+    private string nuevoTercero = "";
+    private string nuevoDocTercero = "";
+    private string nuevoTipoTercero = "Proveedor";
+    private string nuevoOrigenMotivo = "Operación regular asociativa";
+    private string nuevaDescripcion = "";
+    private string nuevoTipoSoporte = TiposSoporteFinanciero.ComprobanteInternoAsoagro;
+    private string nuevoNumeroFactura = "";
+    private string nuevoNombreSoporte = "Comprobante_Pago.pdf";
+    private string nuevoComprobantePago = "";
+
+    // Campos de archivo binario cargado
+    private byte[]? nuevoArchivoContenido = null;
+    private string? nuevoArchivoTipoMime = "application/pdf";
+    private byte[]? nuevoComprobantePagoContenido = null;
+
+    // Campos específicos para Costos y Gastos
+    private string nuevoQueSePago = "";
+    private string nuevoParaQueSePago = "";
+    private string nuevoActividadNecesidad = "";
+
+    // Textos modales
+    private string textoObservacion = "";
+    private string textoMotivoAnulacion = "";
+    private decimal montoPagoRegistro = 0;
+    private string comprobantePagoTexto = "";
+
+    // Mensajes
+    private string? mensajeFeedback = null;
+    private bool esFeedbackExito = true;
+
+    // Banners dinámicos según el rol
+    private string TextoModoRol => EsTesorero ? "Gestión Integral y Control · Tesorera" :
+                                   EsAdmin ? "Registro Operativo Inicial · Administración" :
+                                   EsPresidenta ? "Supervisión y Gobernanza · Presidencia" :
+                                   "Consulta Documental y Soportes · Secretaría";
+
+    private string ColorBadgeModo => EsTesorero ? "#059669" :
+                                     EsAdmin ? "#2563eb" :
+                                     EsPresidenta ? "#7c3aed" :
+                                     "#4b5563";
+
+    private string IconoModo => EsTesorero ? "bi-shield-check" :
+                                EsAdmin ? "bi-pencil-square" :
+                                EsPresidenta ? "bi-eye" :
+                                "bi-file-earmark-text";
+
+    private string AlcancePermisoTexto => EsTesorero ? "Control total, correcciones, anulación y emisión de reportes" :
+                                          EsAdmin ? "Ingreso de operaciones (sin aprobación ni edición)" :
+                                          EsPresidenta ? "Consulta consolidada y seguimiento de gobernanza" :
+                                          "Consulta de balances y soportes";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        nombreUsuario = user.Identity?.Name 
+            ?? user.FindFirst(ClaimTypes.Name)?.Value 
+            ?? "Usuario ASOAGRO";
+
+        correoUsuario = user.FindFirst(ClaimTypes.Email)?.Value ?? "";
+
+        // Determinar rol
+        if (user.IsInRole("Tesorero") || user.IsInRole("Tesorera"))
+        {
+            rolActivo = "Tesorera";
+        }
+        else if (user.IsInRole("Directora") || user.IsInRole("Director") || user.IsInRole("Administrador"))
+        {
+            rolActivo = "Administrador";
+        }
+        else if (user.IsInRole("Presidenta") || user.IsInRole("Presidente"))
+        {
+            rolActivo = "Presidenta";
+        }
+        else if (user.IsInRole("Secretaria") || user.IsInRole("Secretaría"))
+        {
+            rolActivo = "Secretaría";
+        }
+
+        // Suscribirse a sincronización en tiempo real
+        FinanzasService.DatosFinancierosActualizados += OnDatosActualizadosExternos;
+
+        await CargarDatosAsync();
+    }
+
+    private void OnDatosActualizadosExternos()
+    {
+        _ = InvokeAsync(async () =>
+        {
+            await CargarDatosAsync();
+            StateHasChanged();
+        });
+    }
+
+    private Task CargarDatosAsync()
+    {
+        listaAsociaciones = FinanzasService.ObtenerAsociaciones().ToList();
+        listaPeriodos = FinanzasService.ObtenerPeriodosDisponibles().ToList();
+
+        if (string.IsNullOrWhiteSpace(nuevaAsociacion) && listaAsociaciones.Any())
+        {
+            nuevaAsociacion = listaAsociaciones.First();
+        }
+
+        AplicarFiltros();
+        return Task.CompletedTask;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrWhiteSpace(Seccion))
+        {
+            moduloActivo = Seccion.ToLowerInvariant() switch
+            {
+                "resumen" => "resumen",
+                "costos" or "gastos" or "costos-gastos" => "costos",
+                "ingresos" or "ventas" or "ingresos-ventas" => "ingresos",
+                "cobrar" or "cuentas-por-cobrar" => "cobrar",
+                "pagar" or "pagos" or "cuentas-por-pagar" => "pagar",
+                "soportes" or "facturacion" or "facturacion-soportes" => "soportes",
+                "reportes" or "balances" or "reportes-balances" => "reportes",
+                _ => "resumen"
+            };
+        }
+    }
+
+    private void AplicarFiltros()
+    {
+        resumenActual = FinanzasService.ObtenerResumen(filtroAsociacion, filtroPeriodo);
+        todosMovimientos = FinanzasService.ObtenerTodos(filtroAsociacion, filtroPeriodo).ToList();
+
+        movimientosCostos = todosMovimientos.Where(m => m.Tipo == TipoMovimientoFinanciero.CostoGasto).ToList();
+        movimientosIngresos = todosMovimientos.Where(m => m.Tipo == TipoMovimientoFinanciero.Ingreso).ToList();
+        movimientosPagos = todosMovimientos.Where(m => m.Tipo == TipoMovimientoFinanciero.PagoDespacho).ToList();
+
+        movimientosCobrar = todosMovimientos.Where(m => m.Tipo == TipoMovimientoFinanciero.Ingreso && (m.SaldoPendiente > 0 || m.Estado == EstadosMovimientoFinanciero.PendienteRevision || m.Estado == EstadosMovimientoFinanciero.PorCobrar || m.Estado == EstadosMovimientoFinanciero.AbonoParcial)).ToList();
+        if (!movimientosCobrar.Any())
+        {
+            movimientosCobrar = movimientosIngresos.Take(10).ToList();
+        }
+
+        movimientosPagar = todosMovimientos.Where(m => (m.Tipo == TipoMovimientoFinanciero.CostoGasto || m.Tipo == TipoMovimientoFinanciero.PagoDespacho) && (m.SaldoPendiente > 0 || m.Estado == EstadosMovimientoFinanciero.PendienteRevision || m.Estado == EstadosMovimientoFinanciero.PorPagar || m.Estado == EstadosMovimientoFinanciero.AbonoParcial)).ToList();
+        if (!movimientosPagar.Any())
+        {
+            movimientosPagar = movimientosCostos.Concat(movimientosPagos).Take(10).ToList();
+        }
+
+        movimientosSoportes = todosMovimientos.Where(m => !string.IsNullOrWhiteSpace(m.ArchivoNombre) || !string.IsNullOrWhiteSpace(m.NumeroFactura) || !string.IsNullOrWhiteSpace(m.ComprobantePagoNombre) || !string.IsNullOrWhiteSpace(m.TipoSoporte)).ToList();
+
+        conteoCostos = movimientosCostos.Count;
+        conteoIngresos = movimientosIngresos.Count;
+        conteoPagos = movimientosPagos.Count;
+        conteoCobrar = movimientosCobrar.Count;
+        conteoPagar = movimientosPagar.Count;
+        conteoSoportes = movimientosSoportes.Count;
+    }
+
+    private void CambiarModulo(string modulo)
+    {
+        moduloActivo = modulo;
+        var slug = modulo switch
+        {
+            "resumen" => "resumen",
+            "costos" => "costos-gastos",
+            "ingresos" => "ingresos-ventas",
+            "cobrar" => "cuentas-por-cobrar",
+            "pagar" => "cuentas-por-pagar",
+            "soportes" => "facturacion-soportes",
+            "reportes" => "reportes-balances",
+            _ => "resumen"
+        };
+        Navigation.NavigateTo($"gestion-financiera/{slug}", replace: false);
+    }
+
+    private void OnCambioTipoOperacion()
+    {
+        var subtipos = ObtenerSubtiposPorTipo(nuevoTipo);
+        nuevoSubtipo = subtipos.FirstOrDefault() ?? "Operación general";
+        if (nuevoTipo == TipoMovimientoFinanciero.Ingreso)
+        {
+            nuevoTipoSoporte = TiposSoporteFinanciero.FacturaVentaAsociacion;
+            nuevoTipoTercero = "Cliente";
+        }
+        else if (nuevoTipo == TipoMovimientoFinanciero.CostoGasto)
+        {
+            nuevoTipoSoporte = TiposSoporteFinanciero.FacturaElectronicaProveedor;
+            nuevoTipoTercero = "Proveedor";
+        }
+        else
+        {
+            nuevoTipoSoporte = TiposSoporteFinanciero.ExtractoConsignacion;
+            nuevoTipoTercero = "Transportador";
+        }
+    }
+
+    private string[] ObtenerSubtiposPorTipo(TipoMovimientoFinanciero tipo) => tipo switch
+    {
+        TipoMovimientoFinanciero.Ingreso => new[]
+        {
+            SubtiposMovimientoFinanciero.VentaProduccion,
+            SubtiposMovimientoFinanciero.VentaServicios,
+            SubtiposMovimientoFinanciero.CuotaOrdinaria,
+            SubtiposMovimientoFinanciero.CuotaExtraordinaria,
+            SubtiposMovimientoFinanciero.AporteSocial,
+            SubtiposMovimientoFinanciero.RecaudoCartera,
+            SubtiposMovimientoFinanciero.SubsidioDonacion,
+            SubtiposMovimientoFinanciero.OtroIngreso
+        },
+        TipoMovimientoFinanciero.CostoGasto => new[]
+        {
+            SubtiposMovimientoFinanciero.InsumosFertilizantes,
+            SubtiposMovimientoFinanciero.ManoDeObra,
+            SubtiposMovimientoFinanciero.TransporteFlete,
+            SubtiposMovimientoFinanciero.AsistenciaTecnica,
+            SubtiposMovimientoFinanciero.EmpaquesEmbalajes,
+            SubtiposMovimientoFinanciero.GastosAdministrativos,
+            SubtiposMovimientoFinanciero.ServiciosPublicos,
+            SubtiposMovimientoFinanciero.MantenimientoEquipos,
+            SubtiposMovimientoFinanciero.HonorariosProfesionales,
+            SubtiposMovimientoFinanciero.OtroCostoGasto
+        },
+        TipoMovimientoFinanciero.PagoDespacho => new[]
+        {
+            SubtiposMovimientoFinanciero.PagoProveedor,
+            SubtiposMovimientoFinanciero.LiquidacionAsociado,
+            SubtiposMovimientoFinanciero.AbonoObligacion,
+            SubtiposMovimientoFinanciero.AnticipoDespacho,
+            SubtiposMovimientoFinanciero.DespachoCarga
+        },
+        _ => Array.Empty<string>()
+    };
+
+    private void AbrirModalNuevoMovimiento()
+    {
+        esEdicion = false;
+        movimientoSeleccionado = null;
+        nuevoMonto = 0;
+        nuevaFecha = DateTime.Today;
+        nuevaDescripcion = "";
+        nuevoTercero = "";
+        nuevoDocTercero = "";
+        nuevoOrigenMotivo = "Operación regular asociativa";
+        nuevoNumeroFactura = "";
+        nuevoNombreSoporte = "Comprobante_Pago.pdf";
+        nuevoComprobantePago = "";
+        nuevoArchivoContenido = null;
+        nuevoComprobantePagoContenido = null;
+        nuevoQueSePago = "";
+        nuevoParaQueSePago = "";
+        nuevoActividadNecesidad = "";
+        OnCambioTipoOperacion();
+        mostrarModalNuevo = true;
+    }
+
+    private void AbrirModalNuevoMovimientoConTipo(TipoMovimientoFinanciero tipo)
+    {
+        nuevoTipo = tipo;
+        AbrirModalNuevoMovimiento();
+    }
+
+    private void AbrirModalEditar(MovimientoFinanciero mov)
+    {
+        esEdicion = true;
+        movimientoSeleccionado = mov;
+        nuevoTipo = mov.Tipo;
+        nuevaAsociacion = mov.NombreAsociacion;
+        nuevoSubtipo = mov.Subtipo;
+        nuevaActividadProyecto = mov.ActividadOProyecto;
+        nuevaFecha = mov.FechaMovimiento;
+        nuevoMonto = mov.Monto;
+        nuevoMetodoPago = mov.MetodoPago;
+        nuevoTercero = mov.BeneficiarioOProveedor ?? "";
+        nuevoDocTercero = mov.DocumentoIdentidadTercero ?? "";
+        nuevoTipoTercero = mov.TipoTercero;
+        nuevoOrigenMotivo = mov.OrigenOMotivo;
+        nuevaDescripcion = mov.Descripcion;
+        nuevoTipoSoporte = mov.TipoSoporte;
+        nuevoNumeroFactura = mov.NumeroFactura ?? "";
+        nuevoNombreSoporte = mov.ArchivoNombre ?? "";
+        nuevoComprobantePago = mov.ComprobantePagoNombre ?? "";
+        nuevoArchivoContenido = mov.ArchivoContenido;
+        nuevoComprobantePagoContenido = mov.ComprobantePagoContenido;
+        nuevoQueSePago = mov.QueSePago ?? "";
+        nuevoParaQueSePago = mov.ParaQueSePago ?? "";
+        nuevoActividadNecesidad = mov.ActividadONecesidad ?? "";
+        mostrarModalNuevo = true;
+    }
+
+    private void AbrirModalPago(MovimientoFinanciero mov)
+    {
+        movimientoSeleccionado = mov;
+        montoPagoRegistro = mov.SaldoPendiente > 0 ? mov.SaldoPendiente : mov.Monto;
+        comprobantePagoTexto = $"Transferencia_{mov.CodigoReferencia}.pdf";
+        nuevoComprobantePagoContenido = null;
+        mostrarModalPago = true;
+    }
+
+    private void AbrirModalObservacion(MovimientoFinanciero mov)
+    {
+        movimientoSeleccionado = mov;
+        textoObservacion = "";
+        mostrarModalObservacion = true;
+    }
+
+    private void AbrirModalAnular(MovimientoFinanciero mov)
+    {
+        movimientoSeleccionado = mov;
+        textoMotivoAnulacion = "";
+        mostrarModalAnular = true;
+    }
+
+    private void AbrirModalAuditoria(MovimientoFinanciero mov)
+    {
+        movimientoSeleccionado = mov;
+        mostrarModalAuditoria = true;
+    }
+
+    private void AbrirModalSoporte(MovimientoFinanciero mov)
+    {
+        movimientoSeleccionado = mov;
+        mostrarModalSoporte = true;
+    }
+
+    private void CerrarModales()
+    {
+        mostrarModalNuevo = false;
+        mostrarModalPago = false;
+        mostrarModalObservacion = false;
+        mostrarModalAnular = false;
+        mostrarModalAuditoria = false;
+        mostrarModalSoporte = false;
+        movimientoSeleccionado = null;
+    }
+
+    private async Task OnSeleccionarArchivoSoporte(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var file = e.File;
+            if (file != null)
+            {
+                nuevoNombreSoporte = file.Name;
+                nuevoArchivoTipoMime = string.IsNullOrWhiteSpace(file.ContentType) ? "application/pdf" : file.ContentType;
+                using var stream = file.OpenReadStream(maxAllowedSize: 15 * 1024 * 1024);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                nuevoArchivoContenido = ms.ToArray();
+                mensajeFeedback = $"Archivo soporte '{file.Name}' cargado correctamente para la operación.";
+                esFeedbackExito = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeFeedback = $"Error al leer el archivo soporte: {ex.Message}";
+            esFeedbackExito = false;
+        }
+    }
+
+    private async Task OnSeleccionarComprobantePago(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var file = e.File;
+            if (file != null)
+            {
+                nuevoComprobantePago = file.Name;
+                using var stream = file.OpenReadStream(maxAllowedSize: 15 * 1024 * 1024);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                nuevoComprobantePagoContenido = ms.ToArray();
+                mensajeFeedback = $"Comprobante de pago '{file.Name}' cargado correctamente.";
+                esFeedbackExito = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeFeedback = $"Error al leer el comprobante de pago: {ex.Message}";
+            esFeedbackExito = false;
+        }
+    }
+
+    private async Task OnSeleccionarComprobantePagoModal(InputFileChangeEventArgs e)
+    {
+        try
+        {
+            var file = e.File;
+            if (file != null)
+            {
+                comprobantePagoTexto = file.Name;
+                using var stream = file.OpenReadStream(maxAllowedSize: 15 * 1024 * 1024);
+                using var ms = new MemoryStream();
+                await stream.CopyToAsync(ms);
+                nuevoComprobantePagoContenido = ms.ToArray();
+            }
+        }
+        catch (Exception ex)
+        {
+            mensajeFeedback = $"Error al cargar comprobante: {ex.Message}";
+            esFeedbackExito = false;
+        }
+    }
+
+    private async Task GuardarMovimientoAsync()
+    {
+        if (nuevoMonto <= 0)
+        {
+            mensajeFeedback = "El valor de la operación debe ser mayor a $0 COP.";
+            esFeedbackExito = false;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(nuevaDescripcion))
+        {
+            mensajeFeedback = "Debe ingresar una descripción explicativa de la operación.";
+            esFeedbackExito = false;
+            return;
+        }
+
+        if (esEdicion && movimientoSeleccionado != null)
+        {
+            var res = FinanzasService.ActualizarMovimiento(movimientoSeleccionado.Id, m =>
+            {
+                m.Tipo = nuevoTipo;
+                m.NombreAsociacion = nuevaAsociacion;
+                m.Subtipo = nuevoSubtipo;
+                m.Categoria = nuevoSubtipo;
+                m.ActividadOProyecto = nuevaActividadProyecto;
+                m.FechaMovimiento = nuevaFecha;
+                m.Monto = nuevoMonto;
+                m.MetodoPago = nuevoMetodoPago;
+                m.BeneficiarioOProveedor = nuevoTercero;
+                m.DocumentoIdentidadTercero = nuevoDocTercero;
+                m.TipoTercero = nuevoTipoTercero;
+                m.OrigenOMotivo = nuevoOrigenMotivo;
+                m.Descripcion = nuevaDescripcion;
+                m.TipoSoporte = nuevoTipoSoporte;
+                m.NumeroFactura = nuevoNumeroFactura;
+                m.ArchivoNombre = nuevoNombreSoporte;
+                m.ComprobantePagoNombre = nuevoComprobantePago;
+                if (nuevoArchivoContenido != null && nuevoArchivoContenido.Length > 0)
+                {
+                    m.ArchivoContenido = nuevoArchivoContenido;
+                    m.ArchivoTipoMime = nuevoArchivoTipoMime;
+                }
+                if (nuevoComprobantePagoContenido != null && nuevoComprobantePagoContenido.Length > 0)
+                {
+                    m.ComprobantePagoContenido = nuevoComprobantePagoContenido;
+                }
+                m.QueSePago = nuevoQueSePago;
+                m.ParaQueSePago = nuevoParaQueSePago;
+                m.ActividadONecesidad = nuevoActividadNecesidad;
+            }, nombreUsuario, rolActivo);
+
+            mensajeFeedback = res.Mensaje;
+            esFeedbackExito = res.Exitoso;
+        }
+        else
+        {
+            var mov = new MovimientoFinanciero
+            {
+                Tipo = nuevoTipo,
+                NombreAsociacion = nuevaAsociacion,
+                Subtipo = nuevoSubtipo,
+                Categoria = nuevoSubtipo,
+                ActividadOProyecto = nuevaActividadProyecto,
+                FechaMovimiento = nuevaFecha,
+                Monto = nuevoMonto,
+                ValorPagado = EsTesorero ? nuevoMonto : 0,
+                MetodoPago = nuevoMetodoPago,
+                BeneficiarioOProveedor = nuevoTercero,
+                DocumentoIdentidadTercero = nuevoDocTercero,
+                TipoTercero = nuevoTipoTercero,
+                OrigenOMotivo = nuevoOrigenMotivo,
+                Descripcion = nuevaDescripcion,
+                TipoSoporte = nuevoTipoSoporte,
+                NumeroFactura = nuevoNumeroFactura,
+                ArchivoNombre = nuevoNombreSoporte,
+                ArchivoContenido = nuevoArchivoContenido,
+                ArchivoTipoMime = nuevoArchivoTipoMime ?? "application/pdf",
+                ComprobantePagoNombre = nuevoComprobantePago,
+                ComprobantePagoContenido = nuevoComprobantePagoContenido,
+                QueSePago = nuevoQueSePago,
+                ParaQueSePago = nuevoParaQueSePago,
+                ActividadONecesidad = nuevoActividadNecesidad,
+                Estado = EsTesorero ? EstadosMovimientoFinanciero.Validado : EstadosMovimientoFinanciero.PendienteRevision
+            };
+
+            var res = FinanzasService.RegistrarMovimiento(mov, nombreUsuario, rolActivo);
+            mensajeFeedback = res.Mensaje;
+            esFeedbackExito = res.Exitoso;
+        }
+
+        CerrarModales();
+        await CargarDatosAsync();
+    }
+
+    private async Task ConfirmarPagoAsync()
+    {
+        if (movimientoSeleccionado == null) return;
+
+        var res = FinanzasService.MarcarPagado(movimientoSeleccionado.Id, nombreUsuario, rolActivo, comprobantePagoTexto, montoPagoRegistro);
+        if (res.Exitoso && res.Movimiento != null && nuevoComprobantePagoContenido != null)
+        {
+            res.Movimiento.ComprobantePagoContenido = nuevoComprobantePagoContenido;
+        }
+        mensajeFeedback = res.Mensaje;
+        esFeedbackExito = res.Exitoso;
+
+        CerrarModales();
+        await CargarDatosAsync();
+    }
+
+    private async Task ValidarMovimiento(Guid id)
+    {
+        var res = FinanzasService.ValidarMovimiento(id, nombreUsuario, rolActivo);
+        mensajeFeedback = res.Mensaje;
+        esFeedbackExito = res.Exitoso;
+        await CargarDatosAsync();
+    }
+
+    private async Task ConfirmarObservacionAsync()
+    {
+        if (movimientoSeleccionado == null) return;
+
+        if (string.IsNullOrWhiteSpace(textoObservacion))
+        {
+            mensajeFeedback = "Debe redactar la observación o solicitud de corrección requerida.";
+            esFeedbackExito = false;
+            return;
+        }
+
+        var res = FinanzasService.ObservarMovimiento(movimientoSeleccionado.Id, textoObservacion, nombreUsuario, rolActivo);
+        mensajeFeedback = res.Mensaje;
+        esFeedbackExito = res.Exitoso;
+
+        CerrarModales();
+        await CargarDatosAsync();
+    }
+
+    private async Task ConfirmarAnulacionAsync()
+    {
+        if (movimientoSeleccionado == null) return;
+
+        if (string.IsNullOrWhiteSpace(textoMotivoAnulacion))
+        {
+            mensajeFeedback = "El motivo de anulación es obligatorio por normatividad de auditoría.";
+            esFeedbackExito = false;
+            return;
+        }
+
+        var res = FinanzasService.AnularMovimiento(movimientoSeleccionado.Id, textoMotivoAnulacion, nombreUsuario, rolActivo);
+        mensajeFeedback = res.Mensaje;
+        esFeedbackExito = res.Exitoso;
+
+        CerrarModales();
+        await CargarDatosAsync();
+    }
+
+    private void MostrarAvisoSinSoporte(MovimientoFinanciero mov)
+    {
+        mensajeFeedback = $"Aviso: El movimiento {mov.CodigoReferencia} ({mov.Descripcion}) no cuenta con un archivo de soporte adjunto o disponible en el sistema.";
+        esFeedbackExito = false;
+    }
+
+    /// <summary>
+    /// Descarga el soporte principal de la operación (Factura de venta, factura electrónica de proveedor o documento soporte).
+    /// </summary>
+    private async Task DescargarSoportePrincipalAsync(Guid id)
+    {
+        try
+        {
+            var resultado = FinanzasService.ObtenerSoporteDescarga(id, esComprobantePago: false, $"{nombreUsuario} ({rolActivo})");
+            if (!resultado.Disponible || resultado.Contenido == null || resultado.Contenido.Length == 0)
+            {
+                mensajeFeedback = string.IsNullOrWhiteSpace(resultado.Mensaje)
+                    ? "El registro financiero no cuenta con un archivo de soporte adjunto o no se encuentra disponible."
+                    : resultado.Mensaje;
+                esFeedbackExito = false;
+                return;
+            }
+
+            var base64 = Convert.ToBase64String(resultado.Contenido);
+            await JS.InvokeVoidAsync("descargarArchivoBase64", resultado.NombreArchivo, resultado.TipoMime, base64);
+            mensajeFeedback = $"Soporte '{resultado.NombreArchivo}' descargado exitosamente.";
+            esFeedbackExito = true;
+        }
+        catch (Exception ex)
+        {
+            mensajeFeedback = $"Error al descargar soporte documental: {ex.Message}";
+            esFeedbackExito = false;
+        }
+    }
+
+    /// <summary>
+    /// Descarga el comprobante de pago bancario anexo (transferencia, consignación o recibo de caja).
+    /// </summary>
+    private async Task DescargarComprobantePagoAsync(Guid id)
+    {
+        try
+        {
+            var resultado = FinanzasService.ObtenerSoporteDescarga(id, esComprobantePago: true, $"{nombreUsuario} ({rolActivo})");
+            if (!resultado.Disponible || resultado.Contenido == null || resultado.Contenido.Length == 0)
+            {
+                mensajeFeedback = string.IsNullOrWhiteSpace(resultado.Mensaje)
+                    ? "Este registro no cuenta con un comprobante de pago bancario anexo."
+                    : resultado.Mensaje;
+                esFeedbackExito = false;
+                return;
+            }
+
+            var base64 = Convert.ToBase64String(resultado.Contenido);
+            await JS.InvokeVoidAsync("descargarArchivoBase64", resultado.NombreArchivo, resultado.TipoMime, base64);
+            mensajeFeedback = $"Comprobante de pago '{resultado.NombreArchivo}' descargado exitosamente.";
+            esFeedbackExito = true;
+        }
+        catch (Exception ex)
+        {
+            mensajeFeedback = $"Error al descargar comprobante de pago: {ex.Message}";
+            esFeedbackExito = false;
+        }
+    }
+
+    /// <summary>
+    /// Descarga el comprobante oficial interno generado en PDF por ASOAGRO.
+    /// </summary>
+    private async Task DescargarComprobanteIndividualPdf(Guid id)
+    {
+        try
+        {
+            var mov = FinanzasService.ObtenerPorId(id);
+            if (mov == null)
+            {
+                mensajeFeedback = "El movimiento seleccionado no fue encontrado.";
+                esFeedbackExito = false;
+                return;
+            }
+
+            var bytes = FinanzasService.GenerarComprobantePdf(id, $"{nombreUsuario} ({rolActivo})");
+            var base64 = Convert.ToBase64String(bytes);
+            var nombreArchivo = $"Comprobante_{mov.CodigoReferencia}_{DateTime.Now:yyyyMMdd}.pdf";
+
+            await JS.InvokeVoidAsync("descargarArchivoBase64", nombreArchivo, "application/pdf", base64);
+            mensajeFeedback = $"Comprobante oficial '{nombreArchivo}' descargado exitosamente.";
+            esFeedbackExito = true;
+        }
+        catch (Exception ex)
+        {
+            mensajeFeedback = $"Error al generar comprobante PDF: {ex.Message}";
+            esFeedbackExito = false;
+        }
+    }
+
+    /// <summary>
+    /// Descarga el reporte consolidado de Tesorería por periodo y asociación.
+    /// </summary>
+    private async Task DescargarReportePdf()
+    {
+        try
+        {
+            var bytes = FinanzasService.GenerarReporteConsolidadoPdf(filtroAsociacion, filtroPeriodo, $"{nombreUsuario} ({rolActivo})");
+            var base64 = Convert.ToBase64String(bytes);
+            var nombreArchivo = $"Reporte_Tesoreria_ASOAGRO_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+
+            await JS.InvokeVoidAsync("descargarArchivoBase64", nombreArchivo, "application/pdf", base64);
+            mensajeFeedback = "Reporte de balance consolidado generado y descargado en PDF exitosamente.";
+            esFeedbackExito = true;
+        }
+        catch (Exception ex)
+        {
+            mensajeFeedback = $"Error al generar reporte PDF: {ex.Message}";
+            esFeedbackExito = false;
+        }
+    }
+
+    private async Task ExportarExcelCsv()
+    {
+        try
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("Codigo;Fecha;Asociacion;Tipo;Categoria;Concepto;Tercero;DocumentoTercero;ValorCOP;Estado;MetodoPago;Soporte;FacturaNumero;QueSePago;ParaQueSePago;ActividadProyecto");
+
+            foreach (var m in todosMovimientos)
+            {
+                sb.AppendLine($"{m.CodigoReferencia};{m.FechaMovimiento:dd/MM/yyyy};\"{m.NombreAsociacion}\";{m.Tipo};\"{m.Categoria}\";\"{m.Concepto}\";\"{m.BeneficiarioOProveedor}\";{m.DocumentoIdentidadTercero};{m.Monto};{m.Estado};\"{m.MetodoPago}\";\"{m.TipoSoporte}\";\"{m.NumeroFactura}\";\"{m.QueSePago}\";\"{m.ParaQueSePago}\";\"{m.ActividadOProyecto}\"");
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetPreamble().Concat(System.Text.Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+            var base64 = Convert.ToBase64String(bytes);
+            var nombre = $"Movimientos_Tesoreria_{DateTime.Now:yyyyMMdd}.csv";
+
+            await JS.InvokeVoidAsync("descargarArchivoBase64", nombre, "text/csv", base64);
+            mensajeFeedback = "Archivo CSV exportado exitosamente con compatibilidad Excel.";
+            esFeedbackExito = true;
+        }
+        catch (Exception ex)
+        {
+            mensajeFeedback = $"Error al exportar CSV: {ex.Message}";
+            esFeedbackExito = false;
+        }
+    }
+
+    private static string FormatearCop(decimal valor)
+    {
+        return $"$ {valor:N0} COP";
+    }
+
+    private static string ObtenerClaseBadgeEstado(string estado) => estado switch
+    {
+        EstadosMovimientoFinanciero.Validado => "bg-success text-white",
+        EstadosMovimientoFinanciero.Pagado => "bg-primary text-white",
+        EstadosMovimientoFinanciero.AbonoParcial => "bg-info text-dark",
+        EstadosMovimientoFinanciero.PorCobrar => "bg-warning text-dark",
+        EstadosMovimientoFinanciero.PorPagar => "bg-secondary text-white",
+        EstadosMovimientoFinanciero.PendienteRevision => "bg-warning-subtle text-dark border border-warning",
+        EstadosMovimientoFinanciero.Observado => "bg-danger-subtle text-danger border border-danger",
+        EstadosMovimientoFinanciero.Anulado => "bg-dark text-white text-decoration-line-through",
+        _ => "bg-light text-dark border"
+    };
+
+    public void Dispose()
+    {
+        FinanzasService.DatosFinancierosActualizados -= OnDatosActualizadosExternos;
+    }
+}

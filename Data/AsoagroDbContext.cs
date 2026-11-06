@@ -270,6 +270,8 @@ public class AsoagroDbContext : DbContext
                 .HasColumnName("proxima_gestion")
                 .HasColumnType("date");
 
+            entity.Ignore(seguimiento => seguimiento.HoraReunion);
+
             entity.Property(seguimiento => seguimiento.GestionadoPor)
                 .HasColumnName("gestionado_por")
                 .HasMaxLength(254)

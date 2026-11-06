@@ -255,13 +255,37 @@ public class InMemoryDocumentoInstitucionalService : IDocumentoInstitucionalServ
     {
         var dummyPdf = System.Text.Encoding.UTF8.GetBytes("%PDF-1.4 Documento Oficial de Asoagro - Federación FAAUA");
 
-        AgregarEjemplo("Acta N° 014 - Asamblea Ordinaria Anual 2024", "Acta de Asamblea",
+        var doc1 = AgregarEjemplo("Acta N° 014 - Asamblea Ordinaria Anual 2024", "Acta de Asamblea",
             new DateTime(2024, 2, 10), "014", "Aprobación de estados financieros, fijación de cuotas de sostenimiento y plan operativo anual.",
             ArchivoAdjunto.Crear("Acta_014_Asamblea_Ordinaria_2024.pdf", "application/pdf", dummyPdf));
+        doc1.Compromisos.Add(new CompromisoActa
+        {
+            Descripcion = "Entrega de informe financiero consolidado y balance de tesorería ante la Revisoría Fiscal",
+            Responsable = "Tesorería General (Manuela Mosquera)",
+            FechaLimite = DateTime.Today.AddDays(10),
+            Estado = "En curso",
+            Observaciones = "Avance del 85% con conciliación bancaria y libros de recaudo"
+        });
+        doc1.Compromisos.Add(new CompromisoActa
+        {
+            Descripcion = "Actualización de expedientes y membresías de 12 productores federados de plátano",
+            Responsable = "Secretaría General (Karen Argumedo)",
+            FechaLimite = DateTime.Today.AddDays(-4),
+            Estado = "Atrasado",
+            Observaciones = "Pendiente soporte catastral de 2 predios de base"
+        });
 
-        AgregarEjemplo("Acta N° 013 - Nombramiento Revisor Fiscal", "Acta de Asamblea",
+        var doc2 = AgregarEjemplo("Acta N° 013 - Nombramiento Revisor Fiscal", "Acta de Asamblea",
             new DateTime(2023, 11, 5), "013", "Elección del nuevo revisor fiscal para el periodo 2024 y ratificación de dignatarios.",
             ArchivoAdjunto.Crear("Acta_013_Nombramiento_Revisor_Fiscal.pdf", "application/pdf", dummyPdf));
+        doc2.Compromisos.Add(new CompromisoActa
+        {
+            Descripcion = "Radicación formal del nombramiento ante la Cámara de Comercio de Urabá",
+            Responsable = "Presidencia (Juan Padilla)",
+            FechaLimite = DateTime.Today.AddDays(-60),
+            Estado = "Cumplido",
+            Observaciones = "Inscripción en registro mercantil completada con certificado vigente"
+        });
 
         AgregarEjemplo("Estatutos Generales Asoagro 2023", "Estatuto Actualizado",
             new DateTime(2023, 3, 15), "EST-2023", "Reforma estatutaria aprobada en Asamblea Extraordinaria ante Cámara de Comercio de Urabá.",
@@ -272,7 +296,7 @@ public class InMemoryDocumentoInstitucionalService : IDocumentoInstitucionalServ
             ArchivoAdjunto.Crear("Reglamento_Maquinaria_Asoagro.pdf", "application/pdf", dummyPdf));
     }
 
-    private void AgregarEjemplo(string titulo, string tipo, DateTime fecha, string referencia, string descripcion, ArchivoAdjunto? archivo = null)
+    private DocumentoInstitucional AgregarEjemplo(string titulo, string tipo, DateTime fecha, string referencia, string descripcion, ArchivoAdjunto? archivo = null)
     {
         var documento = new DocumentoInstitucional
         {
@@ -290,5 +314,6 @@ public class InMemoryDocumentoInstitucionalService : IDocumentoInstitucionalServ
 
         _documentos.Add(documento);
         Registrar(documento.Id, "Presidencia", "Registro creado", archivo is null ? "Sin archivo adjunto" : $"Archivo adjunto: {archivo.Nombre}");
+        return documento;
     }
 }

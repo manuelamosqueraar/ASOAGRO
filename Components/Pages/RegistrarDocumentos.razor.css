@@ -1,0 +1,1069 @@
+/* ==========================================================================
+   REGISTRO DE DOCUMENTACIÓN INSTITUCIONAL DE ASOCIACIONES — ASOAGRO
+   Secretaría General FAAUA · Diseño formal, accesible y adaptable
+   ========================================================================== */
+
+.ra {
+    --bosque: #14532d;
+    --bosque-osc: #0f3d21;
+    --musgo: #15803d;
+    --oliva: #4ca36a;
+    --hoja-suave: #ecf6ef;
+    --hoja-borde: #c8e3d1;
+    --tierra: #3a443d;
+    --tierra-claro: #7b8a80;
+    --papel: #ffffff;
+    --crema: #f8faf8;
+    --borde: #e2e5de;
+    --borde-fuerte: #cfd4cb;
+    --trigo: #d97706;
+    --trigo-osc: #b45309;
+    --trigo-claro: #fef3dc;
+    --arcilla: #c2410c;
+    --arcilla-suave: #fff1ea;
+    --arcilla-borde: #f5c9b6;
+    --tinta: #17201b;
+    --texto: #3a443d;
+    --suave: #6b776f;
+
+    width: 100%;
+    margin: 0;
+    padding: 0 0 3rem;
+    color: var(--tinta);
+    font-family: var(--font-body, 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif);
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+.ra *,
+.ra *::before,
+.ra *::after {
+    box-sizing: border-box;
+}
+
+.ra-ico {
+    width: 1rem;
+    height: 1rem;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    flex-shrink: 0;
+}
+
+.ra-shell {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 1.25rem;
+}
+
+/* ==========================================================================
+   HERO BANNER INSTITUCIONAL
+   ========================================================================== */
+.ra-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.25rem 2rem;
+    padding: 1.4rem 1.75rem;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f7f9f6 0%, #edf3eb 100%);
+    box-shadow: 0 2px 6px rgba(20, 83, 45, 0.04);
+}
+
+.ra-hero-texto {
+    flex: 1 1 340px;
+    min-width: 0;
+}
+
+.ra-etiquetas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+}
+
+.ra-etiqueta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.22rem 0.65rem;
+    border-radius: 999px;
+    background: var(--hoja-suave);
+    border: 1px solid var(--hoja-borde);
+    color: var(--bosque);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.ra-etiqueta-trigo {
+    background: var(--trigo-claro);
+    border-color: #f0d9a6;
+    color: var(--trigo-osc);
+}
+
+.ra-titulo {
+    margin: 0;
+    font-size: 1.55rem;
+    font-weight: 800;
+    color: var(--bosque);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.ra-descripcion {
+    margin: 0.35rem 0 0;
+    color: var(--suave);
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+.ra-hero-progreso {
+    flex: 0 0 240px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.ra-hero-progreso-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+}
+
+.ra-hero-etiqueta {
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tierra-claro);
+}
+
+.ra-hero-valor {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--bosque);
+}
+
+.ra-barra {
+    height: 8px;
+    border-radius: 4px;
+    background: #e2e8df;
+    overflow: hidden;
+}
+
+.ra-barra-relleno {
+    height: 100%;
+    background: repeating-linear-gradient(45deg, var(--musgo) 0 8px, #3c7746 8px 16px);
+    transition: width 0.35s ease;
+}
+
+.ra-hero-pie {
+    font-size: 0.72rem;
+    color: var(--suave);
+}
+
+/* ==========================================================================
+   STEPPER DE 7 PASOS
+   ========================================================================== */
+.ra-pasos {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.35rem;
+    padding: 0.25rem 0;
+}
+
+.ra-paso {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    min-width: 0;
+    padding: 0.45rem 0.25rem;
+    border: 0;
+    background: transparent;
+    color: var(--suave);
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.ra-paso-num {
+    position: relative;
+    z-index: 1;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--borde-fuerte);
+    border-radius: 50%;
+    background: var(--papel);
+    color: var(--tierra-claro);
+    font-size: 0.88rem;
+    font-weight: 700;
+    transition: all 0.2s ease;
+}
+
+.ra-paso:hover .ra-paso-num {
+    border-color: var(--musgo);
+    color: var(--musgo);
+}
+
+.ra-paso.activo .ra-paso-num {
+    background: var(--bosque);
+    border-color: var(--bosque);
+    color: #ffffff;
+    box-shadow: 0 0 0 3px var(--hoja-suave);
+}
+
+.ra-paso.completo:not(.activo) .ra-paso-num {
+    background: var(--musgo);
+    border-color: var(--musgo);
+    color: #ffffff;
+}
+
+.ra-paso-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    max-width: 100%;
+    line-height: 1.2;
+}
+
+.ra-paso-titulo {
+    font-size: 0.74rem;
+    font-weight: 700;
+    color: inherit;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ra-paso-sub {
+    font-size: 0.65rem;
+    color: var(--suave);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   ALERTA DE ERROR / VALIDACIÓN
+   ========================================================================== */
+.ra-alerta {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.ra-alerta-error {
+    background: var(--arcilla-suave);
+    border: 1px solid var(--arcilla-borde);
+    color: #8c2505;
+}
+
+.ra-alerta-exito {
+    background: var(--hoja-suave);
+    border: 1px solid var(--hoja-borde);
+    color: var(--bosque);
+}
+
+.ra-alerta-cerrar {
+    margin-left: auto;
+    border: 0;
+    background: transparent;
+    font-size: 1.3rem;
+    line-height: 1;
+    color: inherit;
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   PANEL Y SECCIÓN
+   ========================================================================== */
+.ra-panel {
+    background: var(--papel);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    overflow: hidden;
+}
+
+.ra-seccion {
+    display: flex;
+    flex-direction: column;
+}
+
+.ra-seccion-cab {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem 1.75rem;
+    border-bottom: 4px solid var(--trigo);
+    background: var(--bosque);
+    color: #ffffff;
+}
+
+.ra-seccion-ico {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.14);
+    color: var(--trigo-claro);
+}
+
+.ra-seccion-ico .ra-ico {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.ra-seccion-texto {
+    flex: 1;
+    min-width: 0;
+}
+
+.ra-kicker {
+    display: block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #e5cf92;
+}
+
+.ra-seccion-texto h2 {
+    margin: 0.15rem 0 0;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.2;
+}
+
+.ra-seccion-texto p {
+    margin: 0.25rem 0 0;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.78);
+}
+
+.ra-estado {
+    padding: 0.22rem 0.7rem;
+    border-radius: 999px;
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    background: rgba(255, 255, 255, 0.15);
+    color: #fffaf0;
+}
+
+.ra-estado-ok {
+    background: var(--hoja-suave);
+    color: var(--bosque);
+}
+
+/* ==========================================================================
+   FORMULARIO: GRID, CAMPOS Y ETIQUETAS
+   ========================================================================== */
+.ra-body {
+    padding: 1.6rem 1.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.ra-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem 1.4rem;
+    align-items: start;
+}
+
+.ra-grid-full {
+    grid-column: 1 / -1;
+}
+
+.ra-campo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.ra-label-fila {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.ra-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--tierra);
+}
+
+/* Badges de Obligatorio y Opcional */
+.ra-badge-req {
+    display: inline-block;
+    padding: 0.12rem 0.45rem;
+    border-radius: 4px;
+    background: var(--arcilla-suave);
+    color: var(--arcilla);
+    border: 1px solid var(--arcilla-borde);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.ra-badge-opc {
+    display: inline-block;
+    padding: 0.12rem 0.45rem;
+    border-radius: 4px;
+    background: #f1f3f0;
+    color: #64748b;
+    border: 1px solid #e2e8de;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.ra-hint {
+    font-size: 0.72rem;
+    color: var(--suave);
+    line-height: 1.35;
+}
+
+.ra-input,
+.ra-select,
+.ra-textarea {
+    width: 100%;
+    height: 44px;
+    min-height: 44px;
+    padding: 0 0.85rem;
+    border: 1px solid var(--borde-fuerte);
+    border-radius: 8px;
+    background-color: #ffffff;
+    color: var(--tinta);
+    font-size: 0.92rem;
+    font-weight: 500;
+    transition: all 0.16s ease;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.ra-textarea {
+    height: auto;
+    min-height: 78px;
+    padding: 0.65rem 0.85rem;
+    resize: vertical;
+}
+
+.ra-input:focus,
+.ra-select:focus,
+.ra-textarea:focus {
+    outline: none;
+    border-color: var(--musgo);
+    box-shadow: 0 0 0 3px rgba(21, 128, 61, 0.18);
+    background-color: #ffffff;
+}
+
+.ra-input-error {
+    border-color: #dc2626 !important;
+    background-color: #fffafa !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12) !important;
+}
+
+.ra-error-campo {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.32rem;
+    padding: 0.32rem 0.65rem;
+    border-radius: 8px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #b91c1c;
+    font-size: 0.76rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+/* Sub-tarjetas contenedoras */
+.ra-subtarjeta {
+    padding: 1.25rem;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: #fafbfa;
+    display: flex;
+    flex-direction: column;
+    gap: 0.95rem;
+}
+
+.ra-subtarjeta-titulo {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--bosque);
+    border-bottom: 1px solid var(--borde);
+    padding-bottom: 0.45rem;
+    margin: 0;
+}
+
+/* ==========================================================================
+   CARDS DE DOCUMENTOS Y ADJUNTOS
+   ========================================================================== */
+.ra-doc-card {
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    transition: all 0.2s ease;
+}
+
+.ra-doc-card:hover {
+    border-color: var(--musgo);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.ra-doc-card.no-aplica {
+    background: #fbfbfb;
+    border-style: dashed;
+    border-color: #d1d8d3;
+    opacity: 0.9;
+}
+
+.ra-doc-cab {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+}
+
+.ra-doc-cab-izq {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.ra-doc-titulo {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--tinta);
+    margin: 0;
+}
+
+/* Selector de estado de documento */
+.ra-doc-estado-select {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: 6px;
+    border: 1px solid var(--borde-fuerte);
+    background: #ffffff;
+    cursor: pointer;
+}
+
+/* Caja de archivo adjuntado */
+.ra-archivo-box {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding: 0.55rem 0.8rem;
+    border: 1px solid var(--hoja-borde);
+    border-radius: 6px;
+    background: #f7fbf8;
+}
+
+.ra-archivo-info {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.ra-archivo-ico {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    background: var(--musgo);
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ra-archivo-nombres {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.ra-archivo-nombres strong {
+    font-size: 0.8rem;
+    color: var(--tinta);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ra-archivo-nombres small {
+    font-size: 0.68rem;
+    color: var(--suave);
+}
+
+.ra-archivo-btn-quitar {
+    border: 1px solid var(--arcilla-borde);
+    border-radius: 5px;
+    background: var(--arcilla-suave);
+    color: var(--arcilla);
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.22rem 0.55rem;
+    cursor: pointer;
+}
+
+.ra-archivo-btn-quitar:hover {
+    background: #fcd2c2;
+}
+
+/* ==========================================================================
+   BOTONES DE ACCIÓN: ANTERIOR / CONTINUAR
+   ========================================================================== */
+.ra-acciones {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1.1rem 1.75rem;
+    border-top: 1px solid var(--borde);
+    background: #fafbfa;
+}
+
+.ra-acciones-izq {
+    display: flex;
+    gap: 0.6rem;
+}
+
+.ra-acciones-der {
+    display: flex;
+    gap: 0.6rem;
+    margin-left: auto;
+}
+
+.ra-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    height: 40px;
+    padding: 0 1.15rem;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.ra-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.ra-btn-primario {
+    background: var(--bosque);
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(20, 83, 45, 0.18);
+}
+
+.ra-btn-primario:hover:not(:disabled) {
+    background: #0f3d21;
+    transform: translateY(-1px);
+}
+
+.ra-btn-secundario {
+    background: #ffffff;
+    color: var(--bosque);
+    border-color: var(--borde-fuerte);
+}
+
+.ra-btn-secundario:hover:not(:disabled) {
+    background: var(--crema);
+}
+
+.ra-btn-pdf {
+    background: #ffffff;
+    color: var(--arcilla);
+    border-color: var(--arcilla-borde);
+}
+
+.ra-btn-pdf:hover:not(:disabled) {
+    background: var(--arcilla-suave);
+}
+
+.ra-btn-guardar {
+    background: var(--trigo);
+    color: #ffffff;
+    box-shadow: 0 2px 4px rgba(217, 119, 6, 0.25);
+}
+
+.ra-btn-guardar:hover:not(:disabled) {
+    background: var(--trigo-osc);
+    transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   RESUMEN FINAL (PASO 7)
+   ========================================================================== */
+.ra-resumen-card {
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    background: #ffffff;
+    padding: 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.ra-resumen-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--borde);
+}
+
+.ra-resumen-card-header h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--bosque);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.ra-resumen-btn-editar {
+    border: 0;
+    background: transparent;
+    color: var(--musgo);
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.ra-resumen-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 0.65rem 1.1rem;
+}
+
+.ra-resumen-item {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.8rem;
+}
+
+.ra-resumen-etiqueta {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--suave);
+    letter-spacing: 0.04em;
+}
+
+.ra-resumen-valor {
+    color: var(--tinta);
+    font-weight: 600;
+    margin-top: 0.12rem;
+}
+
+.ra-resumen-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.ra-resumen-tabla th {
+    background: #f1f4f0;
+    color: var(--bosque);
+    font-weight: 700;
+    text-align: left;
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--borde-fuerte);
+}
+
+.ra-resumen-tabla td {
+    padding: 0.6rem 0.75rem;
+    border-bottom: 1px solid var(--borde);
+    color: var(--texto);
+}
+
+/* ==========================================================================
+   MODAL DE CONFIRMACIÓN CORREGIDO (CENTRADO, SIN CORTES, RESPONSIVE)
+   ========================================================================== */
+.ra-modal-velo {
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    overflow-y: auto;
+}
+
+.ra-exito-modal {
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+    max-height: calc(100vh - 2.5rem);
+    overflow-y: auto;
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 2rem 1.75rem 1.75rem;
+    text-align: center;
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.35);
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.ra-exito-cerrar {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 1.25rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    z-index: 2;
+}
+
+.ra-exito-cerrar:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+.ra-exito-icono {
+    width: 58px;
+    height: 58px;
+    margin: 0.25rem auto 1rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #16a34a;
+    font-size: 1.75rem;
+    flex-shrink: 0;
+}
+
+.ra-exito-titulo {
+    margin: 0 0 0.4rem;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #0f172a;
+    line-height: 1.25;
+}
+
+.ra-exito-subtitulo {
+    margin: 0 0 1.15rem;
+    font-size: 0.85rem;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.ra-exito-resumen-compacto {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1.25rem;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.ra-exito-fila-dato {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.ra-exito-fila-etiqueta {
+    color: #64748b;
+    font-weight: 600;
+}
+
+.ra-exito-fila-valor {
+    color: #0f172a;
+    font-weight: 700;
+    text-align: right;
+}
+
+.ra-exito-acciones {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    margin-top: auto;
+}
+
+.ra-exito-btn-ficha {
+    width: 100%;
+    min-height: 44px;
+    background: #17603a !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    font-size: 0.92rem !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 0.5rem !important;
+    padding: 0.6rem 1.25rem !important;
+    box-shadow: 0 4px 12px rgba(23, 96, 58, 0.28) !important;
+    transition: all 0.18s ease !important;
+    text-align: center !important;
+    text-decoration: none !important;
+}
+
+.ra-exito-btn-ficha:hover {
+    background: #0b2e1c !important;
+    color: #ffffff !important;
+    box-shadow: 0 6px 16px rgba(11, 46, 28, 0.38) !important;
+    transform: translateY(-1px);
+}
+
+.ra-exito-btn-ficha:active {
+    transform: translateY(0);
+}
+
+.ra-exito-btn-pdf {
+    width: 100%;
+    height: 40px;
+    background: #f8fafc;
+    color: var(--arcilla);
+    border: 1px solid var(--arcilla-borde);
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.ra-exito-btn-pdf:hover {
+    background: var(--arcilla-suave);
+}
+
+.ra-exito-btn-nuevo {
+    width: 100%;
+    height: 38px;
+    background: transparent;
+    color: var(--suave);
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+}
+
+.ra-exito-btn-nuevo:hover {
+    background: #f8fafc;
+    color: var(--tinta);
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN
+   ========================================================================== */
+@media (max-width: 991px) {
+    .ra-pasos {
+        grid-template-columns: repeat(4, minmax(130px, 1fr));
+        overflow-x: auto;
+    }
+}
+
+@media (max-width: 767px) {
+    .ra-hero {
+        padding: 1.15rem;
+    }
+
+    .ra-hero-progreso {
+        flex: 1 1 100%;
+    }
+
+    .ra-body {
+        padding: 1.2rem 1rem;
+    }
+
+    .ra-seccion-cab {
+        padding: 1rem 1.15rem;
+    }
+
+    .ra-acciones {
+        padding: 1rem;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .ra-acciones-izq,
+    .ra-acciones-der {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .ra-acciones-izq .ra-btn,
+    .ra-acciones-der .ra-btn {
+        flex: 1;
+    }
+
+    .ra-pasos {
+        display: flex;
+        overflow-x: auto;
+        padding-bottom: 0.4rem;
+    }
+}

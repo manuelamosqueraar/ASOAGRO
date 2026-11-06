@@ -1,7 +1,7 @@
 @page "/subir-actas-estatutos"
 @page "/actas-estatutos/documentos"
 @page "/actas-estatutos/registrar"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Presidente")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Presidenta,Presidente")]
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
@@ -338,6 +338,43 @@
                             <div><dt>Versión del archivo</dt><dd>@documento.Version</dd></div>
                             <div><dt>Última actualización</dt><dd>@documento.FechaActualizacion.ToString("dd/MM/yyyy HH:mm") · @documento.ActualizadoPor</dd></div>
                         </dl>
+
+                        @if (documento.Compromisos.Any())
+                        {
+                            <div class="ai-compromisos-card mt-3 p-3 bg-light rounded-3 border">
+                                <span class="ai-eyebrow d-block mb-1 text-success fw-bold" style="font-size: 0.72rem; text-transform: uppercase;">
+                                    <svg class="ai-icon me-1" width="14" height="14" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg>
+                                    Compromisos derivados del acta
+                                </span>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.76rem;">
+                                        <thead>
+                                            <tr class="text-muted">
+                                                <th>Compromiso</th>
+                                                <th>Responsable</th>
+                                                <th>Fecha límite</th>
+                                                <th>Estado</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var comp in documento.Compromisos)
+                                            {
+                                                <tr>
+                                                    <td class="fw-semibold text-dark">@comp.Descripcion</td>
+                                                    <td>@comp.Responsable</td>
+                                                    <td>@comp.FechaLimite.ToString("dd/MM/yyyy")</td>
+                                                    <td>
+                                                        <span class="badge @(comp.Estado == "Cumplido" ? "bg-success" : comp.Estado == "Atrasado" ? "bg-danger" : "bg-warning text-dark")" style="font-size: 0.68rem;">
+                                                            @comp.Estado
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        }
 
                         @if (documento.Archivo is not null)
                         {
@@ -1221,8 +1258,8 @@
             Icono = "doc",
             Categoria = Asoagro.Models.CategoriaNotificacion.Documentos,
             Nivel = Asoagro.Models.NivelNotificacion.Informativa,
-            RolesDestino = new[] { "Presidente", "Director", "Tesorero" },
-            RolesEnlace = new[] { "Presidente" }
+            RolesDestino = new[] { "Presidenta", "Directora", "Secretaria", "Tesorero" },
+            RolesEnlace = new[] { "Presidenta" }
         });
     }
 
