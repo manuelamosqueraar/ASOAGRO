@@ -6,16 +6,13 @@ namespace Asoagro.Data;
 
 public class AsoagroDbContext : DbContext
 {
-    // Hectáreas: en C# son decimal y en Supabase son double precision.
-    // El convertidor traduce entre los dos tipos sin cambiar la base de datos.
-    private static readonly ValueConverter<decimal?, double?> HectareasConverter = new(
-        valor => valor.HasValue ? (double?)Convert.ToDouble(valor.Value) : null,
-        valor => valor.HasValue ? (decimal?)Convert.ToDecimal(valor.Value) : null);
+    private static readonly ValueConverter<DateTime, DateOnly> DateConverter = new(
+        v => DateOnly.FromDateTime(v),
+        v => v.ToDateTime(TimeOnly.MinValue));
 
-    // Es víctima: en C# es bool y en Supabase es texto "Si" / "No".
-    private static readonly ValueConverter<bool, string> EsVictimaConverter = new(
-        valor => valor ? "Si" : "No",
-        valor => string.Equals(valor, "Si", StringComparison.OrdinalIgnoreCase));
+    private static readonly ValueConverter<DateTime?, DateOnly?> NullableDateConverter = new(
+        v => v.HasValue ? DateOnly.FromDateTime(v.Value) : null,
+        v => v.HasValue ? v.Value.ToDateTime(TimeOnly.MinValue) : null);
 
     public AsoagroDbContext(DbContextOptions<AsoagroDbContext> options)
         : base(options)
@@ -91,8 +88,7 @@ public class AsoagroDbContext : DbContext
 
             entity.Property(a => a.HectareasPredio)
                 .HasColumnName("hectareas_predio")
-                .HasColumnType("double precision")
-                .HasConversion(HectareasConverter);
+                .HasColumnType("numeric");
 
             entity.Property(a => a.CultivoPrincipal)
                 .HasColumnName("cultivo_principal")
@@ -105,8 +101,7 @@ public class AsoagroDbContext : DbContext
 
             entity.Property(a => a.EsVictima)
                 .HasColumnName("es_victima")
-                .HasColumnType("varchar(10)")
-                .HasConversion(EsVictimaConverter);
+                .HasDefaultValue(false);
 
             entity.Property(a => a.EstadoMembresia)
                 .HasColumnName("estado_membresia")
@@ -139,14 +134,7 @@ public class AsoagroDbContext : DbContext
                 .HasColumnName("id")
                 .UseIdentityByDefaultColumn();
 
-            entity.Property(t => t.Codigo)
-                .HasColumnName("codigo")
-                .HasMaxLength(50)
-                .IsRequired();
-
-            entity.HasIndex(t => t.Codigo)
-                .IsUnique()
-                .HasDatabaseName("uq_tipos_documento_codigo");
+            entity.Ignore(t => t.Codigo);
 
             entity.Property(t => t.Nombre)
                 .HasColumnName("nombre")
@@ -170,30 +158,25 @@ public class AsoagroDbContext : DbContext
                 .HasColumnName("tipo_documento_id");
 
             entity.Property(d => d.DocumentoAsociado)
-                .HasColumnName("documento_asociado")
-                .HasMaxLength(20)
-                .IsRequired();
+                .HasColumnName("numero_documento")
+                .HasMaxLength(50);
 
-            entity.Property(d => d.TipoDocumento)
-                .HasColumnName("tipo_documento")
-                .HasMaxLength(120)
-                .IsRequired();
+            entity.Ignore(d => d.TipoDocumento);
+            entity.Ignore(d => d.Estado);
 
             entity.Property(d => d.ArchivoNombre)
                 .HasColumnName("archivo_nombre")
-                .HasMaxLength(255)
-                .HasDefaultValue(string.Empty);
+                .HasMaxLength(255);
 
             entity.Property(d => d.FechaEmision)
-                .HasColumnName("fecha_emision");
+                .HasColumnName("fecha_expedicion")
+                .HasColumnType("date")
+                .HasConversion(NullableDateConverter);
 
             entity.Property(d => d.FechaVencimiento)
-                .HasColumnName("fecha_vencimiento");
-
-            entity.Property(d => d.Estado)
-                .HasColumnName("estado")
-                .HasMaxLength(30)
-                .HasDefaultValue("Vigente");
+                .HasColumnName("fecha_vencimiento")
+                .HasColumnType("date")
+                .HasConversion(NullableDateConverter);
 
             entity.HasOne(d => d.Asociado)
                 .WithMany()
@@ -228,10 +211,12 @@ public class AsoagroDbContext : DbContext
                 .IsRequired();
 
             entity.Property(a => a.Fecha)
-                .HasColumnName("fecha");
+                .HasColumnName("fecha_acta")
+                .HasColumnType("date")
+                .HasConversion(DateConverter);
 
             entity.Property(a => a.Descripcion)
-                .HasColumnName("descripcion")
+                .HasColumnName("resumen")
                 .IsRequired();
 
             entity.Property(a => a.ArchivoNombre)

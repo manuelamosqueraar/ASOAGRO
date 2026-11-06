@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using Asoagro.Models;
+using Asoagro.Services;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Asoagro.Tests;
 
@@ -11,7 +13,13 @@ public class AlertasDocumentosApiTests : IClassFixture<WebApplicationFactory<Pro
 
     public AlertasDocumentosApiTests(WebApplicationFactory<Program> factory)
     {
-        client = factory.CreateClient();
+        client = factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureServices(services =>
+            {
+                services.AddSingleton<IAlertaDocumentoService, InMemoryAlertaDocumentoService>();
+            });
+        }).CreateClient();
     }
 
     [Fact]

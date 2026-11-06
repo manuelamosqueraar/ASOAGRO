@@ -41,7 +41,7 @@ public class PostgresAlertaDocumentoService : IAlertaDocumentoService
             .OrderBy(x => x.DiasRestantes)
             .Select(x => new AlertaDocumento
             {
-                NombreAsociado = x.Documento.Asociado?.NombreCompleto ?? x.Documento.DocumentoAsociado,
+                NombreAsociado = x.Documento.Asociado?.NombreCompleto ?? x.Documento.DocumentoAsociado ?? string.Empty,
                 TipoDocumento = x.Documento.TipoDocumentoNav?.Nombre ?? x.Documento.TipoDocumento,
                 FechaVencimiento = x.FechaVencimiento,
                 DiasRestantes = x.DiasRestantes,
@@ -59,4 +59,3 @@ public class PostgresAlertaDocumentoService : IAlertaDocumentoService
         return "Aviso preventivo: vence en menos de 30 días";
     }
 }
-

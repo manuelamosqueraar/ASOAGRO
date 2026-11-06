@@ -117,15 +117,13 @@ builder.Services.AddControllers()
             });
         };
     });
-var rawSupabaseConnection = Environment.GetEnvironmentVariable("ASOAGRO_SUPABASE_CONNECTION")
-    ?? Environment.GetEnvironmentVariable("ASOAGRO_SUPABASE_CONNECTION", EnvironmentVariableTarget.User)
-    ?? builder.Configuration["ASOAGRO_SUPABASE_CONNECTION"];
 
 static string? NormalizarConexionSupabase(string? raw)
 {
     if (string.IsNullOrWhiteSpace(raw)) return null;
     var s = raw.Trim().Trim('"', '\'');
     if (s.Contains("<TU_CADENA_DE_CONEXION>", StringComparison.OrdinalIgnoreCase) ||
+        s.Contains("<cadena-de-conexion-de-Supabase>", StringComparison.OrdinalIgnoreCase) ||
         s.Contains("<TU_USUARIO>", StringComparison.OrdinalIgnoreCase) ||
         s.Contains("[Asociaciones_aso]", StringComparison.OrdinalIgnoreCase) ||
         s.Contains("YOUR-PASSWORD", StringComparison.OrdinalIgnoreCase) ||
@@ -147,19 +145,52 @@ static string? NormalizarConexionSupabase(string? raw)
             Username = Uri.UnescapeDataString(userInfo[0]),
             Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
             SslMode = SslMode.Require
-        }; 
+        };
         return connBuilder.ConnectionString;
     }
 
     return s;
 }
 
-var supabaseConnection = NormalizarConexionSupabase(rawSupabaseConnection);
+static string? ObtenerConexionSupabase(IConfiguration configuration)
+{
+    var candidatos = new List<string?>
+    {
+        Environment.GetEnvironmentVariable("ASOAGRO_SUPABASE_CONNECTION"),
+        Environment.GetEnvironmentVariable("ASOAGRO_SUPABASE_CONNECTION", EnvironmentVariableTarget.User),
+        configuration["ASOAGRO_SUPABASE_CONNECTION"]
+    };
+
+    if (configuration is IConfigurationRoot configRoot)
+    {
+        foreach (var provider in configRoot.Providers.Reverse())
+        {
+            if (provider.TryGet("ASOAGRO_SUPABASE_CONNECTION", out var valor))
+            {
+                candidatos.Add(valor);
+            }
+        }
+    }
+
+    foreach (var candidato in candidatos)
+    {
+        var normalizada = NormalizarConexionSupabase(candidato);
+        if (!string.IsNullOrWhiteSpace(normalizada))
+        {
+            return normalizada;
+        }
+    }
+
+    return null;
+}
+
+var supabaseConnection = ObtenerConexionSupabase(builder.Configuration);
 
 if (!string.IsNullOrWhiteSpace(supabaseConnection))
 {
     builder.Services.AddDbContextFactory<AsoagroDbContext>(options =>
-        options.UseNpgsql(supabaseConnection));
+        options.UseNpgsql(supabaseConnection, npgsqlOptions =>
+            npgsqlOptions.EnableRetryOnFailure(3, TimeSpan.FromSeconds(5), null)));
 
     builder.Services.AddSingleton<IAsociadoService, PostgresAsociadoService>();
     builder.Services.AddSingleton<ISeguimientoAsociadoService, PostgresSeguimientoAsociadoService>();

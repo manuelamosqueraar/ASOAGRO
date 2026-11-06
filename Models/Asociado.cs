@@ -6,7 +6,7 @@ public class Asociado
 {
     public int Id { get; set; }
 
-    [Required(ErrorMessage = "La cédula es obligatoria.")]
+    [Required(ErrorMessage = "La cÃ©dula es obligatoria.")]
     public string Cedula { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "El nombre completo es obligatorio.")]

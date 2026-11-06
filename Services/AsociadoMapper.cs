@@ -11,14 +11,20 @@ public static class AsociadoMapper
         Cedula = asociado.Cedula,
         Telefono = asociado.Telefono ?? string.Empty,
         Correo = asociado.Correo ?? string.Empty,
-        NombrePredio = asociado.NombrePredio ?? string.Empty,
-        VeredaSector = asociado.VeredaSector ?? string.Empty,
+        NombrePredio = string.IsNullOrWhiteSpace(asociado.NombrePredio)
+            ? (asociado.FincaVereda ?? string.Empty)
+            : asociado.NombrePredio,
+        VeredaSector = string.IsNullOrWhiteSpace(asociado.VeredaSector)
+            ? (asociado.FincaVereda ?? string.Empty)
+            : asociado.VeredaSector,
         Municipio = asociado.Municipio ?? string.Empty,
         HectareasPredio = Convert.ToDouble(asociado.HectareasPredio ?? 0),
         CultivoPrincipal = asociado.CultivoPrincipal,
         TieneBPA = asociado.TieneBPA,
         EsVictima = asociado.EsVictima ? "Si" : "No",
-        EstadoMembresia = asociado.EstadoMembresia,
+        EstadoMembresia = string.IsNullOrWhiteSpace(asociado.EstadoMembresia) || asociado.EstadoMembresia == "Activo"
+            ? "AlDia"
+            : asociado.EstadoMembresia,
         FechaRegistro = asociado.FechaRegistro
     };
 
