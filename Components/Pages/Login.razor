@@ -300,6 +300,12 @@
                                 💡 <strong>Sugerencia:</strong> En la consola de Google Cloud (Credenciales &gt; IDs de cliente OAuth 2.0), revisa que esté agregada en <em>URIs de redireccionamiento autorizados</em> la dirección: <code>https://localhost:7136/signin-google</code>.
                             </p>
                         }
+                        @if (ErrorDetail?.Contains("client secret is invalid", StringComparison.OrdinalIgnoreCase) == true || ErrorDetail?.Contains("invalid_client", StringComparison.OrdinalIgnoreCase) == true)
+                        {
+                            <p style="margin: 8px 0 0; font-size: 0.84rem; color: #cf1322;">
+                                💡 <strong>Sugerencia:</strong> El Secreto de Cliente actual fue revocado o cambió en Google Cloud. Ve a <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="text-decoration: underline; color: inherit; font-weight: 600;">Google Cloud Console &gt; Credenciales</a>, copia tu Secreto de Cliente activo o genera uno nuevo, y pégalo aquí para actualizarlo.
+                            </p>
+                        }
                     </div>
                 }
                 else if (Error == "google_oauth_not_configured")
