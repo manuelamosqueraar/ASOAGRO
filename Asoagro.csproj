@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Asoagro</RootNamespace>
+    <AssemblyName>Asoagro</AssemblyName>
     <UserSecretsId>asoagro-local-development</UserSecretsId>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
