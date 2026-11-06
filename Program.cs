@@ -31,6 +31,8 @@ var authBuilder = builder.Services.AddAuthentication(options =>
 {
     options.LoginPath = "/login";
     options.AccessDeniedPath = "/access-denied";
+    options.Cookie.SameSite = SameSiteMode.Lax;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 });
 
 if (googleAuthenticationConfigured)
@@ -39,6 +41,8 @@ if (googleAuthenticationConfigured)
     {
         options.ClientId = googleClientId!;
         options.ClientSecret = googleClientSecret!;
+        options.CorrelationCookie.SameSite = SameSiteMode.Lax;
+        options.CorrelationCookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
 
         // Asignación de roles dinámica basada en Supabase o correos del equipo
         options.Events.OnCreatingTicket = async context =>
@@ -103,16 +107,21 @@ if (googleAuthenticationConfigured)
 
         options.Events.OnRemoteFailure = context =>
         {
+            var errorMessage = context.Failure?.Message ?? "Error de comunicación con Google.";
+            var failureType = context.Failure?.GetType().Name ?? "unknown";
+
             var logger = context.HttpContext.RequestServices
                 .GetRequiredService<ILoggerFactory>()
                 .CreateLogger("GoogleOAuth");
             logger.LogError(
                 context.Failure,
-                "Google OAuth failed. Failure type: {FailureType}",
-                context.Failure?.GetType().Name ?? "unknown");
+                "Google OAuth failed: {FailureType} - {Message}",
+                failureType,
+                errorMessage);
 
             context.HandleResponse();
-            context.Response.Redirect("/login?error=google_oauth");
+            var encodedReason = Uri.EscapeDataString(errorMessage);
+            context.Response.Redirect($"/login?error=google_oauth&detail={encodedReason}");
             return Task.CompletedTask;
         };
     });

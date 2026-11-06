@@ -277,9 +277,30 @@
 
                 @if (Error == "google_oauth")
                 {
-                    <p class="ag-error" role="alert">
-                        Google no pudo completar el inicio de sesión. Revisa las credenciales OAuth y la URI de redirección; el detalle técnico está en el registro de la aplicación.
-                    </p>
+                    <div class="ag-error" role="alert" style="margin-bottom: 20px; padding: 14px 16px; border-radius: 10px; background: #fff2f0; border: 1px solid #ffccc7; color: #a8071a;">
+                        <strong style="display: block; font-size: 0.95rem; margin-bottom: 4px;">Google no pudo completar el inicio de sesión</strong>
+                        <p style="margin: 0; font-size: 0.88rem; color: #595959;">
+                            @(string.IsNullOrWhiteSpace(ErrorDetail) ? "Error en la verificación OAuth o credenciales no autorizadas." : ErrorDetail)
+                        </p>
+                        @if (ErrorDetail?.Contains("Correlation failed", StringComparison.OrdinalIgnoreCase) == true)
+                        {
+                            <p style="margin: 8px 0 0; font-size: 0.84rem; color: #cf1322;">
+                                💡 <strong>Sugerencia:</strong> Accede a través de <strong>https://localhost:7136</strong> para que el navegador comparta las cookies seguras con Google.
+                            </p>
+                        }
+                        @if (ErrorDetail?.Contains("access_denied", StringComparison.OrdinalIgnoreCase) == true)
+                        {
+                            <p style="margin: 8px 0 0; font-size: 0.84rem; color: #cf1322;">
+                                💡 <strong>Sugerencia:</strong> Si la aplicación en Google Cloud está en modo <em>Testing</em>, debes registrar tu correo Gmail en la sección <strong>Usuarios de prueba (Test users)</strong> dentro de la consola de Google Cloud.
+                            </p>
+                        }
+                        @if (ErrorDetail?.Contains("redirect_uri_mismatch", StringComparison.OrdinalIgnoreCase) == true)
+                        {
+                            <p style="margin: 8px 0 0; font-size: 0.84rem; color: #cf1322;">
+                                💡 <strong>Sugerencia:</strong> En la consola de Google Cloud (Credenciales &gt; IDs de cliente OAuth 2.0), revisa que esté agregada en <em>URIs de redireccionamiento autorizados</em> la dirección: <code>https://localhost:7136/signin-google</code>.
+                            </p>
+                        }
+                    </div>
                 }
                 else if (Error == "google_oauth_not_configured")
                 {
@@ -390,6 +411,9 @@
 
     [SupplyParameterFromQuery(Name = "error")]
     private string? Error { get; set; }
+
+    [SupplyParameterFromQuery(Name = "detail")]
+    private string? ErrorDetail { get; set; }
 
     [SupplyParameterFromQuery(Name = "returnUrl")]
     private string? ReturnUrl { get; set; }
