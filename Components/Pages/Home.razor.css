@@ -1347,25 +1347,40 @@
 .eco-fin {
     position: relative;
     width: 100%;
-    padding: clamp(4.5rem, 9vh, 6.5rem) 0;
+    scroll-margin-top: 110px;
+    padding: clamp(5rem, 8vh, 6.5rem) 0 clamp(3.5rem, 6vh, 5rem);
     background: var(--eco-crema);
     border-top: 1px solid var(--eco-borde);
 }
 
-.fin-grid {
+.fin-layout {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(1.8rem, 3.5vw, 2.75rem);
+}
+
+/* Fila Superior: Texto a la izquierda + Foto Principal a la derecha */
+.fin-fila-superior {
     display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: clamp(2.25rem, 5vw, 4rem);
+    grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+    gap: clamp(2rem, 4vw, 3.5rem);
     align-items: center;
 }
 
-.fin-texto .eco-tag-claro {
-    margin-bottom: 0.95rem;
+.fin-texto .eco-h2-oscuro {
+    margin: 0 0 1rem;
 }
 
 .fin-texto .eco-sub-oscuro {
-    margin-bottom: 1.85rem;
+    margin-bottom: 1.6rem;
     max-width: 520px;
+    font-size: 0.98rem;
+    line-height: 1.55;
+}
+
+.fin-cta-wrap {
+    display: flex;
+    align-items: center;
 }
 
 .eco-subrayado-amarillo {
@@ -1373,54 +1388,227 @@
     background: linear-gradient(transparent 62%, rgba(246, 201, 39, 0.55) 62%, rgba(246, 201, 39, 0.55) 92%, transparent 92%);
 }
 
-.fin-pilares {
-    position: relative;
-    display: grid;
-    gap: 1.1rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+/* Foto Principal Superior */
+.fin-media-principal {
+    width: 100%;
 }
 
-.fin-pilar {
+.fin-foto-wrap {
     position: relative;
-    display: flex;
-    align-items: flex-start;
-    gap: 1.1rem;
-    padding: 1.3rem 1.45rem;
-    border-radius: 18px;
-    background: #ffffff;
+    border-radius: 20px;
+    overflow: hidden;
+    height: 260px;
+    box-shadow: 0 16px 36px -14px rgba(17, 36, 20, 0.18);
     border: 1px solid var(--eco-borde);
-    box-shadow: 0 12px 28px -18px rgba(17, 36, 20, 0.25);
-    transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    background: #ffffff;
 }
 
-.fin-pilar:hover {
-    transform: translateX(6px);
-    border-color: var(--eco-verde);
-    box-shadow: 0 18px 34px -18px rgba(30, 102, 24, 0.35);
+.fin-foto-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
 }
 
-.fin-pilar-ico {
+.fin-foto-wrap:hover img {
+    transform: scale(1.03);
+}
+
+.fin-foto-badge {
+    position: absolute;
+    bottom: 14px;
+    left: 16px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 13px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(23, 96, 58, 0.15);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--eco-tinta);
+}
+
+.fin-badge-punto {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #16a34a;
+    box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.22);
+}
+
+/* Fila Inferior: Video Card a la izquierda + Cuadrícula 2x2 a la derecha */
+.fin-fila-inferior {
+    display: grid;
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr);
+    gap: clamp(1.25rem, 2.5vw, 1.75rem);
+    align-items: stretch;
+}
+
+/* Video Card Preview Compacto */
+.fin-col-video {
+    width: 100%;
+    display: flex;
+}
+
+.fin-video-card {
+    position: relative;
+    border-radius: 18px;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+    min-height: 230px;
+    cursor: pointer;
+    box-shadow: 0 10px 24px -10px rgba(17, 36, 20, 0.16);
+    border: 1px solid var(--eco-borde);
+    background: #0c2612;
+}
+
+.fin-video-card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease;
+}
+
+.fin-video-card:hover img {
+    transform: scale(1.04);
+}
+
+.fin-video-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(11, 46, 28, 0.08) 0%, rgba(11, 46, 28, 0.25) 45%, rgba(11, 46, 28, 0.85) 100%);
+    pointer-events: none;
+}
+
+/* Botón de reproducción compacto que no tapa la imagen */
+.fin-video-play-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #ffffff;
+    color: var(--eco-verde);
     display: grid;
     place-items: center;
-    flex: 0 0 52px;
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
-    background: var(--eco-verde);
-    color: var(--eco-amarillo);
-    transition: background-color 0.25s ease, color 0.25s ease;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.28);
+    transition: transform 0.22s ease, background-color 0.22s ease, color 0.22s ease;
+    z-index: 2;
+    pointer-events: auto;
 }
 
-.fin-pilar:hover .fin-pilar-ico {
+.fin-video-play-btn svg {
+    width: 14px !important;
+    height: 14px !important;
+    max-width: 14px !important;
+    max-height: 14px !important;
+    margin-left: 2px;
+    fill: var(--eco-verde) !important;
+    stroke: none !important;
+    display: block;
+    transition: fill 0.22s ease;
+}
+
+.fin-video-card:hover .fin-video-play-btn {
+    transform: translate(-50%, -50%) scale(1.1);
     background: var(--eco-amarillo);
     color: var(--eco-tinta);
 }
 
-.fin-pilar-ico .fin-ico {
-    width: 24px;
-    height: 24px;
+.fin-video-card:hover .fin-video-play-btn svg {
+    fill: var(--eco-tinta) !important;
+}
+
+.fin-video-caption {
+    position: absolute;
+    bottom: 14px;
+    left: 16px;
+    right: 16px;
+    z-index: 2;
+}
+
+.fin-video-caption strong {
+    display: block;
+    color: #ffffff;
+    font-size: 0.95rem;
+    font-weight: 700;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    line-height: 1.25;
+}
+
+.fin-video-caption small {
+    display: block;
+    color: #d0e4d4;
+    font-size: 0.76rem;
+    margin-top: 2px;
+}
+
+/* Cuadrícula 2x2 de Cuatro Tarjetas Uniformes */
+.fin-grid-tarjetas {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.fin-tarjeta {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 1.15rem 1.25rem;
+    border-radius: 16px;
+    background: #ffffff;
+    border: 1px solid var(--eco-borde);
+    box-shadow: 0 4px 16px -6px rgba(17, 36, 20, 0.08);
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.fin-tarjeta:hover {
+    transform: translateY(-2px);
+    border-color: var(--eco-verde);
+    box-shadow: 0 10px 22px -8px rgba(23, 96, 58, 0.18);
+}
+
+/* Cabecera uniforme de tarjeta: Icono a la izquierda, Número a la derecha */
+.fin-tarjeta-cab {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-bottom: 0.75rem;
+}
+
+.fin-tarjeta-ico {
+    display: grid;
+    place-items: center;
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: var(--eco-verde);
+    color: var(--eco-amarillo);
+    transition: background-color 0.22s ease, color 0.22s ease;
+}
+
+.fin-tarjeta:hover .fin-tarjeta-ico {
+    background: var(--eco-amarillo);
+    color: var(--eco-tinta);
+}
+
+.fin-tarjeta-ico .fin-ico {
+    width: 20px;
+    height: 20px;
     fill: none;
     stroke: currentColor;
     stroke-width: 2.2;
@@ -1428,38 +1616,89 @@
     stroke-linejoin: round;
 }
 
-.fin-pilar-txt {
-    min-width: 0;
-    flex: 1 1 auto;
-    padding-right: 2.2rem;
-}
-
-.fin-pilar h3 {
-    margin: 0 0 0.3rem;
-    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
-    font-size: 1.22rem;
-    font-weight: 800;
-    color: var(--eco-tinta);
-}
-
-.fin-pilar p {
-    margin: 0;
-    font-size: 0.94rem;
-    line-height: 1.55;
-    color: var(--eco-texto);
-}
-
-.fin-pilar-num {
-    position: absolute;
-    top: 1rem;
-    right: 1.25rem;
-    padding: 0.15rem 0.55rem;
+.fin-tarjeta-num {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
     border-radius: 999px;
     background: #eff5ee;
     font-size: 0.72rem;
     font-weight: 800;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.05em;
     color: var(--eco-verde);
+    flex-shrink: 0;
+}
+
+/* Cuerpo de tarjeta con títulos proporcionales y estables */
+.fin-tarjeta-cuerpo {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+.fin-tarjeta-titulo {
+    margin: 0 0 0.35rem;
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
+    font-size: clamp(0.92rem, 1.05vw, 0.98rem);
+    font-weight: 700;
+    color: var(--eco-tinta);
+    line-height: 1.28;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.fin-tarjeta-desc {
+    margin: 0;
+    font-size: 0.81rem;
+    line-height: 1.4;
+    color: var(--eco-texto);
+}
+
+/* Responsividad Sección Financiación */
+@media (max-width: 991px) {
+    .fin-fila-superior {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.75rem;
+    }
+
+    .fin-foto-wrap {
+        height: 240px;
+    }
+
+    .fin-fila-inferior {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.25rem;
+    }
+
+    .fin-video-card {
+        min-height: 200px;
+        height: 200px;
+        max-height: 220px;
+    }
+}
+
+@media (max-width: 640px) {
+    .fin-grid-tarjetas {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0.85rem;
+    }
+
+    .fin-tarjeta {
+        height: auto;
+        padding: 1rem 1.15rem;
+    }
+
+    .fin-foto-wrap {
+        height: 200px;
+    }
+
+    .fin-video-card {
+        min-height: 180px;
+        height: 180px;
+    }
 }
 
 /* ==========================================================================
@@ -1681,10 +1920,6 @@
 @media (min-width: 992px) {
     .art-grid {
         grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-    }
-
-    .fin-grid {
-        grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
     }
 }
 

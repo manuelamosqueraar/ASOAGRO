@@ -39,6 +39,7 @@
             <symbol id="fin-carpeta" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><path d="M8 13l2.5 2.5L16 10" /></symbol>
             <symbol id="fin-doc" viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" /><path d="M14 3v6h6M8 13h8M8 17h5" /></symbol>
             <symbol id="fin-reloj" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></symbol>
+            <symbol id="fin-escudo" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></symbol>
         </defs>
     </svg>
 
@@ -390,51 +391,123 @@
         </div>
     </section>
 
-    <!-- ===== 6. FINANCIACIÓN (SECCIÓN BLANCA LIMPIA CON TARJETAS ECOLAND) ===== -->
+    <!-- ===== 6. FINANCIACIÓN (DISTRIBUCIÓN MODERNA TIPO AGRICULTURE FEATURES EN ESTILO ASOAGRO) ===== -->
     <section class="fin eco-fin" id="financiacion">
         <div class="eco-contenedor">
-            <div class="fin-grid">
+            <div class="fin-layout">
 
-                <div class="fin-texto fin-rev">
-                    <span class="eco-tag-claro">Núcleo estratégico</span>
-                    <h2 class="eco-h2-oscuro">Acceso Oportuno a <em class="eco-serif-italica eco-subrayado-amarillo">Fuentes de Financiación</em></h2>
-                    <p class="eco-sub-oscuro">
-                        Evitamos que las asociaciones pierdan oportunidades de recursos externos por falta de registros listos o documentación desactualizada en convocatorias.
-                    </p>
-                    <button type="button" class="eco-btn eco-btn-verde" @onclick='() => NavegarA("financiacion")'>
-                        <span>Revisar elegibilidad</span>
-                        <span class="eco-btn-circulo" aria-hidden="true">
-                            <svg viewBox="0 0 24 24"><use href="#eco-flecha-der" /></svg>
-                        </span>
-                    </button>
+                <!-- FILA SUPERIOR: TEXTO DE CABECERA + FOTO PRINCIPAL -->
+                <div class="fin-fila-superior">
+                    <div class="fin-texto fin-rev">
+                        <h2 class="eco-h2-oscuro">Acceso Oportuno a <em class="eco-serif-italica eco-subrayado-amarillo">Fuentes de Financiación</em></h2>
+                        <p class="eco-sub-oscuro">
+                            Evitamos que las asociaciones pierdan oportunidades de recursos externos por falta de registros listos o documentación desactualizada en convocatorias.
+                        </p>
+                        <div class="fin-cta-wrap">
+                            <button type="button" class="eco-btn eco-btn-verde" @onclick='() => NavegarA("financiacion")'>
+                                <span>Revisar elegibilidad</span>
+                                <span class="eco-btn-circulo" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24"><use href="#eco-flecha-der" /></svg>
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Foto principal superior derecha -->
+                    <div class="fin-media-principal fin-rev fin-r2">
+                        <div class="fin-foto-wrap">
+                            <img src="https://images.unsplash.com/photo-1592982537447-7440770cbfc9?auto=format&fit=crop&w=1200&q=80"
+                                 alt="Productores agropecuarios analizando cultivos y convocatorias de financiación"
+                                 loading="lazy" />
+                            <div class="fin-foto-badge">
+                                <span class="fin-badge-punto"></span>
+                                <span>Convocatorias y Fomento Agropecuario</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <ol class="fin-pilares">
-                    <li class="fin-pilar fin-rev fin-r2">
-                        <span class="fin-pilar-ico"><svg class="fin-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#fin-carpeta" /></svg></span>
-                        <div class="fin-pilar-txt">
-                            <h3>Registros listos</h3>
-                            <p>Expedientes completos antes de cada convocatoria.</p>
+                <!-- FILA INFERIOR: VIDEO/PREVIEW CARD + CUADRÍCULA 2x2 DE TARJETAS -->
+                <div class="fin-fila-inferior">
+                    <!-- Tarjeta multimedia lateral izquierda -->
+                    <div class="fin-col-video fin-rev fin-r3">
+                        <div class="fin-video-card" @onclick='() => NavegarA("financiacion")' role="button" tabindex="0" title="Explorar proceso de financiación">
+                            <img src="https://images.unsplash.com/photo-1574943320219-553eb213f72d?auto=format&fit=crop&w=800&q=80"
+                                 alt="Cultivo productivo y asesoría técnica"
+                                 loading="lazy" />
+                            <div class="fin-video-overlay">
+                                <span class="fin-video-play-btn" aria-label="Ver proceso">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                        <polygon points="7 4 20 12 7 20 7 4" />
+                                    </svg>
+                                </span>
+                                <div class="fin-video-caption">
+                                    <strong>Guía de Elegibilidad</strong>
+                                    <small>Preparación de expedientes asociativos</small>
+                                </div>
+                            </div>
                         </div>
-                        <span class="fin-pilar-num" aria-hidden="true">01</span>
-                    </li>
-                    <li class="fin-pilar fin-rev fin-r3">
-                        <span class="fin-pilar-ico"><svg class="fin-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#fin-doc" /></svg></span>
-                        <div class="fin-pilar-txt">
-                            <h3>Documentación al día</h3>
-                            <p>Estatutos, certificados y actas siempre vigentes.</p>
+                    </div>
+
+                    <!-- Cuadrícula 2x2 de tarjetas informativas a la derecha -->
+                    <div class="fin-grid-tarjetas">
+                        <!-- Tarjeta 1 -->
+                        <div class="fin-tarjeta fin-rev fin-r2">
+                            <div class="fin-tarjeta-cab">
+                                <span class="fin-tarjeta-ico" aria-hidden="true">
+                                    <svg class="fin-ico" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#fin-carpeta" /></svg>
+                                </span>
+                                <span class="fin-tarjeta-num">01</span>
+                            </div>
+                            <div class="fin-tarjeta-cuerpo">
+                                <h3 class="fin-tarjeta-titulo">Registros listos</h3>
+                                <p class="fin-tarjeta-desc">Expedientes completos antes de cada convocatoria.</p>
+                            </div>
                         </div>
-                        <span class="fin-pilar-num" aria-hidden="true">02</span>
-                    </li>
-                    <li class="fin-pilar fin-rev fin-r4">
-                        <span class="fin-pilar-ico"><svg class="fin-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#fin-reloj" /></svg></span>
-                        <div class="fin-pilar-txt">
-                            <h3>Sin oportunidades perdidas</h3>
-                            <p>Alertas a tiempo sobre plazos y vencimientos.</p>
+
+                        <!-- Tarjeta 2 -->
+                        <div class="fin-tarjeta fin-rev fin-r3">
+                            <div class="fin-tarjeta-cab">
+                                <span class="fin-tarjeta-ico" aria-hidden="true">
+                                    <svg class="fin-ico" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#fin-doc" /></svg>
+                                </span>
+                                <span class="fin-tarjeta-num">02</span>
+                            </div>
+                            <div class="fin-tarjeta-cuerpo">
+                                <h3 class="fin-tarjeta-titulo">Documentación al día</h3>
+                                <p class="fin-tarjeta-desc">Estatutos, certificados y actas siempre vigentes.</p>
+                            </div>
                         </div>
-                        <span class="fin-pilar-num" aria-hidden="true">03</span>
-                    </li>
-                </ol>
+
+                        <!-- Tarjeta 3 -->
+                        <div class="fin-tarjeta fin-rev fin-r4">
+                            <div class="fin-tarjeta-cab">
+                                <span class="fin-tarjeta-ico" aria-hidden="true">
+                                    <svg class="fin-ico" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#fin-reloj" /></svg>
+                                </span>
+                                <span class="fin-tarjeta-num">03</span>
+                            </div>
+                            <div class="fin-tarjeta-cuerpo">
+                                <h3 class="fin-tarjeta-titulo">Sin oportunidades perdidas</h3>
+                                <p class="fin-tarjeta-desc">Alertas a tiempo sobre plazos y vencimientos.</p>
+                            </div>
+                        </div>
+
+                        <!-- Tarjeta 4 -->
+                        <div class="fin-tarjeta fin-rev fin-r5">
+                            <div class="fin-tarjeta-cab">
+                                <span class="fin-tarjeta-ico" aria-hidden="true">
+                                    <svg class="fin-ico" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><use href="#fin-escudo" /></svg>
+                                </span>
+                                <span class="fin-tarjeta-num">04</span>
+                            </div>
+                            <div class="fin-tarjeta-cuerpo">
+                                <h3 class="fin-tarjeta-titulo">Elegibilidad garantizada</h3>
+                                <p class="fin-tarjeta-desc">Trazabilidad y respaldo asociativo para cooperantes.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>
