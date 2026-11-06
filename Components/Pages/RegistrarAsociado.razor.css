@@ -2604,6 +2604,29 @@
     .ra-paso { flex: 1 1 45%; justify-content: flex-start; }
 }
 
+@media (max-width: 480px) {
+    .ra-pasos {
+        padding: 8px !important;
+        gap: 6px !important;
+    }
+    .ra-paso {
+        flex: 1 1 100% !important;
+        padding: 8px 10px !important;
+    }
+    .ra-acciones {
+        flex-direction: column-reverse !important;
+        gap: 10px !important;
+    }
+    .ra-acciones .ra-btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    .ra-cuotas-barra-top {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+}
+
 /* ==========================================================================
    VALIDACIONES POR CAMPO, SELECTOR CC/NIT Y ESTADOS DE ERROR / LECTURA
    ========================================================================== */

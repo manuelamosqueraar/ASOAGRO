@@ -71,15 +71,15 @@
         </aside>
 
         <!-- Columna principal -->
-        <div class="hv-main-col" style="flex: 1; min-width: 0; display: flex; flex-direction: column; min-height: 100vh; background-color: #edf2ed;">
+        <div class="hv-main-col">
             @if (mostrarMenuUsuario || mostrarNotificaciones)
             {
                 <div class="hv-backdrop-close" style="position: fixed; inset: 0; z-index: 900; background: transparent;" @onclick="CerrarTodo"></div>
             }
 
             <!-- Barra superior de acciones y perfil -->
-            <header class="hv-topbar" style="display: flex; align-items: center; justify-content: flex-end; gap: 20px; padding: 22px 32px 14px; background-color: #edf2ed; position: relative; z-index: 1200; pointer-events: none;">
-                <div class="hv-top-actions" style="margin-left: auto; pointer-events: auto;">
+            <header class="hv-topbar">
+                <div class="hv-top-actions">
                     <!-- Campana de notificaciones exactamente con las mismas funciones y panel de antes -->
                     <div class="ag-desplegable">
                         <button type="button" class="hv-action-circle" @onclick="ToggleNotificaciones" title="Centro de alertas" aria-label="Centro de alertas" aria-expanded="@(mostrarNotificaciones ? "true" : "false")">

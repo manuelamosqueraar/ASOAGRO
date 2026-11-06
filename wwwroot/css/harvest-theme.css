@@ -1767,41 +1767,6 @@
     50% { opacity: 0.4; transform: scale(1.3); }
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 1200px) {
-    .hv-grid-top {
-        grid-template-columns: 1fr 1fr;
-    }
-    .hv-card-landscape {
-        grid-column: span 2;
-    }
-    .hv-grid-bottom {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 860px) {
-    .hv-app {
-        flex-direction: column;
-    }
-    .hv-sidebar {
-        width: 100%;
-        height: auto;
-        position: relative;
-        padding: 16px 20px;
-    }
-    .hv-grid-top {
-        grid-template-columns: 1fr;
-    }
-    .hv-card-landscape {
-        grid-column: span 1;
-    }
-    .hv-main {
-        padding: 20px 16px 40px;
-    }
-}
-
-
 /* Layout principal */
 .hv-app {
     display: flex !important;
@@ -1848,28 +1813,31 @@
     overflow-y: auto !important;
 }
 
-/* Colapsado del sidebar */
-.hv-sidebar-collapsed .hv-sidebar {
-    width: 76px !important;
-    min-width: 76px !important;
-    max-width: 76px !important;
-    padding: 0 !important;
-}
+/* Colapsado del sidebar (exclusivo para escritorio) */
+@media (min-width: 861px) {
+    .hv-sidebar-collapsed .hv-sidebar {
+        width: 76px !important;
+        min-width: 76px !important;
+        max-width: 76px !important;
+        padding: 0 !important;
+    }
 
-.hv-sidebar-collapsed .hv-brand-name,
-.hv-sidebar-collapsed .hv-nav-txt,
-.hv-sidebar-collapsed .hv-add-card,
-.hv-sidebar-collapsed .hv-logout span {
-    display: none !important;
-}
+    .hv-sidebar-collapsed .hv-brand-name,
+    .hv-sidebar-collapsed .hv-brand-sub,
+    .hv-sidebar-collapsed .hv-nav-txt,
+    .hv-sidebar-collapsed .hv-add-card,
+    .hv-sidebar-collapsed .hv-logout span {
+        display: none !important;
+    }
 
-.hv-sidebar-collapsed .hv-brand-row {
-    justify-content: center !important;
-}
+    .hv-sidebar-collapsed .hv-brand-row {
+        justify-content: center !important;
+    }
 
-.hv-sidebar-collapsed .hv-nav-item {
-    justify-content: center !important;
-    padding: 12px 0 !important;
+    .hv-sidebar-collapsed .hv-nav-item {
+        justify-content: center !important;
+        padding: 12px 0 !important;
+    }
 }
 
 /* Enlaces del Nav */
@@ -3875,5 +3843,366 @@ a.hv-nav-item svg,
     opacity: 0.55;
     cursor: not-allowed;
     pointer-events: none;
+}
+
+/* ==========================================================================
+   ARQUITECTURA RESPONSIVA UNIFICADA ASOAGRO (ESCRITORIO, PORTÁTILES, TABLETAS Y CELULARES)
+   ========================================================================== */
+
+/* 1. Reglas Globales de Contención y Prevención de Desbordamiento */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+img, video {
+    max-width: 100%;
+    height: auto;
+}
+
+/* 2. Contenedor Universal para Tablas Responsivas sin Desbordamiento de Página */
+.table-responsive,
+.hv-table-responsive {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 14px;
+    margin-bottom: 1rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(23, 96, 58, 0.25) transparent;
+}
+
+.table-responsive::-webkit-scrollbar,
+.hv-table-responsive::-webkit-scrollbar {
+    height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb,
+.hv-table-responsive::-webkit-scrollbar-thumb {
+    background: rgba(23, 96, 58, 0.25);
+    border-radius: 6px;
+}
+
+/* 3. Modales Universales Adaptables a Todo Dispositivo */
+.modal {
+    padding: 0 !important;
+}
+
+.modal-dialog {
+    max-width: min(calc(100vw - 24px), 640px) !important;
+    margin: 1rem auto !important;
+}
+
+.modal-dialog.modal-lg {
+    max-width: min(calc(100vw - 24px), 940px) !important;
+}
+
+.modal-content {
+    max-height: calc(100vh - 2rem) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: 20px !important;
+    overflow: hidden !important;
+}
+
+.modal-body {
+    overflow-y: auto !important;
+    flex: 1 1 auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 1.25rem !important;
+}
+
+.modal-header,
+.modal-footer {
+    flex-shrink: 0 !important;
+}
+
+/* Modales personalizados ASOAGRO */
+.hv-modal-backdrop {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 1300 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 12px !important;
+    background: rgba(11, 46, 28, 0.55) !important;
+    backdrop-filter: blur(6px) !important;
+}
+
+.hv-modal-dialog {
+    width: min(560px, calc(100vw - 24px)) !important;
+    max-height: calc(100vh - 32px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    background: #ffffff !important;
+    border-radius: 22px !important;
+    overflow: hidden !important;
+    margin: auto !important;
+    box-shadow: 0 24px 60px -16px rgba(0, 0, 0, 0.35) !important;
+}
+
+.hv-modal-body {
+    overflow-y: auto !important;
+    flex: 1 1 auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 20px 24px !important;
+}
+
+.hv-modal-foot {
+    flex-shrink: 0 !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    gap: 12px !important;
+    padding: 14px 24px 18px !important;
+    border-top: 1px solid #edf2ed !important;
+    background: inherit !important;
+}
+
+/* Paneles emergentes y menús de usuario en cabecera */
+.ag-panel,
+.hv-user-popover,
+.hv-popover {
+    max-width: calc(100vw - 24px) !important;
+    right: 0 !important;
+    left: auto !important;
+}
+
+/* ==========================================================================
+   BREAKPOINTS DE PANTALLA: PORTÁTILES Y TABLETAS HORIZONTALES (≤ 1200px)
+   ========================================================================== */
+@media (max-width: 1200px) {
+    .hv-grid-top {
+        grid-template-columns: 1fr 1fr !important;
+    }
+    .hv-card-landscape {
+        grid-column: span 2 !important;
+    }
+    .hv-grid-bottom {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ==========================================================================
+   BREAKPOINTS DE PANTALLA: TABLETAS Y PANTALLAS MEDIANAS (≤ 992px)
+   ========================================================================== */
+@media (max-width: 992px) {
+    .hv-body-container {
+        padding: 0 20px 40px !important;
+    }
+    .hv-topbar {
+        padding: 16px 20px 10px !important;
+    }
+    .hv-search-box {
+        width: min(340px, 100%) !important;
+    }
+}
+
+/* ==========================================================================
+   BREAKPOINTS DE PANTALLA: TABLETAS VERTICALES Y CELULARES (≤ 860px)
+   ========================================================================== */
+@media (max-width: 860px) {
+    .hv-app {
+        flex-direction: column !important;
+        min-height: 100vh !important;
+        width: 100% !important;
+        overflow-x: clip !important;
+    }
+
+    .hv-sidebar {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+        position: sticky !important;
+        top: 0 !important;
+        z-index: 1050 !important;
+        border-right: none !important;
+        border-bottom: 1px solid rgba(185, 231, 122, 0.16) !important;
+        padding: 0 !important;
+    }
+
+    .hv-sidebar-inner {
+        width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        max-height: 85vh !important;
+        padding: 12px 16px !important;
+        overflow-y: auto !important;
+    }
+
+    .hv-brand-row {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+        border-bottom: none !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        width: 100% !important;
+    }
+
+    .hv-brand-text,
+    .hv-brand-name,
+    .hv-brand-sub {
+        display: flex !important;
+    }
+
+    .hv-hamb-btn {
+        display: flex !important;
+    }
+
+    /* Estado contraído en móvil: menú limpio mostrando únicamente la cabecera */
+    .hv-sidebar-collapsed .hv-sidebar {
+        width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
+        height: auto !important;
+    }
+
+    .hv-sidebar-collapsed .hv-sidebar-inner {
+        padding: 12px 16px !important;
+        height: auto !important;
+    }
+
+    .hv-sidebar-collapsed .hv-nav,
+    .hv-sidebar-collapsed .hv-logout-wrapper {
+        display: none !important;
+    }
+
+    /* Estado desplegado en móvil: navegación visible debajo del encabezado */
+    .hv-app:not(.hv-sidebar-collapsed) .hv-nav {
+        display: flex !important;
+        margin-top: 14px !important;
+        padding-top: 12px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+        gap: 6px !important;
+    }
+
+    .hv-app:not(.hv-sidebar-collapsed) .hv-logout-wrapper {
+        display: block !important;
+        margin-top: 12px !important;
+        padding-top: 12px !important;
+    }
+
+    .hv-main-col {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        flex: 1 1 auto !important;
+    }
+
+    .hv-topbar {
+        padding: 12px 16px 8px !important;
+        gap: 12px !important;
+    }
+
+    .hv-body-container {
+        padding: 0 16px 36px !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-height: auto !important;
+        overflow-x: clip !important;
+    }
+
+    .hv-grid-top,
+    .hv-grid-bottom {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    .hv-card-landscape {
+        grid-column: span 1 !important;
+    }
+
+    .hv-card,
+    .hv-padron-card {
+        padding: 18px 16px !important;
+        border-radius: 20px !important;
+    }
+
+    .hv-search-box {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+}
+
+/* ==========================================================================
+   BREAKPOINTS DE PANTALLA: CELULARES Y DISPOSITIVOS TÁCTILES (≤ 640px)
+   ========================================================================== */
+@media (max-width: 640px) {
+    /* Objetivos táctiles cómodos */
+    button,
+    .btn,
+    .hv-nav-item,
+    .ea-btn,
+    .ra-btn {
+        min-height: 42px;
+    }
+
+    .hv-nav-item {
+        padding: 11px 14px !important;
+        font-size: 0.9rem !important;
+    }
+
+    /* En celulares, ocultar rol secundario del badge de usuario para evitar cortes */
+    .hv-user-badge .hv-user-loc {
+        display: none !important;
+    }
+
+    .hv-user-badge {
+        padding: 4px 10px 4px 6px !important;
+        gap: 8px !important;
+    }
+
+    .hv-user-name {
+        font-size: 0.8rem !important;
+        max-width: 120px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .hv-modal-dialog {
+        width: calc(100vw - 20px) !important;
+        border-radius: 18px !important;
+    }
+
+    .hv-modal-body {
+        padding: 16px !important;
+    }
+
+    .hv-modal-foot {
+        padding: 12px 16px 16px !important;
+    }
+
+    /* Tablas adaptables */
+    .table td, .table th {
+        padding: 0.65rem 0.5rem !important;
+    }
+}
+
+/* ==========================================================================
+   BREAKPOINTS DE PANTALLA: CELULARES PEQUEÑOS (≤ 480px)
+   ========================================================================== */
+@media (max-width: 480px) {
+    .hv-modal-foot {
+        flex-direction: column-reverse !important;
+        gap: 8px !important;
+    }
+
+    .hv-modal-foot button {
+        width: 100% !important;
+        text-align: center !important;
+        justify-content: center !important;
+    }
+
+    .hv-brand-name {
+        font-size: 1rem !important;
+    }
+
+    .hv-brand-sub {
+        font-size: 0.6rem !important;
+    }
 }
 

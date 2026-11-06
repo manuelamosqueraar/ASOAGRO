@@ -250,3 +250,29 @@
     flex-shrink: 0;
     stroke: currentColor;
 }
+
+@media (max-width: 860px) {
+    .hv-sidebar-inner {
+        height: auto;
+        min-height: auto;
+        max-height: 85vh;
+        overflow-y: auto;
+        padding: 12px 14px;
+    }
+
+    .hv-brand-row {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+    }
+
+    .hv-nav-item {
+        min-height: 42px;
+        padding: 11px 12px;
+        font-size: 0.9rem;
+    }
+
+    .hv-logout {
+        min-height: 42px;
+    }
+}

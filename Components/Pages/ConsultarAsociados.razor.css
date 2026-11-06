@@ -880,8 +880,8 @@
     .ca-ficha-cab { padding: 1.25rem; }
     .ca-ficha-cuerpo { padding: 1rem; }
     .ca-ficha-pie { flex-direction: column; align-items: stretch; }
-    .ca-tabla-marco { overflow: visible; border-radius: 1rem; }
-    .ca-tabla { display: block; min-width: 0; }
+    .ca-tabla-marco { overflow-x: hidden; border-radius: 1rem; width: 100%; max-width: 100%; }
+    .ca-tabla { display: block; min-width: 0; width: 100%; }
     .ca-tabla colgroup,
     .ca-tabla thead { display: none; }
     .ca-tabla tbody { display: grid; gap: .75rem; padding: .75rem; }

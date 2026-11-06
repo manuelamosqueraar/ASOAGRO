@@ -1936,23 +1936,31 @@
 @media (max-width: 860px) {
     .hv-app {
         flex-direction: column !important;
+        overflow-x: clip !important;
     }
 
     .hv-sidebar {
         width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
         height: auto !important;
-        position: relative !important;
+        position: sticky !important;
         top: 0 !important;
+        z-index: 1050 !important;
     }
 
     .hv-sidebar ::deep .hv-sidebar-inner {
         height: auto !important;
         min-height: auto !important;
-        padding: 14px 16px !important;
+        max-height: 85vh !important;
+        padding: 12px 16px !important;
+        overflow-y: auto !important;
     }
 
     .hv-sidebar-collapsed .hv-sidebar {
         width: 100% !important;
+        min-width: 100% !important;
+        max-width: 100% !important;
     }
 
     .hv-sidebar-collapsed .hv-sidebar ::deep .hv-brand-row {
@@ -1977,7 +1985,52 @@
         display: none !important;
     }
 
+    .hv-topbar {
+        padding: 12px 16px 8px !important;
+        gap: 12px !important;
+    }
+
     .hv-body-container {
         padding: 0 16px 40px !important;
+        overflow-x: clip !important;
+    }
+
+    .ag-panel,
+    .hv-user-popover {
+        max-width: calc(100vw - 24px) !important;
+        right: 0 !important;
+        left: auto !important;
+    }
+}
+
+@media (max-width: 640px) {
+    .hv-user-badge .hv-user-loc {
+        display: none !important;
+    }
+
+    .hv-user-badge {
+        padding: 4px 10px 4px 6px !important;
+        gap: 8px !important;
+    }
+
+    .hv-user-name {
+        font-size: 0.82rem !important;
+        max-width: 120px !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        text-overflow: ellipsis !important;
+    }
+
+    .hv-modal-dialog {
+        width: calc(100vw - 24px) !important;
+        border-radius: 18px !important;
+    }
+
+    .hv-modal-body {
+        padding: 16px !important;
+    }
+
+    .hv-modal-foot {
+        padding: 12px 16px 16px !important;
     }
 }

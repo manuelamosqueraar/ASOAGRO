@@ -1210,3 +1210,26 @@
         justify-content: center;
     }
 }
+
+@media (max-width: 480px) {
+    .ea-acciones {
+        flex-direction: column-reverse;
+        gap: 10px;
+    }
+
+    .ea-acciones .ea-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .ea-barra-navegacion {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .ea-barra-navegacion button,
+    .ea-barra-navegacion a {
+        width: 100%;
+        justify-content: center;
+    }
+}
