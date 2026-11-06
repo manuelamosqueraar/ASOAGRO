@@ -16,8 +16,21 @@ using Npgsql;
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Configuración de Autenticación con Cookies y Google OAuth
-var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
-var googleClientSecret = builder.Configuration["Authentication:Google:ClientSecret"];
+static string? LimpiarSecreto(string? val)
+{
+    if (string.IsNullOrWhiteSpace(val)) return null;
+    var s = val.Trim().Trim('"', '\'');
+    if (s.Contains("<client-secret-de-Google>", StringComparison.OrdinalIgnoreCase)) return null;
+    return s;
+}
+
+var googleClientId = LimpiarSecreto(builder.Configuration["Authentication:Google:ClientId"]) 
+    ?? "594645629434-s422ptsmn40uiff405b2hbgqnlc9iadr.apps.googleusercontent.com";
+var googleClientSecret = LimpiarSecreto(builder.Configuration["Authentication:Google:ClientSecret"]) 
+    ?? LimpiarSecreto(Environment.GetEnvironmentVariable("Authentication__Google__ClientSecret"))
+    ?? LimpiarSecreto(Environment.GetEnvironmentVariable("Authentication__Google__ClientSecret", EnvironmentVariableTarget.User))
+    ?? "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";
+
 var googleAuthenticationConfigured =
     !string.IsNullOrWhiteSpace(googleClientId) &&
     !string.IsNullOrWhiteSpace(googleClientSecret);
