@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.HttpOverrides;
 using System.Security.Claims;
 using Asoagro.Components;
 using Asoagro.Configuration;
@@ -14,6 +15,14 @@ using Npgsql;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configuración de Forwarded Headers para proxies de la nube (Render, Railway, etc.)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownNetworks.Clear();
+    options.KnownProxies.Clear();
+});
 
 // 1. Configuración de Autenticación con Cookies y Google OAuth
 var googleClientId = builder.Configuration["Authentication:Google:ClientId"];
@@ -219,6 +228,8 @@ if (!googleAuthenticationConfigured)
     app.Logger.LogWarning(
         "Google OAuth no está configurado. El inicio de sesión con Google estará deshabilitado.");
 }
+
+app.UseForwardedHeaders();
 
 if (!app.Environment.IsDevelopment())
 {
