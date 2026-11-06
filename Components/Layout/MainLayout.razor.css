@@ -1217,7 +1217,7 @@
 }
 
 .hv-sidebar {
-    width: 250px;
+    width: 256px;
     height: 100vh;
     position: sticky;
     top: 0;
@@ -1226,10 +1226,22 @@
     transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     background: linear-gradient(180deg, #0b2618 0%, #07190f 100%);
     border-right: 1px solid rgba(185, 231, 122, 0.12);
+    padding: 0 !important;
+    box-sizing: border-box;
+}
+
+.hv-sidebar ::deep .hv-sidebar-inner {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
 }
 
 .hv-sidebar-collapsed .hv-sidebar {
     width: 76px;
+    min-width: 76px;
+    max-width: 76px;
 }
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-brand-text,
@@ -1243,56 +1255,64 @@
 }
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-sidebar-inner {
-    padding: 18px 8px;
-    align-items: center;
+    padding: 18px 8px !important;
+    align-items: center !important;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
 }
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-brand-row {
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    padding-bottom: 16px;
-    width: 100%;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    padding-bottom: 16px !important;
+    margin-bottom: 16px !important;
+    width: 100% !important;
 }
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-brand {
-    justify-content: center;
-    gap: 0;
+    justify-content: center !important;
+    gap: 0 !important;
+    margin: 0 auto !important;
 }
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-brand-plantita-wrap {
-    width: 36px;
-    height: 36px;
-    margin: 0 auto;
+    width: 36px !important;
+    height: 36px !important;
+    margin: 0 auto !important;
 }
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-hamb-btn {
     display: flex !important;
-    width: 34px;
-    height: 34px;
-    margin: 0 auto;
+    width: 34px !important;
+    height: 34px !important;
+    margin: 0 auto !important;
 }
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-nav {
-    width: 100%;
-    align-items: center;
+    width: 100% !important;
+    align-items: center !important;
 }
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-nav-item {
-    justify-content: center;
-    padding: 11px 0;
-    width: 44px;
-    height: 44px;
-    margin: 0 auto;
+    justify-content: center !important;
+    padding: 11px 0 !important;
+    width: 44px !important;
+    height: 44px !important;
+    margin: 0 auto !important;
+    border-radius: 12px !important;
 }
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-logout {
-    justify-content: center;
-    padding: 11px 0;
-    width: 44px;
-    height: 44px;
-    margin: 0 auto;
+    justify-content: center !important;
+    padding: 11px 0 !important;
+    width: 44px !important;
+    height: 44px !important;
+    margin: 0 auto !important;
+    border-radius: 12px !important;
 }
 
 .hv-main-col {

@@ -17,26 +17,26 @@
 
 /* ===== BARRA LATERAL (SIDEBAR QUE CABE EN LA PANTALLA) ===== */
 .hv-sidebar {
-    width: 240px;
+    width: 256px;
     height: 100vh;
     position: sticky;
     top: 0;
-    background-color: #0d2c1c;
+    background: linear-gradient(180deg, #0b2618 0%, #07190f 100%);
     color: #ffffff;
-    padding: 20px 16px 18px;
+    padding: 0;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     flex-shrink: 0;
     box-sizing: border-box;
-    overflow-y: auto;
+    overflow-y: hidden;
     z-index: 20;
-    transition: width 0.25s ease, padding 0.25s ease;
+    transition: width 0.25s ease;
 }
 
 .hv-sidebar-collapsed .hv-sidebar {
     width: 76px;
-    padding: 20px 10px;
+    padding: 0;
 }
 
 .hv-sidebar-collapsed .hv-brand-name,
@@ -1815,17 +1815,19 @@
 }
 
 .hv-sidebar {
-    width: 240px !important;
-    min-width: 240px !important;
-    max-width: 240px !important;
+    width: 256px !important;
+    min-width: 256px !important;
+    max-width: 256px !important;
     height: 100vh !important;
     position: sticky !important;
     top: 0 !important;
-    background-color: #0d2c1c !important;
+    background: linear-gradient(180deg, #0b2618 0%, #07190f 100%) !important;
     color: #ffffff !important;
+    padding: 0 !important;
     flex-shrink: 0 !important;
     z-index: 1020 !important;
     box-sizing: border-box !important;
+    border-right: 1px solid rgba(185, 231, 122, 0.12) !important;
     transition: width 0.25s ease, min-width 0.25s ease, max-width 0.25s ease !important;
 }
 
@@ -1836,8 +1838,12 @@
     flex-direction: column !important;
     justify-content: space-between !important;
     box-sizing: border-box !important;
-    padding: 20px 16px 18px !important;
-    background-color: #0d2c1c !important;
+    padding: 18px 14px !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
     color: #ffffff !important;
     overflow-y: auto !important;
 }
@@ -1847,6 +1853,7 @@
     width: 76px !important;
     min-width: 76px !important;
     max-width: 76px !important;
+    padding: 0 !important;
 }
 
 .hv-sidebar-collapsed .hv-brand-name,
