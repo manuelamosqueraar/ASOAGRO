@@ -1,7 +1,7 @@
 @page "/subir-actas-estatutos"
 @page "/actas-estatutos/documentos"
 @page "/actas-estatutos/registrar"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Presidenta,Presidente")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Presidenta,Presidente")]
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
@@ -43,25 +43,46 @@
 
     @if (PestanaActiva == "lista")
     {
-        <section class="ai-hero">
-            <div class="ai-hero-copy">
-                <div class="ai-tags">
-                    <a class="ai-tag ai-tag-link" href="/actas-estatutos">FAAUA · Centro documental</a>
-                    <span class="ai-tag ai-tag-soft"><svg class="ai-icon"><use href="#ico-escudo" /></svg>Acceso de Presidencia</span>
+        <div class="card aso-hero-card mb-3">
+            <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="aso-hero-icon-box">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="aso-hero-kicker">FAAUA · Centro Documental</span>
+                                <span class="text-white-50" style="font-size: 0.75rem; font-weight: 600;">@Documentos.Count registrados (@Documentos.Count(d => d.Estado == EstadosDocumento.Vigente) vigentes)</span>
+                            </div>
+                            <h1 class="aso-hero-title">Repositorio de actas y estatutos</h1>
+                            <p class="aso-hero-desc">Busca, inspecciona, edita y conserva los documentos institucionales con trazabilidad de cambios y descargas.</p>
+                        </div>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        @if (Documentos.Count > 0)
+                        {
+                            <button type="button" class="aso-btn-hero-secondary" @onclick="ExportarCsvAsync">
+                                <svg class="ai-icon" width="16" height="16"><use href="#ico-exportar" /></svg>
+                                <span>Exportar CSV</span>
+                            </button>
+                        }
+                        <button type="button" class="aso-btn-hero-primary" @onclick="IniciarNuevo">
+                            <svg class="ai-icon" width="16" height="16"><use href="#ico-mas" /></svg>
+                            <span>Registrar nuevo</span>
+                        </button>
+                    </div>
                 </div>
-                <h1>Repositorio de actas</h1>
-                <p>Busca, inspecciona, edita y conserva los documentos institucionales con trazabilidad de cambios y descargas.</p>
             </div>
-            <div class="ai-hero-stats">
-                <span>Documentos registrados</span>
-                <strong>@Documentos.Count</strong>
-                <small>@Documentos.Count(d => d.Estado == EstadosDocumento.Vigente) vigentes · @Documentos.Count(d => d.Estado == EstadosDocumento.Anulado) anulados</small>
-            </div>
-        </section>
+        </div>
     }
     else
     {
-        <header class="ai-form-route-heading">
+        <header class="ai-form-route-heading mb-3">
             <a href="/actas-estatutos">Centro documental</a>
             <span aria-hidden="true">/</span>
             <a href="/actas-estatutos/documentos">Repositorio</a>
@@ -90,160 +111,224 @@
 
     @if (PestanaActiva == "lista")
     {
-        <div class="ai-repository-heading">
-            <div>
-                <span class="ai-eyebrow">Consulta y administración</span>
-                <h2>Documentos registrados</h2>
-                <p>Busca fichas existentes para inspeccionarlas, descargarlas o actualizar sus datos.</p>
-            </div>
-            <button type="button" class="ai-btn ai-btn-primary" @onclick="IniciarNuevo">
-                <svg class="ai-icon"><use href="#ico-mas" /></svg>
-                Registrar nuevo
-            </button>
-        </div>
-        <div class="ai-storage-note">
-            <svg class="ai-icon"><use href="#ico-alerta" /></svg>
-            <span>Los documentos están guardados en memoria temporal en esta versión y se perderán al reiniciar la aplicación.</span>
-        </div>
-
-        <section class="ai-panel ai-filters">
-            <label class="ai-search">
-                <svg class="ai-icon"><use href="#ico-buscar" /></svg>
-                <input aria-label="Buscar documentos" placeholder="Buscar por título, asociado, código o referencia…" @bind="Busqueda" @bind:event="oninput" />
-            </label>
-            <label class="ai-filter">
-                <span>Tipo</span>
-                <select @bind="FiltroTipo" aria-label="Filtrar por tipo">
-                    <option value="">Todos los tipos</option>
-                    @foreach (var tipo in TiposDocumento)
-                    {
-                        <option value="@tipo">@tipo</option>
-                    }
-                </select>
-            </label>
-            <label class="ai-filter">
-                <span>Estado</span>
-                <select @bind="FiltroEstado" aria-label="Filtrar por estado">
-                    <option value="">Todos los estados</option>
-                    @foreach (var estado in EstadosFiltro)
-                    {
-                        <option value="@estado">@estado</option>
-                    }
-                </select>
-            </label>
-            <button type="button" class="ai-btn ai-btn-light ai-clear" @onclick="LimpiarFiltros">
-                <svg class="ai-icon"><use href="#ico-limpiar" /></svg>
-                Limpiar
-            </button>
-        </section>
-
         var documentosFiltrados = DocumentosFiltrados;
-        <section class="ai-list-section">
-            <div class="ai-section-heading">
-                <div>
-                    <h2>Documentos disponibles</h2>
-                    <p>@documentosFiltrados.Count documento(s) encontrado(s) · Haz clic en los encabezados para cambiar el orden</p>
+
+        <!-- FRANJA EJECUTIVA DE INDICADORES DEL REPOSITORIO -->
+        <div class="aso-kpi-grid">
+            <div class="aso-kpi-card kpi-emerald" style="cursor: pointer;" @onclick='() => FiltroEstado = ""'>
+                <div class="aso-kpi-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                 </div>
-                @if (documentosFiltrados.Count > 0)
-                {
-                    <button type="button" class="ai-btn ai-btn-light ai-export" @onclick="ExportarCsvAsync">
-                        <svg class="ai-icon"><use href="#ico-exportar" /></svg>
-                        Descargar reporte (CSV)
-                    </button>
-                }
+                <div class="aso-kpi-meta">
+                    <span class="aso-kpi-label">Total Repositorio</span>
+                    <strong class="aso-kpi-value">@Documentos.Count</strong>
+                    <span class="aso-kpi-sub">Actas, estatutos y reglamentos</span>
+                </div>
             </div>
 
+            <div class="aso-kpi-card kpi-sky" style="cursor: pointer;" @onclick='() => FiltroEstado = EstadosDocumento.Vigente'>
+                <div class="aso-kpi-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                </div>
+                <div class="aso-kpi-meta">
+                    <span class="aso-kpi-label">Estado Vigente</span>
+                    <strong class="aso-kpi-value">@Documentos.Count(d => d.Estado == EstadosDocumento.Vigente)</strong>
+                    <span class="aso-kpi-sub">Con validez institucional activa</span>
+                </div>
+            </div>
+
+            <div class="aso-kpi-card kpi-amber" style="cursor: pointer;" @onclick='() => FiltroEstado = ""'>
+                <div class="aso-kpi-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                </div>
+                <div class="aso-kpi-meta">
+                    <span class="aso-kpi-label">Con Soporte Digital</span>
+                    <strong class="aso-kpi-value">@Documentos.Count(d => d.Archivo is not null)</strong>
+                    <span class="aso-kpi-sub">Archivos listos para descarga</span>
+                </div>
+            </div>
+
+            <div class="aso-kpi-card kpi-rose" style="cursor: pointer;" @onclick='() => FiltroEstado = ""'>
+                <div class="aso-kpi-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                </div>
+                <div class="aso-kpi-meta">
+                    <span class="aso-kpi-label">En Revisión / Histórico</span>
+                    <strong class="aso-kpi-value">@Documentos.Count(d => d.Estado != EstadosDocumento.Vigente)</strong>
+                    <span class="aso-kpi-sub">Borradores o versiones anteriores</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ESTACIÓN DE BÚSQUEDA Y FILTROS DEL REPOSITORIO -->
+        <div class="aso-filter-workbench">
+            <div class="aso-filter-top-row">
+                <div class="aso-search-wrap">
+                    <span class="aso-search-icon">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </span>
+                    <input type="text" class="aso-search-input"
+                           aria-label="Buscar documentos"
+                           placeholder="Buscar documento por título, asociado vinculado, código interno o referencia..."
+                           @bind="Busqueda" @bind:event="oninput" />
+                    @if (!string.IsNullOrWhiteSpace(Busqueda))
+                    {
+                        <button type="button" class="aso-search-clear" @onclick='() => Busqueda = ""' title="Limpiar búsqueda">
+                            &times;
+                        </button>
+                    }
+                </div>
+
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <span class="aso-table-count-pill">
+                        @documentosFiltrados.Count de @Documentos.Count documento(s)
+                    </span>
+                    <button type="button" class="aso-btn-action" @onclick="LimpiarFiltros">
+                        <svg class="ai-icon" width="14" height="14"><use href="#ico-limpiar" /></svg>
+                        <span>Restablecer filtros</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="aso-filter-grid-3">
+                <div class="aso-field-group">
+                    <label class="aso-field-label">Tipo de documento institucional</label>
+                    <select class="aso-select-modern" @bind="FiltroTipo" aria-label="Filtrar por tipo">
+                        <option value="">Todos los tipos documentales</option>
+                        @foreach (var tipo in TiposDocumento)
+                        {
+                            <option value="@tipo">@tipo</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="aso-field-group">
+                    <label class="aso-field-label">Estado de vigencia</label>
+                    <select class="aso-select-modern" @bind="FiltroEstado" aria-label="Filtrar por estado">
+                        <option value="">Todos los estados</option>
+                        @foreach (var estado in EstadosFiltro)
+                        {
+                            <option value="@estado">@estado</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="aso-field-group">
+                    <label class="aso-field-label">Acción rápida</label>
+                    <button type="button" class="aso-btn-action aso-btn-action-primary w-100 justify-content-center" style="height: 40px; border-radius: 11px;" @onclick="IniciarNuevo">
+                        <svg class="ai-icon" width="15" height="15"><use href="#ico-mas" /></svg>
+                        <span>Incorporar nuevo documento</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <section class="ai-list-section">
             @if (documentosFiltrados.Count > 0)
             {
-                <div class="ai-table-wrap" role="region" aria-label="Resultados del repositorio" tabindex="0">
-                    <table class="ai-document-table">
-                        <thead>
-                            <tr>
-                                <th scope="col" aria-sort="@AriaOrden("titulo")">
-                                    <button type="button" class="ai-table-sort" @onclick='() => CambiarOrden("titulo")'>
-                                        Documento <span aria-hidden="true">@IndicadorOrden("titulo")</span>
-                                    </button>
-                                </th>
-                                <th scope="col" aria-sort="@AriaOrden("fecha")">
-                                    <button type="button" class="ai-table-sort" @onclick='() => CambiarOrden("fecha")'>
-                                        Fecha <span aria-hidden="true">@IndicadorOrden("fecha")</span>
-                                    </button>
-                                </th>
-                                <th scope="col" aria-sort="@AriaOrden("estado")">
-                                    <button type="button" class="ai-table-sort" @onclick='() => CambiarOrden("estado")'>
-                                        Estado <span aria-hidden="true">@IndicadorOrden("estado")</span>
-                                    </button>
-                                </th>
-                                <th scope="col">Archivo digital</th>
-                                <th scope="col" style="text-align: right;">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var documento in documentosFiltrados)
-                            {
-                                <tr class="ai-document-row @ClaseTarjeta(documento.Estado) @(DocumentoSeleccionado?.Id == documento.Id ? "selected" : "")">
-                                    <td class="ai-table-document">
-                                        <span class="ai-code">@documento.Codigo</span>
-                                        <strong>@documento.Titulo</strong>
-                                        <span class="ai-type">@documento.Tipo</span>
-                                        <span class="ai-associated">
-                                            <svg class="ai-icon"><use href="#ico-usuario" /></svg>
-                                            @(string.IsNullOrWhiteSpace(documento.NombreAsociado) ? "Documento institucional" : documento.NombreAsociado)
-                                        </span>
-                                        @if (!string.IsNullOrWhiteSpace(documento.Descripcion))
-                                        {
-                                            <small class="ai-table-description">@documento.Descripcion</small>
-                                        }
-                                    </td>
-                                    <td class="ai-table-date">
-                                        <span><svg class="ai-icon"><use href="#ico-calendario" /></svg>@documento.Fecha.ToString("dd MMM yyyy")</span>
-                                        <span><svg class="ai-icon"><use href="#ico-version" /></svg>Versión @documento.Version</span>
-                                        @if (documento.FechaVencimiento is DateTime fechaVencimiento)
-                                        {
-                                            <span class="ai-expiry"><svg class="ai-icon"><use href="#ico-calendario" /></svg>Vence @fechaVencimiento.ToString("dd MMM yyyy")</span>
-                                        }
-                                    </td>
-                                    <td>
-                                        <span class="ai-status @ClaseEstado(documento.Estado)">@documento.Estado</span>
-                                    </td>
-                                    <td>
-                                        <div class="ai-card-file">
+                <div class="aso-table-card">
+                    <div class="aso-table-header-bar">
+                        <div class="aso-table-header-title">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                            <span>Catálogo General de Actas y Estatutos</span>
+                            <span class="aso-table-count-pill">@documentosFiltrados.Count registros</span>
+                        </div>
+                        <span class="text-muted" style="font-size: 0.78rem; font-weight: 500;">Haz clic en los encabezados de columna para ordenar</span>
+                    </div>
+                    <div class="aso-table-wrap" role="region" aria-label="Resultados del repositorio" tabindex="0">
+                        <table class="table aso-table-grid align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="text-start" style="width: 34%; min-width: 240px;" aria-sort="@AriaOrden("titulo")">
+                                        <button type="button" class="btn btn-link p-0 text-white text-decoration-none fw-bold text-uppercase d-inline-flex align-items-center gap-1" style="font-size: 0.74rem; letter-spacing: 0.04em;" @onclick='() => CambiarOrden("titulo")'>
+                                            Documento <span aria-hidden="true">@IndicadorOrden("titulo")</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" class="text-start" style="width: 18%; min-width: 150px;" aria-sort="@AriaOrden("fecha")">
+                                        <button type="button" class="btn btn-link p-0 text-white text-decoration-none fw-bold text-uppercase d-inline-flex align-items-center gap-1" style="font-size: 0.74rem; letter-spacing: 0.04em;" @onclick='() => CambiarOrden("fecha")'>
+                                            Fecha y Versión <span aria-hidden="true">@IndicadorOrden("fecha")</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" class="text-center" style="width: 12%; min-width: 100px;" aria-sort="@AriaOrden("estado")">
+                                        <button type="button" class="btn btn-link p-0 text-white text-decoration-none fw-bold text-uppercase d-inline-flex align-items-center gap-1" style="font-size: 0.74rem; letter-spacing: 0.04em;" @onclick='() => CambiarOrden("estado")'>
+                                            Estado <span aria-hidden="true">@IndicadorOrden("estado")</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" class="text-start" style="width: 18%; min-width: 165px;">Archivo digital</th>
+                                    <th scope="col" class="text-end" style="width: 18%; min-width: 185px;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var documento in documentosFiltrados)
+                                {
+                                    <tr class="@(DocumentoSeleccionado?.Id == documento.Id ? "selected" : "")">
+                                        <td class="text-start">
+                                            <div class="d-flex flex-column gap-0.5">
+                                                <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                                                    <span class="badge bg-white text-dark border font-monospace" style="font-size: 0.7rem; border-color: #dce4d8 !important; color: #17603a !important;">@documento.Codigo</span>
+                                                    <span class="badge bg-success-subtle text-success-emphasis rounded-pill" style="font-size: 0.7rem;">@documento.Tipo</span>
+                                                </div>
+                                                <strong class="text-dark mt-0.5" style="font-size: 0.88rem; line-height: 1.3;">@documento.Titulo</strong>
+                                                <small class="text-muted d-inline-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                                                    @(string.IsNullOrWhiteSpace(documento.NombreAsociado) ? "Documento institucional" : documento.NombreAsociado)
+                                                </small>
+                                                @if (!string.IsNullOrWhiteSpace(documento.Descripcion))
+                                                {
+                                                    <small class="text-secondary text-truncate" style="max-width: 340px; font-size: 0.74rem;" title="@documento.Descripcion">@documento.Descripcion</small>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td class="text-start">
+                                            <div class="d-flex flex-column gap-0.5" style="font-size: 0.8rem;">
+                                                <strong class="text-dark">@documento.Fecha.ToString("dd MMM yyyy")</strong>
+                                                <small class="text-muted">Versión @documento.Version</small>
+                                                @if (documento.FechaVencimiento is DateTime fechaVencimiento)
+                                                {
+                                                    <small class="text-warning-emphasis fw-semibold">Vence: @fechaVencimiento.ToString("dd MMM yyyy")</small>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="@(documento.Estado == EstadosDocumento.Vigente ? "aso-badge-activa" : documento.Estado == EstadosDocumento.Anulado ? "aso-badge-vencida" : "aso-badge-pendiente")">
+                                                @documento.Estado
+                                            </span>
+                                        </td>
+                                        <td class="text-start">
                                             @if (documento.Archivo is not null)
                                             {
-                                                <svg class="ai-icon"><use href="@IconoArchivo(documento.Archivo.TipoMime)" /></svg>
-                                                <span title="@documento.Archivo.Nombre">@documento.Archivo.Nombre</span>
-                                                <small>@TamanoLegible(documento.Archivo.Tamano)</small>
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" class="flex-shrink-0"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                                                    <div class="d-flex flex-column" style="min-width: 0;">
+                                                        <span class="text-dark fw-semibold text-truncate" style="max-width: 170px; font-size: 0.8rem;" title="@documento.Archivo.Nombre">@documento.Archivo.Nombre</span>
+                                                        <small class="text-muted" style="font-size: 0.72rem;">@TamanoLegible(documento.Archivo.Tamano)</small>
+                                                    </div>
+                                                </div>
                                             }
                                             else
                                             {
-                                                <svg class="ai-icon"><use href="#ico-alerta" /></svg>
-                                                <span>Sin archivo adjunto</span>
+                                                <span class="aso-badge-neutro">Sin archivo adjunto</span>
                                             }
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="ai-card-actions">
-                                            <button type="button" class="ai-btn ai-btn-light" @onclick="() => AbrirDetalleAsync(documento.Id)">
-                                                <svg class="ai-icon"><use href="#ico-ojo" /></svg>
-                                                Ver detalles
-                                            </button>
-                                            @if (documento.Archivo is not null)
-                                            {
-                                                <button type="button" class="ai-btn ai-btn-descarga-rapida" title="Descargar archivo" aria-label="@($"Descargar {documento.Archivo.Nombre}")" @onclick="() => DescargarAsync(documento.Id)">
-
-                                                    <svg class="ai-icon"><use href="#ico-descargar" /></svg>
-                                                    <span>Descargar</span></button>
-
-
-
-
-                                            }
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
+                                        </td>
+                                        <td class="text-end">
+                                            <div class="aso-actions-group">
+                                                <button type="button" class="aso-btn-action" @onclick="() => AbrirDetalleAsync(documento.Id)">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                                    <span>Detalles</span>
+                                                </button>
+                                                @if (documento.Archivo is not null)
+                                                {
+                                                    <button type="button" class="aso-btn-action aso-btn-action-primary" title="Descargar archivo" aria-label="@($"Descargar {documento.Archivo.Nombre}")" @onclick="() => DescargarAsync(documento.Id)">
+                                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                                        <span>Descargar</span>
+                                                    </button>
+                                                }
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             }
             else
@@ -1258,7 +1343,7 @@
             Icono = "doc",
             Categoria = Asoagro.Models.CategoriaNotificacion.Documentos,
             Nivel = Asoagro.Models.NivelNotificacion.Informativa,
-            RolesDestino = new[] { "Presidenta", "Directora", "Secretaria", "Tesorero" },
+            RolesDestino = new[] { "Presidenta", "Administrador", "Secretaria", "Tesorero" },
             RolesEnlace = new[] { "Presidenta" }
         });
     }

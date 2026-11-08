@@ -1,5 +1,5 @@
 @page "/alertas-documentos"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Directora,Director,Presidenta,Presidente")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Presidenta,Presidente")]
 @rendermode InteractiveServer
 @using Asoagro.Models
 @using Asoagro.Services
@@ -12,36 +12,37 @@
 <div class="asoagro-documentos-wrapper container-fluid px-0 pb-5">
 
     <!-- HERO PANEL INSTITUCIONAL -->
-    <div class="asoagro-hero-banner p-4 p-md-5 mb-4 position-relative overflow-hidden rounded-4">
-        <div class="hero-bg-shapes"></div>
-        <div class="row align-items-center position-relative" style="z-index: 2;">
-            <div class="col-lg-8">
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                    <span class="badge-agri-pill">
-                        <i class="bi bi-bell-fill me-1"></i> FAAUA · Secretaría General
-                    </span>
-                    <span class="badge-agri-pill-sub">
-                        <i class="bi bi-shield-exclamation me-1"></i> Alertas y Vencimientos
-                    </span>
+    <div class="card aso-hero-card mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="aso-hero-icon-box">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="aso-hero-kicker">FAAUA · Secretaría General</span>
+                            <span class="text-white-50" style="font-size: 0.75rem; font-weight: 600;">Umbrales 30 / 15 / 7 días · @alertas.Count alerta(s) activa(s)</span>
+                        </div>
+                        <h1 class="aso-hero-title">Alertas y vencimientos documentales</h1>
+                        <p class="aso-hero-desc">
+                            Monitoreo en tiempo real de soportes legales, tributarios y certificaciones de las asociaciones de base para mantener la elegibilidad de la federación.
+                        </p>
+                    </div>
                 </div>
-                <h1 class="fw-extrabold text-white mb-2 tracking-tight" style="font-size: 1.85rem; font-weight: 800;">
-                    Vencimientos de Documentos Institucionales
-                </h1>
-                <p class="text-white-50 mb-0 small" style="max-width: 650px; line-height: 1.6;">
-                    Monitoreo en tiempo real de soportes legales, tributarios y certificaciones de las asociaciones de base. Alerta sobre vigencias críticas y permite renovar los expedientes para mantener la elegibilidad de la federación.
-                </p>
-            </div>
-            
-            <div class="col-lg-4 mt-4 mt-lg-0 text-lg-end">
-                <div class="hero-stats-glass p-3 rounded-4 d-inline-block text-start w-100" style="max-width: 280px;">
-                    <div class="d-flex align-items-center justify-content-between mb-2">
-                        <span class="alerta-indicador-label">Umbrales Operativos</span>
-                        <span class="badge-umbrales">30 / 15 / 7 días</span>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-between gap-3 pt-2 border-top border-white border-opacity-25">
-                        <span class="alerta-indicador-label">Alertas Activas</span>
-                        <strong class="alerta-contador">@alertas.Count</strong>
-                    </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <a href="consultar-estado-documentos" class="aso-btn-hero-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                        <span>Estado de documentación</span>
+                    </a>
+                    <a href="registrar-documentos" class="aso-btn-hero-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>Registrar documento</span>
+                    </a>
                 </div>
             </div>
         </div>
@@ -57,16 +58,61 @@
         </div>
     }
 
-    <!-- BARRA DE FILTROS Y RESUMEN -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 p-md-4 bg-white">
-        <div class="row g-3 align-items-end">
+    <!-- FRANJA EJECUTIVA DE SEVERIDAD DE ALERTAS -->
+    <div class="aso-kpi-grid">
+        <div class="aso-kpi-card kpi-emerald" style="cursor: pointer;" @onclick='() => filtroNivel = "Todos"'>
+            <div class="aso-kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+            </div>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Total Alertas Activas</span>
+                <strong class="aso-kpi-value">@alertas.Count</strong>
+                <span class="aso-kpi-sub">Umbral preventivo de 30 días</span>
+            </div>
+        </div>
+
+        <div class="aso-kpi-card kpi-rose" style="cursor: pointer;" @onclick='() => filtroNivel = "Vencido"'>
+            <div class="aso-kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+            </div>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Soportes Vencidos</span>
+                <strong class="aso-kpi-value">@alertas.Count(a => a.DiasRestantes < 0)</strong>
+                <span class="aso-kpi-sub">Renovación urgente requerida</span>
+            </div>
+        </div>
+
+        <div class="aso-kpi-card kpi-amber" style="cursor: pointer;" @onclick='() => filtroNivel = "Crítica"'>
+            <div class="aso-kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Alerta Crítica (&le; 7d)</span>
+                <strong class="aso-kpi-value">@alertas.Count(a => a.DiasRestantes >= 0 && a.DiasRestantes <= 7)</strong>
+                <span class="aso-kpi-sub">Vencimiento en la semana actual</span>
+            </div>
+        </div>
+
+        <div class="aso-kpi-card kpi-sky" style="cursor: pointer;" @onclick='() => filtroNivel = "Preventivo"'>
+            <div class="aso-kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Aviso Preventivo (8–30d)</span>
+                <strong class="aso-kpi-value">@alertas.Count(a => a.DiasRestantes > 7)</strong>
+                <span class="aso-kpi-sub">En ventana de gestión anticipada</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESTACIÓN DE FILTROS Y RESUMEN -->
+    <div class="aso-filter-workbench">
+        <div class="aso-filter-grid-3">
             <!-- Filtro por asociación -->
-            <div class="col-lg-4 col-md-6">
-                <label class="form-label fw-bold small text-dark mb-1">
-                    <i class="bi bi-building me-1 text-success"></i> Filtrar por Asociación:
-                </label>
-                <select class="form-select" @bind="filtroAsociacion">
-                    <option value="">-- Todas las asociaciones --</option>
+            <div class="aso-field-group">
+                <label class="aso-field-label">Filtrar por asociación federada</label>
+                <select class="aso-select-modern" @bind="filtroAsociacion">
+                    <option value="">Todas las asociaciones federadas</option>
                     @foreach (var asoc in listaAsociaciones)
                     {
                         <option value="@asoc">@asoc</option>
@@ -75,12 +121,10 @@
             </div>
 
             <!-- Filtro por severidad / nivel de alerta -->
-            <div class="col-lg-4 col-md-6">
-                <label class="form-label fw-bold small text-dark mb-1">
-                    <i class="bi bi-exclamation-triangle me-1 text-warning"></i> Nivel de Alerta:
-                </label>
-                <select class="form-select" @bind="filtroNivel">
-                    <option value="Todos">Todos los niveles</option>
+            <div class="aso-field-group">
+                <label class="aso-field-label">Nivel de severidad / alerta</label>
+                <select class="aso-select-modern" @bind="filtroNivel">
+                    <option value="Todos">Todos los niveles de alerta</option>
                     <option value="Vencido">Documentos vencidos</option>
                     <option value="Crítica">Alerta crítica (&le; 7 días)</option>
                     <option value="Advertencia">Advertencia (&le; 15 días)</option>
@@ -88,24 +132,32 @@
                 </select>
             </div>
 
-            <div class="col-lg-4 col-md-12 text-md-end">
-                <a href="registrar-documentos" class="btn btn-success fw-bold px-3 py-2 rounded-pill d-inline-flex align-items-center gap-2">
-                    <i class="bi bi-cloud-arrow-up-fill"></i>
-                    <span>Registrar Documento</span>
-                </a>
+            <div class="aso-field-group">
+                <label class="aso-field-label">Resumen de monitoreo</label>
+                <div class="d-flex align-items-center justify-content-between gap-2 px-3 rounded-3" style="height: 40px; background: #fff1f2; border: 1px solid #fecdd3;">
+                    <span class="fw-bold text-danger" style="font-size: 0.82rem;">
+                        @AlertasFiltradas.Count() alerta(s) filtrada(s)
+                    </span>
+                    @if (!string.IsNullOrWhiteSpace(filtroAsociacion) || filtroNivel != "Todos")
+                    {
+                        <button type="button" class="btn btn-sm btn-link text-danger p-0 fw-bold text-decoration-none" style="font-size: 0.76rem;" @onclick='() => { filtroAsociacion = ""; filtroNivel = "Todos"; }'>
+                            Restablecer
+                        </button>
+                    }
+                </div>
             </div>
         </div>
     </div>
 
     <!-- TABLA DE ALERTAS REALES DE ASOCIACIONES -->
-    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
-        <div class="card-header bg-white py-3 px-4 d-flex justify-content-between align-items-center border-bottom">
-            <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                <i class="bi bi-shield-exclamation text-danger"></i>
-                <span>Documentos Próximos a Vencer o Vencidos</span>
-                <span class="badge bg-danger-subtle text-danger rounded-pill">@AlertasFiltradas.Count()</span>
-            </h6>
-            <small class="text-muted">Calculado según la fecha del sistema (@DateTime.Today.ToString("dd/MM/yyyy"))</small>
+    <div class="aso-table-card">
+        <div class="aso-table-header-bar">
+            <div class="aso-table-header-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span>Tablero de Soportes Próximos a Vencer o Vencidos</span>
+                <span class="aso-table-count-pill" style="background: #ffe4e6; color: #be123c; border-color: #fecdd3;">@AlertasFiltradas.Count() alertas</span>
+            </div>
+            <span class="text-muted" style="font-size: 0.78rem; font-weight: 500;">Corte del sistema: @DateTime.Today.ToString("dd/MM/yyyy")</span>
         </div>
 
         @if (!AlertasFiltradas.Any())
@@ -121,35 +173,27 @@
                         : $"La asociación '{filtroAsociacion}' no presenta documentos con vencimiento próximo en el sistema.")
                 </p>
                 <div class="d-flex justify-content-center gap-2">
-                    <a href="consultar-estado-documentos" class="btn btn-sm btn-outline-success fw-semibold px-3 py-2 rounded-pill">
-                        <i class="bi bi-folder-check me-1"></i> Consultar Expedientes
+                    <a href="consultar-estado-documentos" class="aso-btn-action px-3 py-2">
+                        <span>Consultar Expedientes</span>
                     </a>
-                    <a href="registrar-documentos" class="btn btn-sm btn-success fw-bold px-3 py-2 rounded-pill">
-                        <i class="bi bi-cloud-plus me-1"></i> Registrar Documento
+                    <a href="registrar-documentos" class="aso-btn-action aso-btn-action-primary px-3 py-2">
+                        <span>Registrar Documento</span>
                     </a>
                 </div>
             </div>
         }
         else
         {
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0 alerta-tabla" style="min-width: 880px;">
-                    <colgroup>
-                        <col style="width: 23%;" />
-                        <col style="width: 25%;" />
-                        <col style="width: 14%;" />
-                        <col style="width: 12%;" />
-                        <col style="width: 14%;" />
-                        <col style="width: 12%;" />
-                    </colgroup>
-                    <thead style="background: linear-gradient(105deg, #0b2e1c, #17603a) !important;">
+            <div class="aso-table-wrap">
+                <table class="table aso-table-grid align-middle mb-0">
+                    <thead>
                         <tr>
-                            <th class="alerta-th ps-4 py-3 text-start" style="color: #ffffff !important; font-weight: 800; font-size: 0.76rem; letter-spacing: 0.065em; text-transform: uppercase; border: none !important;">Asociación</th>
-                            <th class="alerta-th py-3 text-start" style="color: #ffffff !important; font-weight: 800; font-size: 0.76rem; letter-spacing: 0.065em; text-transform: uppercase; border: none !important;">Documento</th>
-                            <th class="alerta-th py-3 text-center" style="color: #ffffff !important; font-weight: 800; font-size: 0.76rem; letter-spacing: 0.065em; text-transform: uppercase; border: none !important;">Fecha de Vencimiento</th>
-                            <th class="alerta-th py-3 text-center" style="color: #ffffff !important; font-weight: 800; font-size: 0.76rem; letter-spacing: 0.065em; text-transform: uppercase; border: none !important;">Días Restantes</th>
-                            <th class="alerta-th py-3 text-start" style="color: #ffffff !important; font-weight: 800; font-size: 0.76rem; letter-spacing: 0.065em; text-transform: uppercase; border: none !important;">Estado de Alerta</th>
-                            <th class="alerta-th py-3 text-center pe-4" style="color: #ffffff !important; font-weight: 800; font-size: 0.76rem; letter-spacing: 0.065em; text-transform: uppercase; border: none !important;">Acciones</th>
+                            <th class="text-start" style="width: 24%; min-width: 200px;">Asociación</th>
+                            <th class="text-start" style="width: 22%; min-width: 190px;">Documento</th>
+                            <th class="text-center" style="width: 12%; min-width: 110px;">Vencimiento</th>
+                            <th class="text-center" style="width: 12%; min-width: 110px;">Días restantes</th>
+                            <th class="text-start" style="width: 14%; min-width: 145px;">Nivel de alerta</th>
+                            <th class="text-end" style="width: 16%; min-width: 175px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -160,31 +204,32 @@
                             var esAdvertencia = alerta.DiasRestantes > 7 && alerta.DiasRestantes <= 15;
 
                             <tr>
-                                <td class="ps-4 text-start">
-                                    <div class="d-flex align-items-center gap-2">
-                                        <div class="rounded-circle @(esVencido ? "bg-danger" : esCritica ? "bg-danger" : "bg-warning-emphasis") text-white d-flex align-items-center justify-content-center fw-bold" style="width: 32px; height: 32px; font-size: 0.75rem;">
+                                <td class="text-start">
+                                    <div class="d-flex align-items-center gap-2.5">
+                                        <div class="d-flex align-items-center justify-content-center text-white fw-bold shadow-xs flex-shrink-0"
+                                             style="width: 38px; height: 38px; min-width: 38px; border-radius: 10px; background: @(esVencido || esCritica ? "#b91c1c" : "#b45309"); font-size: 0.76rem;">
                                             @ObtenerInicialesAsociacion(alerta.NombreAsociacion)
                                         </div>
-                                        <div>
-                                            <strong class="d-block text-dark small">@alerta.NombreAsociacion</strong>
+                                        <div class="d-flex flex-column" style="min-width: 0;">
+                                            <strong class="text-dark text-truncate" style="max-width: 200px; font-size: 0.85rem;" title="@alerta.NombreAsociacion">@alerta.NombreAsociacion</strong>
                                             @if (!string.IsNullOrWhiteSpace(alerta.NitAsociacion))
                                             {
-                                                <small class="text-muted extra-small">NIT: @alerta.NitAsociacion</small>
+                                                <small class="text-muted font-monospace" style="font-size: 0.72rem;">NIT: @alerta.NitAsociacion</small>
                                             }
                                         </div>
                                     </div>
                                 </td>
 
                                 <td class="text-start">
-                                    <strong class="d-block text-dark small">@alerta.TipoDocumento</strong>
+                                    <strong class="d-block text-dark" style="font-size: 0.85rem;">@alerta.TipoDocumento</strong>
                                     @if (!string.IsNullOrWhiteSpace(alerta.Titulo) && alerta.Titulo != alerta.TipoDocumento)
                                     {
-                                        <span class="text-muted extra-small d-block">@alerta.Titulo</span>
+                                        <small class="text-muted d-block text-truncate" style="max-width: 220px; font-size: 0.74rem;">@alerta.Titulo</small>
                                     }
                                 </td>
 
                                 <td class="text-center">
-                                    <strong class="small @(esVencido ? "text-danger fw-bold" : esCritica ? "text-danger fw-bold" : "text-dark")">
+                                    <strong class="@(esVencido || esCritica ? "text-danger fw-bold" : "text-dark")" style="font-size: 0.84rem;">
                                         @alerta.FechaVencimiento.ToString("dd/MM/yyyy")
                                     </strong>
                                 </td>
@@ -192,74 +237,70 @@
                                 <td class="text-center">
                                     @if (esVencido)
                                     {
-                                        <span class="badge bg-danger text-white px-2.5 py-1 rounded-pill small fw-bold">
+                                        <span class="aso-badge-vencida">
                                             Vencido (@Math.Abs(alerta.DiasRestantes)d)
                                         </span>
                                     }
                                     else if (esCritica)
                                     {
-                                        <span class="badge bg-danger text-white px-2.5 py-1 rounded-pill small fw-bold">
+                                        <span class="aso-badge-vencida">
                                             @alerta.DiasRestantes días
                                         </span>
                                     }
                                     else if (esAdvertencia)
                                     {
-                                        <span class="badge bg-warning text-dark px-2.5 py-1 rounded-pill small fw-bold">
+                                        <span class="aso-badge-pendiente">
                                             @alerta.DiasRestantes días
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-info text-dark px-2.5 py-1 rounded-pill small fw-bold">
+                                        <span class="aso-badge-neutro">
                                             @alerta.DiasRestantes días
                                         </span>
                                     }
                                 </td>
 
                                 <td class="text-start">
-                                    <div class="d-flex align-items-center gap-1.5">
+                                    <div class="d-flex align-items-center gap-1.5" style="font-size: 0.8rem;">
                                         @if (esVencido)
                                         {
-                                            <i class="bi bi-x-circle-fill text-danger"></i>
-                                            <strong class="small text-danger">Documento vencido</strong>
+                                            <strong class="text-danger">Documento vencido</strong>
                                         }
                                         else if (esCritica)
                                         {
-                                            <i class="bi bi-exclamation-octagon-fill text-danger"></i>
-                                            <strong class="small text-danger">Alerta crítica: vence en &le; 7 días</strong>
+                                            <strong class="text-danger">Crítica (&le; 7 días)</strong>
                                         }
                                         else if (esAdvertencia)
                                         {
-                                            <i class="bi bi-exclamation-triangle-fill text-warning-emphasis"></i>
-                                            <strong class="small text-warning-emphasis">Advertencia: vence en &le; 15 días</strong>
+                                            <strong class="text-warning-emphasis">Advertencia (&le; 15 días)</strong>
                                         }
                                         else
                                         {
-                                            <i class="bi bi-info-circle-fill text-primary"></i>
-                                            <strong class="small text-primary">Aviso preventivo: vence en &le; 30 días</strong>
+                                            <strong class="text-primary">Preventivo (&le; 30 días)</strong>
                                         }
                                     </div>
                                 </td>
 
-                                <td class="text-center pe-4 align-middle">
-                                    <div class="alerta-acciones-fila" style="justify-content: center;">
+                                <td class="text-end align-middle">
+                                    <div class="aso-actions-group">
                                         @if (!string.IsNullOrWhiteSpace(alerta.ArchivoNombre))
                                         {
                                             <button type="button"
-                                                    class="alerta-btn alerta-btn-ver"
+                                                    class="aso-btn-action"
                                                     title="Descargar o consultar archivo archivado"
                                                     @onclick="() => DescargarArchivoPorId(alerta.DocumentoId)">
-                                                <i class="bi bi-file-earmark-arrow-down-fill"></i>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
                                                 <span>Ver</span>
                                             </button>
                                         }
 
                                         <button type="button"
-                                                class="alerta-btn alerta-btn-actualizar"
+                                                class="aso-btn-action aso-btn-action-primary"
                                                 title="Actualizar fecha de vencimiento o subir renovación"
                                                 @onclick="() => AbrirModalActualizar(alerta)">
-                                            <i class="bi bi-arrow-repeat"></i>
-                                            <span>Actualizar</span>
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                                            <span>Renovar</span>
                                         </button>
                                     </div>
                                 </td>
@@ -276,19 +317,19 @@
 <!-- MODAL PARA ACTUALIZAR O RENOVAR DOCUMENTO -->
 @if (alertaSeleccionada != null)
 {
-    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(11, 46, 28, 0.65); backdrop-filter: blur(4px);">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header bg-light border-bottom py-3 px-4">
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(11, 46, 28, 0.65); backdrop-filter: blur(5px); z-index: 2500; pointer-events: auto;" @onclick="CerrarModalActualizar">
+        <div class="modal-dialog modal-dialog-centered" style="pointer-events: auto;" @onclick:stopPropagation="true">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden" style="pointer-events: auto;">
+                <div class="modal-header border-0 py-3 px-4 text-white" style="background: linear-gradient(135deg, #0b2e1c 0%, #17603a 100%);">
                     <div>
-                        <span class="badge bg-success-subtle text-success extra-small fw-bold">Renovación de Documento</span>
-                        <h5 class="modal-title fw-bold text-dark mb-0">Actualizar Expediente Institucional</h5>
+                        <span class="badge rounded-pill fw-bold mb-1" style="background-color: #b9e77a; color: #0b2e1c; font-size: 0.7rem;">Renovación de Documento</span>
+                        <h5 class="modal-title fw-bold text-white mb-0" style="font-family: 'Sora', sans-serif; font-size: 1.05rem;">Actualizar Expediente Institucional</h5>
                     </div>
-                    <button type="button" class="btn-close" @onclick="CerrarModalActualizar"></button>
+                    <button type="button" class="btn-close btn-close-white" @onclick="CerrarModalActualizar"></button>
                 </div>
 
-                <div class="modal-body p-4">
-                    <div class="p-3 bg-light rounded-3 mb-3 border">
+                <div class="modal-body p-4" style="max-height: 75vh; overflow-y: auto; overscroll-behavior: contain;">
+                    <div class="p-3 bg-light rounded-3 mb-3 border" style="border-color: #dce4d8 !important;">
                         <strong class="d-block text-dark small">@alertaSeleccionada.NombreAsociacion</strong>
                         <span class="text-secondary small d-block">Documento: <strong>@alertaSeleccionada.TipoDocumento</strong></span>
                         <span class="extra-small text-muted">Vencimiento anterior: @alertaSeleccionada.FechaVencimiento.ToString("dd/MM/yyyy")</span>
@@ -325,9 +366,9 @@
                 </div>
 
                 <div class="modal-footer bg-light border-top py-2.5 px-4">
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-3" @onclick="CerrarModalActualizar">Cancelar</button>
-                    <button type="button" class="btn btn-success btn-sm px-4 fw-bold" @onclick="GuardarActualizacionDocumento">
-                        <i class="bi bi-check2-circle me-1"></i> Guardar Renovación
+                    <button type="button" class="aso-btn-action px-3 py-1.5" @onclick="CerrarModalActualizar">Cancelar</button>
+                    <button type="button" class="aso-btn-action-primary px-4 py-1.5" @onclick="GuardarActualizacionDocumento">
+                        <i class="bi bi-check2-circle"></i> Guardar Renovación
                     </button>
                 </div>
             </div>

@@ -1,0 +1,2295 @@
+@page "/asociaciones"
+@page "/directorio-asociaciones"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Presidenta,Presidente")]
+@rendermode InteractiveServer
+@implements IAsyncDisposable
+@using System.Security.Claims
+@using System.Text.RegularExpressions
+@using Asoagro.Models
+@using Asoagro.Services
+@inject IDocumentoAsociacionService DocumentoService
+@inject IAsociadoService AsociadoService
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Directorio de Asociaciones · ASOAGRO & FAAUA</PageTitle>
+
+<div class="aso-directorio-wrap">
+
+    <!-- =========================================================================
+         1. ENCABEZADO EJECUTIVO DEL DIRECTORIO
+         ========================================================================= -->
+    <div class="card aso-hero-card">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3" style="flex: 1 1 360px; min-width: 0;">
+                    <div class="aso-hero-icon-box">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h2M9 15h2M13 11h2M13 15h2" />
+                        </svg>
+                    </div>
+                    <div style="min-width: 0;">
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="aso-hero-kicker">Gestión Institucional · FAAUA</span>
+                            <span class="text-white-50" style="font-size: 0.74rem; font-weight: 600;">Subregión de Urabá</span>
+                        </div>
+                        <h2 class="aso-hero-title">Directorio de Asociaciones Federadas</h2>
+                        <p class="aso-hero-desc">
+                            Administración centralizada de perfiles jurídicos, juntas directivas, padrón de productores y expedientes documentales.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap align-items-center gap-2 flex-shrink-0">
+                    <a href="/registrar-documentos" class="aso-btn-hero-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                        </svg>
+                        <span>Expedientes documentales</span>
+                    </a>
+                    @if (puedeEditar)
+                    {
+                        <button type="button" class="aso-btn-hero-primary" @onclick="AbrirModalCrear">
+                            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="12" y1="8" x2="12" y2="16" />
+                                <line x1="8" y1="12" x2="16" y2="12" />
+                            </svg>
+                            <span>Registrar asociación</span>
+                        </button>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         1.B FRANJA INTERACTIVA DE MÉTRICAS INSTITUCIONALES (Datos reales en vivo)
+         ========================================================================= -->
+    @{
+        var totalActivas = todasAsociaciones.Count(a => string.Equals(a.Estado, "Activa", StringComparison.OrdinalIgnoreCase));
+        var totalEnActualizacion = todasAsociaciones.Count(a => !string.Equals(a.Estado, "Activa", StringComparison.OrdinalIgnoreCase));
+        var totalMunicipiosSede = MunicipiosDisponibles.Count();
+        var totalConExpediente = todasAsociaciones.Count(a =>
+        {
+            var nom = string.IsNullOrWhiteSpace(a.Sigla) ? a.NombreLegal : $"{a.Sigla} - {a.NombreLegal}";
+            return DocumentoService.ObtenerExpediente(nom).TotalRegistrados > 0;
+        });
+    }
+    <div class="aso-kpi-grid">
+        <button type="button" class="aso-kpi-card @(string.IsNullOrEmpty(filtroEstado) ? "aso-kpi-active" : "")"
+                @onclick='() => filtroEstado = ""'>
+            <div class="aso-kpi-icon green">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h2M9 15h2M13 11h2M13 15h2" />
+                </svg>
+            </div>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Total Federadas</span>
+                <strong class="aso-kpi-value">@todasAsociaciones.Count</strong>
+                <span class="aso-kpi-sub">En @totalMunicipiosSede municipio(s) de Urabá</span>
+            </div>
+        </button>
+
+        <button type="button" class="aso-kpi-card @(filtroEstado == "Activa" ? "aso-kpi-active" : "")"
+                @onclick='() => filtroEstado = filtroEstado == "Activa" ? "" : "Activa"'>
+            <div class="aso-kpi-icon green">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+            </div>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Estado Activa</span>
+                <strong class="aso-kpi-value">@totalActivas</strong>
+                <span class="aso-kpi-sub">Habilitadas en la red FAAUA</span>
+            </div>
+        </button>
+
+        <button type="button" class="aso-kpi-card kpi-amber @(filtroEstado == "En actualización" ? "aso-kpi-active" : "")"
+                @onclick='() => filtroEstado = filtroEstado == "En actualización" ? "" : "En actualización"'>
+            <div class="aso-kpi-icon amber">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+            </div>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">En Actualización / Trámite</span>
+                <strong class="aso-kpi-value">@totalEnActualizacion</strong>
+                <span class="aso-kpi-sub">Revisión o ajuste estatutario</span>
+            </div>
+        </button>
+
+        <a href="/consultar-estado-documentos" class="aso-kpi-card kpi-slate text-decoration-none">
+            <div class="aso-kpi-icon slate">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                </svg>
+            </div>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Con Expediente Activo</span>
+                <strong class="aso-kpi-value">@totalConExpediente</strong>
+                <span class="aso-kpi-sub">Soportes custodiados en línea</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- ALERTA DE MENSAJE TEMPORAL -->
+    @if (!string.IsNullOrWhiteSpace(mensajeAlerta))
+    {
+        <div class="alert @(esErrorAlerta ? "alert-danger" : "alert-success") alert-dismissible fade show rounded-4 shadow-xs d-flex align-items-center gap-2 mb-3"
+             style="border: 1px solid #dce4d8;" role="alert">
+            <i class="bi @(esErrorAlerta ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill") fs-5"></i>
+            <div class="flex-grow-1 small fw-semibold">@mensajeAlerta</div>
+            <button type="button" class="btn-close" @onclick='() => mensajeAlerta = ""' aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <!-- Estilos específicos perfeccionados para la tabla y modales -->
+    <style>
+        .aso-directorio-wrap {
+            width: 100%;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding-bottom: 2.5rem;
+        }
+
+        .aso-asoc-name {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+            line-height: 1.32;
+            font-size: 0.89rem;
+            font-weight: 800;
+            color: #0b2e1c !important;
+        }
+        .aso-asoc-name:hover {
+            color: #17603a !important;
+            text-decoration: underline !important;
+        }
+
+        /* Estructura fija e interactiva de modal para evitar que botones tapen contenido y garantizar interacción y scroll independiente */
+        .aso-modal-overlay {
+            position: fixed !important;
+            inset: 0 !important;
+            z-index: 2500 !important;
+            background: rgba(11, 46, 28, 0.65) !important;
+            backdrop-filter: blur(5px) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 1.25rem !important;
+            overflow-y: auto !important;
+            overscroll-behavior: contain !important;
+            pointer-events: auto !important;
+        }
+        .aso-modal-dialog {
+            position: relative !important;
+            width: 100% !important;
+            max-width: 900px !important;
+            max-height: 92vh !important;
+            margin: auto !important;
+            pointer-events: auto !important;
+            display: flex !important;
+            flex-direction: column !important;
+        }
+        .aso-modal-content {
+            width: 100% !important;
+            max-height: 90vh !important;
+            display: flex !important;
+            flex-direction: column !important;
+            overflow: hidden !important;
+            border-radius: 20px !important;
+            background: #ffffff !important;
+            pointer-events: auto !important;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35) !important;
+        }
+        .aso-modal-header {
+            flex-shrink: 0 !important;
+            pointer-events: auto !important;
+        }
+        .aso-modal-tabs {
+            flex-shrink: 0 !important;
+            pointer-events: auto !important;
+        }
+        .aso-modal-tabs button.nav-link {
+            cursor: pointer !important;
+            pointer-events: auto !important;
+        }
+        .aso-modal-body {
+            flex: 1 1 auto !important;
+            overflow-y: auto !important;
+            max-height: calc(90vh - 175px) !important;
+            -webkit-overflow-scrolling: touch !important;
+            overscroll-behavior: contain !important;
+            pointer-events: auto !important;
+        }
+        .aso-modal-body input,
+        .aso-modal-body select,
+        .aso-modal-body button,
+        .aso-modal-body label,
+        .aso-modal-body textarea {
+            pointer-events: auto !important;
+        }
+        .aso-modal-footer {
+            flex-shrink: 0 !important;
+            border-top: 1px solid #edf2eb !important;
+            background-color: #f8faf7 !important;
+            pointer-events: auto !important;
+        }
+        .aso-modal-footer button {
+            pointer-events: auto !important;
+        }
+    </style>
+
+    <!-- =========================================================================
+         2. ESTACIÓN DE BÚSQUEDA Y FILTROS EN 2 NIVELES (Amplia, separada y sin textos cortados)
+         ========================================================================= -->
+    <div class="aso-filter-workbench">
+        <!-- Nivel 1: Buscador principal amplio + Conteo y Controles de vista -->
+        <div class="aso-filter-top-row">
+            <div class="aso-search-wrap">
+                <svg class="aso-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" class="aso-search-input"
+                       placeholder="Buscar por nombre legal, sigla, NIT, municipio de sede o representante legal..."
+                       @bind="busqueda" @bind:event="oninput" />
+                @if (!string.IsNullOrWhiteSpace(busqueda))
+                {
+                    <button type="button" class="aso-search-clear" @onclick='() => busqueda = ""' aria-label="Limpiar búsqueda">
+                        Limpiar &times;
+                    </button>
+                }
+            </div>
+
+            <div class="d-flex flex-wrap align-items-center gap-3">
+                <span class="aso-table-count-pill">
+                    Mostrando @AsociacionesPaginadas.Count de @AsociacionesFiltradas.Count asociación(es)
+                </span>
+
+                @if (HayFiltrosActivos)
+                {
+                    <button type="button" class="aso-btn-action-danger" @onclick="LimpiarFiltros" title="Restablecer todos los filtros">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                            <path d="M3 3v5h5" />
+                        </svg>
+                        <span>Restablecer filtros</span>
+                    </button>
+                }
+
+                <div class="d-flex align-items-center gap-2">
+                    <label for="filasPorPagina" class="aso-field-label mb-0">Filas:</label>
+                    <select id="filasPorPagina" class="aso-select-modern" style="width: 78px !important; height: 36px !important; padding: 0 26px 0 10px !important;"
+                            @bind="filasPorPagina">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Nivel 2: Cuadrícula de 5 filtros etiquetados con separación holgada (gap: 14px) -->
+        <div class="aso-filter-grid-5">
+            <div class="aso-field-group">
+                <label class="aso-field-label">Tipo de organización</label>
+                <select class="form-select aso-select-modern" @bind="filtroTipo" aria-label="Tipo de organización">
+                    <option value="">Todas las organizaciones</option>
+                    <option value="Asociación campesina">Asociación campesina</option>
+                    <option value="Asociación agropecuaria">Asociación agropecuaria</option>
+                    <option value="Cooperativa agropecuaria">Cooperativa agropecuaria</option>
+                    <option value="Otra">Otra entidad</option>
+                </select>
+            </div>
+
+            <div class="aso-field-group">
+                <label class="aso-field-label">Actividad productiva</label>
+                <select class="form-select aso-select-modern" @bind="filtroActividad" aria-label="Actividad productiva">
+                    <option value="">Todas las actividades</option>
+                    <option value="Agrícola">Agrícola</option>
+                    <option value="Pecuario o ganadero">Pecuario o ganadero</option>
+                    <option value="Mixto">Mixto</option>
+                    <option value="Forestal">Forestal</option>
+                    <option value="Piscícola o acuícola">Piscícola o acuícola</option>
+                    <option value="Otro">Otro enfoque</option>
+                </select>
+            </div>
+
+            <div class="aso-field-group">
+                <label class="aso-field-label">Ámbito territorial</label>
+                <select class="form-select aso-select-modern" @bind="filtroAmbito" aria-label="Ámbito territorial">
+                    <option value="">Todos los ámbitos</option>
+                    <option value="Municipal">Municipal</option>
+                    <option value="Regional">Regional</option>
+                    <option value="Departamental">Departamental</option>
+                    <option value="Nacional">Nacional</option>
+                </select>
+            </div>
+
+            <div class="aso-field-group">
+                <label class="aso-field-label">Estado institucional</label>
+                <select class="form-select aso-select-modern" @bind="filtroEstado" aria-label="Estado institucional">
+                    <option value="">Todos los estados</option>
+                    <option value="Activa">Activa</option>
+                    <option value="En actualización">En actualización</option>
+                    <option value="Suspendida">Suspendida</option>
+                    <option value="Disuelta">Disuelta</option>
+                    <option value="En liquidación">En liquidación</option>
+                </select>
+            </div>
+
+            <div class="aso-field-group">
+                <label class="aso-field-label">Municipio de sede</label>
+                <select class="form-select aso-select-modern" @bind="filtroMunicipio" aria-label="Municipio de sede">
+                    <option value="">Todos los municipios</option>
+                    @foreach (var mun in MunicipiosDisponibles)
+                    {
+                        <option value="@mun">@mun</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================================
+         3. TABLA EJECUTIVA DEL DIRECTORIO DE ASOCIACIONES
+         ========================================================================= -->
+    <div class="aso-table-card">
+        <div class="aso-table-header-bar">
+            <h3 class="aso-table-header-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17603a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                    <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                    <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                </svg>
+                <span>Padrón Institucional de Asociaciones Base</span>
+            </h3>
+            <span class="text-muted small fw-semibold">
+                Haz clic en el nombre o en <strong>Ver perfil</strong> para inspeccionar su ficha técnica y documentos
+            </span>
+        </div>
+
+        @if (AsociacionesFiltradas.Any())
+        {
+            <div id="tablaDirectorioContainer" class="aso-table-wrap">
+                <table class="table aso-table-grid align-middle mb-0" style="min-width: 980px;">
+                    <thead>
+                        <tr>
+                            <th scope="col" class="text-start" style="width: 24%; min-width: 215px;">Asociación Federada</th>
+                            <th scope="col" class="text-start" style="width: 8%; min-width: 80px;">Sigla</th>
+                            <th scope="col" class="text-start" style="width: 10%; min-width: 98px;">NIT</th>
+                            <th scope="col" class="text-start" style="width: 9%; min-width: 90px;">Sede</th>
+                            <th scope="col" class="text-start" style="width: 14%; min-width: 135px;">Representante Legal</th>
+                            <th scope="col" class="text-center" style="width: 8%; min-width: 75px;">Estado</th>
+                            <th scope="col" class="text-center" style="width: 7%; min-width: 75px;">Productores</th>
+                            <th scope="col" class="text-center" style="width: 7%; min-width: 75px;">Expediente</th>
+                            <th scope="col" class="text-end" style="width: 13%; min-width: 140px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var asoc in AsociacionesPaginadas)
+                        {
+                            var nombreCompleto = string.IsNullOrWhiteSpace(asoc.Sigla)
+                                ? asoc.NombreLegal
+                                : $"{asoc.Sigla} - {asoc.NombreLegal}";
+                            var productoresCount = ContarProductores(nombreCompleto);
+                            var expediente = DocumentoService.ObtenerExpediente(nombreCompleto);
+
+                            <tr @key="asoc.Id">
+                                <!-- Columna 1: Asociación -->
+                                <td class="text-start">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="d-flex align-items-center justify-content-center text-white fw-bold shadow-xs flex-shrink-0"
+                                             style="width: 40px; height: 40px; min-width: 40px; border-radius: 11px; background: linear-gradient(135deg, #0b2e1c 0%, #1e7043 100%); font-size: 0.82rem; border: 1px solid rgba(185, 231, 122, 0.4);">
+                                            @ObtenerIniciales(string.IsNullOrWhiteSpace(asoc.Sigla) ? asoc.NombreLegal : asoc.Sigla)
+                                        </div>
+                                        <div class="flex-grow-1" style="min-width: 0;">
+                                            <a href="javascript:void(0)" class="aso-asoc-name text-decoration-none d-block"
+                                               title="@asoc.NombreLegal"
+                                               @onclick="() => AbrirFicha(asoc)">
+                                                @asoc.NombreLegal
+                                            </a>
+                                            <div class="text-muted d-flex flex-wrap align-items-center gap-1 mt-1" style="font-size: 0.73rem; line-height: 1.25;">
+                                                <span class="text-secondary fw-semibold">@asoc.TipoOrganizacion</span>
+                                                <span class="text-muted">·</span>
+                                                <span class="text-success fw-bold">@asoc.ActividadProductiva</span>
+                                                <span class="text-muted">·</span>
+                                                <span>@asoc.Ambito</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <!-- Columna 2: Sigla -->
+                                <td class="text-start" style="white-space: nowrap;">
+                                    @if (!string.IsNullOrWhiteSpace(asoc.Sigla))
+                                    {
+                                        <span class="aso-badge-activa" style="background: #f0f9f2 !important; border-color: #c2e5ca !important; color: #0f4c29 !important;">
+                                            @asoc.Sigla
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Sin sigla</span>
+                                    }
+                                </td>
+
+                                <!-- Columna 3: NIT -->
+                                <td class="text-start" style="white-space: nowrap;">
+                                    @if (!string.IsNullOrWhiteSpace(asoc.Nit))
+                                    {
+                                        <span class="font-monospace fw-bold text-dark px-2 py-1 rounded-2" style="background: #f4f7f4; border: 1px solid #e1e8e0; font-size: 0.81rem;">
+                                            @(asoc.Nit)@(string.IsNullOrWhiteSpace(asoc.DigitoVerificacion) ? "" : $"-{asoc.DigitoVerificacion}")
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="aso-badge-pendiente">En trámite</span>
+                                    }
+                                </td>
+
+                                <!-- Columna 4: Municipio -->
+                                <td class="text-start">
+                                    <div class="d-flex flex-column" style="line-height: 1.25;">
+                                        <strong class="text-dark" style="font-size: 0.85rem;">@asoc.Municipio</strong>
+                                        <small class="text-muted" style="font-size: 0.72rem;">@asoc.Departamento</small>
+                                    </div>
+                                </td>
+
+                                <!-- Columna 5: Representante legal -->
+                                <td class="text-start">
+                                    <div class="d-flex flex-column" style="line-height: 1.25;">
+                                        <strong class="text-dark text-truncate" title="@asoc.RepLegalNombre" style="font-size: 0.85rem; max-width: 165px;">
+                                            @(string.IsNullOrWhiteSpace(asoc.RepLegalNombre) ? "Por designar" : asoc.RepLegalNombre)
+                                        </strong>
+                                        <small class="text-muted" style="font-size: 0.72rem;">
+                                            @(string.IsNullOrWhiteSpace(asoc.RepLegalCargo) ? "Representante Legal" : asoc.RepLegalCargo)
+                                        </small>
+                                    </div>
+                                </td>
+
+                                <!-- Columna 6: Estado -->
+                                <td class="text-center" style="white-space: nowrap;">
+                                    <span class="badge rounded-pill px-2.5 py-1 fw-bold shadow-xs"
+                                          style="font-size: 0.74rem; @ObtenerEstiloBadgeEstado(asoc.Estado)">
+                                        @asoc.Estado
+                                    </span>
+                                </td>
+
+                                <!-- Columna 7: Productores afiliados -->
+                                <td class="text-center" style="white-space: nowrap;">
+                                    <a href="@($"/consultar-asociados?asociacion={Uri.EscapeDataString(nombreCompleto)}")"
+                                       class="aso-badge-activa text-decoration-none"
+                                       title="Ver padrón de productores afiliados de @asoc.NombreLegal">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                            <circle cx="9" cy="7" r="4" />
+                                        </svg>
+                                        <span>@productoresCount</span>
+                                    </a>
+                                </td>
+
+                                <!-- Columna 8: Expediente documental -->
+                                <td class="text-center" style="white-space: nowrap;">
+                                    <a href="@($"/registrar-documentos?asociacion={Uri.EscapeDataString(nombreCompleto)}")"
+                                       class="@(expediente.Vencidos > 0 ? "aso-badge-vencida" : "aso-badge-neutro") text-decoration-none"
+                                       title="@expediente.TotalRegistrados documentos registrados (@expediente.Vigentes vigentes, @expediente.Vencidos vencidos)">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                                        </svg>
+                                        <span>@expediente.TotalRegistrados docs</span>
+                                    </a>
+                                </td>
+
+                                <!-- Columna 9: Acciones explícitas con icono SVG y etiqueta clara -->
+                                <td class="text-end" style="white-space: nowrap;">
+                                    <div class="aso-actions-group">
+                                        <button type="button" class="aso-btn-action-primary"
+                                                @onclick="() => AbrirFicha(asoc)"
+                                                title="Ver perfil institucional completo">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                                <circle cx="12" cy="12" r="3" />
+                                            </svg>
+                                            <span>Perfil</span>
+                                        </button>
+
+                                        @if (puedeEditar)
+                                        {
+                                            <button type="button" class="aso-btn-action"
+                                                    @onclick="async () => await AbrirModalEditar(asoc)"
+                                                    title="Editar datos de la asociación">
+                                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                                    <path d="M12 20h9" />
+                                                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+                                                </svg>
+                                                <span>Editar</span>
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- PAGINADOR COMPACTO -->
+            @if (TotalPaginas > 1)
+            {
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 p-3 px-4 bg-light border-top"
+                     style="border-color: #edf2eb !important;">
+                    <small class="text-muted fw-semibold" style="font-size: 0.8rem;">
+                        Página @paginaActual de @TotalPaginas
+                    </small>
+                    <nav aria-label="Paginación de asociaciones">
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item @(paginaActual <= 1 ? "disabled" : "")">
+                                <button type="button" class="page-link" @onclick="() => CambiarPagina(paginaActual - 1)" aria-label="Anterior">&laquo;</button>
+                            </li>
+                            @for (int p = 1; p <= TotalPaginas; p++)
+                            {
+                                var nPag = p;
+                                <li class="page-item @(paginaActual == nPag ? "active" : "")">
+                                    <button type="button" class="page-link" @onclick="() => CambiarPagina(nPag)">@nPag</button>
+                                </li>
+                            }
+                            <li class="page-item @(paginaActual >= TotalPaginas ? "disabled" : "")">
+                                <button type="button" class="page-link" @onclick="() => CambiarPagina(paginaActual + 1)" aria-label="Siguiente">&raquo;</button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="p-5 text-center">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#8da496" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" class="mx-auto mb-3">
+                    <path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h2M9 15h2M13 11h2M13 15h2" />
+                </svg>
+                <h5 class="fw-bold text-dark mt-2">No se encontraron asociaciones</h5>
+                <p class="text-muted small mb-3">
+                    @(HayFiltrosActivos
+                        ? "Ninguna asociación federada coincide con los criterios de búsqueda aplicados."
+                        : "Actualmente no existen asociaciones registradas en el directorio.")
+                </p>
+                @if (HayFiltrosActivos)
+                {
+                    <button type="button" class="aso-btn-action mx-auto" @onclick="LimpiarFiltros">
+                        <span>Restablecer filtros</span>
+                    </button>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- =========================================================================
+         4. MODAL: FICHA TÉCNICA DEL PERFIL INSTITUCIONAL (Consulta completa)
+         ========================================================================= -->
+    @if (asociacionSeleccionada != null)
+    {
+        var nombreAsocCompleto = string.IsNullOrWhiteSpace(asociacionSeleccionada.Sigla)
+            ? asociacionSeleccionada.NombreLegal
+            : $"{asociacionSeleccionada.Sigla} - {asociacionSeleccionada.NombreLegal}";
+        var productoresAsoc = ContarProductores(nombreAsocCompleto);
+        var expAsoc = DocumentoService.ObtenerExpediente(nombreAsocCompleto);
+
+        <div class="modal fade show d-block aso-modal-overlay" tabindex="-1" style="background: rgba(11, 46, 28, 0.65); backdrop-filter: blur(5px); z-index: 2500; pointer-events: auto;" role="dialog" aria-modal="true" @onclick="CerrarFicha">
+            <div class="modal-dialog modal-lg modal-dialog-centered aso-modal-dialog" style="max-height: 90vh; pointer-events: auto;" @onclick:stopPropagation>
+                <div class="modal-content aso-modal-content rounded-4 border-0 shadow-lg" style="pointer-events: auto;">
+                    
+                    <!-- Header Modal Ficha -->
+                    <div class="modal-header aso-modal-header text-white px-4 py-3" style="background: linear-gradient(135deg, #092615 0%, #17603a 100%);">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge bg-warning text-dark fw-bold" style="font-size: 0.72rem;">Perfil Institucional</span>
+                                <span class="badge @ObtenerClaseBadgeEstado(asociacionSeleccionada.Estado)" style="font-size: 0.72rem;">@asociacionSeleccionada.Estado</span>
+                            </div>
+                            <h5 class="modal-title fw-bold text-white mb-0">@asociacionSeleccionada.NombreLegal</h5>
+                            <small class="text-white-50">
+                                @(string.IsNullOrWhiteSpace(asociacionSeleccionada.Sigla) ? "" : $"Sigla: {asociacionSeleccionada.Sigla} · ")
+                                NIT: @(string.IsNullOrWhiteSpace(asociacionSeleccionada.Nit) ? "En trámite" : $"{asociacionSeleccionada.Nit}-{asociacionSeleccionada.DigitoVerificacion}")
+                            </small>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarFicha" aria-label="Cerrar"></button>
+                    </div>
+
+                    <!-- Body Modal con Ficha Técnica Detallada -->
+                    <div class="modal-body aso-modal-body p-4" style="font-size: 0.88rem;">
+                        
+                        <!-- Resumen KPI de la asociación -->
+                        <div class="row g-2 mb-4">
+                            <div class="col-6 col-sm-3">
+                                <div class="p-2.5 rounded-3 bg-light border text-center">
+                                    <span class="d-block text-muted small fw-semibold">Productores</span>
+                                    <strong class="fs-5 text-success">@productoresAsoc</strong>
+                                </div>
+                            </div>
+                            <div class="col-6 col-sm-3">
+                                <div class="p-2.5 rounded-3 bg-light border text-center">
+                                    <span class="d-block text-muted small fw-semibold">Docs. Registrados</span>
+                                    <strong class="fs-5 text-dark">@expAsoc.TotalRegistrados</strong>
+                                </div>
+                            </div>
+                            <div class="col-6 col-sm-3">
+                                <div class="p-2.5 rounded-3 bg-light border text-center">
+                                    <span class="d-block text-muted small fw-semibold">Docs. Vigentes</span>
+                                    <strong class="fs-5 text-primary">@expAsoc.Vigentes</strong>
+                                </div>
+                            </div>
+                            <div class="col-6 col-sm-3">
+                                <div class="p-2.5 rounded-3 bg-light border text-center">
+                                    <span class="d-block text-muted small fw-semibold">Docs. Vencidos</span>
+                                    <strong class="fs-5 @(expAsoc.Vencidos > 0 ? "text-danger" : "text-muted")">@expAsoc.Vencidos</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 1. Identificación y Constitución -->
+                        <h6 class="fw-bold text-success border-bottom pb-1 mb-2.5 d-flex align-items-center gap-1.5">
+                            <i class="bi bi-shield-check"></i> 1. Identificación y Naturaleza Jurídica
+                        </h6>
+                        <div class="row g-2 mb-3">
+                            <div class="col-sm-6"><strong>Nombre legal:</strong> <span class="text-dark">@asociacionSeleccionada.NombreLegal</span></div>
+                            <div class="col-sm-6"><strong>Sigla:</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(asociacionSeleccionada.Sigla) ? "No registra" : asociacionSeleccionada.Sigla)</span></div>
+                            <div class="col-sm-6">
+                                <strong>Tipo o clasificación jurídica:</strong>
+                                <span class="text-dark">
+                                    @(asociacionSeleccionada.TipoOrganizacion == "Otra" && !string.IsNullOrWhiteSpace(asociacionSeleccionada.TipoOrganizacionOtro)
+                                        ? $"Otra ({asociacionSeleccionada.TipoOrganizacionOtro})"
+                                        : asociacionSeleccionada.TipoOrganizacion)
+                                </span>
+                            </div>
+                            <div class="col-sm-6">
+                                <strong>Actividad productiva:</strong>
+                                <span class="badge bg-success-subtle text-success-emphasis border border-success fw-bold">
+                                    @(asociacionSeleccionada.ActividadProductiva == "Otro" && !string.IsNullOrWhiteSpace(asociacionSeleccionada.ActividadProductivaOtro)
+                                        ? $"Otro ({asociacionSeleccionada.ActividadProductivaOtro})"
+                                        : asociacionSeleccionada.ActividadProductiva)
+                                </span>
+                            </div>
+                            <div class="col-sm-6"><strong>Ámbito territorial:</strong> <span class="text-dark">@asociacionSeleccionada.Ambito</span></div>
+                            <div class="col-sm-6"><strong>Grado de organización:</strong> <span class="text-dark">@asociacionSeleccionada.GradoOrganizacion</span></div>
+                            <div class="col-sm-6"><strong>NIT y DV:</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(asociacionSeleccionada.Nit) ? "En trámite" : $"{asociacionSeleccionada.Nit}-{asociacionSeleccionada.DigitoVerificacion}")</span></div>
+                            <div class="col-sm-6"><strong>Fecha constitución:</strong> <span class="text-dark">@(asociacionSeleccionada.FechaConstitucion?.ToString("dd/MM/yyyy") ?? "No indicada")</span></div>
+                            <div class="col-sm-6"><strong>Entidad de registro:</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(asociacionSeleccionada.EntidadInscripcion) ? "No indicada" : asociacionSeleccionada.EntidadInscripcion)</span></div>
+                            <div class="col-sm-6"><strong>No. Registro / RUES:</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(asociacionSeleccionada.NumeroRegistro) ? "No indicado" : asociacionSeleccionada.NumeroRegistro)</span></div>
+                            <div class="col-sm-6"><strong>Fecha inscripción:</strong> <span class="text-dark">@(asociacionSeleccionada.FechaInscripcion?.ToString("dd/MM/yyyy") ?? "No indicada")</span></div>
+                            @if (!string.IsNullOrWhiteSpace(asociacionSeleccionada.MotivoCambioEstado))
+                            {
+                                <div class="col-12 mt-1">
+                                    <div class="p-2 rounded-3 bg-warning-subtle text-warning-emphasis border border-warning small">
+                                        <strong>Motivo del estado actual (@asociacionSeleccionada.Estado):</strong> @asociacionSeleccionada.MotivoCambioEstado
+                                        @if (asociacionSeleccionada.FechaCambioEstado.HasValue)
+                                        {
+                                            <span>(registrado el @asociacionSeleccionada.FechaCambioEstado.Value.ToString("dd/MM/yyyy"))</span>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- 2. Domicilio y Contacto institucional -->
+                        <h6 class="fw-bold text-success border-bottom pb-1 mb-2.5 d-flex align-items-center gap-1.5">
+                            <i class="bi bi-geo-alt-fill"></i> 2. Domicilio y Canales de Contacto
+                        </h6>
+                        <div class="row g-2 mb-3">
+                            <div class="col-sm-6"><strong>Departamento:</strong> <span class="text-dark">@asociacionSeleccionada.Departamento</span></div>
+                            <div class="col-sm-6"><strong>Municipio sede:</strong> <span class="text-dark">@asociacionSeleccionada.Municipio</span></div>
+                            <div class="col-12"><strong>Dirección principal:</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(asociacionSeleccionada.DireccionPrincipal) ? "No especificada" : asociacionSeleccionada.DireccionPrincipal)</span></div>
+                            <div class="col-12">
+                                <strong>Dirección de notificaciones:</strong>
+                                <span class="text-dark">
+                                    @(asociacionSeleccionada.DireccionNotificacionesEsMisma
+                                        ? "Misma dirección principal"
+                                        : (string.IsNullOrWhiteSpace(asociacionSeleccionada.DireccionNotificaciones) ? "No indicada" : asociacionSeleccionada.DireccionNotificaciones))
+                                </span>
+                            </div>
+                            <div class="col-sm-6"><strong>Correo institucional:</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(asociacionSeleccionada.CorreoInstitucional) ? "No registra" : asociacionSeleccionada.CorreoInstitucional)</span></div>
+                            <div class="col-sm-6"><strong>Teléfono / Celular:</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(asociacionSeleccionada.TelefonoContacto) ? "No registra" : asociacionSeleccionada.TelefonoContacto)</span></div>
+                            <div class="col-12"><strong>Sitio web:</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(asociacionSeleccionada.SitioWeb) ? "No registra" : asociacionSeleccionada.SitioWeb)</span></div>
+                        </div>
+
+                        <!-- 3. Representación Legal y Órganos de Gobierno -->
+                        <h6 class="fw-bold text-success border-bottom pb-1 mb-2.5 d-flex align-items-center gap-1.5">
+                            <i class="bi bi-people-fill"></i> 3. Representación Legal y Órganos Directivos
+                        </h6>
+                        <div class="row g-2 mb-3">
+                            <div class="col-sm-6"><strong>Representante legal:</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(asociacionSeleccionada.RepLegalNombre) ? "Por designar" : asociacionSeleccionada.RepLegalNombre)</span></div>
+                            <div class="col-sm-6"><strong>Documento de identidad:</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(asociacionSeleccionada.RepLegalDocumento) ? "No indicado" : asociacionSeleccionada.RepLegalDocumento)</span></div>
+                            <div class="col-sm-6"><strong>Cargo oficial:</strong> <span class="text-dark">@asociacionSeleccionada.RepLegalCargo</span></div>
+                            <div class="col-sm-6"><strong>Periodo de nombramiento:</strong> <span class="text-dark">@(asociacionSeleccionada.RepLegalPeriodoInicio?.ToString("dd/MM/yyyy") ?? "-") al @(asociacionSeleccionada.RepLegalPeriodoFin?.ToString("dd/MM/yyyy") ?? "Vigente")</span></div>
+                            <div class="col-sm-6"><strong>Presidente(a) de Junta:</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(asociacionSeleccionada.JuntaPresidente) ? "No registrado" : asociacionSeleccionada.JuntaPresidente)</span></div>
+                            <div class="col-sm-6"><strong>Secretario(a):</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(asociacionSeleccionada.JuntaSecretario) ? "No registrado" : asociacionSeleccionada.JuntaSecretario)</span></div>
+                            <div class="col-sm-6"><strong>Tesorero(a):</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(asociacionSeleccionada.JuntaTesorero) ? "No registrado" : asociacionSeleccionada.JuntaTesorero)</span></div>
+                            <div class="col-sm-6">
+                                <strong>Órgano de control / Fiscal:</strong>
+                                <span class="text-dark">
+                                    @(asociacionSeleccionada.FiscalAplica
+                                        ? (!string.IsNullOrWhiteSpace(asociacionSeleccionada.FiscalNombre) ? $"{asociacionSeleccionada.FiscalNombre} ({asociacionSeleccionada.FiscalTipo})" : "Aplica")
+                                        : $"No aplica ({asociacionSeleccionada.FiscalMotivoNoAplica})")
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- 4. Información Tributaria y RUT -->
+                        <h6 class="fw-bold text-success border-bottom pb-1 mb-2.5 d-flex align-items-center gap-1.5">
+                            <i class="bi bi-file-earmark-text"></i> 4. Información Tributaria (DIAN)
+                        </h6>
+                        <div class="row g-2 mb-2">
+                            <div class="col-sm-6"><strong>Régimen tributario:</strong> <span class="text-dark">@asociacionSeleccionada.RegimenTributario</span></div>
+                            <div class="col-sm-6"><strong>Estado RUT:</strong> <span class="text-dark">@asociacionSeleccionada.RutEstado</span></div>
+                            <div class="col-12 text-muted small">
+                                <em>* El RUT tiene vigencia indefinida y se actualiza ante modificaciones de datos (no posee caducidad fija).</em>
+                            </div>
+                        </div>
+
+                        <!-- 5. Trazabilidad y Auditoría -->
+                        <div class="mt-3 pt-2 border-top text-muted small d-flex flex-wrap justify-content-between">
+                            <span>Registrado por: <strong>@asociacionSeleccionada.CreadoPor</strong> (@asociacionSeleccionada.FechaCreacion.ToString("dd/MM/yyyy HH:mm"))</span>
+                            <span>Última actualización: <strong>@asociacionSeleccionada.ActualizadoPor</strong> (@asociacionSeleccionada.FechaActualizacion.ToString("dd/MM/yyyy HH:mm"))</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer Modal con Accesos Rápidos -->
+                    <div class="modal-footer aso-modal-footer px-4 py-2.5 d-flex justify-content-between">
+                        <div>
+                            <button type="button" class="btn btn-secondary rounded-pill px-3 py-1.5" @onclick="CerrarFicha">Cerrar</button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <a href="@($"/consultar-asociados?asociacion={Uri.EscapeDataString(nombreAsocCompleto)}")" class="btn btn-outline-success rounded-pill px-3 py-1.5 fw-semibold">
+                                <i class="bi bi-people-fill me-1"></i> Ver Padrón
+                            </a>
+                            <a href="@($"/registrar-documentos?asociacion={Uri.EscapeDataString(nombreAsocCompleto)}")" class="btn btn-outline-secondary rounded-pill px-3 py-1.5 fw-semibold">
+                                <i class="bi bi-folder-check me-1"></i> Abrir Expediente
+                            </a>
+                            @if (puedeEditar)
+                            {
+                                <button type="button" class="btn btn-success rounded-pill px-3 py-1.5 fw-bold" style="background-color: #17603a; border-color: #17603a;" @onclick="() => AbrirModalEditar(asociacionSeleccionada)">
+                                    <i class="bi bi-pencil-square me-1"></i> Editar Asociación
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- =========================================================================
+         5. MODAL: REGISTRAR / EDITAR ASOCIACIÓN (Formulario con Header y Footer fijos)
+         ========================================================================= -->
+    @if (mostrandoModalFormulario)
+    {
+        <div class="modal fade show d-block aso-modal-overlay" tabindex="-1" style="background: rgba(11, 46, 28, 0.65); backdrop-filter: blur(5px); z-index: 2500; pointer-events: auto;" role="dialog" aria-modal="true" @onclick="CerrarModalFormulario">
+            <div class="modal-dialog modal-lg modal-dialog-centered aso-modal-dialog" style="max-height: 90vh; pointer-events: auto;" @onclick:stopPropagation>
+                <div class="modal-content aso-modal-content rounded-4 border-0 shadow-lg" style="pointer-events: auto;">
+                    
+                    <!-- Header Modal Formulario (Fijo) -->
+                    <div class="modal-header aso-modal-header text-white px-4 py-3" style="background: linear-gradient(135deg, #092615 0%, #17603a 100%);">
+                        <div>
+                            <span class="badge bg-warning text-dark fw-bold mb-1" style="font-size: 0.72rem;">
+                                @(editandoExistente ? "Actualizar Perfil Institucional" : "Registro de Nueva Asociación")
+                            </span>
+                            <h5 class="modal-title fw-bold text-white mb-0">
+                                @(editandoExistente ? (string.IsNullOrWhiteSpace(formularioModelo.NombreLegal) ? "Editar Asociación" : formularioModelo.NombreLegal) : "Nueva Asociación Federada")
+                            </h5>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModalFormulario" aria-label="Cerrar"></button>
+                    </div>
+
+                    <!-- Mensaje de error en formulario -->
+                    @if (!string.IsNullOrWhiteSpace(errorFormulario))
+                    {
+                        <div class="alert alert-danger mb-0 rounded-0 d-flex align-items-center gap-2 px-4 py-2 small" role="alert">
+                            <i class="bi bi-exclamation-octagon-fill fs-5"></i>
+                            <div>@errorFormulario</div>
+                        </div>
+                    }
+
+                    <!-- Tabs de Secciones del Formulario (Fijo) -->
+                    <div class="aso-modal-tabs bg-light border-bottom px-4 pt-2">
+                        <ul class="nav nav-tabs border-bottom-0 small fw-semibold">
+                            <li class="nav-item">
+                                <button type="button" class="nav-link text-dark @(seccionFormulario == 1 ? "active fw-bold text-success" : "")" @onclick="() => seccionFormulario = 1">
+                                    1. Identificación
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button type="button" class="nav-link text-dark @(seccionFormulario == 2 ? "active fw-bold text-success" : "")" @onclick="() => seccionFormulario = 2">
+                                    2. Constitución
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button type="button" class="nav-link text-dark @(seccionFormulario == 3 ? "active fw-bold text-success" : "")" @onclick="() => seccionFormulario = 3">
+                                    3. Domicilio y Contacto
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button type="button" class="nav-link text-dark @(seccionFormulario == 4 ? "active fw-bold text-success" : "")" @onclick="() => seccionFormulario = 4">
+                                    4. Representación
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button type="button" class="nav-link text-dark @(seccionFormulario == 5 ? "active fw-bold text-success" : "")" @onclick="() => seccionFormulario = 5">
+                                    5. Revisión y Guardar
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Body Modal Formulario (Único contenedor con scroll vertical) -->
+                    <div class="modal-body aso-modal-body p-4" style="font-size: 0.88rem;">
+
+                        <!-- SECCIÓN 1: Identificación institucional (Separación de tipo legal y actividad productiva) -->
+                        @if (seccionFormulario == 1)
+                        {
+                            <div class="row g-3">
+                                <!-- Nombre Legal Completo -->
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold mb-1">Nombre legal completo de la entidad <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" placeholder="Ej: Asociación de Productores Agropecuarios de Apartadó"
+                                           @bind="formularioModelo.NombreLegal" />
+                                    <small class="text-muted" style="font-size: 0.72rem;">Razón social o denominación estatutaria aprobada (mínimo 4 caracteres con letras).</small>
+                                </div>
+
+                                <!-- Sigla Institucional -->
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold mb-1">Sigla institucional</label>
+                                    <input type="text" class="form-control" placeholder="Ej: ASOPROMAGRO"
+                                           @bind="formularioModelo.Sigla" maxlength="20" />
+                                    <small class="text-muted" style="font-size: 0.72rem;">Acrónimo o sigla identificadora (máx. 20 caracteres).</small>
+                                </div>
+
+                                <!-- A. Tipo o clasificación jurídica -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Tipo o clasificación jurídica <span class="text-danger">*</span></label>
+                                    <select class="form-select" @bind="formularioModelo.TipoOrganizacion">
+                                        <option value="Asociación campesina">Asociación campesina</option>
+                                        <option value="Asociación agropecuaria">Asociación agropecuaria</option>
+                                        <option value="Cooperativa agropecuaria">Cooperativa agropecuaria</option>
+                                        <option value="Otra">Otra</option>
+                                    </select>
+                                    <small class="text-muted" style="font-size: 0.72rem;">Naturaleza jurídica estatutaria de la entidad.</small>
+                                </div>
+
+                                <!-- B. Actividad o enfoque productivo -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Actividad o enfoque productivo <span class="text-danger">*</span></label>
+                                    <select class="form-select" @bind="formularioModelo.ActividadProductiva">
+                                        <option value="Agrícola">Agrícola</option>
+                                        <option value="Pecuario o ganadero">Pecuario o ganadero</option>
+                                        <option value="Mixto">Mixto</option>
+                                        <option value="Forestal">Forestal</option>
+                                        <option value="Piscícola o acuícola">Piscícola o acuícola</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                    <small class="text-muted" style="font-size: 0.72rem;">Línea de producción o vocación económica de los asociados.</small>
+                                </div>
+
+                                <!-- Campo condicional: Especifique otra naturaleza jurídica -->
+                                @if (formularioModelo.TipoOrganizacion == "Otra")
+                                {
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold mb-1">Especifique el tipo o clasificación jurídica <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" placeholder="Ej: Corporación comunitaria o gremial"
+                                               @bind="formularioModelo.TipoOrganizacionOtro" />
+                                    </div>
+                                }
+
+                                <!-- Campo condicional: Especifique otra actividad productiva -->
+                                @if (formularioModelo.ActividadProductiva == "Otro")
+                                {
+                                    <div class="col-md-6">
+                                        <label class="form-label fw-bold mb-1">Especifique la actividad o enfoque productivo <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" placeholder="Ej: Apicultura y agroindustria rural"
+                                               @bind="formularioModelo.ActividadProductivaOtro" />
+                                    </div>
+                                }
+
+                                <!-- C. Grado y Ámbito Territorial -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Grado de organización</label>
+                                    <select class="form-select" @bind="formularioModelo.GradoOrganizacion">
+                                        <option value="Primer grado (Asociación de base)">Primer grado (Asociación de base)</option>
+                                        <option value="Segundo grado (Federación / Regional)">Segundo grado (Federación / Regional)</option>
+                                        <option value="Tercer grado (Confederación)">Tercer grado (Confederación)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Ámbito territorial <span class="text-danger">*</span></label>
+                                    <select class="form-select" @bind="formularioModelo.Ambito">
+                                        <option value="Municipal">Municipal</option>
+                                        <option value="Regional">Regional</option>
+                                        <option value="Departamental">Departamental</option>
+                                        <option value="Nacional">Nacional</option>
+                                    </select>
+                                </div>
+
+                                <!-- Estado institucional -->
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Estado institucional <span class="text-danger">*</span></label>
+                                    <select class="form-select" @bind="formularioModelo.Estado">
+                                        <option value="Activa">Activa</option>
+                                        <option value="En actualización">En actualización</option>
+                                        <option value="Suspendida">Suspendida</option>
+                                        <option value="Disuelta">Disuelta</option>
+                                        <option value="En liquidación">En liquidación</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Fecha de constitución asamblearia</label>
+                                    <input type="date" class="form-control"
+                                           max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                           value="@(formularioModelo.FechaConstitucion?.ToString("yyyy-MM-dd"))"
+                                           @onchange="e => formularioModelo.FechaConstitucion = ParsearFecha(e.Value?.ToString())" />
+                                    <small class="text-muted" style="font-size: 0.72rem;">Fecha de firma de estatutos (no puede ser futura).</small>
+                                </div>
+
+                                @if (formularioModelo.Estado != "Activa")
+                                {
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold mb-1 text-danger">Motivo del estado institucional (@formularioModelo.Estado) <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control border-danger" placeholder="Indique la justificación formal del estado" @bind="formularioModelo.MotivoCambioEstado" />
+                                    </div>
+                                }
+
+                                <!-- NIT institucional y Dígito de Verificación (Algoritmo DIAN en tiempo real) -->
+                                <div class="col-md-8">
+                                    <label class="form-label fw-bold mb-1">NIT institucional</label>
+                                    <input type="text" class="form-control font-monospace" placeholder="Ej: 901456789 (solo dígitos, sin puntos ni guiones)"
+                                           value="@formularioModelo.Nit"
+                                           @oninput="ActualizarNit" maxlength="10" />
+                                    <small class="text-muted" style="font-size: 0.72rem;">Si se encuentra en trámite ante la DIAN, puede dejarse en blanco temporalmente.</small>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold mb-1">Dígito Verificación (DV)</label>
+                                    <input type="text" class="form-control bg-light font-monospace fw-bold text-center" placeholder="-" value="@formularioModelo.DigitoVerificacion" readonly />
+                                    <small class="text-muted" style="font-size: 0.72rem;">Calculado automáticamente con algoritmo oficial DIAN.</small>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- SECCIÓN 2: Constitución y Soportes -->
+                        @if (seccionFormulario == 2)
+                        {
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Lugar de constitución</label>
+                                    <input type="text" class="form-control" placeholder="Ej: Apartadó, Vereda El Reposo" @bind="formularioModelo.LugarConstitucion" />
+                                    <small class="text-muted" style="font-size: 0.72rem;">Municipio o vereda donde se constituyó la entidad.</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Entidad de inscripción o registro</label>
+                                    <input type="text" class="form-control" placeholder="Ej: Cámara de Comercio de Urabá o MinAgricultura" @bind="formularioModelo.EntidadInscripcion" />
+                                    <small class="text-muted" style="font-size: 0.72rem;">Entidad que confirió personería o matrícula mercantil.</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">No. matrícula / RUES</label>
+                                    <input type="text" class="form-control" placeholder="Ej: 00041235-08" @bind="formularioModelo.NumeroRegistro" />
+                                    <small class="text-muted" style="font-size: 0.72rem;">Número de matrícula o radicado oficial.</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Fecha de inscripción</label>
+                                    <input type="date" class="form-control"
+                                           max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                           value="@(formularioModelo.FechaInscripcion?.ToString("yyyy-MM-dd"))"
+                                           @onchange="e => formularioModelo.FechaInscripcion = ParsearFecha(e.Value?.ToString())" />
+                                    <small class="text-muted" style="font-size: 0.72rem;">Fecha de registro ante la entidad competente.</small>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Régimen tributario DIAN</label>
+                                    <select class="form-select" @bind="formularioModelo.RegimenTributario">
+                                        <option value="Régimen Ordinario">Régimen Ordinario</option>
+                                        <option value="Régimen Tributario Especial (RTE)">Régimen Tributario Especial (RTE)</option>
+                                        <option value="Régimen Especial Cooperativo">Régimen Especial Cooperativo</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Estado en el RUT</label>
+                                    <select class="form-select" @bind="formularioModelo.RutEstado">
+                                        <option value="Inscrita y activa">Inscrita y activa</option>
+                                        <option value="En trámite">En trámite</option>
+                                        <option value="No aplica">No aplica</option>
+                                    </select>
+                                    <small class="text-muted" style="font-size: 0.72rem;">El RUT tiene vigencia indefinida; se custodia su versión actual.</small>
+                                </div>
+
+                                <!-- Carga de soportes iniciales de constitución y estatutos -->
+                                <div class="col-12 mt-3">
+                                    <div class="p-3 rounded-4 border bg-white shadow-xs" style="border-color: #dce4d8 !important;">
+                                        <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom" style="border-color: #edf2eb !important;">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-file-earmark-pdf-fill text-success fs-5"></i>
+                                                <h6 class="fw-bold text-dark mb-0" style="font-size: 0.88rem;">Soportes de constitución y personería jurídica</h6>
+                                            </div>
+                                            <span class="badge bg-light text-muted border small">Máx. 10 MB · PDF, JPG, PNG</span>
+                                        </div>
+
+                                        @foreach (var doc in documentosIniciales.Where(d => d.CategoriaSeccion == "Constitución y estatutos" || d.CategoriaSeccion == "Inscripción y existencia legal"))
+                                        {
+                                            <div class="p-2.5 rounded-3 border mb-2 bg-light d-flex flex-wrap align-items-center justify-content-between gap-2" style="border-color: #e5ede2 !important;">
+                                                <div style="min-width: 240px; flex: 1;">
+                                                    <div class="d-flex align-items-center gap-1.5">
+                                                        <strong class="text-dark small">@doc.TipoDocumento</strong>
+                                                        <span class="badge @(doc.NivelRequerimiento.Contains("Requerido") ? "bg-success-subtle text-success border border-success" : "bg-light text-muted border")" style="font-size: 0.68rem;">
+                                                            @doc.NivelRequerimiento
+                                                        </span>
+                                                    </div>
+                                                    @if (!string.IsNullOrWhiteSpace(doc.MotivoRequerimiento))
+                                                    {
+                                                        <small class="text-muted d-block" style="font-size: 0.72rem;">@doc.MotivoRequerimiento</small>
+                                                    }
+                                                </div>
+
+                                                <div class="d-flex align-items-center gap-2">
+                                                    @if (!string.IsNullOrWhiteSpace(doc.ArchivoNombre))
+                                                    {
+                                                        <span class="badge bg-success text-white d-inline-flex align-items-center gap-1 py-1.5 px-2.5" style="font-size: 0.74rem;">
+                                                            <i class="bi bi-check2-circle"></i> @doc.ArchivoNombre (@FormatearBytes(doc.TamanoBytes))
+                                                        </span>
+                                                        <button type="button" class="btn btn-outline-primary btn-sm py-0.5 px-2 rounded-pill" style="font-size: 0.72rem;"
+                                                                @onclick="() => PrevisualizarArchivo(doc)" title="Previsualizar archivo adjunto">
+                                                            <i class="bi bi-eye"></i> Ver
+                                                        </button>
+                                                        <label class="btn btn-outline-secondary btn-sm py-0.5 px-2 rounded-pill mb-0 cursor-pointer" style="font-size: 0.72rem;" title="Reemplazar archivo">
+                                                            <i class="bi bi-arrow-repeat"></i> Reemplazar
+                                                            <InputFile OnChange="e => CargarArchivoInicial(e, doc.TipoDocumento)" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" />
+                                                        </label>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm py-0.5 px-2 rounded-pill" style="font-size: 0.72rem;"
+                                                                @onclick="() => SolicitarQuitarArchivo(doc.TipoDocumento)" title="Quitar archivo">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <label class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 mb-0 fw-semibold cursor-pointer" style="font-size: 0.76rem;">
+                                                            <i class="bi bi-upload me-1"></i> Adjuntar
+                                                            <InputFile OnChange="e => CargarArchivoInicial(e, doc.TipoDocumento)" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" />
+                                                        </label>
+                                                    }
+                                                </div>
+                                            </div>
+
+                                            @if (documentoAConfirmarEliminar == doc.TipoDocumento)
+                                            {
+                                                <div class="alert alert-warning d-flex align-items-center justify-content-between p-2 mb-2 rounded-3 border border-warning" role="alert">
+                                                    <span class="small fw-semibold">
+                                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> ¿Desea eliminar el archivo adjunto para <strong>@doc.TipoDocumento</strong>?
+                                                    </span>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="button" class="btn btn-sm btn-danger px-2.5 py-0.5 rounded-pill" @onclick="ConfirmarQuitarArchivo">Eliminar</button>
+                                                        <button type="button" class="btn btn-sm btn-secondary px-2.5 py-0.5 rounded-pill" @onclick="CancelarQuitarArchivo">Cancelar</button>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- SECCIÓN 3: Domicilio y Contacto institucional -->
+                        @if (seccionFormulario == 3)
+                        {
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Departamento <span class="text-danger">*</span></label>
+                                    <select class="form-select" @bind="formularioModelo.Departamento">
+                                        <option value="Antioquia">Antioquia</option>
+                                        <option value="Chocó">Chocó</option>
+                                        <option value="Córdoba">Córdoba</option>
+                                        <option value="Sucre">Sucre</option>
+                                        <option value="Otro">Otro</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Municipio sede <span class="text-danger">*</span></label>
+                                    <select class="form-select" @bind="formularioModelo.Municipio">
+                                        <option value="">Seleccione el municipio...</option>
+                                        @foreach (var mun in ListaMunicipiosUraba)
+                                        {
+                                            <option value="@mun">@mun</option>
+                                        }
+                                    </select>
+                                    <small class="text-muted" style="font-size: 0.72rem;">Sede formal de la entidad en Urabá o zona de influencia.</small>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label fw-bold mb-1">Dirección principal / Sede</label>
+                                    <input type="text" class="form-control" placeholder="Ej: Carrera 100 # 98-45, Barrio Ortíz o Vereda La Balsa" @bind="formularioModelo.DireccionPrincipal" />
+                                    <small class="text-muted" style="font-size: 0.72rem;">Ubicación física de la oficina o casa de la asociación.</small>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="checkNotifMisma" @bind="formularioModelo.DireccionNotificacionesEsMisma" />
+                                        <label class="form-check-label fw-semibold" for="checkNotifMisma">
+                                            La dirección de notificaciones judiciales y administrativas es la misma de la sede principal
+                                        </label>
+                                    </div>
+                                </div>
+
+                                @if (!formularioModelo.DireccionNotificacionesEsMisma)
+                                {
+                                    <div class="col-12">
+                                        <label class="form-label fw-bold mb-1">Dirección de notificaciones</label>
+                                        <input type="text" class="form-control" placeholder="Dirección especial para recepción de correspondencia" @bind="formularioModelo.DireccionNotificaciones" />
+                                    </div>
+                                }
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Correo electrónico institucional</label>
+                                    <input type="email" class="form-control" placeholder="Ej: contacto@asociacion.org" @bind="formularioModelo.CorreoInstitucional" />
+                                    <small class="text-muted" style="font-size: 0.72rem;">Canal formal para correspondencia y convocatorias (debe incluir '&#64;').</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Teléfono o celular institucional</label>
+                                    <input type="tel" class="form-control" placeholder="Ej: 3104509876 (7 a 10 dígitos)" @bind="formularioModelo.TelefonoContacto" maxlength="10" />
+                                    <small class="text-muted" style="font-size: 0.72rem;">Línea telefónica de contacto para la secretaría.</small>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label fw-bold mb-1">Sitio web o portal institucional</label>
+                                    <input type="url" class="form-control" placeholder="https://asociacion.org (opcional)" @bind="formularioModelo.SitioWeb" />
+                                </div>
+                            </div>
+                        }
+
+                        <!-- SECCIÓN 4: Representación legal y Órganos directivos -->
+                        @if (seccionFormulario == 4)
+                        {
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Nombre completo del Representante Legal <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" placeholder="Nombre completo" @bind="formularioModelo.RepLegalNombre" />
+                                    <small class="text-muted" style="font-size: 0.72rem;">Dignatario formal acreditado en estatutos o acta.</small>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Documento de identidad (C.C. o C.E.)</label>
+                                    <input type="text" class="form-control" placeholder="Ej: 1045123890" @bind="formularioModelo.RepLegalDocumento" />
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold mb-1">Cargo formal</label>
+                                    <input type="text" class="form-control" placeholder="Representante Legal / Presidente" @bind="formularioModelo.RepLegalCargo" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold mb-1">Periodo desde</label>
+                                    <input type="date" class="form-control"
+                                           value="@(formularioModelo.RepLegalPeriodoInicio?.ToString("yyyy-MM-dd"))"
+                                           @onchange="e => formularioModelo.RepLegalPeriodoInicio = ParsearFecha(e.Value?.ToString())" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-bold mb-1">Periodo hasta</label>
+                                    <input type="date" class="form-control"
+                                           value="@(formularioModelo.RepLegalPeriodoFin?.ToString("yyyy-MM-dd"))"
+                                           @onchange="e => formularioModelo.RepLegalPeriodoFin = ParsearFecha(e.Value?.ToString())" />
+                                </div>
+
+                                <!-- Dignatarios de la Junta Directiva -->
+                                <div class="col-12 mt-2">
+                                    <h6 class="fw-bold text-success border-bottom pb-1 mb-2" style="font-size: 0.85rem;">
+                                        <i class="bi bi-people"></i> Dignatarios de la Junta Directiva
+                                    </h6>
+                                    <div class="row g-2">
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold mb-0.5">Presidente(a) de Junta</label>
+                                            <input type="text" class="form-control form-control-sm" placeholder="Nombre completo" @bind="formularioModelo.JuntaPresidente" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold mb-0.5">Vicepresidente(a)</label>
+                                            <input type="text" class="form-control form-control-sm" placeholder="Nombre completo" @bind="formularioModelo.JuntaVicepresidente" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold mb-0.5">Secretario(a)</label>
+                                            <input type="text" class="form-control form-control-sm" placeholder="Nombre completo" @bind="formularioModelo.JuntaSecretario" />
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="form-label small fw-bold mb-0.5">Tesorero(a)</label>
+                                            <input type="text" class="form-control form-control-sm" placeholder="Nombre completo" @bind="formularioModelo.JuntaTesorero" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Órgano de Control / Fiscal -->
+                                <div class="col-12 mt-2">
+                                    <div class="form-check form-switch mb-2">
+                                        <input class="form-check-input" type="checkbox" id="checkFiscalAplica" @bind="formularioModelo.FiscalAplica" />
+                                        <label class="form-check-label fw-semibold" for="checkFiscalAplica">
+                                            Aplica Revisor Fiscal u Órgano de Control Social
+                                        </label>
+                                    </div>
+
+                                    @if (!formularioModelo.FiscalAplica)
+                                    {
+                                        <div class="mb-2">
+                                            <label class="form-label small fw-bold mb-0.5 text-danger">Motivo por el cual no aplica órgano de control <span class="text-danger">*</span></label>
+                                            <input type="text" class="form-control form-control-sm border-danger" placeholder="Ej: Asociación de base en régimen simplificado según estatutos" @bind="formularioModelo.FiscalMotivoNoAplica" />
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="row g-2 p-2.5 rounded-3 bg-light border">
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold mb-1">Nombre del Fiscal / Revisor</label>
+                                                <input type="text" class="form-control form-control-sm" placeholder="Nombre completo o firma auditora" @bind="formularioModelo.FiscalNombre" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label small fw-bold mb-1">Tipo de cargo</label>
+                                                <input type="text" class="form-control form-control-sm" placeholder="Fiscal principal / Revisor" @bind="formularioModelo.FiscalTipo" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label small fw-bold mb-1">Periodo</label>
+                                                <input type="text" class="form-control form-control-sm" placeholder="Ej: 2024 - 2026" @bind="formularioModelo.FiscalPeriodo" />
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Carga de soporte de representación y gobierno -->
+                                <div class="col-12 mt-3">
+                                    <div class="p-3 rounded-4 border bg-white shadow-xs" style="border-color: #dce4d8 !important;">
+                                        <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom" style="border-color: #edf2eb !important;">
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-people-fill text-success fs-5"></i>
+                                                <h6 class="fw-bold text-dark mb-0" style="font-size: 0.88rem;">Soportes de representación y nombramiento</h6>
+                                            </div>
+                                            <span class="badge bg-light text-muted border small">Máx. 10 MB · PDF, JPG, PNG</span>
+                                        </div>
+
+                                        @foreach (var doc in documentosIniciales.Where(d => d.CategoriaSeccion == "Representación y gobierno"))
+                                        {
+                                            <div class="p-2.5 rounded-3 border mb-2 bg-light d-flex flex-wrap align-items-center justify-content-between gap-2" style="border-color: #e5ede2 !important;">
+                                                <div style="min-width: 240px; flex: 1;">
+                                                    <div class="d-flex align-items-center gap-1.5">
+                                                        <strong class="text-dark small">@doc.TipoDocumento</strong>
+                                                        <span class="badge @(doc.NivelRequerimiento.Contains("Requerido") ? "bg-success-subtle text-success border border-success" : "bg-light text-muted border")" style="font-size: 0.68rem;">
+                                                            @doc.NivelRequerimiento
+                                                        </span>
+                                                    </div>
+                                                    @if (!string.IsNullOrWhiteSpace(doc.MotivoRequerimiento))
+                                                    {
+                                                        <small class="text-muted d-block" style="font-size: 0.72rem;">@doc.MotivoRequerimiento</small>
+                                                    }
+                                                </div>
+
+                                                <div class="d-flex align-items-center gap-2">
+                                                    @if (!string.IsNullOrWhiteSpace(doc.ArchivoNombre))
+                                                    {
+                                                        <span class="badge bg-success text-white d-inline-flex align-items-center gap-1 py-1.5 px-2.5" style="font-size: 0.74rem;">
+                                                            <i class="bi bi-check2-circle"></i> @doc.ArchivoNombre (@FormatearBytes(doc.TamanoBytes))
+                                                        </span>
+                                                        <button type="button" class="btn btn-outline-primary btn-sm py-0.5 px-2 rounded-pill" style="font-size: 0.72rem;"
+                                                                @onclick="() => PrevisualizarArchivo(doc)" title="Previsualizar archivo adjunto">
+                                                            <i class="bi bi-eye"></i> Ver
+                                                        </button>
+                                                        <label class="btn btn-outline-secondary btn-sm py-0.5 px-2 rounded-pill mb-0 cursor-pointer" style="font-size: 0.72rem;" title="Reemplazar archivo">
+                                                            <i class="bi bi-arrow-repeat"></i> Reemplazar
+                                                            <InputFile OnChange="e => CargarArchivoInicial(e, doc.TipoDocumento)" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" />
+                                                        </label>
+                                                        <button type="button" class="btn btn-outline-danger btn-sm py-0.5 px-2 rounded-pill" style="font-size: 0.72rem;"
+                                                                @onclick="() => SolicitarQuitarArchivo(doc.TipoDocumento)" title="Quitar archivo">
+                                                            <i class="bi bi-trash"></i>
+                                                        </button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <label class="btn btn-sm btn-outline-success rounded-pill px-3 py-1 mb-0 fw-semibold cursor-pointer" style="font-size: 0.76rem;">
+                                                            <i class="bi bi-upload me-1"></i> Adjuntar
+                                                            <InputFile OnChange="e => CargarArchivoInicial(e, doc.TipoDocumento)" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" />
+                                                        </label>
+                                                    }
+                                                </div>
+                                            </div>
+
+                                            @if (documentoAConfirmarEliminar == doc.TipoDocumento)
+                                            {
+                                                <div class="alert alert-warning d-flex align-items-center justify-content-between p-2 mb-2 rounded-3 border border-warning" role="alert">
+                                                    <span class="small fw-semibold">
+                                                        <i class="bi bi-exclamation-triangle-fill me-1"></i> ¿Desea eliminar el archivo adjunto para <strong>@doc.TipoDocumento</strong>?
+                                                    </span>
+                                                    <div class="d-flex gap-2">
+                                                        <button type="button" class="btn btn-sm btn-danger px-2.5 py-0.5 rounded-pill" @onclick="ConfirmarQuitarArchivo">Eliminar</button>
+                                                        <button type="button" class="btn btn-sm btn-secondary px-2.5 py-0.5 rounded-pill" @onclick="CancelarQuitarArchivo">Cancelar</button>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- SECCIÓN 5: Revisión, verificación documental y guardado -->
+                        @if (seccionFormulario == 5)
+                        {
+                            <div>
+                                <h6 class="fw-bold text-success border-bottom pb-1 mb-3">
+                                    <i class="bi bi-check2-all"></i> Resumen de la Asociación a Registrar
+                                </h6>
+
+                                <!-- Resumen de datos -->
+                                <div class="p-3 rounded-4 bg-light border mb-3">
+                                    <div class="row g-2">
+                                        <div class="col-sm-6"><strong>Nombre legal:</strong> <span class="text-dark">@formularioModelo.NombreLegal</span></div>
+                                        <div class="col-sm-6"><strong>Sigla:</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(formularioModelo.Sigla) ? "Sin sigla" : formularioModelo.Sigla)</span></div>
+                                        <div class="col-sm-6">
+                                            <strong>Naturaleza jurídica:</strong>
+                                            <span class="text-dark">
+                                                @(formularioModelo.TipoOrganizacion == "Otra" && !string.IsNullOrWhiteSpace(formularioModelo.TipoOrganizacionOtro)
+                                                    ? $"Otra ({formularioModelo.TipoOrganizacionOtro})"
+                                                    : formularioModelo.TipoOrganizacion)
+                                            </span>
+                                        </div>
+                                        <div class="col-sm-6">
+                                            <strong>Actividad productiva:</strong>
+                                            <span class="badge bg-success-subtle text-success-emphasis border border-success fw-bold">
+                                                @(formularioModelo.ActividadProductiva == "Otro" && !string.IsNullOrWhiteSpace(formularioModelo.ActividadProductivaOtro)
+                                                    ? $"Otro ({formularioModelo.ActividadProductivaOtro})"
+                                                    : formularioModelo.ActividadProductiva)
+                                            </span>
+                                        </div>
+                                        <div class="col-sm-6"><strong>Ámbito:</strong> <span class="text-dark">@formularioModelo.Ambito</span></div>
+                                        <div class="col-sm-6"><strong>Grado:</strong> <span class="text-dark">@formularioModelo.GradoOrganizacion</span></div>
+                                        <div class="col-sm-6"><strong>NIT y DV:</strong> <span class="text-dark">@(string.IsNullOrWhiteSpace(formularioModelo.Nit) ? "En trámite" : $"{formularioModelo.Nit}-{formularioModelo.DigitoVerificacion}")</span></div>
+                                        <div class="col-sm-6"><strong>Municipio sede:</strong> <span class="text-dark">@formularioModelo.Municipio, @formularioModelo.Departamento</span></div>
+                                        <div class="col-sm-6"><strong>Representante legal:</strong> <span class="text-dark">@formularioModelo.RepLegalNombre</span></div>
+                                        <div class="col-sm-6"><strong>Estado:</strong> <span class="badge bg-success">@formularioModelo.Estado</span></div>
+                                    </div>
+                                </div>
+
+                                <!-- Verificación documental -->
+                                <h6 class="fw-bold text-dark mb-2" style="font-size: 0.88rem;">
+                                    <i class="bi bi-folder-check text-success"></i> Estado de los Soportes Documentales
+                                </h6>
+                                <div class="list-group list-group-flush border rounded-3 mb-3">
+                                    @foreach (var doc in documentosIniciales)
+                                    {
+                                        <div class="list-group-item d-flex justify-content-between align-items-center py-2 px-3">
+                                            <div>
+                                                <span class="fw-semibold small text-dark d-block">@doc.TipoDocumento</span>
+                                                <small class="text-muted">@doc.CategoriaSeccion · @doc.NivelRequerimiento</small>
+                                            </div>
+                                            <div>
+                                                @if (!string.IsNullOrWhiteSpace(doc.ArchivoNombre))
+                                                {
+                                                    <span class="badge bg-success-subtle text-success border border-success px-2 py-1">
+                                                        <i class="bi bi-check-circle-fill me-1"></i> Adjunto: @doc.ArchivoNombre
+                                                    </span>
+                                                }
+                                                else if (doc.NivelRequerimiento.Contains("Requerido"))
+                                                {
+                                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning px-2 py-1">
+                                                        <i class="bi bi-exclamation-circle-fill me-1"></i> Requerido pendiente
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-light text-muted border px-2 py-1">
+                                                        Pendiente / Opcional
+                                                    </span>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+
+                                <!-- Alerta si faltan obligatorios -->
+                                @if (DocumentosFaltantesObligatorios.Any())
+                                {
+                                    <div class="alert alert-warning rounded-3 p-3 mb-3 small border border-warning" role="alert">
+                                        <div class="d-flex align-items-start gap-2">
+                                            <i class="bi bi-exclamation-triangle-fill fs-5 text-warning flex-shrink-0"></i>
+                                            <div>
+                                                <strong>Expediente incompleto:</strong>
+                                                Se detectaron <strong>@DocumentosFaltantesObligatorios.Count</strong> soporte(s) requerido(s) sin adjuntar:
+                                                <ul class="mb-1 mt-1 ps-3">
+                                                    @foreach (var f in DocumentosFaltantesObligatorios)
+                                                    {
+                                                        <li>@f.TipoDocumento</li>
+                                                    }
+                                                </ul>
+                                                <span>
+                                                    Para garantizar la integridad documental, puede guardar el registro como <strong>Borrador</strong> para completar los documentos más tarde, o regresar a las secciones correspondientes para adjuntarlos.
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+
+                                <!-- Nota institucional de responsabilidad -->
+                                <div class="p-2.5 rounded-3 bg-light border text-muted small">
+                                    <i class="bi bi-info-circle-fill text-success me-1"></i>
+                                    <strong>Aviso institucional:</strong> El registro y la custodia de este expediente constituyen un procedimiento interno de ASOAGRO para fines gremiales, asociativos y de supervisión estatutaria de la federación.
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+
+                    <!-- Footer Modal Formulario (Fijo: Botones siempre visibles sin solapar campos) -->
+                    <div class="modal-footer aso-modal-footer px-4 py-3 d-flex justify-content-between">
+                        <div>
+                            @if (seccionFormulario > 1)
+                            {
+                                <button type="button" class="btn btn-outline-secondary rounded-pill px-3 py-1.5" @onclick="() => seccionFormulario--">
+                                    <i class="bi bi-arrow-left"></i> Anterior
+                                </button>
+                            }
+                            <button type="button" class="btn btn-secondary rounded-pill px-3 py-1.5 ms-1" @onclick="CerrarModalFormulario">Cancelar</button>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            @if (seccionFormulario < 5)
+                            {
+                                <button type="button" class="btn btn-success rounded-pill px-4 py-1.5 fw-bold shadow-xs" style="background-color: #17603a; border-color: #17603a;" @onclick="AvanzarSeccion">
+                                    Siguiente <i class="bi bi-arrow-right"></i>
+                                </button>
+                            }
+                            else
+                            {
+                                @if (DocumentosFaltantesObligatorios.Any())
+                                {
+                                    <button type="button" class="btn btn-outline-warning text-dark rounded-pill px-3.5 py-1.5 fw-bold shadow-xs" @onclick="() => GuardarAsociacion(esBorrador: true)" title="Guarda los datos registrados manteniendo el estado como Borrador">
+                                        <i class="bi bi-bookmark-fill me-1"></i> Guardar como Borrador
+                                    </button>
+                                }
+                                <button type="button" class="btn btn-success rounded-pill px-4 py-1.5 fw-bold shadow-sm" style="background-color: #17603a; border-color: #17603a;" @onclick="() => GuardarAsociacion(esBorrador: false)">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Guardar Expediente Completo
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- =========================================================================
+         6. MODAL: PREVISUALIZADOR DE DOCUMENTOS Y ARCHIVOS
+         ========================================================================= -->
+    @if (mostrandoModalPreview)
+    {
+        <div class="modal fade show d-block aso-modal-overlay" tabindex="-1" style="background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); z-index: 2600; pointer-events: auto;" role="dialog" aria-modal="true" @onclick="CerrarModalPreview">
+            <div class="modal-dialog modal-lg modal-dialog-centered aso-modal-dialog" style="pointer-events: auto;" @onclick:stopPropagation>
+                <div class="modal-content aso-modal-content rounded-4 border-0 shadow-lg overflow-hidden" style="pointer-events: auto;">
+                    <div class="modal-header text-white px-4 py-2.5" style="background: #0b2e1c;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-file-earmark-check fs-5 text-warning"></i>
+                            <h6 class="modal-title fw-bold text-white mb-0 text-truncate" style="max-width: 500px;">@previewNombre</h6>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarModalPreview" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body p-3 text-center bg-light" style="max-height: 75vh; overflow-y: auto;">
+                        @if (previewMime.StartsWith("image/"))
+                        {
+                            <img src="@previewDataUrl" alt="@previewNombre" class="img-fluid rounded shadow-sm" style="max-height: 70vh;" />
+                        }
+                        else if (previewMime == "application/pdf")
+                        {
+                            <iframe src="@previewDataUrl" style="width: 100%; height: 68vh; border: none; border-radius: 8px;" title="@previewNombre"></iframe>
+                        }
+                        else
+                        {
+                            <div class="py-5 text-muted">
+                                <i class="bi bi-file-earmark-text fs-1 text-secondary"></i>
+                                <p class="mt-2 mb-0 fw-semibold">@previewNombre</p>
+                                <small>Previsualización directa no disponible para este formato (@previewMime).</small>
+                            </div>
+                        }
+                    </div>
+                    <div class="modal-footer bg-white px-4 py-2 d-flex justify-content-between">
+                        <a href="@previewDataUrl" download="@previewNombre" class="btn btn-outline-success btn-sm rounded-pill px-3">
+                            <i class="bi bi-download me-1"></i> Descargar archivo
+                        </a>
+                        <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" @onclick="CerrarModalPreview">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    [SupplyParameterFromQuery(Name = "editar")]
+    public string? ParamEditarId { get; set; }
+
+    private string busqueda = string.Empty;
+    private string filtroTipo = string.Empty;
+    private string filtroActividad = string.Empty;
+    private string filtroAmbito = string.Empty;
+    private string filtroEstado = string.Empty;
+    private string filtroMunicipio = string.Empty;
+
+    private int paginaActual = 1;
+    private int filasPorPagina = 10;
+
+    private List<AsociacionInstitucional> todasAsociaciones = new();
+    private List<Asociado> todosProductores = new();
+
+    private AsociacionInstitucional? asociacionSeleccionada;
+    private bool mostrandoModalFormulario = false;
+    private bool editandoExistente = false;
+    private int seccionFormulario = 1;
+    private AsociacionInstitucional formularioModelo = new();
+    private List<DocumentoItemInstitucional> documentosIniciales = new();
+    private string errorFormulario = string.Empty;
+    private string mensajeAlerta = string.Empty;
+    private bool esErrorAlerta = false;
+
+    private Guid? menuAccionesAbiertoId = null;
+    private string? documentoAConfirmarEliminar = null;
+
+    // Previsualizador
+    private bool mostrandoModalPreview = false;
+    private string previewNombre = string.Empty;
+    private string previewMime = string.Empty;
+    private string previewDataUrl = string.Empty;
+
+    private static readonly List<string> ListaMunicipiosUraba = new()
+    {
+        "Apartadó", "Arboletes", "Carepa", "Chigorodó", "Murindó", "Mutatá",
+        "Necoclí", "San Juan de Urabá", "San Pedro de Urabá", "Turbo", "Vigía del Fuerte",
+        "Acandí", "Unguía", "Riosucio", "Montería", "Tierralta", "Medellín"
+    };
+
+    private List<DocumentoItemInstitucional> DocumentosFaltantesObligatorios =>
+        documentosIniciales.Where(d => d.Aplica && d.NivelRequerimiento.Contains("Requerido") && string.IsNullOrWhiteSpace(d.ArchivoNombre)).ToList();
+
+    private bool puedeEditar = true;
+    private bool esPresidenta = false;
+    private string usuarioActual = "Secretaría FAAUA";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            usuarioActual = user.FindFirst("NombreCompleto")?.Value
+                ?? user.Identity.Name
+                ?? user.FindFirst(ClaimTypes.Name)?.Value
+                ?? "Secretaría FAAUA";
+
+            esPresidenta = user.IsInRole("Presidenta") || user.IsInRole("Presidente");
+            puedeEditar = user.IsInRole("Secretaria") || user.IsInRole("Secretaría") || esPresidenta;
+        }
+
+        CargarDatos();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await RestablecerScrollTabla();
+    }
+
+    private void CargarDatos()
+    {
+        todasAsociaciones = DocumentoService.ObtenerAsociacionesInstitucionales().ToList();
+        todosProductores = AsociadoService.ObtenerTodos().ToList();
+    }
+
+    private async Task RestablecerScrollTabla()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("eval", "var el = document.getElementById('tablaDirectorioContainer'); if (el) { el.scrollLeft = 0; }");
+        }
+        catch { }
+    }
+
+    private void AlternarMenuAcciones(Guid id)
+    {
+        menuAccionesAbiertoId = menuAccionesAbiertoId == id ? null : id;
+    }
+
+    private bool HayFiltrosActivos =>
+        !string.IsNullOrWhiteSpace(busqueda) ||
+        !string.IsNullOrWhiteSpace(filtroTipo) ||
+        !string.IsNullOrWhiteSpace(filtroActividad) ||
+        !string.IsNullOrWhiteSpace(filtroAmbito) ||
+        !string.IsNullOrWhiteSpace(filtroEstado) ||
+        !string.IsNullOrWhiteSpace(filtroMunicipio);
+
+    private async Task LimpiarFiltros()
+    {
+        busqueda = "";
+        filtroTipo = "";
+        filtroActividad = "";
+        filtroAmbito = "";
+        filtroEstado = "";
+        filtroMunicipio = "";
+        paginaActual = 1;
+        await RestablecerScrollTabla();
+    }
+
+    private IEnumerable<string> MunicipiosDisponibles =>
+        todasAsociaciones.Select(a => a.Municipio)
+            .Where(m => !string.IsNullOrWhiteSpace(m))
+            .Union(ListaMunicipiosUraba)
+            .Distinct()
+            .OrderBy(m => m);
+
+    private List<AsociacionInstitucional> AsociacionesFiltradas =>
+        todasAsociaciones.Where(a =>
+        {
+            var matchBusqueda = string.IsNullOrWhiteSpace(busqueda) ||
+                (a.NombreLegal?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) == true) ||
+                (a.Sigla?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) == true) ||
+                (a.Nit?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) == true) ||
+                (a.Municipio?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) == true) ||
+                (a.Departamento?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) == true) ||
+                (a.RepLegalNombre?.Contains(busqueda, StringComparison.OrdinalIgnoreCase) == true);
+
+            var matchTipo = string.IsNullOrWhiteSpace(filtroTipo) ||
+                string.Equals(a.TipoOrganizacion, filtroTipo, StringComparison.OrdinalIgnoreCase);
+
+            var matchActividad = string.IsNullOrWhiteSpace(filtroActividad) ||
+                string.Equals(a.ActividadProductiva, filtroActividad, StringComparison.OrdinalIgnoreCase);
+
+            var matchAmbito = string.IsNullOrWhiteSpace(filtroAmbito) ||
+                string.Equals(a.Ambito, filtroAmbito, StringComparison.OrdinalIgnoreCase);
+
+            var matchEstado = string.IsNullOrWhiteSpace(filtroEstado) ||
+                string.Equals(a.Estado, filtroEstado, StringComparison.OrdinalIgnoreCase);
+
+            var matchMun = string.IsNullOrWhiteSpace(filtroMunicipio) ||
+                string.Equals(a.Municipio, filtroMunicipio, StringComparison.OrdinalIgnoreCase);
+
+            return matchBusqueda && matchTipo && matchActividad && matchAmbito && matchEstado && matchMun;
+        }).ToList();
+
+    private int TotalPaginas => Math.Max(1, (int)Math.Ceiling((double)AsociacionesFiltradas.Count / filasPorPagina));
+
+    private List<AsociacionInstitucional> AsociacionesPaginadas =>
+        AsociacionesFiltradas
+            .Skip((paginaActual - 1) * filasPorPagina)
+            .Take(filasPorPagina)
+            .ToList();
+
+    private async Task CambiarPagina(int nuevaPagina)
+    {
+        if (nuevaPagina >= 1 && nuevaPagina <= TotalPaginas)
+        {
+            paginaActual = nuevaPagina;
+            await RestablecerScrollTabla();
+        }
+    }
+
+    private int ContarProductores(string nombreAsociacion)
+    {
+        if (string.IsNullOrWhiteSpace(nombreAsociacion)) return 0;
+        return todosProductores.Count(p =>
+            string.Equals(p.AsociacionPertenece, nombreAsociacion, StringComparison.OrdinalIgnoreCase) ||
+            p.Afiliaciones.Any(af => string.Equals(af.AsociacionNombre, nombreAsociacion, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    private static string ObtenerIniciales(string? texto)
+    {
+        if (string.IsNullOrWhiteSpace(texto)) return "AS";
+        var palabras = texto.Trim().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (palabras.Length == 1) return palabras[0][..Math.Min(2, palabras[0].Length)].ToUpperInvariant();
+        return $"{palabras[0][0]}{palabras[1][0]}".ToUpperInvariant();
+    }
+
+    private static string ObtenerClaseBadgeEstado(string estado) => estado?.Trim().ToLowerInvariant() switch
+    {
+        "activa" => "bg-success text-white",
+        "en actualización" or "suspendida" or "pendiente" => "bg-warning text-dark",
+        "disuelta" or "en liquidación" or "inactiva" or "vencida" => "bg-danger text-white",
+        _ => "bg-light text-dark border"
+    };
+
+    private static string ObtenerEstiloBadgeEstado(string estado) => estado?.Trim().ToLowerInvariant() switch
+    {
+        "activa" => "background-color: #dcfce7 !important; color: #14532d !important; border: 1px solid #86efac !important;",
+        "en actualización" or "suspendida" or "pendiente" => "background-color: #fef9c3 !important; color: #713f12 !important; border: 1px solid #fde047 !important;",
+        "disuelta" or "en liquidación" or "inactiva" or "vencida" => "background-color: #fee2e2 !important; color: #7f1d1d !important; border: 1px solid #fca5a5 !important;",
+        _ => "background-color: #f1f5f9 !important; color: #334155 !important; border: 1px solid #cbd5e1 !important;"
+    };
+
+    private static string FormatearBytes(long bytes)
+    {
+        if (bytes <= 0) return "0 KB";
+        double kb = bytes / 1024.0;
+        if (kb > 1024.0) return $"{kb / 1024.0:F1} MB";
+        return $"{kb:F0} KB";
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrWhiteSpace(ParamEditarId) && Guid.TryParse(ParamEditarId, out var id))
+        {
+            var asoc = DocumentoService.ObtenerAsociacionPorId(id);
+            if (asoc != null)
+            {
+                await AbrirModalEditar(asoc);
+            }
+        }
+    }
+
+    private async Task BloquearScrollModalAsync(bool bloquear)
+    {
+        try
+        {
+            if (bloquear)
+            {
+                await JS.InvokeVoidAsync("eval", "window._asoagroModalScrollY = window.scrollY || document.documentElement.scrollTop || 0; document.body.style.overflow = 'hidden'; document.documentElement.style.overflow = 'hidden';");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("eval", "document.body.style.overflow = ''; document.documentElement.style.overflow = ''; if (typeof window._asoagroModalScrollY === 'number') { window.scrollTo(0, window._asoagroModalScrollY); }");
+            }
+        }
+        catch { }
+    }
+
+    private async Task AbrirFicha(AsociacionInstitucional asoc)
+    {
+        asociacionSeleccionada = asoc;
+        menuAccionesAbiertoId = null;
+        await BloquearScrollModalAsync(true);
+    }
+
+    private async Task CerrarFicha()
+    {
+        asociacionSeleccionada = null;
+        await BloquearScrollModalAsync(false);
+    }
+
+    private void InicializarDocumentosParaAsociacion(AsociacionInstitucional? asoc)
+    {
+        documentosIniciales = new List<DocumentoItemInstitucional>
+        {
+            new DocumentoItemInstitucional
+            {
+                Clave = "constitucion",
+                CategoriaSeccion = "Constitución y estatutos",
+                TipoDocumento = "Acta de Constitución y Aprobación de Estatutos",
+                Titulo = "Acta de Asamblea de Constitución",
+                NivelRequerimiento = "Requerido para esta asociación",
+                TieneVencimiento = false,
+                Aplica = true
+            },
+            new DocumentoItemInstitucional
+            {
+                Clave = "estatutos",
+                CategoriaSeccion = "Constitución y estatutos",
+                TipoDocumento = "Estatutos Vigentes de la Asociación",
+                Titulo = "Estatutos Oficiales Vigentes",
+                NivelRequerimiento = "Requerido para esta asociación",
+                TieneVencimiento = false,
+                Aplica = true
+            },
+            new DocumentoItemInstitucional
+            {
+                Clave = "existencia",
+                CategoriaSeccion = "Inscripción y existencia legal",
+                TipoDocumento = "Certificado de Existencia y Representación Legal (Cámara de Comercio)",
+                Titulo = "Certificado de Cámara de Comercio",
+                NivelRequerimiento = "Requerido si aplica",
+                MotivoRequerimiento = "Aplica a entidades con personería inscrita ante Cámara de Comercio",
+                TieneVencimiento = true,
+                Aplica = asoc == null || !string.IsNullOrWhiteSpace(asoc.EntidadInscripcion)
+            },
+            new DocumentoItemInstitucional
+            {
+                Clave = "nombramiento",
+                CategoriaSeccion = "Representación y gobierno",
+                TipoDocumento = "Acta de Asamblea General y Elección de Junta Directiva",
+                Titulo = "Acta de Elección de Órganos de Gobierno",
+                NivelRequerimiento = "Requerido si aplica",
+                MotivoRequerimiento = "Acredita el nombramiento de los dignatarios actuales",
+                TieneVencimiento = false,
+                Aplica = true
+            },
+            new DocumentoItemInstitucional
+            {
+                Clave = "aceptacion",
+                CategoriaSeccion = "Representación y gobierno",
+                TipoDocumento = "Constancia de Aceptación de Cargos Directivos",
+                Titulo = "Constancia de Aceptación de Cargos",
+                NivelRequerimiento = "Opcional o de referencia",
+                TieneVencimiento = false,
+                Aplica = true
+            }
+        };
+
+        if (asoc != null)
+        {
+            var clave = string.IsNullOrWhiteSpace(asoc.Sigla) ? asoc.NombreLegal.Trim() : $"{asoc.Sigla.Trim()} - {asoc.NombreLegal.Trim()}";
+            var existentes = DocumentoService.ObtenerPorAsociacion(clave);
+            foreach (var item in documentosIniciales)
+            {
+                var doc = existentes.FirstOrDefault(d => string.Equals(d.TipoDocumento.Trim(), item.TipoDocumento.Trim(), StringComparison.OrdinalIgnoreCase));
+                if (doc != null && !string.IsNullOrWhiteSpace(doc.ArchivoNombre))
+                {
+                    item.ArchivoNombre = doc.ArchivoNombre;
+                    item.ArchivoContenido = doc.ArchivoContenido;
+                    item.TamanoBytes = doc.TamanoBytes;
+                    item.ArchivoTipoMime = doc.ArchivoTipoMime;
+                    item.FechaEmision = doc.FechaEmision;
+                    item.FechaVencimiento = doc.FechaVencimiento;
+                    item.TieneVencimiento = doc.TieneVencimiento;
+                    item.EstadoRevision = doc.EstadoRevision;
+                }
+            }
+        }
+    }
+
+    private async Task CargarArchivoInicial(InputFileChangeEventArgs e, string tipoDocumento)
+    {
+        errorFormulario = "";
+        var file = e.File;
+        if (file == null) return;
+
+        if (file.Size == 0)
+        {
+            errorFormulario = "El archivo seleccionado está vacío (0 bytes). Selecciona un archivo válido.";
+            return;
+        }
+
+        const long maxBytes = 10 * 1024 * 1024; // 10 MB
+        if (file.Size > maxBytes)
+        {
+            errorFormulario = $"El archivo '{file.Name}' supera el límite permitido de 10 MB ({file.Size / (1024 * 1024.0):F1} MB).";
+            return;
+        }
+
+        var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+        var permitidas = new[] { ".pdf", ".jpg", ".jpeg", ".png" };
+        if (!permitidas.Contains(ext))
+        {
+            errorFormulario = $"El formato '{ext}' no está permitido. Solo se aceptan archivos PDF, JPG y PNG.";
+            return;
+        }
+
+        try
+        {
+            using var stream = file.OpenReadStream(maxBytes);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+
+            var docItem = documentosIniciales.FirstOrDefault(d => d.TipoDocumento == tipoDocumento);
+            if (docItem != null)
+            {
+                docItem.ArchivoNombre = file.Name;
+                docItem.ArchivoContenido = ms.ToArray();
+                docItem.TamanoBytes = file.Size;
+                docItem.ArchivoTipoMime = file.ContentType ?? (ext == ".pdf" ? "application/pdf" : (ext == ".png" ? "image/png" : "image/jpeg"));
+                docItem.EstadoRevision = "Aprobado";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorFormulario = $"Error al leer el archivo '{file.Name}': {ex.Message}";
+        }
+    }
+
+    private void SolicitarQuitarArchivo(string tipoDocumento)
+    {
+        documentoAConfirmarEliminar = tipoDocumento;
+    }
+
+    private void ConfirmarQuitarArchivo()
+    {
+        if (!string.IsNullOrWhiteSpace(documentoAConfirmarEliminar))
+        {
+            var docItem = documentosIniciales.FirstOrDefault(d => d.TipoDocumento == documentoAConfirmarEliminar);
+            if (docItem != null)
+            {
+                docItem.ArchivoNombre = null;
+                docItem.ArchivoContenido = null;
+                docItem.TamanoBytes = 0;
+            }
+            documentoAConfirmarEliminar = null;
+        }
+    }
+
+    private void CancelarQuitarArchivo()
+    {
+        documentoAConfirmarEliminar = null;
+    }
+
+    private void PrevisualizarArchivo(DocumentoItemInstitucional doc)
+    {
+        if (doc.ArchivoContenido != null && doc.ArchivoContenido.Length > 0)
+        {
+            previewNombre = doc.ArchivoNombre ?? "Documento";
+            previewMime = string.IsNullOrWhiteSpace(doc.ArchivoTipoMime) ? "application/pdf" : doc.ArchivoTipoMime;
+            previewDataUrl = $"data:{previewMime};base64,{Convert.ToBase64String(doc.ArchivoContenido)}";
+            mostrandoModalPreview = true;
+        }
+    }
+
+    private void CerrarModalPreview()
+    {
+        mostrandoModalPreview = false;
+        previewDataUrl = string.Empty;
+    }
+
+    private async Task AbrirModalCrear()
+    {
+        editandoExistente = false;
+        errorFormulario = "";
+        documentoAConfirmarEliminar = null;
+        seccionFormulario = 1;
+        menuAccionesAbiertoId = null;
+
+        formularioModelo = new AsociacionInstitucional
+        {
+            Id = Guid.NewGuid(),
+            NombreLegal = "",
+            Sigla = "",
+            TipoOrganizacion = "Asociación campesina",
+            TipoOrganizacionOtro = "",
+            ActividadProductiva = "Agrícola",
+            ActividadProductivaOtro = "",
+            Ambito = "Municipal",
+            GradoOrganizacion = "Primer grado (Asociación de base)",
+            Estado = "Activa",
+            Departamento = "Antioquia",
+            Municipio = "Apartadó",
+            DireccionPrincipal = "",
+            Sede = "Sede Principal",
+            CorreoInstitucional = "",
+            TelefonoContacto = "",
+            DireccionNotificacionesEsMisma = true,
+            RepLegalCargo = "Representante Legal",
+            RegimenTributario = "Régimen Ordinario",
+            RutEstado = "Inscrita y activa",
+            EstadoExpediente = "Completo",
+            CreadoPor = usuarioActual,
+            ActualizadoPor = usuarioActual,
+            FechaCreacion = DateTime.Now,
+            FechaActualizacion = DateTime.Now
+        };
+        InicializarDocumentosParaAsociacion(null);
+        mostrandoModalFormulario = true;
+        await BloquearScrollModalAsync(true);
+    }
+
+    private async Task AbrirModalEditar(AsociacionInstitucional asoc)
+    {
+        editandoExistente = true;
+        errorFormulario = "";
+        documentoAConfirmarEliminar = null;
+        seccionFormulario = 1;
+        menuAccionesAbiertoId = null;
+
+        formularioModelo = new AsociacionInstitucional
+        {
+            Id = asoc.Id,
+            NombreLegal = asoc.NombreLegal,
+            Sigla = asoc.Sigla,
+            TipoOrganizacion = asoc.TipoOrganizacion,
+            TipoOrganizacionOtro = asoc.TipoOrganizacionOtro,
+            ActividadProductiva = asoc.ActividadProductiva,
+            ActividadProductivaOtro = asoc.ActividadProductivaOtro,
+            Ambito = asoc.Ambito,
+            GradoOrganizacion = asoc.GradoOrganizacion,
+            Nit = asoc.Nit,
+            DigitoVerificacion = asoc.DigitoVerificacion,
+            FechaConstitucion = asoc.FechaConstitucion,
+            LugarConstitucion = asoc.LugarConstitucion,
+            Estado = asoc.Estado,
+            MotivoCambioEstado = asoc.MotivoCambioEstado,
+            FechaCambioEstado = asoc.FechaCambioEstado,
+            Departamento = asoc.Departamento,
+            Municipio = asoc.Municipio,
+            DireccionPrincipal = asoc.DireccionPrincipal,
+            Sede = asoc.Sede,
+            DireccionNotificacionesEsMisma = asoc.DireccionNotificacionesEsMisma,
+            DireccionNotificaciones = asoc.DireccionNotificaciones,
+            CorreoInstitucional = asoc.CorreoInstitucional,
+            TelefonoContacto = asoc.TelefonoContacto,
+            SitioWeb = asoc.SitioWeb,
+            EntidadInscripcion = asoc.EntidadInscripcion,
+            NumeroRegistro = asoc.NumeroRegistro,
+            FechaInscripcion = asoc.FechaInscripcion,
+            RepLegalNombre = asoc.RepLegalNombre,
+            RepLegalCargo = asoc.RepLegalCargo,
+            RepLegalDocumento = asoc.RepLegalDocumento,
+            RepLegalPeriodoInicio = asoc.RepLegalPeriodoInicio,
+            RepLegalPeriodoFin = asoc.RepLegalPeriodoFin,
+            JuntaPresidente = asoc.JuntaPresidente,
+            JuntaVicepresidente = asoc.JuntaVicepresidente,
+            JuntaSecretario = asoc.JuntaSecretario,
+            JuntaTesorero = asoc.JuntaTesorero,
+            JuntaPeriodo = asoc.JuntaPeriodo,
+            FiscalAplica = asoc.FiscalAplica,
+            FiscalMotivoNoAplica = asoc.FiscalMotivoNoAplica,
+            FiscalNombre = asoc.FiscalNombre,
+            FiscalTipo = asoc.FiscalTipo,
+            FiscalPeriodo = asoc.FiscalPeriodo,
+            RegimenTributario = asoc.RegimenTributario,
+            RutEstado = asoc.RutEstado,
+            EstadoExpediente = asoc.EstadoExpediente,
+            CreadoPor = asoc.CreadoPor,
+            ActualizadoPor = usuarioActual,
+            FechaCreacion = asoc.FechaCreacion,
+            FechaActualizacion = DateTime.Now
+        };
+
+        InicializarDocumentosParaAsociacion(asoc);
+        mostrandoModalFormulario = true;
+        await BloquearScrollModalAsync(true);
+    }
+
+    private async Task CerrarModalFormulario()
+    {
+        mostrandoModalFormulario = false;
+        errorFormulario = "";
+        documentoAConfirmarEliminar = null;
+        await BloquearScrollModalAsync(false);
+    }
+
+    private void ActualizarNit(ChangeEventArgs e)
+    {
+        var raw = e.Value?.ToString() ?? string.Empty;
+        formularioModelo.Nit = Regex.Replace(raw, "[^0-9]", "");
+        formularioModelo.DigitoVerificacion = CalcularDigitoVerificacionDian(formularioModelo.Nit);
+    }
+
+    private static string CalcularDigitoVerificacionDian(string nit)
+    {
+        if (string.IsNullOrWhiteSpace(nit)) return string.Empty;
+        var nums = Regex.Replace(nit, "[^0-9]", "");
+        if (nums.Length == 0) return string.Empty;
+
+        int[] primos = { 3, 7, 13, 17, 19, 23, 29, 37, 41, 43, 47, 53, 59, 67, 71 };
+        int suma = 0;
+        int p = 0;
+        for (int i = nums.Length - 1; i >= 0 && p < primos.Length; i--, p++)
+        {
+            suma += (nums[i] - '0') * primos[p];
+        }
+
+        int residuo = suma % 11;
+        if (residuo == 0 || residuo == 1) return residuo.ToString();
+        return (11 - residuo).ToString();
+    }
+
+    private static DateTime? ParsearFecha(string? texto)
+    {
+        if (DateTime.TryParse(texto, out var f)) return f.Date;
+        return null;
+    }
+
+    private void AvanzarSeccion()
+    {
+        errorFormulario = "";
+
+        if (seccionFormulario == 1)
+        {
+            if (string.IsNullOrWhiteSpace(formularioModelo.NombreLegal))
+            {
+                errorFormulario = "El nombre legal completo de la asociación es obligatorio.";
+                return;
+            }
+
+            if (formularioModelo.NombreLegal.Trim().Length < 4)
+            {
+                errorFormulario = "El nombre legal debe tener al menos 4 caracteres.";
+                return;
+            }
+
+            if (!Regex.IsMatch(formularioModelo.NombreLegal, @"[a-zA-ZáéíóúÁÉÍÓÚñÑ]"))
+            {
+                errorFormulario = "El nombre legal no puede componerse únicamente de números o caracteres especiales.";
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(formularioModelo.Sigla))
+            {
+                if (formularioModelo.Sigla.Length > 20)
+                {
+                    errorFormulario = "La sigla institucional no debe superar los 20 caracteres.";
+                    return;
+                }
+
+                if (!Regex.IsMatch(formularioModelo.Sigla, @"^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s\.\-]+$"))
+                {
+                    errorFormulario = "La sigla institucional contiene caracteres no permitidos (solo letras, números, puntos y guiones).";
+                    return;
+                }
+            }
+
+            if (formularioModelo.TipoOrganizacion == "Otra" && string.IsNullOrWhiteSpace(formularioModelo.TipoOrganizacionOtro))
+            {
+                errorFormulario = "Por favor especifique el tipo o clasificación jurídica de la entidad.";
+                return;
+            }
+
+            if (formularioModelo.ActividadProductiva == "Otro" && string.IsNullOrWhiteSpace(formularioModelo.ActividadProductivaOtro))
+            {
+                errorFormulario = "Por favor especifique la actividad o enfoque productivo de la entidad.";
+                return;
+            }
+
+            if (!editandoExistente && DocumentoService.ExisteNombre(formularioModelo.NombreLegal, formularioModelo.Id))
+            {
+                errorFormulario = $"Ya existe otra asociación registrada con el nombre '{formularioModelo.NombreLegal}'. Evite registros duplicados.";
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(formularioModelo.Nit))
+            {
+                if (formularioModelo.Nit.Length < 8 || formularioModelo.Nit.Length > 10)
+                {
+                    errorFormulario = "El NIT institucional debe tener entre 8 y 10 dígitos numéricos (sin dígito de verificación).";
+                    return;
+                }
+
+                if (DocumentoService.ExisteNit(formularioModelo.Nit, formularioModelo.Id))
+                {
+                    errorFormulario = $"El NIT {formularioModelo.Nit} ya se encuentra registrado por otra asociación federada. Verifique los datos.";
+                    return;
+                }
+            }
+
+            if (formularioModelo.FechaConstitucion.HasValue && formularioModelo.FechaConstitucion.Value.Date > DateTime.Today)
+            {
+                errorFormulario = "La fecha de constitución asamblearia no puede ser una fecha futura.";
+                return;
+            }
+
+            if (formularioModelo.Estado != "Activa" && string.IsNullOrWhiteSpace(formularioModelo.MotivoCambioEstado))
+            {
+                errorFormulario = "Debe registrar el motivo de suspensión, disolución o actualización de la asociación.";
+                return;
+            }
+        }
+        else if (seccionFormulario == 2)
+        {
+            if (formularioModelo.FechaInscripcion.HasValue && formularioModelo.FechaInscripcion.Value.Date > DateTime.Today)
+            {
+                errorFormulario = "La fecha de inscripción en Cámara de Comercio no puede ser una fecha futura.";
+                return;
+            }
+        }
+        else if (seccionFormulario == 3)
+        {
+            if (string.IsNullOrWhiteSpace(formularioModelo.Municipio))
+            {
+                errorFormulario = "El municipio de sede es obligatorio.";
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(formularioModelo.CorreoInstitucional) &&
+                !Regex.IsMatch(formularioModelo.CorreoInstitucional, @"^[^@\s]+@[^@\s]+\.[^@\s]+$"))
+            {
+                errorFormulario = "El correo electrónico institucional no tiene un formato válido (ejemplo: contacto@asociacion.org).";
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(formularioModelo.TelefonoContacto) &&
+                !Regex.IsMatch(formularioModelo.TelefonoContacto, @"^[0-9]{7,10}$"))
+            {
+                errorFormulario = "El teléfono institucional debe tener entre 7 y 10 dígitos numéricos (ej. celular o fijo de Colombia).";
+                return;
+            }
+        }
+        else if (seccionFormulario == 4)
+        {
+            if (string.IsNullOrWhiteSpace(formularioModelo.RepLegalNombre))
+            {
+                errorFormulario = "El nombre del representante legal es obligatorio.";
+                return;
+            }
+
+            if (formularioModelo.RepLegalNombre.Trim().Length < 4 || !Regex.IsMatch(formularioModelo.RepLegalNombre, @"[a-zA-ZáéíóúÁÉÍÓÚñÑ]"))
+            {
+                errorFormulario = "El nombre del representante legal debe ser un nombre válido con al menos 4 caracteres.";
+                return;
+            }
+
+            if (!formularioModelo.FiscalAplica && string.IsNullOrWhiteSpace(formularioModelo.FiscalMotivoNoAplica))
+            {
+                errorFormulario = "Indique el motivo por el cual no aplica revisor fiscal u órgano de control.";
+                return;
+            }
+        }
+
+        seccionFormulario++;
+    }
+
+    private async Task GuardarAsociacion(bool esBorrador = false)
+    {
+        errorFormulario = "";
+
+        if (string.IsNullOrWhiteSpace(formularioModelo.NombreLegal))
+        {
+            errorFormulario = "El nombre legal de la asociación es obligatorio.";
+            seccionFormulario = 1;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(formularioModelo.RepLegalNombre))
+        {
+            errorFormulario = "El nombre del representante legal es obligatorio.";
+            seccionFormulario = 4;
+            return;
+        }
+
+        if (!string.IsNullOrWhiteSpace(formularioModelo.Nit))
+        {
+            if (DocumentoService.ExisteNit(formularioModelo.Nit, formularioModelo.Id))
+            {
+                errorFormulario = $"El NIT {formularioModelo.Nit} ya está registrado por otra asociación. Por favor verifique los datos para no duplicarla.";
+                seccionFormulario = 1;
+                return;
+            }
+        }
+
+        if (!esBorrador && DocumentosFaltantesObligatorios.Any())
+        {
+            errorFormulario = $"Faltan {DocumentosFaltantesObligatorios.Count} soporte(s) requerido(s) para marcar el expediente como completo. Puedes adjuntarlos ahora o pulsar 'Guardar como Borrador'.";
+            return;
+        }
+
+        formularioModelo.EstadoExpediente = esBorrador ? "Borrador" : "Completo";
+        formularioModelo.ActualizadoPor = usuarioActual;
+        formularioModelo.FechaActualizacion = DateTime.Now;
+
+        var exito = DocumentoService.GuardarAsociacionInstitucional(formularioModelo, documentosIniciales);
+        if (!exito)
+        {
+            errorFormulario = "No fue posible guardar la asociación. Verifique que no exista otra entidad con el mismo NIT.";
+            return;
+        }
+
+        mensajeAlerta = editandoExistente
+            ? $"El perfil y expediente de '{formularioModelo.NombreLegal}' fueron actualizados exitosamente."
+            : $"La asociación '{formularioModelo.NombreLegal}' fue registrada satisfactoriamente en el directorio y su expediente documental quedó vinculado.";
+        esErrorAlerta = false;
+
+        CargarDatos();
+        await CerrarModalFormulario();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await BloquearScrollModalAsync(false);
+        }
+        catch { }
+    }
+}

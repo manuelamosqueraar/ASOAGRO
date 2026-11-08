@@ -475,7 +475,7 @@ public class InMemoryFinanzasService : IFinanzasService
             Categoria = CategoriaNotificacion.Finanzas,
             Nivel = NivelNotificacion.Informativa,
             RolesDestino = new[] { "Tesorero", "Tesorera" },
-            RolesEnlace = new[] { "Tesorero", "Tesorera", "Directora", "Director" },
+            RolesEnlace = new[] { "Tesorero", "Tesorera", "Administrador", "Admin" },
             ClaveUnica = $"fin-reg-{movimiento.Id}"
         });
 
@@ -516,8 +516,8 @@ public class InMemoryFinanzasService : IFinanzasService
             Icono = "ajustes",
             Categoria = CategoriaNotificacion.Finanzas,
             Nivel = NivelNotificacion.Informativa,
-            RolesDestino = new[] { "Directora", "Director", "Tesorero", "Tesorera" },
-            RolesEnlace = new[] { "Tesorero", "Tesorera", "Directora", "Director" },
+            RolesDestino = new[] { "Administrador", "Admin", "Tesorero", "Tesorera" },
+            RolesEnlace = new[] { "Tesorero", "Tesorera", "Administrador", "Admin" },
             ClaveUnica = $"fin-act-{mov.Id}-{DateTime.Now.Ticks}"
         });
 
@@ -554,8 +554,8 @@ public class InMemoryFinanzasService : IFinanzasService
             Icono = "check",
             Categoria = CategoriaNotificacion.Finanzas,
             Nivel = NivelNotificacion.Informativa,
-            RolesDestino = new[] { "Directora", "Director", "Tesorero", "Tesorera" },
-            RolesEnlace = new[] { "Directora", "Director", "Tesorero", "Tesorera", "Presidenta", "Presidente" },
+            RolesDestino = new[] { "Administrador", "Admin", "Tesorero", "Tesorera" },
+            RolesEnlace = new[] { "Administrador", "Admin", "Tesorero", "Tesorera", "Presidenta", "Presidente" },
             ClaveUnica = $"fin-val-{mov.Id}-{DateTime.Now.Ticks}"
         });
 
@@ -597,8 +597,8 @@ public class InMemoryFinanzasService : IFinanzasService
             Icono = "alerta",
             Categoria = CategoriaNotificacion.Finanzas,
             Nivel = NivelNotificacion.Advertencia,
-            RolesDestino = new[] { "Directora", "Director", "Tesorero", "Tesorera" },
-            RolesEnlace = new[] { "Directora", "Director", "Tesorero", "Tesorera" },
+            RolesDestino = new[] { "Administrador", "Admin", "Tesorero", "Tesorera" },
+            RolesEnlace = new[] { "Administrador", "Admin", "Tesorero", "Tesorera" },
             ClaveUnica = $"fin-obs-{mov.Id}-{DateTime.Now.Ticks}"
         });
 
@@ -650,7 +650,7 @@ public class InMemoryFinanzasService : IFinanzasService
             Categoria = CategoriaNotificacion.Finanzas,
             Nivel = NivelNotificacion.Informativa,
             RolesDestino = new[] { "Tesorero", "Tesorera", "Presidenta", "Presidente", "Secretaria", "Secretaría" },
-            RolesEnlace = new[] { "Tesorero", "Tesorera", "Directora", "Director", "Presidenta", "Presidente" },
+            RolesEnlace = new[] { "Tesorero", "Tesorera", "Administrador", "Admin", "Presidenta", "Presidente" },
             ClaveUnica = $"fin-pag-{mov.Id}-{DateTime.Now.Ticks}"
         });
 
@@ -692,8 +692,8 @@ public class InMemoryFinanzasService : IFinanzasService
             Icono = "alerta",
             Categoria = CategoriaNotificacion.Finanzas,
             Nivel = NivelNotificacion.Advertencia,
-            RolesDestino = new[] { "Directora", "Director", "Tesorero", "Tesorera" },
-            RolesEnlace = new[] { "Tesorero", "Tesorera", "Directora", "Director" },
+            RolesDestino = new[] { "Administrador", "Admin", "Tesorero", "Tesorera" },
+            RolesEnlace = new[] { "Tesorero", "Tesorera", "Administrador", "Admin" },
             ClaveUnica = $"fin-anu-{mov.Id}-{DateTime.Now.Ticks}"
         });
 
@@ -802,9 +802,8 @@ public class InMemoryFinanzasService : IFinanzasService
         rol.Equals("Tesorera", StringComparison.OrdinalIgnoreCase);
 
     private static bool EsAdmin(string rol) =>
-        rol.Equals("Directora", StringComparison.OrdinalIgnoreCase) ||
-        rol.Equals("Director", StringComparison.OrdinalIgnoreCase) ||
-        rol.Equals("Administrador", StringComparison.OrdinalIgnoreCase);
+        rol.Equals("Administrador", StringComparison.OrdinalIgnoreCase) ||
+        rol.Equals("Admin", StringComparison.OrdinalIgnoreCase);
 
     private static bool EsPresidencia(string rol) =>
         rol.Equals("Presidenta", StringComparison.OrdinalIgnoreCase) ||

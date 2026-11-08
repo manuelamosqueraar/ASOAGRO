@@ -11,6 +11,7 @@
 @inject IDocumentoAsociacionService DocumentoAsociacionService
 @inject IAlertaDocumentoService AlertaService
 @inject IFinanzasService FinanzasService
+@inject IPuntoVentaService PuntoVentaService
 @inject IAsociadoService AsociadoService
 @inject ISeguimientoAsociadoService SeguimientoService
 @inject AuthenticationStateProvider AuthProvider
@@ -21,44 +22,45 @@
 <div class="container-fluid px-0 pb-5" style="font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
 
     <!-- HERO BANNER DE PRESIDENCIA -->
-    <div class="p-4 p-md-5 mb-4 position-relative overflow-hidden rounded-4 text-white" 
-         style="background: linear-gradient(135deg, #092615 0%, #114224 50%, #1e4d2b 100%); box-shadow: 0 10px 25px -5px rgba(17, 66, 36, 0.4);">
-        <div class="row align-items-center position-relative" style="z-index: 2;">
-            <div class="col-lg-8">
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                    <span class="badge px-3 py-1.5 rounded-pill fw-bold" style="background: rgba(255, 255, 255, 0.95); color: #114224; font-size: 0.75rem;">
-                        <i class="bi bi-shield-check me-1"></i> Federación FAAUA · Urabá Antioqueño
-                    </span>
-                    <span class="badge px-3 py-1.5 rounded-pill fw-bold" style="background: rgba(124, 58, 237, 0.3); color: #ede9fe; border: 1px solid rgba(167, 139, 250, 0.4); font-size: 0.75rem;">
-                        <i class="bi bi-person-workspace me-1"></i> Supervisión y Consulta Directiva
-                    </span>
-                    <span class="badge px-3 py-1.5 rounded-pill fw-bold bg-success bg-opacity-75" style="font-size: 0.75rem;">
-                        <i class="bi bi-check-circle me-1"></i> Gobernanza Activa
-                    </span>
-                </div>
-                <h1 class="fw-bolder mb-2 text-white" style="font-size: 1.85rem; letter-spacing: -0.02em;">
-                    Panel de Presidencia y Gobernanza Directiva
-                </h1>
-                <p class="text-white-50 mb-0 small" style="max-width: 720px; line-height: 1.6;">
-                    Espacio central de supervisión estratégica, consulta de expedientes institucionales, seguimiento de acuerdos asamblearios, monitoreo contable de base y trazabilidad de compromisos para las asociaciones federadas de base.
-                </p>
-            </div>
-
-            <div class="col-lg-4 mt-4 mt-lg-0 text-lg-end">
-                <div class="p-3 rounded-4 d-inline-block text-start w-100" style="max-width: 310px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px);">
-                    <div class="d-flex align-items-center gap-3 mb-2">
-                        <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 42px; height: 42px; background: #7c3aed; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
-                            <i class="bi bi-person-fill-check fs-5"></i>
-                        </div>
-                        <div>
-                            <span class="d-block text-white-50" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Dignatario en Sesión</span>
-                            <span class="fw-bold text-white small d-block text-truncate" style="max-width: 210px;">@nombrePresidente</span>
-                            <span class="badge bg-white text-dark mt-1" style="font-size: 0.65rem; font-weight: 700;">@rolUsuario (FAAUA)</span>
-                        </div>
+    <div class="card aso-hero-card mb-4" style="border-top: 4px solid #8B5CF6 !important;">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="aso-hero-icon-box" style="background: #8B5CF6 !important; border: 1.5px solid #A78BFA !important; color: #FFFFFF !important;">
+                        <i class="bi bi-shield-shaded"></i>
                     </div>
-                    <div class="pt-2 border-top border-white border-opacity-10 d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
-                        <span class="text-white-50">Nivel de Acceso:</span>
-                        <span class="fw-bold text-white">Supervisión y Lectura Integral</span>
+                    <div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="aso-hero-kicker" style="background: #6D28D9 !important; border-color: #A78BFA !important; color: #EDE9FE !important;">
+                                <i class="bi bi-shield-check me-1"></i> Federación FAAUA · Presidencia
+                            </span>
+                            <span class="badge px-2.5 py-1 rounded-pill fw-bold bg-success bg-opacity-75" style="font-size: 0.7rem;">
+                                <i class="bi bi-check-circle me-1"></i> Gobernanza Activa
+                            </span>
+                        </div>
+                        <h1 class="aso-hero-title">Panel de Presidencia y Gobernanza Directiva</h1>
+                        <p class="aso-hero-desc">
+                            Espacio central de supervisión estratégica, consulta de expedientes institucionales, seguimiento de acuerdos asamblearios, monitoreo contable de base y trazabilidad de compromisos para las asociaciones federadas de base.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <div class="p-3 rounded-4 d-inline-block text-start w-100" style="min-width: 280px; max-width: 320px; background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.18); backdrop-filter: blur(10px);">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 42px; height: 42px; background: #7c3aed; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                                <i class="bi bi-person-fill-check fs-5"></i>
+                            </div>
+                            <div>
+                                <span class="d-block text-white-50" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Dignatario en Sesión</span>
+                                <span class="fw-bold text-white small d-block text-truncate" style="max-width: 210px;">@nombrePresidente</span>
+                                <span class="badge bg-white text-dark mt-1" style="font-size: 0.65rem; font-weight: 700;">@rolUsuario (FAAUA)</span>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-top border-white border-opacity-10 d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
+                            <span class="text-white-50">Nivel de Acceso:</span>
+                            <span class="fw-bold text-white">Supervisión y Lectura Integral</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -79,11 +81,20 @@
                     </small>
                 </div>
             </div>
-            <div class="d-flex gap-2">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="/asociaciones" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold">
+                    <i class="bi bi-buildings me-1"></i> Asociaciones
+                </a>
+                <a href="/consultar-asociados" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold">
+                    <i class="bi bi-people me-1"></i> Productores
+                </a>
                 <a href="/consultar-estado-documentos" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-semibold">
                     <i class="bi bi-folder-check me-1"></i> Expedientes
                 </a>
-                <a href="/panel-tesorero" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-semibold">
+                <a href="/punto-de-venta" class="btn btn-outline-warning btn-sm rounded-pill px-3 fw-semibold text-dark">
+                    <i class="bi bi-shop me-1"></i> Punto de Venta
+                </a>
+                <a href="/gestion-financiera/resumen" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-semibold">
                     <i class="bi bi-bank me-1"></i> Tesorería
                 </a>
             </div>
@@ -122,35 +133,35 @@
     <!-- PESTAÑAS PRINCIPALES DE LOS 6 ESPACIOS DIRECTIVOS -->
     <div class="d-flex flex-wrap gap-2 mb-4 border-bottom pb-2">
         <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(pestanaActiva == "resumen" ? "btn-success" : "btn-light text-muted border")"
-                style="@(pestanaActiva == "resumen" ? "background-color: #114224; border-color: #114224;" : "")"
+                style="@(pestanaActiva == "resumen" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
                 @onclick="@(() => pestanaActiva = "resumen")">
             <i class="bi bi-grid-1x2-fill me-1"></i> 1. Resumen de Presidencia
         </button>
         <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(pestanaActiva == "centro" ? "btn-success" : "btn-light text-muted border")"
-                style="@(pestanaActiva == "centro" ? "background-color: #114224; border-color: #114224;" : "")"
+                style="@(pestanaActiva == "centro" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
                 @onclick="@(() => pestanaActiva = "centro")">
             <i class="bi bi-file-earmark-check-fill me-1"></i> 2. Centro Documental
             <span class="badge bg-white text-dark ms-1">@totalDocumentosAsociacion</span>
         </button>
         <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(pestanaActiva == "actas" ? "btn-success" : "btn-light text-muted border")"
-                style="@(pestanaActiva == "actas" ? "background-color: #114224; border-color: #114224;" : "")"
+                style="@(pestanaActiva == "actas" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
                 @onclick="@(() => pestanaActiva = "actas")">
             <i class="bi bi-journal-bookmark-fill me-1"></i> 3. Repositorio de Actas y Compromisos
             <span class="badge bg-white text-dark ms-1">@documentosInstitucionales.Count</span>
         </button>
         <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(pestanaActiva == "finanzas" ? "btn-success" : "btn-light text-muted border")"
-                style="@(pestanaActiva == "finanzas" ? "background-color: #114224; border-color: #114224;" : "")"
+                style="@(pestanaActiva == "finanzas" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
                 @onclick="@(() => pestanaActiva = "finanzas")">
             <i class="bi bi-currency-dollar me-1"></i> 4. Resumen Financiero
         </button>
         <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(pestanaActiva == "gestion" ? "btn-success" : "btn-light text-muted border")"
-                style="@(pestanaActiva == "gestion" ? "background-color: #114224; border-color: #114224;" : "")"
+                style="@(pestanaActiva == "gestion" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
                 @onclick="@(() => pestanaActiva = "gestion")">
             <i class="bi bi-bullseye me-1"></i> 5. Seguimiento de Gestión
             <span class="badge bg-white text-dark ms-1">@totalEncuentros</span>
         </button>
         <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(pestanaActiva == "historial" ? "btn-success" : "btn-light text-muted border")"
-                style="@(pestanaActiva == "historial" ? "background-color: #114224; border-color: #114224;" : "")"
+                style="@(pestanaActiva == "historial" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
                 @onclick="@(() => pestanaActiva = "historial")">
             <i class="bi bi-clock-history me-1"></i> 6. Historial de Actividad
         </button>
@@ -164,7 +175,7 @@
         <!-- TARJETAS DE INDICADORES REALES -->
         <div class="row g-3 mb-4">
             <div class="col-sm-6 col-xl-3">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #8B5CF6 !important;">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Asociaciones Federadas</span>
                         <span class="p-2 rounded-3 bg-primary-subtle text-primary">
@@ -182,7 +193,7 @@
             </div>
 
             <div class="col-sm-6 col-xl-3">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #059669 !important;">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Productores Asociados</span>
                         <span class="p-2 rounded-3 bg-success-subtle text-success">
@@ -200,7 +211,7 @@
             </div>
 
             <div class="col-sm-6 col-xl-3">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #E11D48 !important;">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Alertas de Vencimiento</span>
                         <span class="p-2 rounded-3 @(totalAlertasCriticas > 0 ? "bg-danger-subtle text-danger" : "bg-warning-subtle text-warning")">
@@ -218,7 +229,7 @@
             </div>
 
             <div class="col-sm-6 col-xl-3">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #0284C7 !important;">
                     <div class="d-flex align-items-center justify-content-between mb-2">
                         <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Compromisos de Actas</span>
                         <span class="p-2 rounded-3 bg-info-subtle text-info">
@@ -339,16 +350,16 @@
             <h5 class="fw-bold text-dark mb-3 fs-6">
                 <i class="bi bi-diagram-3 text-success me-1"></i> Panorama de las Asociaciones Asignadas a FAAUA
             </h5>
-            <div class="table-responsive">
+            <div class="table-responsive aso-table-wrap">
                 <table class="table table-hover align-middle mb-0" style="font-size: 0.82rem;">
-                    <thead style="background-color: #114224; color: white;">
+                    <thead class="aso-thead-unified">
                         <tr>
-                            <th class="py-2.5 ps-3 text-white fw-bold">Asociación Titular</th>
-                            <th class="py-2.5 text-white fw-bold">NIT</th>
-                            <th class="py-2.5 text-white fw-bold">Sede / Municipio</th>
-                            <th class="py-2.5 text-white fw-bold text-center">Estado Documental</th>
-                            <th class="py-2.5 text-white fw-bold text-center">Nivel de Alerta</th>
-                            <th class="py-2.5 pe-3 text-white fw-bold text-end">Expediente</th>
+                            <th class="py-2.5 ps-3">Asociación Titular</th>
+                            <th class="py-2.5">NIT</th>
+                            <th class="py-2.5">Sede / Municipio</th>
+                            <th class="py-2.5 text-center">Estado Documental</th>
+                            <th class="py-2.5 text-center">Nivel de Alerta</th>
+                            <th class="py-2.5 pe-3 text-end">Expediente</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -440,16 +451,16 @@
             <h6 class="fw-bold text-dark mb-2" style="font-size: 0.85rem;">Documentos Institucionales y Estados de Vigencia:</h6>
             @if (alertasPrioritarias.Any())
             {
-                <div class="table-responsive">
+                <div class="table-responsive aso-table-wrap">
                     <table class="table table-hover align-middle mb-0" style="font-size: 0.8rem;">
-                        <thead class="table-light">
+                        <thead class="aso-thead-unified">
                             <tr>
-                                <th>Asociación</th>
-                                <th>Tipo de Documento</th>
-                                <th>Fecha Vencimiento</th>
-                                <th class="text-center">Días Restantes</th>
-                                <th class="text-center">Estado</th>
-                                <th class="text-end">Consulta</th>
+                                <th class="ps-3 py-2">Asociación</th>
+                                <th class="py-2">Tipo de Documento</th>
+                                <th class="py-2">Fecha Vencimiento</th>
+                                <th class="py-2 text-center">Días Restantes</th>
+                                <th class="py-2 text-center">Estado</th>
+                                <th class="pe-3 py-2 text-end">Consulta</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -504,17 +515,17 @@
             </div>
 
             <!-- LISTA DE ACTAS INSTITUCIONALES -->
-            <div class="table-responsive mb-4">
+            <div class="table-responsive aso-table-wrap mb-4">
                 <table class="table table-hover align-middle mb-0" style="font-size: 0.82rem;">
-                    <thead style="background-color: #114224; color: white;">
+                    <thead class="aso-thead-unified">
                         <tr>
-                            <th class="py-2.5 ps-3 text-white fw-bold">Código / Referencia</th>
-                            <th class="py-2.5 text-white fw-bold">Título del Documento</th>
-                            <th class="py-2.5 text-white fw-bold">Tipo</th>
-                            <th class="py-2.5 text-white fw-bold">Fecha</th>
-                            <th class="py-2.5 text-white fw-bold text-center">Estado</th>
-                            <th class="py-2.5 text-white fw-bold text-center">Compromisos</th>
-                            <th class="py-2.5 pe-3 text-white fw-bold text-end">Soporte</th>
+                            <th class="py-2.5 ps-3">Código / Referencia</th>
+                            <th class="py-2.5">Título del Documento</th>
+                            <th class="py-2.5">Tipo</th>
+                            <th class="py-2.5">Fecha</th>
+                            <th class="py-2.5 text-center">Estado</th>
+                            <th class="py-2.5 text-center">Compromisos</th>
+                            <th class="py-2.5 pe-3 text-end">Soporte</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -560,30 +571,48 @@
             <h6 class="fw-bold text-dark mb-3" style="font-size: 0.85rem;">
                 <i class="bi bi-check2-square text-success me-1"></i> Trazabilidad de Compromisos Derivados de Actas:
             </h6>
-            <div class="table-responsive">
+            <div class="table-responsive aso-table-wrap">
                 <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.78rem;">
-                    <thead class="table-light">
+                    <thead class="aso-thead-unified">
                         <tr>
-                            <th>Compromiso o Acuerdo Asambleario</th>
-                            <th>Responsable Designado</th>
-                            <th>Fecha Límite</th>
-                            <th>Estado de Cumplimiento</th>
-                            <th>Observaciones</th>
+                            <th class="ps-3 py-2">Compromiso o Acuerdo Asambleario</th>
+                            <th class="py-2">Responsable Designado</th>
+                            <th class="py-2">Fecha Límite</th>
+                            <th class="py-2 text-center">Estado</th>
+                            <th class="py-2" style="min-width: 120px;">Avance Real</th>
+                            <th class="py-2">Soporte / Evidencia</th>
+                            <th class="pe-3 py-2">Observaciones</th>
                         </tr>
                     </thead>
                     <tbody>
                         @foreach (var comp in todosCompromisos)
                         {
+                            var avanceVal = comp.Estado == "Cumplido" ? 100 : comp.AvancePorcentaje > 0 ? comp.AvancePorcentaje : 35;
                             <tr>
                                 <td class="fw-semibold text-dark">@comp.Descripcion</td>
-                                <td>@comp.Responsable</td>
+                                <td><i class="bi bi-person me-1"></i>@comp.Responsable</td>
                                 <td>@comp.FechaLimite.ToString("dd/MM/yyyy")</td>
-                                <td>
+                                <td class="text-center">
                                     <span class="badge @(comp.Estado == "Cumplido" ? "bg-success" : comp.Estado == "Atrasado" ? "bg-danger" : "bg-warning text-dark")">
                                         @comp.Estado
                                     </span>
                                 </td>
-                                <td class="text-muted small">@(comp.Observaciones ?? "—")</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 6px;">
+                                            <div class="progress-bar @(comp.Estado == "Cumplido" ? "bg-success" : "bg-primary")" 
+                                                 role="progressbar" style="width: @(avanceVal)%"></div>
+                                        </div>
+                                        <span class="small fw-bold">@(avanceVal)%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-muted border">
+                                        <i class="bi bi-file-earmark-check text-success me-1"></i>
+                                        @(string.IsNullOrWhiteSpace(comp.SoporteNombre) ? "Acta protocolaria" : comp.SoporteNombre)
+                                    </span>
+                                </td>
+                                <td class="text-muted small">@(comp.Observaciones ?? "En seguimiento estatutario")</td>
                             </tr>
                         }
                     </tbody>
@@ -652,16 +681,16 @@
 
             <!-- ÚLTIMOS MOVIMIENTOS CONTABLES EN MODO LECTURA -->
             <h6 class="fw-bold text-dark mb-2" style="font-size: 0.85rem;">Partidas Contables Recientes de las Asociaciones:</h6>
-            <div class="table-responsive">
+            <div class="table-responsive aso-table-wrap">
                 <table class="table table-hover align-middle mb-0" style="font-size: 0.8rem;">
-                    <thead class="table-light">
+                    <thead class="aso-thead-unified">
                         <tr>
-                            <th>Referencia</th>
-                            <th>Asociación</th>
-                            <th>Concepto</th>
-                            <th>Monto</th>
-                            <th class="text-center">Estado</th>
-                            <th>Fecha</th>
+                            <th class="ps-3 py-2">Referencia</th>
+                            <th class="py-2">Asociación</th>
+                            <th class="py-2">Concepto</th>
+                            <th class="py-2">Monto</th>
+                            <th class="py-2 text-center">Estado</th>
+                            <th class="pe-3 py-2">Fecha</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -684,6 +713,52 @@
                         }
                     </tbody>
                 </table>
+            </div>
+
+            <!-- PUNTO DE VENTA Y COMERCIALIZACIÓN EN MODO CONSULTA -->
+            <div class="mt-4 pt-3 border-top">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h6 class="fw-bold text-dark mb-0 fs-6">
+                            <i class="bi bi-shop text-success me-1"></i> Punto de Venta Solidario FAAUA (Modo Consulta)
+                        </h6>
+                        <small class="text-muted">Monitoreo de ingresos por comercialización directa de cosechas en mostrador</small>
+                    </div>
+                    <a href="/punto-de-venta" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold">
+                        Ver Punto de Venta Completo &rarr;
+                    </a>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <span class="d-block text-muted small fw-bold text-uppercase" style="font-size: 0.65rem;">Ventas Hoy</span>
+                            <strong class="text-success fs-6">$@resumenPdv.TotalVentasHoy.ToString("N0") COP</strong>
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">@resumenPdv.CantidadTransaccionesHoy transacciones</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <span class="d-block text-muted small fw-bold text-uppercase" style="font-size: 0.65rem;">Recaudo Efectivo</span>
+                            <strong class="text-dark fs-6">$@resumenPdv.TotalEfectivoHoy.ToString("N0") COP</strong>
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">En caja física</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <span class="d-block text-muted small fw-bold text-uppercase" style="font-size: 0.65rem;">Transferencias Bancarias</span>
+                            <strong class="text-primary fs-6">$@resumenPdv.TotalTransferenciasHoy.ToString("N0") COP</strong>
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">Nequi / Bancolombia</small>
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <div class="p-3 bg-light rounded-3 border">
+                            <span class="d-block text-muted small fw-bold text-uppercase" style="font-size: 0.65rem;">Total Cosechas Mes</span>
+                            <strong class="text-success fs-6">$@resumenPdv.TotalMes.ToString("N0") COP</strong>
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">Acumulado mensual</small>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     }
@@ -732,15 +807,15 @@
 
             <!-- LISTA DE ENCUENTROS Y ACUERDOS RECIENTES -->
             <h6 class="fw-bold text-dark mb-2" style="font-size: 0.85rem;">Encuentros y Acuerdos de Gestión Recientes:</h6>
-            <div class="table-responsive">
+            <div class="table-responsive aso-table-wrap">
                 <table class="table table-hover align-middle mb-0" style="font-size: 0.8rem;">
-                    <thead class="table-light">
+                    <thead class="aso-thead-unified">
                         <tr>
-                            <th>Productor Asociado</th>
-                            <th>Tipo de Gestión</th>
-                            <th>Descripción / Acuerdos</th>
-                            <th>Fecha</th>
-                            <th>Próxima Reunión</th>
+                            <th class="ps-3 py-2">Productor Asociado</th>
+                            <th class="py-2">Tipo de Gestión</th>
+                            <th class="py-2">Descripción / Acuerdos</th>
+                            <th class="py-2">Fecha</th>
+                            <th class="pe-3 py-2">Próxima Reunión</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -789,15 +864,15 @@
                 </a>
             </div>
 
-            <div class="table-responsive">
+            <div class="table-responsive aso-table-wrap">
                 <table class="table table-hover align-middle mb-0" style="font-size: 0.8rem;">
-                    <thead class="table-light">
+                    <thead class="aso-thead-unified">
                         <tr>
-                            <th>Fecha y Hora</th>
-                            <th>Documento</th>
-                            <th>Usuario Responsable</th>
-                            <th>Acción</th>
-                            <th>Detalle</th>
+                            <th class="ps-3 py-2">Fecha y Hora</th>
+                            <th class="py-2">Documento</th>
+                            <th class="py-2">Usuario Responsable</th>
+                            <th class="py-2">Acción</th>
+                            <th class="pe-3 py-2">Detalle</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -840,6 +915,7 @@
     private List<ItemHistorialActividad> historialActividades = new();
 
     private ResumenFinanciero resumenFinanciero = new();
+    private ResumenPdv resumenPdv = new();
 
     private int totalAsociadosProductores = 0;
     private int totalAsociadosAlDia = 0;
@@ -893,10 +969,11 @@
         totalAlertasActivas = alertas.Count;
         totalAlertasCriticas = alertas.Count(a => a.DiasRestantes <= 7);
 
-        // 5. Finanzas en modo consulta
+        // 5. Finanzas y Punto de Venta en modo consulta
         var asocParam = string.IsNullOrWhiteSpace(filtroAsociacion) ? null : filtroAsociacion;
         resumenFinanciero = FinanzasService.ObtenerResumen(asocParam);
         movimientosFinancieros = FinanzasService.ObtenerTodos(asocParam).ToList();
+        resumenPdv = PuntoVentaService.ObtenerResumen(asocParam);
 
         // 6. Seguimiento de gestión
         ultimosSeguimientos = SeguimientoService.ObtenerTodos().ToList();
@@ -913,6 +990,7 @@
         var asocParam = string.IsNullOrWhiteSpace(filtroAsociacion) ? null : filtroAsociacion;
         resumenFinanciero = FinanzasService.ObtenerResumen(asocParam);
         movimientosFinancieros = FinanzasService.ObtenerTodos(asocParam).ToList();
+        resumenPdv = PuntoVentaService.ObtenerResumen(asocParam);
         await Task.CompletedTask;
     }
 }

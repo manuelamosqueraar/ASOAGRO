@@ -8,6 +8,7 @@ public static class AsociadoMapper
     private sealed class MetadatosExtendidosAsociado
     {
         public string TipoDocumentoIdentidad { get; set; } = "CC";
+        public string AsociacionPertenece { get; set; } = string.Empty;
         public string TenenciaTerreno { get; set; } = string.Empty;
         public string TipoActividadProductiva { get; set; } = string.Empty;
         public string ProduccionAproximada { get; set; } = string.Empty;
@@ -23,6 +24,9 @@ public static class AsociadoMapper
         public Dictionary<string, string> SoportesGruposVulnerables { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> SoportesGruposUrls { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public List<CuotaAporteAsociado> CuotasAportes { get; set; } = new();
+        public List<AfiliacionAsociado> Afiliaciones { get; set; } = new();
+        public bool AutorizacionDatosPersonales { get; set; } = true;
+        public DateTime? FechaAutorizacionHabeasData { get; set; }
     }
 
     private static readonly ConcurrentDictionary<string, MetadatosExtendidosAsociado> CacheMetadatosPorCedula =
@@ -124,6 +128,9 @@ public static class AsociadoMapper
             : asociado.CultivoPrincipal;
 
         var esVictima = asociado.EsVictima || gruposVulnerables.Count > 0;
+        var asociacionPertenece = !string.IsNullOrWhiteSpace(asociado.AsociacionPertenece)
+            ? asociado.AsociacionPertenece!
+            : meta?.AsociacionPertenece ?? string.Empty;
 
         return new AsociadoModel
         {
@@ -131,6 +138,7 @@ public static class AsociadoMapper
             NombreCompleto = asociado.NombreCompleto,
             TipoDocumentoIdentidad = tipoDocumentoIdentidad,
             Cedula = cedulaKey,
+            AsociacionPertenece = asociacionPertenece,
             Telefono = asociado.Telefono ?? string.Empty,
             Correo = asociado.Correo ?? string.Empty,
             CedulaArchivoNombre = cedulaArchivoNombre,
@@ -159,6 +167,15 @@ public static class AsociadoMapper
             SoportesGruposVulnerables = soportes,
             SoportesGruposUrls = soportesUrls,
             CuotasAportes = cuotasAportes,
+            Afiliaciones = asociado.Afiliaciones.Count > 0
+                ? new List<AfiliacionAsociado>(asociado.Afiliaciones)
+                : meta?.Afiliaciones.Count > 0
+                    ? new List<AfiliacionAsociado>(meta.Afiliaciones)
+                    : !string.IsNullOrWhiteSpace(asociacionPertenece)
+                        ? new List<AfiliacionAsociado> { new AfiliacionAsociado { AsociadoId = asociado.Id, AsociadoCedula = cedulaKey, AsociacionNombre = asociacionPertenece, Estado = "Activa" } }
+                        : new List<AfiliacionAsociado>(),
+            AutorizacionDatosPersonales = asociado.AutorizacionDatosPersonales,
+            FechaAutorizacionHabeasData = asociado.FechaAutorizacionHabeasData ?? meta?.FechaAutorizacionHabeasData ?? DateTime.Now,
             EstadoMembresia = string.IsNullOrWhiteSpace(asociado.EstadoMembresia)
                 ? "AlDia"
                 : asociado.EstadoMembresia,
@@ -196,6 +213,7 @@ public static class AsociadoMapper
             CacheMetadatosPorCedula[cedulaLimpia] = new MetadatosExtendidosAsociado
             {
                 TipoDocumentoIdentidad = string.IsNullOrWhiteSpace(model.TipoDocumentoIdentidad) ? "CC" : model.TipoDocumentoIdentidad.Trim(),
+                AsociacionPertenece = model.AsociacionPertenece.Trim(),
                 TenenciaTerreno = model.TenenciaTerreno.Trim(),
                 TipoActividadProductiva = model.TipoActividadProductiva.Trim(),
                 ProduccionAproximada = model.ProduccionAproximada.Trim(),
@@ -216,7 +234,10 @@ public static class AsociadoMapper
                 SoportesGruposUrls = new Dictionary<string, string>(
                     model.SoportesGruposUrls,
                     StringComparer.OrdinalIgnoreCase),
-                CuotasAportes = cuotasClonadas.Select(c => c.Clonar()).ToList()
+                CuotasAportes = cuotasClonadas.Select(c => c.Clonar()).ToList(),
+                Afiliaciones = new List<AfiliacionAsociado>(model.Afiliaciones),
+                AutorizacionDatosPersonales = model.AutorizacionDatosPersonales,
+                FechaAutorizacionHabeasData = model.FechaAutorizacionHabeasData
             };
         }
 
@@ -224,6 +245,10 @@ public static class AsociadoMapper
         {
             Id = model.Id,
             TipoDocumentoIdentidad = string.IsNullOrWhiteSpace(model.TipoDocumentoIdentidad) ? "CC" : model.TipoDocumentoIdentidad.Trim(),
+            AsociacionPertenece = LimpiarTexto(model.AsociacionPertenece),
+            Afiliaciones = new List<AfiliacionAsociado>(model.Afiliaciones),
+            AutorizacionDatosPersonales = model.AutorizacionDatosPersonales,
+            FechaAutorizacionHabeasData = model.FechaAutorizacionHabeasData,
             Cedula = cedulaLimpia,
             NombreCompleto = model.NombreCompleto.Trim(),
             Telefono = LimpiarTexto(model.Telefono),

@@ -30,12 +30,32 @@ public class Asociado
     public bool EsVictima { get; set; }
     public string EstadoMembresia { get; set; } = "Activo";
 
+    public int AsociacionId { get; set; }
+
     public DateTime FechaRegistro { get; set; } = DateTime.UtcNow;
     public DateTime? FechaActualizacion { get; set; }
     public string CreadoPor { get; set; } = "Sistema";
     public string? ActualizadoPor { get; set; }
 
+    public AsociacionEntity? Asociacion { get; set; }
+    public List<AsociadoCultivoEntity> AsociadoCultivos { get; set; } = new();
+    public List<AsociadoGrupoVulnerableEntity> AsociadoGruposVulnerables { get; set; } = new();
+    public List<CuotaAsociadoEntity> CuotasAsociados { get; set; } = new();
+
+    [NotMapped]
     public string TipoDocumentoIdentidad { get; set; } = "CC";
+
+    [NotMapped]
+    public string? AsociacionPertenece { get; set; }
+
+    [NotMapped]
+    public List<AfiliacionAsociado> Afiliaciones { get; set; } = new();
+
+    [NotMapped]
+    public bool AutorizacionDatosPersonales { get; set; } = true;
+
+    [NotMapped]
+    public DateTime? FechaAutorizacionHabeasData { get; set; } = DateTime.Now;
 
     [NotMapped]
     public string? TenenciaTerreno { get; set; }

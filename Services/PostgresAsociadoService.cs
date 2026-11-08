@@ -24,10 +24,40 @@ public class PostgresAsociadoService : IAsociadoService
     public IReadOnlyCollection<Asociado> ObtenerTodos()
     {
         using var context = dbContextFactory.CreateDbContext();
-        return context.Asociados
+        var lista = context.Asociados
+            .Include(a => a.Asociacion)
+            .Include(a => a.AsociadoCultivos).ThenInclude(ac => ac.Cultivo)
+            .Include(a => a.AsociadoGruposVulnerables).ThenInclude(ag => ag.GrupoVulnerable)
+            .AsSplitQuery()
             .AsNoTracking()
             .OrderByDescending(a => a.FechaRegistro)
             .ToList();
+
+        foreach (var a in lista)
+        {
+            if (a.Asociacion != null && string.IsNullOrWhiteSpace(a.AsociacionPertenece))
+            {
+                a.AsociacionPertenece = a.Asociacion.Nombre;
+            }
+
+            if (a.AsociadoCultivos.Count > 0 && a.CultivosSeleccionados.Count == 0)
+            {
+                a.CultivosSeleccionados = a.AsociadoCultivos
+                    .Select(ac => ac.Cultivo?.Nombre ?? string.Empty)
+                    .Where(n => !string.IsNullOrEmpty(n))
+                    .ToList();
+            }
+
+            if (a.AsociadoGruposVulnerables.Count > 0 && a.GruposVulnerables.Count == 0)
+            {
+                a.GruposVulnerables = a.AsociadoGruposVulnerables
+                    .Select(ag => ag.GrupoVulnerable?.Nombre ?? string.Empty)
+                    .Where(n => !string.IsNullOrEmpty(n))
+                    .ToList();
+            }
+        }
+
+        return lista;
     }
 
     public ResultadoRegistroAsociado Registrar(Asociado asociado)
@@ -57,14 +87,110 @@ public class PostgresAsociadoService : IAsociadoService
             };
         }
 
+        // Resolver asociacion_id obligatoria según el esquema de Supabase
+        if (asociado.AsociacionId <= 0)
+        {
+            var nombreAsoc = asociado.AsociacionPertenece?.Trim();
+            var asocEncontrada = !string.IsNullOrWhiteSpace(nombreAsoc)
+                ? context.Asociaciones.FirstOrDefault(a =>
+                    a.Nombre.ToLower() == nombreAsoc.ToLower() ||
+                    a.Nit == nombreAsoc)
+                : null;
+
+            asocEncontrada ??= context.Asociaciones.OrderBy(a => a.Id).FirstOrDefault();
+
+            if (asocEncontrada != null)
+            {
+                asociado.AsociacionId = asocEncontrada.Id;
+            }
+            else
+            {
+                asociado.AsociacionId = 1;
+            }
+        }
+
         asociado.Id = 0;
         asociado.FechaRegistro = DateTime.UtcNow;
         asociado.FechaActualizacion = asociado.FechaRegistro;
         asociado.CreadoPor = options.Audit.DefaultUser;
         asociado.ActualizadoPor = options.Audit.DefaultUser;
 
+        // Limpiar navegaciones circulares antes de agregar la entidad
+        var cultivosTemp = new List<string>(asociado.CultivosSeleccionados);
+        var gruposTemp = new List<string>(asociado.GruposVulnerables);
+        asociado.AsociadoCultivos.Clear();
+        asociado.AsociadoGruposVulnerables.Clear();
+        asociado.CuotasAsociados.Clear();
+
         context.Asociados.Add(asociado);
         context.SaveChanges();
+
+        // Guardar cultivos asociados si la tabla 'cultivos' tiene coincidencias
+        if (cultivosTemp.Count > 0)
+        {
+            try
+            {
+                var catalogoCultivos = context.Cultivos.ToList();
+                foreach (var nombreCultivo in cultivosTemp)
+                {
+                    var cultivoExistente = catalogoCultivos.FirstOrDefault(c =>
+                        string.Equals(c.Nombre, nombreCultivo, StringComparison.OrdinalIgnoreCase));
+
+                    if (cultivoExistente != null)
+                    {
+                        context.AsociadoCultivos.Add(new AsociadoCultivoEntity
+                        {
+                            AsociadoId = asociado.Id,
+                            CultivoId = cultivoExistente.Id,
+                            Hectareas = asociado.HectareasPredio,
+                            TieneBpa = asociado.TieneBPA,
+                            CertificadoBpaNombre = asociado.CertificadoBpaNombre,
+                            CertificadoBpaRuta = asociado.CertificadoBpaUrl,
+                            CreadoEn = DateTime.UtcNow
+                        });
+                    }
+                }
+                context.SaveChanges();
+            }
+            catch
+            {
+                // Manejo tolerante sin interrumpir el registro principal
+            }
+        }
+
+        // Guardar grupos vulnerables si la tabla 'grupos_vulnerables' tiene coincidencias
+        if (gruposTemp.Count > 0)
+        {
+            try
+            {
+                var catalogoGrupos = context.GruposVulnerables.ToList();
+                foreach (var nombreGrupo in gruposTemp)
+                {
+                    var grupoExistente = catalogoGrupos.FirstOrDefault(g =>
+                        string.Equals(g.Nombre, nombreGrupo, StringComparison.OrdinalIgnoreCase));
+
+                    if (grupoExistente != null)
+                    {
+                        asociado.SoportesGruposUrls.TryGetValue(nombreGrupo, out var urlSoporte);
+                        asociado.SoportesGruposVulnerables.TryGetValue(nombreGrupo, out var nombreSoporte);
+
+                        context.AsociadoGruposVulnerables.Add(new AsociadoGrupoVulnerableEntity
+                        {
+                            AsociadoId = asociado.Id,
+                            GrupoId = grupoExistente.Id,
+                            ArchivoNombre = nombreSoporte,
+                            ArchivoRuta = urlSoporte,
+                            CreadoEn = DateTime.UtcNow
+                        });
+                    }
+                }
+                context.SaveChanges();
+            }
+            catch
+            {
+                // Manejo tolerante
+            }
+        }
 
         return new ResultadoRegistroAsociado
         {
@@ -104,6 +230,22 @@ public class PostgresAsociadoService : IAsociadoService
                 Exitoso = false,
                 Mensaje = "Ya existe otro asociado registrado con esa cédula."
             };
+        }
+
+        // Resolver asociacion si fue modificada
+        if (asociado.AsociacionId > 0)
+        {
+            registro.AsociacionId = asociado.AsociacionId;
+        }
+        else if (!string.IsNullOrWhiteSpace(asociado.AsociacionPertenece))
+        {
+            var nombreAsoc = asociado.AsociacionPertenece.Trim();
+            var asoc = context.Asociaciones.FirstOrDefault(a =>
+                a.Nombre.ToLower() == nombreAsoc.ToLower() || a.Nit == nombreAsoc);
+            if (asoc != null)
+            {
+                registro.AsociacionId = asoc.Id;
+            }
         }
 
         registro.Cedula = asociado.Cedula;

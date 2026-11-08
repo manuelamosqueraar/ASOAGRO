@@ -70,21 +70,25 @@ if (googleAuthenticationConfigured)
                     }
 
                     // ===== ASIGNACIÓN DE ROLES SEGÚN CORREO INSTITUCIONAL =====
-                    if (email == "manuela.mosqueraar@amigo.edu.co")
+                    if (email == "karen.argumedoco@amigo.edu.co" || email == "admin@asoagro-faaua.org" || email == "admin@asoagro.com")
                     {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "Directora"));
+                        identity.AddClaim(new Claim(ClaimTypes.Role, "Administrador"));
                     }
                     else if (email == "juan.padillamo@amigo.edu.co")
                     {
                         identity.AddClaim(new Claim(ClaimTypes.Role, "Presidenta"));
                     }
-                    else if (email == "karen.argumedoco@amigo.edu.co")
+                    else if (email == "manuela.mosqueraar@amigo.edu.co" || email == "secretaria@asoagro-faaua.org")
                     {
                         identity.AddClaim(new Claim(ClaimTypes.Role, "Secretaria"));
                     }
-                    else if (email == "manumosque743@gmail.com")
+                    else if (email == "manumosque743@gmail.com" || email == "tesoreria@asoagro-faaua.org")
                     {
                         identity.AddClaim(new Claim(ClaimTypes.Role, "Tesorero"));
+                    }
+                    else if (email == "pdv@asoagro-faaua.org" || email == "puntoventa@asoagro.com" || email?.Contains("pdv") == true || email?.Contains("pos") == true)
+                    {
+                        identity.AddClaim(new Claim(ClaimTypes.Role, "AdministradorPdv"));
                     }
                 }
 
@@ -198,6 +202,9 @@ builder.Services.AddSingleton<IDocumentoInstitucionalService, InMemoryDocumentoI
 
 // Gestión financiera y tesorería sincronizada
 builder.Services.AddSingleton<IFinanzasService, InMemoryFinanzasService>();
+
+// Punto de Venta (PDV) y comercialización agropecuaria
+builder.Services.AddSingleton<IPuntoVentaService, InMemoryPuntoVentaService>();
 
 // Servicio de gestión de sesión/roles de usuario
 builder.Services.AddScoped<UserService>();

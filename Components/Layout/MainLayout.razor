@@ -62,27 +62,54 @@
 @if (!EsInicio)
 {
     <!-- ======================================================== -->
-    <!--            LAYOUT UNIFICADO HARVEST (ADMIN / DIRECTORA)   -->
+    <!--     LAYOUT UNIFICADO HARVEST (ADMINISTRADOR / EQUIPO)      -->
     <!-- ======================================================== -->
-    <div class="hv-app @(collapseNavMenu ? "hv-sidebar-collapsed" : "")">
+    <div class="hv-app @TemaModuloActual @(collapseNavMenu ? "hv-sidebar-collapsed" : "")">
         <!-- Barra lateral unificada con módulos en su orden original -->
         <aside class="hv-sidebar">
             <NavMenu OnToggleCollapse="ToggleNavMenu" />
         </aside>
 
-        <!-- Columna principal -->
-        <div class="hv-main-col">
+        <!-- Columna principal con atmósfera dinámica por módulo -->
+        <div class="hv-main-col @TemaModuloActual">
             @if (mostrarMenuUsuario || mostrarNotificaciones)
             {
-                <div class="hv-backdrop-close" style="position: fixed; inset: 0; z-index: 900; background: transparent;" @onclick="CerrarTodo"></div>
+                <div class="hv-backdrop-close" style="position: fixed; inset: 0; z-index: 950; background: transparent;" @onclick="CerrarTodo"></div>
             }
 
-            <!-- Barra superior de acciones y perfil -->
-            <header class="hv-topbar">
+            <!-- Barra superior de navegación ejecutiva flotante -->
+            <header class="hv-topbar" @onclick="CerrarTodo">
+                <!-- Izquierda: Botón hamburguesa único + Categoría + Nombre del módulo actual -->
+                <div class="hv-topbar-left" @onclick:stopPropagation="true">
+                    <button type="button" class="hv-hamb-btn-top" @onclick="ToggleNavMenu" title="Colapsar o expandir menú lateral" aria-label="Menú hamburguesa">
+                        <span class="hv-bar"></span>
+                        <span class="hv-bar"></span>
+                        <span class="hv-bar"></span>
+                    </button>
+                    <div class="hv-topbar-breadcrumb">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="hv-topbar-cat-pill">@CategoriaRutaActual</span>
+                            <span class="hv-topbar-path d-none d-sm-inline">ASOAGRO · FEDERACIÓN FAAUA</span>
+                        </div>
+                        <h1 class="hv-topbar-title">@TituloRutaActual</h1>
+                    </div>
+                </div>
+
                 <div class="hv-top-actions">
+                    <div class="hv-topbar-region-chip d-none d-xl-inline-flex">
+                        <span class="hv-region-dot"></span>
+                        <span>Urabá Antioqueño · En línea</span>
+                    </div>
                     <!-- Campana de notificaciones exactamente con las mismas funciones y panel de antes -->
-                    <div class="ag-desplegable">
-                        <button type="button" class="hv-action-circle" @onclick="ToggleNotificaciones" title="Centro de alertas" aria-label="Centro de alertas" aria-expanded="@(mostrarNotificaciones ? "true" : "false")">
+                    <div class="ag-desplegable" @onclick:stopPropagation="true">
+                        <button type="button" 
+                                class="hv-action-circle" 
+                                @onclick="ToggleNotificaciones" 
+                                @onkeydown="ManejarTeclaNotificaciones"
+                                title="Centro de alertas" 
+                                aria-label="Centro de alertas y notificaciones" 
+                                aria-haspopup="true"
+                                aria-expanded="@(mostrarNotificaciones ? "true" : "false")">
                             <svg class="ag-ico"><use href="#ico-campana" /></svg>
                             @if (NoLeidas > 0)
                             {
@@ -94,7 +121,7 @@
                         {
                             var lista = NotificacionesVisibles;
 
-                            <div class="ag-panel" style="z-index: 1300;" @onclick:stopPropagation>
+                            <div class="ag-panel" style="z-index: 1300;" @onclick:stopPropagation @onkeydown="@(e => { if (e.Key == "Escape") CerrarTodo(); })">
                                 <div class="ag-panel-cab">
                                     <div>
                                         <strong>Alertas del sistema</strong>
@@ -149,11 +176,17 @@
                     </div>
 
                     <!-- Píldora de usuario dinámico con Menú Desplegable -->
-                    <div class="hv-user-menu-wrap">
-                        <button type="button" class="hv-user-badge" @onclick="ToggleMenuUsuario" aria-expanded="@(mostrarMenuUsuario ? "true" : "false")">
+                    <div class="hv-user-menu-wrap" @onclick:stopPropagation="true">
+                        <button type="button" 
+                                class="hv-user-badge" 
+                                @onclick="ToggleMenuUsuario" 
+                                @onkeydown="ManejarTeclaUsuario"
+                                aria-label="Menú de perfil y cuenta de usuario" 
+                                aria-haspopup="true"
+                                aria-expanded="@(mostrarMenuUsuario ? "true" : "false")">
                             @if (!string.IsNullOrWhiteSpace(fotoUsuarioActual))
                             {
-                                <span class="hv-user-avatar-circle"><img src="@fotoUsuarioActual" alt="@nombreUsuarioActual" /></span>
+                                <span class="hv-user-avatar-circle"><img src="@fotoUsuarioActual" alt="@nombreUsuarioActual" onerror="this.style.display='none'" /></span>
                             }
                             else
                             {
@@ -172,7 +205,7 @@
 
                         @if (mostrarMenuUsuario)
                         {
-                            <div class="hv-user-popover" @onclick:stopPropagation>
+                            <div class="hv-user-popover" @onclick:stopPropagation @onkeydown="@(e => { if (e.Key == "Escape") CerrarTodo(); })">
                                 <div class="hv-user-pop-cab">
                                     @if (!string.IsNullOrWhiteSpace(fotoUsuarioActual))
                                     {
@@ -440,18 +473,19 @@ else
     private string claveUsuario = string.Empty;
     private List<string> roles = new();
     private string nombreUsuarioActual = "Manuela Andrea Mosquera";
-    private string correoUsuarioActual = "directora@asoagro-faaua.org";
+    private string correoUsuarioActual = "admin@asoagro-faaua.org";
     private string fotoUsuarioActual = "";
-    private string rolUsuarioActual = "Directora";
+    private string rolUsuarioActual = "Administrador";
     private string inicialesUsuarioActual = "MM";
 
     private string rolUsuarioLegible => rolUsuarioActual switch
     {
-        "Directora" or "Director" => "Directora FAAUA",
-        "Presidenta" or "Presidente" => "Presidencia FAAUA",
+        "Administrador" or "Admin" => "Administrador de la Plataforma",
+        "Presidenta" or "Presidente" => "Presidente FAAUA",
         "Secretaria" or "Secretaría" => "Secretaría FAAUA",
         "Tesorero" or "Tesorera" => "Tesorería FAAUA",
-        _ => !string.IsNullOrWhiteSpace(rolUsuarioActual) ? rolUsuarioActual : "Directora FAAUA"
+        "AdministradorPdv" or "PuntoVenta" or "Vendedor" => "Administrador Punto de Venta",
+        _ => !string.IsNullOrWhiteSpace(rolUsuarioActual) ? rolUsuarioActual : "Administrador de la Plataforma"
     };
 
     private static string ObtenerIniciales(string? nombre)
@@ -468,6 +502,84 @@ else
 
     private bool EsInicio => IsHomePage();
     private string RutaActual => Navigation.ToBaseRelativePath(Navigation.Uri).Trim('/').ToLowerInvariant();
+
+    private string RutaLimpiaActual => RutaActual.Split('?')[0].Trim('/').ToLowerInvariant();
+
+    private string TituloRutaActual
+    {
+        get
+        {
+            var r = RutaLimpiaActual;
+            if (r.StartsWith("editar-asociado")) return "Actualización de productor asociado";
+            return r switch
+            {
+                "asociaciones" or "directorio-asociaciones" => "Directorio de asociaciones federadas",
+                "registrar-documentos" or "expediente-documental" => "Expediente documental institucional",
+                "registrar-asociado" => "Registro de productor asociado",
+                "consultar-asociados" => "Directorio general de productores",
+                "seguimiento-asociados" => "Seguimiento de asociados y encuentros",
+                "actas-estatutos/documentos" => "Repositorio de actas y estatutos",
+                "consultar-estado-documentos" => "Estado de documentación por asociación",
+                "alertas-documentos" => "Alertas y vencimientos documentales",
+                "actas-estatutos" => "Panel de Presidencia",
+                "actas-estatutos/historial" => "Historial de actividad",
+                "gestion-financiera/resumen" or "financiera/resumen" => "Resumen financiero",
+                "gestion-financiera/ingresos-ventas" or "financiera/ingresos" => "Ingresos y ventas",
+                "gestion-financiera/costos-gastos" or "financiera/gastos" => "Costos y gastos",
+                "gestion-financiera/cuentas-por-cobrar" or "financiera/cobrar" => "Cuentas por cobrar",
+                "gestion-financiera/cuentas-por-pagar" or "financiera/pagar" => "Cuentas por pagar",
+                "gestion-financiera/conciliacion-movimientos" or "financiera/conciliacion" => "Revisión y conciliación",
+                "gestion-financiera/facturacion-soportes" or "financiera/facturacion" => "Facturación y soportes",
+                "gestion-financiera/reportes-balances" or "financiera/reportes" => "Reportes y balances",
+                "punto-de-venta" or "pos/ventas" => "Punto de venta agropecuario",
+                "panel-administrador" => "Supervisión central del sistema",
+                "panel-administrador/usuarios" or "admin/usuarios" => "Usuarios y cuentas",
+                "panel-administrador/auditoria" or "admin/auditoria" => "Auditoría técnica",
+                "panel-administrador/catalogos" or "admin/catalogos" => "Catálogos y parámetros",
+                _ => "Directorio de asociaciones federadas"
+            };
+        }
+    }
+
+    private string CategoriaRutaActual
+    {
+        get
+        {
+            var r = RutaLimpiaActual;
+            if (r.StartsWith("editar-asociado")) return "Padrón de Productores";
+            return r switch
+            {
+                "asociaciones" or "directorio-asociaciones" => "Asociaciones Federadas",
+                "registrar-documentos" or "expediente-documental" => "Custodia Documental",
+                "registrar-asociado" or "consultar-asociados" => "Padrón de Productores",
+                "actas-estatutos/documentos" or "consultar-estado-documentos" => "Expediente Documental",
+                "alertas-documentos" => "Control de Vigencias",
+                "seguimiento-asociados" => "Gestión Asociativa",
+                _ => "Secretaría General"
+            };
+        }
+    }
+
+    private string TemaModuloActual
+    {
+        get
+        {
+            var r = RutaLimpiaActual;
+            if (r.StartsWith("editar-asociado")) return "hv-theme-editar-asociado";
+            return r switch
+            {
+                "asociaciones" or "directorio-asociaciones" => "hv-theme-asociaciones",
+                "registrar-documentos" or "expediente-documental" => "hv-theme-documentos",
+                "registrar-asociado" => "hv-theme-registro-asociado",
+                "consultar-asociados" => "hv-theme-directorio-productores",
+                "actas-estatutos/documentos" => "hv-theme-repositorio-actas",
+                "consultar-estado-documentos" => "hv-theme-estado-documentos",
+                "alertas-documentos" => "hv-theme-alertas",
+                "seguimiento-asociados" => "hv-theme-seguimiento",
+                _ => "hv-theme-asociaciones"
+            };
+        }
+    }
 
     // Se calculan en cada render, así siempre reflejan el estado actual del servicio
     private int NoLeidas => autenticado ? Notificaciones.ContarNoLeidas(claveUsuario, roles) : 0;
@@ -617,6 +729,7 @@ else
         var abrir = !mostrarNotificaciones;
         CerrarTodo();
         mostrarNotificaciones = abrir;
+        StateHasChanged();
     }
 
     private void ToggleMenuUsuario()
@@ -624,6 +737,33 @@ else
         var abrir = !mostrarMenuUsuario;
         CerrarTodo();
         mostrarMenuUsuario = abrir;
+        StateHasChanged();
+    }
+
+    private void ManejarTeclaNotificaciones(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or " ")
+        {
+            ToggleNotificaciones();
+        }
+        else if (e.Key is "Escape")
+        {
+            CerrarTodo();
+            StateHasChanged();
+        }
+    }
+
+    private void ManejarTeclaUsuario(KeyboardEventArgs e)
+    {
+        if (e.Key is "Enter" or " ")
+        {
+            ToggleMenuUsuario();
+        }
+        else if (e.Key is "Escape")
+        {
+            CerrarTodo();
+            StateHasChanged();
+        }
     }
 
     private void AlternarChat()
@@ -643,6 +783,7 @@ else
         mostrarNotificaciones = false;
         mostrarMenuUsuario = false;
         grupoAbierto = null;
+        StateHasChanged();
     }
 
     private void AbrirModalUsuario(string modal)

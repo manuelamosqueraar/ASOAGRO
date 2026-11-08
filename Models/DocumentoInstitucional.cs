@@ -51,6 +51,10 @@ public class CompromisoActa
     public string Responsable { get; set; } = string.Empty;
     public DateTime FechaLimite { get; set; } = DateTime.Today.AddDays(15);
     public string Estado { get; set; } = "Pendiente"; // "Pendiente", "En curso", "Cumplido", "Atrasado"
+    public int AvancePorcentaje { get; set; } = 0;
+    public string? SoporteNombre { get; set; }
+    public DateTime? FechaCumplimiento { get; set; }
+    public string? AsociacionNombre { get; set; } = "ASOAGRO - Asociación Agropecuaria de Urabá";
     public string? Observaciones { get; set; }
 }
 

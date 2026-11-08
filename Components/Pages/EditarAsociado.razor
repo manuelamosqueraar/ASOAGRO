@@ -1,6 +1,6 @@
 @page "/editar-asociado"
 @page "/editar-asociado/{Cedula}"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Directora,Director")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Presidenta,Presidente")]
 @rendermode InteractiveServer
 @using System.Security.Claims
 @using Asoagro.Models
@@ -9,38 +9,50 @@
 @using Microsoft.AspNetCore.Components.Forms
 @inject NavigationManager NavManager
 @inject IAsociadoService RegistroAsociados
+@inject IDocumentoAsociacionService DocumentoService
 @inject NotificacionService Notificaciones
 @inject AuthenticationStateProvider AuthProvider
 
 <PageTitle>Asoagro - Actualización de Expediente</PageTitle>
 
 <div class="ea">
-    <!-- ENCABEZADO HERO INSTITUCIONAL -->
-    <section class="ea-hero">
-        <div class="ea-hero-texto">
-            <div class="ea-etiquetas">
-                <span class="ea-etiqueta">
-                    <svg class="ea-ico"><use href="#ico-ajustes" /></svg>
-                    FAAUA · Gestión Directiva
-                </span>
-                <span class="ea-etiqueta ea-etiqueta-trigo">
-                    <svg class="ea-ico"><use href="#ico-escudo" /></svg>
-                    Actualización Integral del Padrón
-                </span>
-            </div>
-            <h1 class="ea-titulo">@TituloEncabezado</h1>
-            <p class="ea-descripcion">@DescripcionEncabezado</p>
-        </div>
+    <!-- ENCABEZADO HERO INSTITUCIONAL ASOAGRO -->
+    <div class="aso-hero-card card border-0 rounded-4 shadow-sm overflow-hidden mb-3">
+        <div class="card-body position-relative">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="aso-hero-icon-box">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 20h9"></path>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="aso-hero-kicker">Padrón de Productores · FAAUA</span>
+                            <span class="text-white-50" style="font-size: 0.75rem; font-weight: 600;">Urabá Antioqueño</span>
+                        </div>
+                        <h2 class="aso-hero-title">@TituloEncabezado</h2>
+                        <p class="aso-hero-desc">@DescripcionEncabezado</p>
+                    </div>
+                </div>
 
-        <div class="ea-hero-resumen">
-            <span class="ea-resumen-etiqueta">Productores activos</span>
-            <strong class="ea-resumen-valor">@ProductoresCompletos.Count</strong>
-            <div class="ea-resumen-estado">
-                <span class="ea-punto"></span>
-                <span>Padrón sincronizado</span>
+                <div class="d-flex align-items-center gap-2">
+                    @if (!string.IsNullOrWhiteSpace(Cedula))
+                    {
+                        <a href="/editar-asociado" class="aso-btn-hero-secondary">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                            <span>Volver al listado</span>
+                        </a>
+                    }
+                    <a href="/registrar-asociado" class="aso-btn-hero-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>Registrar productor</span>
+                    </a>
+                </div>
             </div>
         </div>
-    </section>
+    </div>
 
     <!-- ALERTAS VISUALES -->
     @if (!string.IsNullOrEmpty(mensajeAlerta))
@@ -59,76 +71,214 @@
 
     @if (string.IsNullOrWhiteSpace(Cedula))
     {
-        <!-- MODO 1: SELECTOR DE PRODUCTOR (/editar-asociado) -->
-        <section class="ea-panel">
-            <div class="ea-selector-cab">
-                <div class="ea-buscador">
-                    <svg class="ea-ico ea-buscador-ico"><use href="#ico-lista" /></svg>
-                    <input type="text"
-                           class="ea-input ea-input-busqueda"
-                           placeholder="Buscar asociado por nombre, cédula, cultivo o vereda..."
-                           @bind="textoBusqueda"
-                           @bind:event="oninput" />
+        <!-- FRANJA EJECUTIVA DE INDICADORES DEL PADRÓN -->
+        <div class="aso-kpi-grid">
+            <div class="aso-kpi-card kpi-emerald">
+                <div class="aso-kpi-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
                 </div>
-                <a href="/registrar-asociado" class="ea-btn ea-btn-primario">
-                    <svg class="ea-ico"><use href="#ico-usuario-mas" /></svg>
-                    <span>Registrar nuevo productor</span>
-                </a>
+                <div class="aso-kpi-meta">
+                    <span class="aso-kpi-label">Padrón Activo</span>
+                    <strong class="aso-kpi-value">@ProductoresCompletos.Count</strong>
+                    <span class="aso-kpi-sub">Expedientes disponibles para edición</span>
+                </div>
             </div>
-            <p class="ea-selector-ayuda">Seleccione la tarjeta de un productor para abrir y editar su ficha productiva, certificado BPA y soportes sociales.</p>
-        </section>
 
-        @if (ProductoresFiltrados.Any())
-        {
-            <div class="ea-tarjetas-grid">
-                @foreach (var p in ProductoresFiltrados)
-                {
-                    <a class="ea-tarjeta-productor" href="@($"/editar-asociado/{p.Cedula}")">
-                        <header class="ea-tarjeta-cab">
-                            <span class="ea-avatar">@ObtenerIniciales(p.NombreCompleto)</span>
-                            <div class="ea-tarjeta-id">
-                                <h3>@p.NombreCompleto</h3>
-                                <small>CC @p.Cedula · @p.Municipio</small>
-                            </div>
-                        </header>
+            <div class="aso-kpi-card kpi-sky">
+                <div class="aso-kpi-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                </div>
+                <div class="aso-kpi-meta">
+                    <span class="aso-kpi-label">Con Asociación Base</span>
+                    <strong class="aso-kpi-value">@ProductoresCompletos.Count(p => !string.IsNullOrWhiteSpace(p.AsociacionPertenece))</strong>
+                    <span class="aso-kpi-sub">Vinculados a entidad federada</span>
+                </div>
+            </div>
 
-                        <dl class="ea-tarjeta-datos">
-                            <div>
-                                <dt>Predio</dt>
-                                <dd>@p.NombrePredio (@p.HectareasPredio.ToString("0.#") ha)</dd>
-                            </div>
-                            <div>
-                                <dt>Cultivos</dt>
-                                <dd>@AsociadoModel.FormatearNombreCultivo(p.CultivoPrincipal)</dd>
-                            </div>
-                            <div>
-                                <dt>BPA / Social</dt>
-                                <dd>@(p.TieneBPA ? "BPA vigente" : "Sin BPA") · @(p.GruposVulnerables.Count > 0 ? $"{p.GruposVulnerables.Count} cond." : (p.EsVictima == "Si" ? "Víctima" : "General"))</dd>
-                            </div>
-                        </dl>
+            <div class="aso-kpi-card kpi-amber">
+                <div class="aso-kpi-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><polyline points="9 12 11 14 15 10"></polyline></svg>
+                </div>
+                <div class="aso-kpi-meta">
+                    <span class="aso-kpi-label">Certificación BPA</span>
+                    <strong class="aso-kpi-value">@ProductoresCompletos.Count(p => p.TieneBPA)</strong>
+                    <span class="aso-kpi-sub">Predios con BPA vigente</span>
+                </div>
+            </div>
 
-                        <footer class="ea-tarjeta-pie">
-                            <span class="ea-btn-editar-inline">
-                                <svg class="ea-ico"><use href="#ico-ajustes" /></svg>
-                                <span>Abrir y editar expediente</span>
-                            </span>
-                        </footer>
+            <div class="aso-kpi-card kpi-rose">
+                <div class="aso-kpi-icon">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+                </div>
+                <div class="aso-kpi-meta">
+                    <span class="aso-kpi-label">Sin Asociación</span>
+                    <strong class="aso-kpi-value">@ProductoresCompletos.Count(p => string.IsNullOrWhiteSpace(p.AsociacionPertenece))</strong>
+                    <span class="aso-kpi-sub">Pendientes de vinculación</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODO 1: SELECTOR DE PRODUCTOR EN TABLA EJECUTIVA ALINEADA (/editar-asociado) -->
+        <div class="aso-filter-workbench">
+            <div class="aso-filter-top-row" style="margin-bottom: 0; padding-bottom: 0; border-bottom: none;">
+                <div class="aso-search-wrap">
+                    <span class="aso-search-icon">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    </span>
+                    <input type="text" class="aso-search-input"
+                           placeholder="Buscar productor por nombre completo, número de cédula, cultivo principal, municipio o vereda..."
+                           @bind="textoBusqueda" @bind:event="oninput" />
+                    @if (!string.IsNullOrWhiteSpace(textoBusqueda))
+                    {
+                        <button type="button" class="aso-search-clear" @onclick='() => textoBusqueda = ""' title="Limpiar búsqueda">
+                            &times;
+                        </button>
+                    }
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <span class="aso-table-count-pill">
+                        @ProductoresFiltrados.Count() de @ProductoresCompletos.Count productores
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="aso-table-card">
+            <div class="aso-table-header-bar">
+                <div class="aso-table-header-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    <span>Directorio de Productores para Edición de Expediente</span>
+                    <span class="aso-table-count-pill">@ProductoresFiltrados.Count() registros</span>
+                </div>
+                <span class="text-muted" style="font-size: 0.78rem; font-weight: 500;">Seleccione un productor para actualizar sus datos personales, predio o línea productiva</span>
+            </div>
+
+            @if (ProductoresFiltrados.Any())
+            {
+                <div class="aso-table-wrap">
+                    <table class="table aso-table-grid align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="text-start" style="min-width: 220px; width: 24%;">Productor</th>
+                                <th scope="col" class="text-start" style="min-width: 110px; width: 12%;">Identificación</th>
+                                <th scope="col" class="text-start" style="min-width: 180px; width: 20%;">Asociación Base</th>
+                                <th scope="col" class="text-start" style="min-width: 130px; width: 14%;">Municipio / Predio</th>
+                                <th scope="col" class="text-start" style="min-width: 115px; width: 11%;">Cultivo Principal</th>
+                                <th scope="col" class="text-center" style="min-width: 80px; width: 7%;">BPA</th>
+                                <th scope="col" class="text-end" style="min-width: 145px; width: 12%;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in ProductoresFiltrados)
+                            {
+                                <tr>
+                                    <!-- Productor: Avatar + Nombre + Estado social -->
+                                    <td class="text-start">
+                                        <div class="d-flex align-items-center gap-2.5">
+                                            <div class="d-flex align-items-center justify-content-center text-white fw-bold shadow-xs flex-shrink-0"
+                                                 style="width: 40px; height: 40px; min-width: 40px; border-radius: 11px; background: linear-gradient(135deg, #0b2e1c 0%, #1e7043 100%); font-size: 0.82rem; border: 1px solid rgba(185, 231, 122, 0.35);">
+                                                @ObtenerIniciales(p.NombreCompleto)
+                                            </div>
+                                            <div class="flex-grow-1" style="min-width: 0;">
+                                                <a href="@($"/editar-asociado/{p.Cedula}")" class="fw-bold text-dark text-decoration-none d-block text-truncate"
+                                                   style="font-size: 0.88rem;" title="Abrir y editar expediente de @p.NombreCompleto">
+                                                    @p.NombreCompleto
+                                                </a>
+                                                <small class="text-muted d-block" style="font-size: 0.74rem;">
+                                                    @(p.GruposVulnerables.Count > 0 ? $"{p.GruposVulnerables.Count} cond. social(es)" : (p.EsVictima == "Si" ? "Víctima" : "Padrón general"))
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    <!-- Identificación -->
+                                    <td class="text-start">
+                                        <span class="font-monospace fw-bold text-secondary" style="font-size: 0.84rem;">CC @p.Cedula</span>
+                                    </td>
+
+                                    <!-- Asociación Base -->
+                                    <td class="text-start">
+                                        @if (!string.IsNullOrWhiteSpace(p.AsociacionPertenece))
+                                        {
+                                            <span class="badge bg-white text-dark border fw-semibold px-2.5 py-1 text-truncate d-inline-block"
+                                                  style="max-width: 220px; font-size: 0.74rem; border-color: #dce4d8 !important; color: #17603a !important;"
+                                                  title="@p.AsociacionPertenece">
+                                                @p.AsociacionPertenece
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="aso-badge-pendiente">
+                                                Pendiente
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <!-- Municipio / Predio -->
+                                    <td class="text-start">
+                                        <div class="d-flex flex-column" style="line-height: 1.25;">
+                                            <strong class="text-dark" style="font-size: 0.84rem;">@p.Municipio</strong>
+                                            <small class="text-muted" style="font-size: 0.73rem;">@p.NombrePredio (@p.HectareasPredio.ToString("0.#") ha)</small>
+                                        </div>
+                                    </td>
+
+                                    <!-- Cultivo Principal -->
+                                    <td class="text-start">
+                                        <span class="fw-semibold text-success" style="font-size: 0.82rem;">
+                                            @AsociadoModel.FormatearNombreCultivo(p.CultivoPrincipal)
+                                        </span>
+                                    </td>
+
+                                    <!-- BPA -->
+                                    <td class="text-center">
+                                        @if (p.TieneBPA)
+                                        {
+                                            <span class="aso-badge-activa">
+                                                Vigente
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="aso-badge-neutro">
+                                                Sin BPA
+                                            </span>
+                                        }
+                                    </td>
+
+                                    <!-- Acción: Botón Editar claramente identificable -->
+                                    <td class="text-end">
+                                        <div class="aso-actions-group">
+                                            <a href="@($"/editar-asociado/{p.Cedula}")"
+                                               class="aso-btn-action aso-btn-action-primary"
+                                               title="Abrir y editar expediente de @p.NombreCompleto">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+                                                <span>Editar expediente</span>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="p-5 text-center">
+                    <i class="bi bi-person-x text-muted" style="font-size: 3rem;"></i>
+                    <h5 class="fw-bold text-dark mt-3">No se encontraron productores</h5>
+                    <p class="text-muted small mb-3">
+                        @(string.IsNullOrWhiteSpace(textoBusqueda)
+                            ? "Aún no hay asociados registrados en el padrón."
+                            : $"No se encontraron coincidencias para '{textoBusqueda}'. Pruebe con otro nombre o cédula.")
+                    </p>
+                    <a href="/registrar-asociado" class="btn btn-success rounded-pill px-4 py-1.5 fw-bold" style="background-color: #17603a;">
+                        <i class="bi bi-plus-circle me-1"></i> Registrar nuevo productor
                     </a>
-                }
-            </div>
-        }
-        else
-        {
-            <section class="ea-vacio">
-                <span class="ea-vacio-ico"><svg class="ea-ico"><use href="#ico-brote" /></svg></span>
-                <h3>No se encontraron productores</h3>
-                <p>Ajuste el criterio de búsqueda o registre un nuevo productor en el padrón.</p>
-                <a class="ea-btn ea-btn-primario" href="/registrar-asociado">
-                    <svg class="ea-ico"><use href="#ico-usuario-mas" /></svg>
-                    <span>Registrar asociado</span>
-                </a>
-            </section>
-        }
+                </div>
+            }
+        </div>
     }
     else if (!encontrado || asociadoActual is null)
     {
@@ -170,6 +320,23 @@
                     <div class="ea-campo ea-ancho-total">
                         <label class="ea-label">Nombre completo <span class="ea-req">*</span></label>
                         <input type="text" class="ea-input" @bind="asociadoActual.NombreCompleto" />
+                    </div>
+                    <div class="ea-campo ea-ancho-total">
+                        <label class="ea-label">Asociación a la que pertenece <span class="ea-req">*</span></label>
+                        <select class="ea-input" @bind="asociadoActual.AsociacionPertenece">
+                            @if (string.IsNullOrWhiteSpace(asociadoActual.AsociacionPertenece))
+                            {
+                                <option value="" selected>⚠️ Pendiente de asignar (Seleccionar asociación obligatoria)</option>
+                            }
+                            else
+                            {
+                                <option value="">-- Seleccionar asociación registrada --</option>
+                            }
+                            @foreach (var asoc in listaAsociacionesRegistradas)
+                            {
+                                <option value="@asoc">@asoc</option>
+                            }
+                        </select>
                     </div>
                     <div class="ea-campo">
                         <label class="ea-label">Cédula / NIT <span class="ea-req">*</span></label>
@@ -659,6 +826,8 @@
     [Parameter] public string? Cedula { get; set; }
 
     private List<AsociadoModel> ProductoresCompletos = new();
+    private List<string> listaAsociacionesRegistradas = new();
+    private bool esAdminSupervisor;
     private AsociadoModel? asociadoActual;
     private string? cedulaCargada;
     private string textoBusqueda = string.Empty;
@@ -691,9 +860,16 @@
             p.NombreCompleto.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
             p.Cedula.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
             p.VeredaSector.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
+            p.AsociacionPertenece.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase) ||
             AsociadoModel.FormatearNombreCultivo(p.CultivoPrincipal).Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase));
 
-    protected override void OnInitialized() => CargarProductores();
+    protected override async Task OnInitializedAsync()
+    {
+        listaAsociacionesRegistradas = DocumentoService.ObtenerAsociaciones().ToList();
+        var auth = await AuthProvider.GetAuthenticationStateAsync();
+        esAdminSupervisor = auth.User.IsInRole("Administrador") || auth.User.IsInRole("Admin");
+        CargarProductores();
+    }
 
     protected override void OnParametersSet()
     {
@@ -908,6 +1084,20 @@
     {
         if (asociadoActual is null) return;
 
+        if (esAdminSupervisor)
+        {
+            mensajeAlerta = "Modo supervisión: el rol Administrador supervisa y consulta el padrón. La edición del expediente corresponde a Secretaría.";
+            esError = true;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(asociadoActual.AsociacionPertenece))
+        {
+            mensajeAlerta = "Debe asignar la asociación a la que pertenece el productor (campo obligatorio).";
+            esError = true;
+            return;
+        }
+
         asociadoActual.SincronizarCultivosDesdeLista();
 
         if (string.IsNullOrWhiteSpace(asociadoActual.CedulaArchivoNombre))
@@ -966,7 +1156,7 @@
             Icono = "ajustes",
             Categoria = Asoagro.Models.CategoriaNotificacion.Productores,
             Nivel = Asoagro.Models.NivelNotificacion.Informativa,
-            RolesEnlace = new[] { "Directora", "Director" }
+            RolesEnlace = new[] { "Secretaria", "Administrador" }
         });
 
         mensajeAlerta = $"El expediente de {asociadoActual.NombreCompleto} se actualizó correctamente.";
@@ -985,6 +1175,6 @@
         var estado = await AuthProvider.GetAuthenticationStateAsync();
         return estado.User.Identity?.Name
             ?? estado.User.FindFirst(ClaimTypes.Email)?.Value
-            ?? "Directora";
+            ?? "Secretaría";
     }
 }

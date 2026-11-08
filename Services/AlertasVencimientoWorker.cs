@@ -31,15 +31,22 @@ public class AlertasVencimientoWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // Espera unos segundos a que la app termine de arrancar y revisa una vez
-        await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
-        RevisarVencimientos();
-
-        using var temporizador = new PeriodicTimer(Intervalo);
-
-        while (await temporizador.WaitForNextTickAsync(stoppingToken))
+        try
         {
+            // Espera unos segundos a que la app termine de arrancar y revisa una vez
+            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             RevisarVencimientos();
+
+            using var temporizador = new PeriodicTimer(Intervalo);
+
+            while (await temporizador.WaitForNextTickAsync(stoppingToken))
+            {
+                RevisarVencimientos();
+            }
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            // Cierre normal del servicio en segundo plano.
         }
     }
 
@@ -96,7 +103,7 @@ public class AlertasVencimientoWorker : BackgroundService
                     Icono = "alerta",
                     Categoria = CategoriaNotificacion.Documentos,
                     Nivel = ObtenerNivel(umbral.Value),
-                    RolesDestino = new[] { "Presidenta", "Presidente", "Directora", "Director", "Secretaria", "Secretaría", "Tesorero", "Tesorera" },
+                    RolesDestino = new[] { "Presidenta", "Presidente", "Administrador", "Admin", "Secretaria", "Secretaría", "Tesorero", "Tesorera" },
                     RolesEnlace = new[] { "Presidenta", "Presidente" },
                     ClaveUnica = $"acta|{documento.Id:N}|{fecha:yyyy-MM-dd}|{umbral}"
                 });

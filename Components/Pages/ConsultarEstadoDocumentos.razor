@@ -1,5 +1,5 @@
 @page "/consultar-estado-documentos"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Directora,Director,Presidenta,Presidente")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Presidenta,Presidente")]
 @rendermode InteractiveServer
 @using System.Text.RegularExpressions
 @using Asoagro.Models
@@ -13,50 +13,131 @@
 <div class="asoagro-documentos-wrapper container-fluid px-0 pb-5">
 
     <!-- HERO PANEL INSTITUCIONAL -->
-    <div class="asoagro-hero-banner p-4 p-md-5 mb-4 position-relative overflow-hidden rounded-4">
-        <div class="hero-bg-shapes"></div>
-        <div class="row align-items-center position-relative" style="z-index: 2;">
-            <div class="col-lg-8">
-                <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-                    <span class="badge-agri-pill">
-                        <i class="bi bi-folder-fill me-1"></i> FAAUA · Secretaría General
-                    </span>
-                    <span class="badge-agri-pill-sub">
-                        <i class="bi bi-file-earmark-ruled me-1"></i> Expedientes Institucionales
-                    </span>
+    <div class="card aso-hero-card mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="aso-hero-icon-box">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <path d="M9 15l2 2 4-4"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="aso-hero-kicker">FAAUA · Secretaría General</span>
+                            <span class="text-white-50" style="font-size: 0.75rem; font-weight: 600;">Auditoría de Expedientes Institucionales</span>
+                        </div>
+                        <h1 class="aso-hero-title">Estado de documentación por asociación</h1>
+                        <p class="aso-hero-desc">
+                            Supervisa el expediente documental de cada entidad base: soportes custodiados, documentos faltantes para elegibilidad y fechas de vencimiento.
+                        </p>
+                    </div>
                 </div>
-                <h1 class="fw-extrabold text-white mb-2 tracking-tight" style="font-size: 1.85rem; font-weight: 800;">
-                    Estado de Documentación por Asociación
-                </h1>
-                <p class="text-white-50 mb-0 small" style="max-width: 650px; line-height: 1.6;">
-                    Supervisa el expediente documental de cada entidad base: soportes custodiados, documentos faltantes para elegibilidad, fechas de vencimiento y descarga de archivos oficiales.
-                </p>
-            </div>
-            
-            <div class="col-lg-4 mt-4 mt-lg-0 text-lg-end">
-                <div class="d-flex flex-column gap-2 align-items-lg-end">
-                    <a href="registrar-documentos" class="btn btn-success fw-bold px-4 py-2 shadow-sm rounded-pill d-inline-flex align-items-center gap-2">
-                        <i class="bi bi-cloud-plus-fill fs-5"></i>
-                        <span>Registrar Nuevo Documento</span>
+
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    <a href="alertas-documentos" class="aso-btn-hero-secondary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#facc15" stroke-width="2.2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                        <span>Alertas de vencimiento (@TotalAlertas)</span>
                     </a>
-                    <a href="alertas-documentos" class="btn btn-outline-light btn-sm rounded-pill px-3">
-                        <i class="bi bi-bell-fill me-1 text-warning"></i> Ver Alertas de Vencimiento (@TotalAlertas)
+                    <a href="@($"/registrar-documentos{(string.IsNullOrWhiteSpace(asociacionFiltro) ? "" : $"?asociacion={Uri.EscapeDataString(asociacionFiltro)}")}")" class="aso-btn-hero-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        <span>Custodiar documento</span>
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- PANEL DE SELECCIÓN Y FILTROS -->
-    <div class="card border-0 shadow-sm rounded-4 mb-4 p-3 p-md-4 bg-white">
-        <div class="row g-3 align-items-end">
+    @{
+        var todosDocs = DocumentoService.ObtenerTodos();
+    }
+
+    <!-- FRANJA EJECUTIVA DE INDICADORES GLOBALES -->
+    <div class="aso-kpi-grid">
+        <div class="aso-kpi-card kpi-emerald" style="cursor: pointer;" @onclick='() => filtroEstado = "Todos"'>
+            <div class="aso-kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            </div>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Total Custodiados</span>
+                <strong class="aso-kpi-value">@todosDocs.Count</strong>
+                <span class="aso-kpi-sub">En @listaAsociaciones.Count asociaciones federadas</span>
+            </div>
+        </div>
+
+        <div class="aso-kpi-card kpi-sky" style="cursor: pointer;" @onclick='() => filtroEstado = "Vigente"'>
+            <div class="aso-kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            </div>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Al Día / Vigentes</span>
+                <strong class="aso-kpi-value">@todosDocs.Count(d => d.EstadoCalculado == "Vigente")</strong>
+                <span class="aso-kpi-sub">Cumplimiento normativo activo</span>
+            </div>
+        </div>
+
+        <div class="aso-kpi-card kpi-amber" style="cursor: pointer;" @onclick='() => filtroEstado = "Por vencer"'>
+            <div class="aso-kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            </div>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Próximos a Vencer</span>
+                <strong class="aso-kpi-value">@todosDocs.Count(d => d.EstadoCalculado == "Por vencer")</strong>
+                <span class="aso-kpi-sub">Vencen en los próximos 30 días</span>
+            </div>
+        </div>
+
+        <div class="aso-kpi-card kpi-rose" style="cursor: pointer;" @onclick='() => filtroEstado = "Vencido"'>
+            <div class="aso-kpi-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </div>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Soportes Vencidos</span>
+                <strong class="aso-kpi-value">@todosDocs.Count(d => d.EstadoCalculado == "Vencido")</strong>
+                <span class="aso-kpi-sub">Requieren renovación inmediata</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ESTACIÓN DE SELECCIÓN Y FILTROS -->
+    <div class="aso-filter-workbench">
+        <div class="aso-filter-top-row">
+            <div class="aso-search-wrap">
+                <span class="aso-search-icon">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </span>
+                <input type="text"
+                       class="aso-search-input"
+                       placeholder="Buscar soporte por nombre de documento, asociación, RUT, Cámara de Comercio o ICA..."
+                       @bind="textoBusqueda"
+                       @bind:event="oninput" />
+                @if (!string.IsNullOrWhiteSpace(textoBusqueda))
+                {
+                    <button class="aso-search-clear" type="button" @onclick="() => textoBusqueda = string.Empty" title="Limpiar búsqueda">
+                        &times;
+                    </button>
+                }
+            </div>
+
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="aso-table-count-pill">
+                    @DocumentosFiltrados.Count() soporte(s) filtrado(s)
+                </span>
+                <button type="button" class="btn-consultar-expediente" style="height: 38px; border-radius: 10px; padding: 0 16px;" @onclick="EjecutarConsultaExpediente">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                    <span>Consultar expediente</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="aso-filter-grid-3">
             <!-- Selector de Asociación -->
-            <div class="col-lg-3 col-md-6">
-                <label class="form-label fw-bold small text-dark mb-1">
-                    <i class="bi bi-building me-1 text-success"></i> Asociación a Consultar:
-                </label>
-                <select class="form-select" value="@asociacionFiltro" @onchange="OnCambioAsociacion">
-                    <option value="">-- Todas las asociaciones federadas --</option>
+            <div class="aso-field-group">
+                <label class="aso-field-label">Asociación federada a consultar</label>
+                <select class="aso-select-modern" value="@asociacionFiltro" @onchange="OnCambioAsociacion">
+                    <option value="">Todas las asociaciones federadas</option>
                     @foreach (var asoc in listaAsociaciones)
                     {
                         <option value="@asoc">@asoc</option>
@@ -64,60 +145,27 @@
                 </select>
             </div>
 
-            <!-- Búsqueda por texto -->
-            <div class="col-lg-3 col-md-6">
-                <label class="form-label fw-bold small text-dark mb-1">
-                    <i class="bi bi-search me-1 text-success"></i> Buscar por detalle:
-                </label>
-                <div class="input-group">
-                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                    <input type="text"
-                           class="form-control border-start-0 ps-0"
-                           placeholder="Ej. RUT, Cámara de Comercio, ICA..."
-                           @bind="textoBusqueda"
-                           @bind:event="oninput" />
-                    @if (!string.IsNullOrWhiteSpace(textoBusqueda))
-                    {
-                        <button class="btn btn-outline-secondary border-start-0" type="button" @onclick="() => textoBusqueda = string.Empty">
-                            <i class="bi bi-x"></i>
-                        </button>
-                    }
-                </div>
-            </div>
-
             <!-- Filtro por Estado -->
-            <div class="col-lg-2 col-md-4">
-                <label class="form-label fw-bold small text-dark mb-1">
-                    <i class="bi bi-funnel me-1 text-success"></i> Estado:
-                </label>
-                <select class="form-select" @bind="filtroEstado">
+            <div class="aso-field-group">
+                <label class="aso-field-label">Estado de vigencia</label>
+                <select class="aso-select-modern" @bind="filtroEstado">
                     <option value="Todos">Todos los estados</option>
                     <option value="Vigente">Vigentes</option>
-                    <option value="Por vencer">Por vencer</option>
+                    <option value="Por vencer">Por vencer (&le; 30 días)</option>
                     <option value="Vencido">Vencidos</option>
                 </select>
             </div>
 
             <!-- Filtro por Tipo -->
-            <div class="col-lg-2 col-md-4">
-                <label class="form-label fw-bold small text-dark mb-1">
-                    <i class="bi bi-tag me-1 text-success"></i> Tipo:
-                </label>
-                <select class="form-select" @bind="filtroTipo">
-                    <option value="">Todos los tipos</option>
+            <div class="aso-field-group">
+                <label class="aso-field-label">Tipo de soporte documental</label>
+                <select class="aso-select-modern" @bind="filtroTipo">
+                    <option value="">Todos los tipos documentales</option>
                     @foreach (var tipo in catalogoTipos)
                     {
                         <option value="@tipo">@tipo</option>
                     }
                 </select>
-            </div>
-
-            <!-- Botón Consultar Expediente -->
-            <div class="col-lg-2 col-md-4 d-flex">
-                <button type="button" class="btn-consultar-expediente w-100" @onclick="EjecutarConsultaExpediente">
-                    <i class="bi bi-folder2-open"></i>
-                    <span>Consultar expediente</span>
-                </button>
             </div>
         </div>
     </div>
@@ -137,17 +185,18 @@
                         </div>
                         @if (!string.IsNullOrWhiteSpace(expediente.NitAsociacion))
                         {
-                            <span class="text-muted small mt-1 d-block"><i class="bi bi-card-text me-1"></i> NIT: @expediente.NitAsociacion</span>
+                            <span class="text-muted small mt-1 d-block">NIT: @expediente.NitAsociacion</span>
                         }
                     </div>
 
                     <div class="d-flex gap-2 align-items-center flex-wrap">
                         <button type="button" class="btn-consultar-expediente" @onclick="() => DescargarExpedientePdf(expediente.NombreAsociacion)">
-                            <i class="bi bi-file-earmark-pdf-fill"></i>
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                             <span>Consultar expediente (PDF)</span>
                         </button>
-                        <a href="@($"/registrar-documentos")" class="btn btn-outline-success fw-bold d-inline-flex align-items-center gap-1.5 py-2 px-3 rounded-pill">
-                            <i class="bi bi-plus-circle-fill"></i> Adjuntar Documento
+                        <a href="@($"/registrar-documentos?asociacion={Uri.EscapeDataString(expediente.NombreAsociacion)}")" class="aso-btn-action aso-btn-action-primary py-2 px-3">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span>Adjuntar en Expediente</span>
                         </a>
                     </div>
                 </div>
@@ -211,17 +260,17 @@
     }
 
     <!-- TABLA DE DOCUMENTOS ENCONTRADOS -->
-    <div class="ced-tabla-card mb-4">
-        <div class="ced-tabla-header">
-            <h6 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                <i class="bi bi-archive-fill text-success"></i>
-                <span>Documentos Registrados</span>
-                <span class="badge bg-success-subtle text-success rounded-pill fw-bold">@DocumentosFiltrados.Count()</span>
-            </h6>
+    <div class="aso-table-card mb-4">
+        <div class="aso-table-header-bar">
+            <div class="aso-table-header-title">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                <span>Documentos Institucionales Custodiados</span>
+                <span class="aso-table-count-pill">@DocumentosFiltrados.Count() registros</span>
+            </div>
 
             @if (DocumentosFiltrados.Any())
             {
-                <small class="text-muted">Ordenados del más reciente al más antiguo</small>
+                <span class="text-muted" style="font-size: 0.78rem; font-weight: 500;">Ordenados del más reciente al más antiguo</span>
             }
         </div>
 
@@ -237,31 +286,23 @@
                         ? "Aún no se han registrado documentos institucionales con los filtros seleccionados." 
                         : $"No hay registros para {asociacionFiltro} con los criterios indicados.")
                 </p>
-                <a href="registrar-documentos" class="btn btn-sm btn-success fw-bold px-3 py-2 rounded-pill">
-                    <i class="bi bi-plus-circle me-1"></i> Registrar Primer Documento
+                <a href="registrar-documentos" class="aso-btn-action aso-btn-action-primary px-3 py-2">
+                    <span>Registrar Primer Documento</span>
                 </a>
             </div>
         }
         else
         {
-            <div class="table-responsive">
-                <table class="ced-tabla">
-                    <colgroup>
-                        <col style="width: 24%;" />
-                        <col style="width: 27%;" />
-                        <col style="width: 12%;" />
-                        <col style="width: 13%;" />
-                        <col style="width: 12%;" />
-                        <col style="width: 12%;" />
-                    </colgroup>
+            <div class="aso-table-wrap">
+                <table class="table aso-table-grid align-middle mb-0">
                     <thead>
                         <tr>
-                            <th class="ps-4">Asociación titular</th>
-                            <th>Documento y detalle</th>
-                            <th>Emisión</th>
-                            <th>Vencimiento</th>
-                            <th class="text-center">Estado / vigencia</th>
-                            <th class="text-center pe-4">Archivo soporte</th>
+                            <th class="text-start" style="width: 25%; min-width: 210px;">Asociación titular</th>
+                            <th class="text-start" style="width: 27%; min-width: 220px;">Documento y detalle</th>
+                            <th class="text-center" style="width: 12%; min-width: 105px;">Emisión</th>
+                            <th class="text-center" style="width: 13%; min-width: 115px;">Vencimiento</th>
+                            <th class="text-center" style="width: 11%; min-width: 105px;">Estado</th>
+                            <th class="text-end" style="width: 12%; min-width: 135px;">Archivo soporte</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -271,95 +312,102 @@
                             var dias = doc.DiasRestantes;
 
                             <tr>
-                                <td class="ps-4">
-                                    <div class="ced-asoc-bloque">
-                                        <div class="ced-asoc-avatar">
+                                <td class="text-start">
+                                    <div class="d-flex align-items-center gap-2.5">
+                                        <div class="d-flex align-items-center justify-content-center text-white fw-bold shadow-xs flex-shrink-0"
+                                             style="width: 38px; height: 38px; min-width: 38px; border-radius: 10px; background: linear-gradient(135deg, #0b2e1c 0%, #1e7043 100%); font-size: 0.78rem; border: 1px solid rgba(185, 231, 122, 0.35);">
                                             @ObtenerInicialesAsociacion(doc.NombreAsociacion)
                                         </div>
-                                        <div class="ced-asoc-info">
-                                            <strong class="ced-asoc-nombre" title="@doc.NombreAsociacion">@doc.NombreAsociacion</strong>
+                                        <div class="d-flex flex-column" style="min-width: 0;">
+                                            <strong class="text-dark text-truncate" style="max-width: 210px; font-size: 0.85rem;" title="@doc.NombreAsociacion">@doc.NombreAsociacion</strong>
                                             @if (!string.IsNullOrWhiteSpace(doc.NitAsociacion))
                                             {
-                                                <span class="ced-asoc-nit">NIT: @doc.NitAsociacion</span>
+                                                <small class="text-muted font-monospace" style="font-size: 0.73rem;">NIT: @doc.NitAsociacion</small>
                                             }
                                         </div>
                                     </div>
                                 </td>
 
-                                <td>
-                                    <span class="ced-doc-tipo-badge">
-                                        @doc.TipoDocumento
-                                    </span>
-                                    <strong class="ced-doc-titulo">@doc.Titulo</strong>
-                                    @if (!string.IsNullOrWhiteSpace(doc.Observaciones))
-                                    {
-                                        <p class="ced-doc-obs" title="@doc.Observaciones">
-                                            @doc.Observaciones
-                                        </p>
-                                    }
+                                <td class="text-start">
+                                    <div class="d-flex flex-column gap-0.5">
+                                        <span class="badge bg-success-subtle text-success-emphasis rounded-pill align-self-start" style="font-size: 0.7rem;">
+                                            @doc.TipoDocumento
+                                        </span>
+                                        <strong class="text-dark" style="font-size: 0.85rem;">@doc.Titulo</strong>
+                                        @if (!string.IsNullOrWhiteSpace(doc.Observaciones))
+                                        {
+                                            <small class="text-secondary text-truncate" style="max-width: 260px; font-size: 0.74rem;" title="@doc.Observaciones">
+                                                @doc.Observaciones
+                                            </small>
+                                        }
+                                    </div>
                                 </td>
 
-                                <td>
-                                    <span class="ced-fecha-txt">@doc.FechaEmision.ToString("dd/MM/yyyy")</span>
+                                <td class="text-center">
+                                    <span class="text-dark fw-semibold" style="font-size: 0.82rem;">@doc.FechaEmision.ToString("dd/MM/yyyy")</span>
                                 </td>
 
-                                <td>
+                                <td class="text-center">
                                     @if (doc.FechaVencimiento.HasValue)
                                     {
-                                        <span class="ced-fecha-txt @(dias < 0 ? "text-danger fw-bold" : dias <= 30 ? "text-warning-emphasis fw-bold" : "")">
-                                            @doc.FechaVencimiento.Value.ToString("dd/MM/yyyy")
-                                        </span>
-                                        @if (dias < 0)
-                                        {
-                                            <span class="badge bg-danger-subtle text-danger extra-small mt-1 d-inline-block">Vencido hace @Math.Abs(dias.Value) d</span>
-                                        }
-                                        else if (dias <= 30)
-                                        {
-                                            <span class="badge bg-warning-subtle text-warning-emphasis extra-small mt-1 d-inline-block">Vence en @dias d</span>
-                                        }
+                                        <div class="d-flex flex-column align-items-center">
+                                            <span class="fw-semibold @(dias < 0 ? "text-danger fw-bold" : dias <= 30 ? "text-warning-emphasis fw-bold" : "text-dark")" style="font-size: 0.82rem;">
+                                                @doc.FechaVencimiento.Value.ToString("dd/MM/yyyy")
+                                            </span>
+                                            @if (dias < 0)
+                                            {
+                                                <small class="text-danger fw-bold" style="font-size: 0.7rem;">Vencido hace @Math.Abs(dias.Value) d</small>
+                                            }
+                                            else if (dias <= 30)
+                                            {
+                                                <small class="text-warning-emphasis fw-bold" style="font-size: 0.7rem;">Vence en @dias d</small>
+                                            }
+                                        </div>
                                     }
                                     else
                                     {
-                                        <span class="text-muted extra-small">No expira</span>
+                                        <span class="text-muted small">No expira</span>
                                     }
                                 </td>
 
                                 <td class="text-center">
                                     @if (estado == "Vigente")
                                     {
-                                        <span class="ced-badge-vigente">
-                                            <i class="bi bi-shield-check"></i> Vigente
+                                        <span class="aso-badge-activa">
+                                            Vigente
                                         </span>
                                     }
                                     else if (estado == "Por vencer")
                                     {
-                                        <span class="ced-badge-por-vencer">
-                                            <i class="bi bi-exclamation-triangle-fill"></i> Por vencer
+                                        <span class="aso-badge-pendiente">
+                                            Por vencer
                                         </span>
                                     }
                                     else
                                     {
-                                        <span class="ced-badge-vencido">
-                                            <i class="bi bi-x-circle-fill"></i> Vencido
+                                        <span class="aso-badge-vencida">
+                                            Vencido
                                         </span>
                                     }
                                 </td>
 
-                                <td class="text-center pe-4">
-                                    @if (!string.IsNullOrWhiteSpace(doc.ArchivoNombre))
-                                    {
-                                        <button type="button"
-                                                class="ced-btn-descargar"
-                                                title="Descargar soporte @doc.ArchivoNombre"
-                                                @onclick="() => DescargarArchivo(doc)">
-                                            <i class="bi bi-file-earmark-arrow-down-fill"></i>
-                                            <span>Descargar</span>
-                                        </button>
-                                    }
-                                    else
-                                    {
-                                        <span class="ced-sin-soporte">Sin soporte</span>
-                                    }
+                                <td class="text-end">
+                                    <div class="aso-actions-group">
+                                        @if (!string.IsNullOrWhiteSpace(doc.ArchivoNombre))
+                                        {
+                                            <button type="button"
+                                                    class="aso-btn-action aso-btn-action-primary"
+                                                    title="Descargar soporte @doc.ArchivoNombre"
+                                                    @onclick="() => DescargarArchivo(doc)">
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                                                <span>Descargar</span>
+                                            </button>
+                                        }
+                                        else
+                                        {
+                                            <span class="aso-badge-neutro">Sin soporte</span>
+                                        }
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -374,6 +422,9 @@
 @code {
     [SupplyParameterFromQuery(Name = "asoc")]
     public string? AsocParam { get; set; }
+
+    [SupplyParameterFromQuery(Name = "asociacion")]
+    public string? AsociacionParam { get; set; }
 
     private string asociacionFiltro = string.Empty;
     private string textoBusqueda = string.Empty;
@@ -390,17 +441,19 @@
         listaAsociaciones = DocumentoService.ObtenerAsociaciones().ToList();
         catalogoTipos = DocumentoService.ObtenerCatalogoTiposDocumentos().ToList();
 
-        if (!string.IsNullOrWhiteSpace(AsocParam))
+        var param = !string.IsNullOrWhiteSpace(AsociacionParam) ? AsociacionParam : AsocParam;
+        if (!string.IsNullOrWhiteSpace(param))
         {
-            asociacionFiltro = AsocParam;
+            asociacionFiltro = param;
         }
     }
 
     protected override void OnParametersSet()
     {
-        if (!string.IsNullOrWhiteSpace(AsocParam) && asociacionFiltro != AsocParam)
+        var param = !string.IsNullOrWhiteSpace(AsociacionParam) ? AsociacionParam : AsocParam;
+        if (!string.IsNullOrWhiteSpace(param) && asociacionFiltro != param)
         {
-            asociacionFiltro = AsocParam;
+            asociacionFiltro = param;
         }
     }
 

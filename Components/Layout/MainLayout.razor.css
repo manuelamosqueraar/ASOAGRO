@@ -1219,8 +1219,11 @@
 .hv-sidebar {
     width: 256px;
     height: 100vh;
-    position: sticky;
+    height: 100dvh;
+    position: fixed;
     top: 0;
+    left: 0;
+    bottom: 0;
     flex-shrink: 0;
     z-index: 1020;
     transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1267,10 +1270,14 @@
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
-    gap: 12px !important;
-    padding-bottom: 16px !important;
-    margin-bottom: 16px !important;
+    gap: 10px !important;
+    padding: 0 0 14px 0 !important;
+    margin-bottom: 14px !important;
     width: 100% !important;
+    background: transparent !important;
+    border: none !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: none !important;
 }
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-brand {
@@ -1280,16 +1287,13 @@
 }
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-brand-plantita-wrap {
-    width: 36px !important;
-    height: 36px !important;
+    width: 38px !important;
+    height: 38px !important;
     margin: 0 auto !important;
 }
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-hamb-btn {
-    display: flex !important;
-    width: 34px !important;
-    height: 34px !important;
-    margin: 0 auto !important;
+    display: none !important;
 }
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-nav {
@@ -1299,7 +1303,7 @@
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-nav-item {
     justify-content: center !important;
-    padding: 11px 0 !important;
+    padding: 0 !important;
     width: 44px !important;
     height: 44px !important;
     margin: 0 auto !important;
@@ -1308,7 +1312,7 @@
 
 .hv-sidebar-collapsed .hv-sidebar ::deep .hv-logout {
     justify-content: center !important;
-    padding: 11px 0 !important;
+    padding: 0 !important;
     width: 44px !important;
     height: 44px !important;
     margin: 0 auto !important;
@@ -1317,11 +1321,21 @@
 
 .hv-main-col {
     flex: 1;
+    margin-left: 256px;
+    width: calc(100% - 256px);
     min-width: 0;
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    background-color: #edf2ed;
+    background-color: #F7F7F2;
+    transition: margin-left 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hv-sidebar-collapsed ~ .hv-main-col,
+.hv-sidebar-collapsed + .hv-main-col,
+.hv-app.hv-sidebar-collapsed .hv-main-col {
+    margin-left: 76px;
+    width: calc(100% - 76px);
 }
 
 .hv-topbar {
@@ -1329,11 +1343,12 @@
     align-items: center;
     justify-content: space-between;
     gap: 20px;
-    padding: 22px 32px 14px;
-    background-color: #edf2ed;
+    padding: 12px 28px;
+    background-color: #ffffff;
+    border-bottom: 1.5px solid #d5e2d8;
     position: sticky;
     top: 0;
-    z-index: 1100;
+    z-index: 1000;
 }
 
 .hv-search-box {
@@ -1946,21 +1961,38 @@
         height: auto !important;
         position: sticky !important;
         top: 0 !important;
-        z-index: 1050 !important;
+        left: 0 !important;
+        right: 0 !important;
+        z-index: 1100 !important;
     }
 
     .hv-sidebar ::deep .hv-sidebar-inner {
         height: auto !important;
         min-height: auto !important;
-        max-height: 85vh !important;
+        max-height: calc(100vh - 16px) !important;
+        max-height: calc(100dvh - 16px) !important;
         padding: 12px 16px !important;
-        overflow-y: auto !important;
+        overflow: visible !important;
+    }
+
+    .hv-main-col {
+        margin-left: 0 !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
     }
 
     .hv-sidebar-collapsed .hv-sidebar {
         width: 100% !important;
         min-width: 100% !important;
         max-width: 100% !important;
+        height: auto !important;
+    }
+
+    .hv-sidebar-collapsed .hv-sidebar ::deep .hv-sidebar-inner {
+        height: auto !important;
+        max-height: none !important;
+        overflow: visible !important;
     }
 
     .hv-sidebar-collapsed .hv-sidebar ::deep .hv-brand-row {
@@ -1977,12 +2009,19 @@
     }
 
     .hv-sidebar-collapsed .hv-sidebar ::deep .hv-hamb-btn {
-        display: flex !important;
+        display: none !important;
     }
 
     .hv-sidebar-collapsed .hv-sidebar ::deep .hv-nav,
     .hv-sidebar-collapsed .hv-sidebar ::deep .hv-logout-wrapper {
         display: none !important;
+    }
+
+    .hv-app:not(.hv-sidebar-collapsed) .hv-sidebar ::deep .hv-nav {
+        display: flex !important;
+        max-height: calc(100vh - 130px) !important;
+        max-height: calc(100dvh - 130px) !important;
+        overflow-y: auto !important;
     }
 
     .hv-topbar {

@@ -16,6 +16,10 @@ namespace Asoagro.Services
         public string NombreCompleto { get; set; } = string.Empty;
         public string TipoDocumentoIdentidad { get; set; } = "CC";
         public string Cedula { get; set; } = string.Empty;
+        public string AsociacionPertenece { get; set; } = string.Empty;
+        public List<Asoagro.Models.AfiliacionAsociado> Afiliaciones { get; set; } = new();
+        public bool AutorizacionDatosPersonales { get; set; } = true;
+        public DateTime? FechaAutorizacionHabeasData { get; set; } = DateTime.Now;
         public string Telefono { get; set; } = string.Empty;
         public string Correo { get; set; } = string.Empty;
         public string NombrePredio { get; set; } = string.Empty;

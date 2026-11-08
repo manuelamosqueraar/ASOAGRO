@@ -5,7 +5,7 @@ namespace Asoagro.Services;
 public class AlertasSeguimientoWorker : BackgroundService
 {
     private static readonly TimeSpan Intervalo = TimeSpan.FromHours(1);
-    private static readonly string[] RolesDirectivos = ["Directora", "Director", "Presidenta", "Presidente"];
+    private static readonly string[] RolesDirectivos = ["Secretaria", "Secretaría", "Administrador", "Admin", "Presidenta", "Presidente"];
 
     private readonly ISeguimientoAsociadoService _seguimientos;
     private readonly NotificacionService _notificaciones;
@@ -23,13 +23,20 @@ public class AlertasSeguimientoWorker : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
-        RevisarVencimientos();
-
-        using var temporizador = new PeriodicTimer(Intervalo);
-        while (await temporizador.WaitForNextTickAsync(stoppingToken))
+        try
         {
+            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
             RevisarVencimientos();
+
+            using var temporizador = new PeriodicTimer(Intervalo);
+            while (await temporizador.WaitForNextTickAsync(stoppingToken))
+            {
+                RevisarVencimientos();
+            }
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+            // Cierre normal del servicio en segundo plano.
         }
     }
 

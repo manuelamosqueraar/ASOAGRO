@@ -1,0 +1,1617 @@
+@page "/punto-de-venta"
+@page "/panel-punto-venta"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "AdministradorPdv,PuntoVenta,Vendedor,Presidenta,Presidente")]
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Forms
+@using Asoagro.Models
+@using Asoagro.Services
+@inject IPuntoVentaService PuntoVentaService
+@inject IDocumentoAsociacionService DocumentoService
+@inject AuthenticationStateProvider AuthProvider
+@inject IJSRuntime JS
+
+<PageTitle>Punto de Venta y Comercialización · FAAUA Urabá</PageTitle>
+
+<div class="container-fluid px-0 pb-5" style="font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+
+    <!-- HERO BANNER DE PUNTO DE VENTA -->
+    <div class="card aso-hero-card mb-4" style="border-top: 4px solid #10B981 !important;">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="aso-hero-icon-box" style="background: #10B981 !important; border: 1.5px solid #34D399 !important; color: #FFFFFF !important;">
+                        <i class="bi bi-shop"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="aso-hero-kicker" style="background: #065F46 !important; border-color: #34D399 !important; color: #ECFDF5 !important;">
+                                <i class="bi bi-shop me-1"></i> Punto de Venta Solidario · FAAUA
+                            </span>
+                            <span class="badge px-2.5 py-1 rounded-pill fw-bold bg-success bg-opacity-75" style="font-size: 0.7rem;">
+                                <i class="bi bi-cart-check-fill me-1"></i> Comercialización Agropecuaria Directa
+                            </span>
+                            @if (esModoConsulta)
+                            {
+                                <span class="badge px-2.5 py-1 rounded-pill fw-bold bg-info bg-opacity-75" style="font-size: 0.7rem;">
+                                    <i class="bi bi-eye-fill me-1"></i> Modo Consulta / Supervisión
+                                </span>
+                            }
+                        </div>
+                        <h1 class="aso-hero-title">Punto de Venta y Comercialización de Cosechas</h1>
+                        <p class="aso-hero-desc">
+                            Terminal comercial para la venta directa de cosechas de las asociaciones federadas de Urabá (plátano, cacao, miel, frutas e insumos), con recepción de lotes de fincas, trazabilidad de stock en COP, control de arqueo de caja y sincronización contable.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <div class="p-3 rounded-4 d-inline-block text-start w-100" style="min-width: 280px; max-width: 320px; background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.18); backdrop-filter: blur(10px);">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 42px; height: 42px; background: #059669; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                                <i class="bi bi-person-badge-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <span class="d-block text-white-50" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Operador / Responsable</span>
+                                <span class="fw-bold text-white small d-block text-truncate" style="max-width: 210px;">@nombreUsuario</span>
+                                <span class="badge bg-white text-dark mt-1" style="font-size: 0.65rem; font-weight: 700;">@rolUsuario</span>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-top border-white border-opacity-10 d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
+                            <span class="text-white-50">Permiso Operativo:</span>
+                            <span class="fw-bold @(esModoConsulta ? "text-warning" : "text-light")">
+                                @(esModoConsulta ? "Consulta y Supervisión" : "Venta y Recepción Activa")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEEDBACK ALERT -->
+    @if (!string.IsNullOrEmpty(mensajeFeedback))
+    {
+        <div class="alert @(esFeedbackExito ? "alert-success border-success" : "alert-danger border-danger") alert-dismissible fade show rounded-4 shadow-sm mb-4 d-flex align-items-center justify-content-between" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi @(esFeedbackExito ? "bi-check-circle-fill text-success" : "bi-exclamation-triangle-fill text-danger") fs-5"></i>
+                <span class="small fw-semibold">@mensajeFeedback</span>
+            </div>
+            <button type="button" class="btn-close small" @onclick="() => mensajeFeedback = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <!-- AVISO DE MODO SUPERVISIÓN -->
+    @if (esModoConsulta)
+    {
+        <div class="alert alert-light border border-info-subtle rounded-4 p-3 mb-4 shadow-sm">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-2 bg-info-subtle text-info rounded-3 flex-shrink-0">
+                    <i class="bi bi-shield-lock-fill fs-5"></i>
+                </div>
+                <div class="small text-muted flex-grow-1">
+                    <strong class="text-dark d-block">Supervisión Institucional Global</strong>
+                    Usted ha ingresado con el rol de <strong>@rolUsuario</strong>. Puede consultar existencias, historial de ventas, recepciones y arqueos de caja para soporte y auditoría. Por separación de funciones de control, las operaciones de cobro y caja corresponden exclusivamente al <em>Administrador del punto de venta</em>.
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- RESUMEN DE INDICADORES COMERCIALES (TODOS EN COP) -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #059669 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Ventas de Hoy</span>
+                    <span class="p-2 rounded-3 bg-success-subtle text-success">
+                        <i class="bi bi-cash-stack fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">$@resumen.TotalVentasHoy.ToString("N0")</h2>
+                    <span class="text-muted small">COP</span>
+                </div>
+                <span class="text-success small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-receipt"></i> @resumen.CantidadTransaccionesHoy operaciones cerradas hoy
+                </span>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #D97706 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Efectivo en Caja</span>
+                    <span class="p-2 rounded-3 bg-warning-subtle text-warning">
+                        <i class="bi bi-wallet2 fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">$@resumen.TotalEfectivoHoy.ToString("N0")</h2>
+                    <span class="text-muted small">COP</span>
+                </div>
+                <span class="text-muted small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-arrow-left-right"></i> Transferencias: $@resumen.TotalTransferenciasHoy.ToString("N0") COP
+                </span>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #0284C7 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Valor Inventario (Costo)</span>
+                    <span class="p-2 rounded-3 bg-primary-subtle text-primary">
+                        <i class="bi bi-boxes fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">$@resumen.TotalCostoInventario.ToString("N0")</h2>
+                    <span class="text-muted small">COP</span>
+                </div>
+                <span class="text-primary small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-diagram-3"></i> @resumen.TotalProductos líneas de cosecha activas
+                </span>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #E11D48 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Alertas de Stock</span>
+                    <span class="p-2 rounded-3 @(resumen.ProductosBajoStock > 0 ? "bg-danger-subtle text-danger" : "bg-success-subtle text-success")">
+                        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">@resumen.ProductosBajoStock</h2>
+                    <span class="text-muted small">por reponer</span>
+                </div>
+                <span class="@(resumen.ProductosBajoStock > 0 ? "text-danger" : "text-muted") small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-shield-check"></i> @(resumen.ProductosBajoStock > 0 ? "Pedir remisión a fincas de base" : "Existencias equilibradas")
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- PESTAÑAS DEL PANEL DE PUNTO DE VENTA (5 ÁREAS OPERATIVAS) -->
+    <div class="d-flex flex-wrap gap-2 mb-4 border-bottom pb-2">
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(pestanaActiva == "caja" ? "btn-success" : "btn-light text-muted border")"
+                style="@(pestanaActiva == "caja" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
+                @onclick='@(() => pestanaActiva = "caja")'>
+            <i class="bi bi-cart3 me-1"></i> 1. Terminal Mostrador y Ventas
+        </button>
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(pestanaActiva == "recepcion" ? "btn-success" : "btn-light text-muted border")"
+                style="@(pestanaActiva == "recepcion" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
+                @onclick='@(() => pestanaActiva = "recepcion")'>
+            <i class="bi bi-box-arrow-in-down me-1"></i> 2. Recepción de Cosechas
+            <span class="badge bg-white text-dark ms-1">@recepciones.Count</span>
+        </button>
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(pestanaActiva == "inventario" ? "btn-success" : "btn-light text-muted border")"
+                style="@(pestanaActiva == "inventario" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
+                @onclick='@(() => pestanaActiva = "inventario")'>
+            <i class="bi bi-boxes me-1"></i> 3. Inventario y Precios en COP
+            <span class="badge bg-white text-dark ms-1">@productos.Count</span>
+        </button>
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(pestanaActiva == "cierre" ? "btn-success" : "btn-light text-muted border")"
+                style="@(pestanaActiva == "cierre" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
+                @onclick='@(() => pestanaActiva = "cierre")'>
+            <i class="bi bi-calculator me-1"></i> 4. Cierre de Turno y Arqueo
+        </button>
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(pestanaActiva == "historial" ? "btn-success" : "btn-light text-muted border")"
+                style="@(pestanaActiva == "historial" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
+                @onclick='@(() => pestanaActiva = "historial")'>
+            <i class="bi bi-clock-history me-1"></i> 5. Historial, Devoluciones y Anulaciones
+            <span class="badge bg-white text-dark ms-1">@ventas.Count</span>
+        </button>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- ÁREA 1: TERMINAL MOSTRADOR Y VENTAS        -->
+    <!-- ========================================== -->
+    @if (pestanaActiva == "caja")
+    {
+        <div class="row g-4">
+            <!-- CATÁLOGO DE PRODUCTOS -->
+            <div class="col-lg-7 col-xl-8">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                        <div>
+                            <h5 class="fw-bold text-dark mb-0 fs-6">
+                                <i class="bi bi-grid-fill text-success me-1"></i> Catálogo de Cosechas Disponibles
+                            </h5>
+                            <small class="text-muted">Precios vigentes en pesos colombianos (COP)</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <select class="form-select form-select-sm" style="max-width: 220px;" @bind="filtroCategoriaCatalogo">
+                                <option value="">Todas las categorías</option>
+                                <option value="Plátano">Plátano</option>
+                                <option value="Cacao">Cacao</option>
+                                <option value="Apicultura">Apicultura</option>
+                                <option value="Frutas">Frutas</option>
+                                <option value="Insumos">Insumos</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        @foreach (var prod in ProductosCatalogoFiltrados)
+                        {
+                            <div class="col-sm-6 col-md-4">
+                                <div class="card h-100 border rounded-4 p-3 d-flex flex-column" 
+                                     style="transition: all 0.2s ease; border-color: rgba(23, 96, 58, 0.15) !important;">
+                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                        <span class="badge bg-light text-success border fw-bold" style="font-size: 0.68rem;">
+                                            @prod.Categoria
+                                        </span>
+                                        <span class="badge @(prod.StockDisponible <= prod.StockMinimo ? "bg-danger" : "bg-success") rounded-pill" style="font-size: 0.65rem;">
+                                            Stock: @prod.StockDisponible.ToString("N0") @prod.UnidadMedida
+                                        </span>
+                                    </div>
+                                    <h6 class="fw-bold text-dark mb-1" style="font-size: 0.88rem; line-height: 1.3;">
+                                        @prod.Nombre
+                                    </h6>
+                                    <small class="text-muted mb-2 d-block text-truncate" title="@prod.AsociacionOrigen" style="font-size: 0.72rem;">
+                                        <i class="bi bi-building me-1"></i>@prod.AsociacionOrigen
+                                    </small>
+
+                                    @if (prod.VigenciaPrecio.HasValue)
+                                    {
+                                        <small class="text-muted d-block mb-2" style="font-size: 0.68rem;">
+                                            <i class="bi bi-calendar-event me-1"></i>Vigencia: @prod.VigenciaPrecio.Value.ToString("dd/MM/yyyy")
+                                        </small>
+                                    }
+
+                                    <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <span class="d-block text-muted" style="font-size: 0.65rem;">Precio COP</span>
+                                            <strong class="text-success fs-6">$@prod.PrecioUnitario.ToString("N0")</strong>
+                                            <span class="text-muted" style="font-size: 0.65rem;">/@prod.UnidadMedida</span>
+                                        </div>
+                                        <button type="button" 
+                                                class="btn btn-sm btn-success rounded-pill px-3 fw-bold" 
+                                                disabled="@(esModoConsulta || prod.StockDisponible <= 0)"
+                                                @onclick="() => AgregarAlCarrito(prod)">
+                                            <i class="bi bi-plus-lg"></i> Agregar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- CANASTA Y RADICACIÓN DE VENTA -->
+            <div class="col-lg-5 col-xl-4">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 90px;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0 fs-6">
+                            <i class="bi bi-cart-fill text-success me-1"></i> Canasta de Venta
+                        </h5>
+                        @if (carrito.Any())
+                        {
+                            <button type="button" class="btn btn-link text-danger p-0 small text-decoration-none" @onclick="VaciarCarrito">
+                                <i class="bi bi-trash"></i> Vaciar
+                            </button>
+                        }
+                    </div>
+
+                    @if (carrito.Any())
+                    {
+                        <div class="list-group list-group-flush mb-3" style="max-height: 220px; overflow-y: auto;">
+                            @foreach (var item in carrito)
+                            {
+                                <div class="list-group-item px-0 py-2 border-light-subtle d-flex justify-content-between align-items-center">
+                                    <div style="max-width: 170px;">
+                                        <strong class="text-dark small d-block text-truncate" title="@item.NombreProducto">@item.NombreProducto</strong>
+                                        <span class="text-muted" style="font-size: 0.7rem;">$@item.PrecioUnitario.ToString("N0") COP x @item.Cantidad @item.UnidadMedida</span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-1">
+                                        <button type="button" class="btn btn-sm btn-light border p-1" style="width: 26px; height: 26px; line-height: 1;" 
+                                                disabled="@esModoConsulta" @onclick="() => ModificarCantidad(item, -1)">-</button>
+                                        <span class="fw-bold small px-1">@item.Cantidad</span>
+                                        <button type="button" class="btn btn-sm btn-light border p-1" style="width: 26px; height: 26px; line-height: 1;" 
+                                                disabled="@esModoConsulta" @onclick="() => ModificarCantidad(item, 1)">+</button>
+                                        <strong class="text-success small ms-2">$@item.Subtotal.ToString("N0")</strong>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                        <!-- TOTALIZACIÓN CON DESCUENTO AUTORIZADO -->
+                        <div class="p-3 rounded-4 mb-3" style="background-color: #f7faf5; border: 1px solid #dbe7d5;">
+                            <div class="d-flex justify-content-between text-muted small mb-1">
+                                <span>Subtotal artículos:</span>
+                                <strong>$@SubtotalBrutoCarrito.ToString("N0") COP</strong>
+                            </div>
+                            @if (descuentoVenta > 0)
+                            {
+                                <div class="d-flex justify-content-between text-danger small mb-1">
+                                    <span>Descuento autorizado:</span>
+                                    <strong>-$@descuentoVenta.ToString("N0") COP</strong>
+                                </div>
+                            }
+                            <div class="d-flex justify-content-between text-muted small mb-2">
+                                <span>Régimen Tributario:</span>
+                                <span>Comprobante Mostrador Solidario</span>
+                            </div>
+                            <div class="d-flex justify-content-between fs-5 fw-bold text-dark pt-2 border-top">
+                                <span>Total Neto a Cobrar:</span>
+                                <span class="text-success">$@TotalCarrito.ToString("N0") COP</span>
+                            </div>
+                        </div>
+
+                        <!-- DATOS DEL CLIENTE Y DESCUENTO -->
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold mb-1">
+                                Cliente / Comprador: <span class="text-danger">* (Obligatorio)</span>
+                            </label>
+                            <input type="text" class="form-control form-control-sm mb-2" placeholder="Ej: Comercializadora Frutas del Norte" @bind="clienteNombre" disabled="@esModoConsulta" />
+                            
+                            <div class="row g-2 mb-2">
+                                <div class="col-6">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Cédula / NIT: <span class="text-danger">* (Obligatorio)</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="Ej: 901234567-8" @bind="clienteDocumento" disabled="@esModoConsulta" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Medio de Pago: <span class="text-danger">* (Obligatorio)</span>
+                                    </label>
+                                    <select class="form-select form-select-sm" @bind="metodoPago" disabled="@esModoConsulta">
+                                        <option value="Efectivo">Efectivo</option>
+                                        <option value="Transferencia">Transferencia Bancaria / Nequi</option>
+                                        <option value="Tarjeta">Tarjeta Débito / Crédito</option>
+                                        <option value="Crédito Solidario">Crédito Solidario Asociativo</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- DESCUENTO AUTORIZADO (OPCIONAL) -->
+                            <div class="p-2 border rounded-3 mb-2 bg-light">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="small fw-bold text-dark">¿Aplica Descuento Autorizado? <span class="text-muted fw-normal">(Opcional)</span></span>
+                                    <input type="checkbox" class="form-check-input" @bind="aplicaDescuento" />
+                                </div>
+                                @if (aplicaDescuento)
+                                {
+                                    <div class="row g-2 mt-1">
+                                        <div class="col-6">
+                                            <input type="number" class="form-control form-control-sm" placeholder="Monto COP" @bind="descuentoVenta" />
+                                        </div>
+                                        <div class="col-6">
+                                            <input type="text" class="form-control form-control-sm" placeholder="Autorizado por (Ej: Junta)" @bind="autorizadoPorDescuento" />
+                                        </div>
+                                        <div class="col-12">
+                                            <input type="text" class="form-control form-control-sm" placeholder="Motivo del descuento (Ej: Compra institucional por volumen)" @bind="motivoDescuento" />
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+
+                        @if (metodoPago == "Efectivo")
+                        {
+                            <div class="mb-3">
+                                <label class="form-label text-muted small fw-bold mb-1">
+                                    Monto Recibido en Efectivo (COP): <span class="text-danger">* (Obligatorio)</span>
+                                </label>
+                                <input type="number" class="form-control form-control-sm" placeholder="Ej: 50000" @bind="montoRecibido" @bind:event="oninput" disabled="@esModoConsulta" />
+                                @if (montoRecibido >= TotalCarrito && TotalCarrito > 0)
+                                {
+                                    <div class="mt-1 small text-success fw-bold">
+                                        Cambio a entregar: $@((montoRecibido - TotalCarrito).ToString("N0")) COP
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        @if (metodoPago == "Transferencia")
+                        {
+                            <div class="mb-3 p-2 border rounded-3 bg-light">
+                                <label class="form-label text-muted small fw-bold mb-1">
+                                    Comprobante de Transferencia: <span class="text-muted fw-normal">(Opcional)</span>
+                                </label>
+                                <InputFile OnChange="CargarSoportePagoVenta" class="form-control form-control-sm" accept=".pdf,.png,.jpg,.jpeg" disabled="@esModoConsulta" />
+                                <small class="text-muted" style="font-size: 0.68rem;">Formatos: PDF, JPG, PNG (máx. 10 MB)</small>
+                                @if (!string.IsNullOrEmpty(nombreSoportePago))
+                                {
+                                    <div class="small text-success mt-1">
+                                        <i class="bi bi-paperclip"></i> @nombreSoportePago
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(errorVenta))
+                        {
+                            <div class="alert alert-danger py-2 small mb-3">@errorVenta</div>
+                        }
+
+                        <button type="button" 
+                                class="btn btn-success w-100 py-2.5 rounded-pill fw-bold shadow-sm"
+                                disabled="@(esModoConsulta || guardandoVenta || TotalCarrito <= 0)"
+                                @onclick="FinalizarVenta">
+                            @if (guardandoVenta)
+                            {
+                                <span class="spinner-border spinner-border-sm me-1"></span>
+                                <span>Radicando ticket...</span>
+                            }
+                            else
+                            {
+                                <i class="bi bi-printer-fill me-1"></i>
+                                <span>Radicar Venta y Emitir Comprobante</span>
+                            }
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="text-center py-5 text-muted">
+                            <i class="bi bi-cart-x fs-1 d-block mb-2 text-muted"></i>
+                            <span class="small d-block">La canasta de mostrador está vacía.</span>
+                            <span class="small text-muted" style="font-size: 0.72rem;">Selecciona productos del catálogo a la izquierda para iniciar la venta.</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ========================================== -->
+    <!-- ÁREA 2: RECEPCIÓN DE COSECHAS              -->
+    <!-- ========================================== -->
+    @if (pestanaActiva == "recepcion")
+    {
+        <div class="row g-4 mb-4">
+            <!-- FORMULARIO DE RECEPCIÓN -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="p-2 rounded-3 bg-success-subtle text-success">
+                            <i class="bi bi-truck-flatbed fs-5"></i>
+                        </span>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-0 fs-6">Radicar Recepción de Cosecha</h5>
+                            <small class="text-muted">Ingreso de lotes de asociaciones con remisión/factura</small>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold mb-1">
+                            Producto Agropecuario: <span class="text-danger">* (Obligatorio)</span>
+                        </label>
+                        <select class="form-select form-select-sm" @bind="nuevaRecepcion.ProductoId" @bind:after="ActualizarDatosProductoRecepcion" disabled="@esModoConsulta">
+                            <option value="@Guid.Empty">-- Seleccionar producto del catálogo --</option>
+                            @foreach (var p in productos)
+                            {
+                                <option value="@p.Id">@p.Nombre (@p.AsociacionOrigen)</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-muted small fw-bold mb-1">
+                                Cantidad Recibida: <span class="text-danger">* (Obligatorio)</span>
+                            </label>
+                            <input type="number" step="0.01" class="form-control form-control-sm" placeholder="Ej: 500" @bind="nuevaRecepcion.Cantidad" disabled="@esModoConsulta" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted small fw-bold mb-1">
+                                Unidad de Medida:
+                            </label>
+                            <input type="text" class="form-control form-control-sm bg-light" @bind="nuevaRecepcion.UnidadMedida" readonly />
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-muted small fw-bold mb-1">
+                                Costo Unitario COP: <span class="text-danger">* (Obligatorio)</span>
+                            </label>
+                            <input type="number" class="form-control form-control-sm" placeholder="Ej: 1800" @bind="nuevaRecepcion.CostoUnitario" disabled="@esModoConsulta" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted small fw-bold mb-1">
+                                Costo Total Lote:
+                            </label>
+                            <div class="form-control form-control-sm bg-light fw-bold text-success">
+                                $@((nuevaRecepcion.Cantidad * nuevaRecepcion.CostoUnitario).ToString("N0")) COP
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold mb-1">
+                            Finca o Productor Proveedor: <span class="text-danger">* (Obligatorio)</span>
+                        </label>
+                        <input type="text" class="form-control form-control-sm" placeholder="Ej: Finca El Porvenir - Carlos Ramírez" @bind="nuevaRecepcion.ProveedorNombre" disabled="@esModoConsulta" />
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <label class="form-label text-muted small fw-bold mb-1">
+                                Fecha de Recepción: <span class="text-danger">* (Obligatorio)</span>
+                            </label>
+                            <input type="date" class="form-control form-control-sm" @bind="nuevaRecepcion.FechaRecepcion" disabled="@esModoConsulta" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label text-muted small fw-bold mb-1">
+                                No. Remisión / Factura: <span class="text-muted fw-normal">(Opcional)</span>
+                            </label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Ej: REM-0982" @bind="nuevaRecepcion.NumeroComprobante" disabled="@esModoConsulta" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold mb-1">
+                            Soporte Digital (Remisión o Factura Proveedor): <span class="text-muted fw-normal">(Opcional)</span>
+                        </label>
+                        <InputFile OnChange="CargarSoporteRecepcion" class="form-control form-control-sm" accept=".pdf,.png,.jpg,.jpeg" disabled="@esModoConsulta" />
+                        <small class="text-muted" style="font-size: 0.68rem;">Formatos: PDF, JPG, PNG (máx. 10 MB)</small>
+                        @if (!string.IsNullOrEmpty(nuevaRecepcion.SoporteNombre))
+                        {
+                            <div class="small text-success mt-1">
+                                <i class="bi bi-file-earmark-check"></i> @nuevaRecepcion.SoporteNombre
+                            </div>
+                        }
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold mb-1">
+                            Observaciones de Calidad y Pesaje: <span class="text-muted fw-normal">(Opcional)</span>
+                        </label>
+                        <textarea class="form-control form-control-sm" rows="2" placeholder="Ej: Cosecha recibida en óptimo estado de maduración, peso certificado en báscula" @bind="nuevaRecepcion.Observaciones" disabled="@esModoConsulta"></textarea>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(errorRecepcion))
+                    {
+                        <div class="alert alert-danger py-2 small mb-3">@errorRecepcion</div>
+                    }
+
+                    <button type="button" class="btn btn-success w-100 rounded-pill py-2 fw-bold" 
+                            disabled="@(esModoConsulta || guardandoRecepcion)"
+                            @onclick="GuardarRecepcion">
+                        @if (guardandoRecepcion)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            <span>Incrementando inventario...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-circle-fill me-1"></i>
+                            <span>Ingresar Cosecha al Inventario</span>
+                        }
+                    </button>
+                </div>
+            </div>
+
+            <!-- TABLA DE RECEPCIONES RECIENTES -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0 fs-6">
+                            <i class="bi bi-clock-history text-success me-1"></i> Bitácora de Cosechas Recibidas
+                        </h5>
+                        <span class="badge bg-light text-dark border">@recepciones.Count lote(s)</span>
+                    </div>
+
+                    <div class="table-responsive aso-table-wrap">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 0.82rem;">
+                            <thead class="aso-thead-unified">
+                                <tr>
+                                    <th class="ps-3 py-2">Fecha</th>
+                                    <th class="py-2">Producto</th>
+                                    <th class="py-2">Proveedor / Finca</th>
+                                    <th class="py-2 text-center">Cantidad</th>
+                                    <th class="py-2 text-end">Costo Total COP</th>
+                                    <th class="pe-3 py-2 text-center">Soporte</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var r in recepciones)
+                                {
+                                    <tr>
+                                        <td class="ps-3 text-muted">@r.FechaRecepcion.ToString("dd/MM/yyyy")</td>
+                                        <td>
+                                            <strong class="text-dark d-block">@r.ProductoNombre</strong>
+                                            <small class="text-muted">@r.AsociacionOrigen</small>
+                                        </td>
+                                        <td>
+                                            <span class="d-block text-dark">@r.ProveedorNombre</span>
+                                            <small class="text-muted">Doc: @(string.IsNullOrWhiteSpace(r.NumeroComprobante) ? "Sin remisión" : r.NumeroComprobante)</small>
+                                        </td>
+                                        <td class="text-center">
+                                            <strong class="text-success">@r.Cantidad.ToString("N0")</strong>
+                                            <small class="text-muted d-block">@r.UnidadMedida</small>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong class="text-dark">$@r.CostoTotal.ToString("N0")</strong>
+                                            <small class="text-muted d-block">COP</small>
+                                        </td>
+                                        <td class="text-center">
+                                            @if (!string.IsNullOrEmpty(r.SoporteNombre))
+                                            {
+                                                <button type="button" class="btn btn-outline-success btn-sm rounded-pill py-0 px-2" title="Descargar soporte de remisión">
+                                                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted small">Sin adjunto</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ============================================== -->
+    <!-- ÁREA 3: INVENTARIO Y PRECIOS EN COP            -->
+    <!-- ============================================== -->
+    @if (pestanaActiva == "inventario")
+    {
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0 fs-6">
+                        <i class="bi bi-boxes text-success me-1"></i> Existencias, Costos y Precios en COP por Asociación
+                    </h5>
+                    <small class="text-muted">Control de existencias, stock mínimo y vigencia de precios</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <select class="form-select form-select-sm" style="max-width: 280px;" @bind="filtroAsocInventario">
+                        <option value="">Todas las asociaciones productoras</option>
+                        @foreach (var asoc in listaAsociaciones)
+                        {
+                            <option value="@asoc">@asoc</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="table-responsive aso-table-wrap">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.84rem;">
+                    <thead class="aso-thead-unified">
+                        <tr>
+                            <th class="py-2.5 ps-3">Código</th>
+                            <th class="py-2.5">Producto Agropecuario</th>
+                            <th class="py-2.5">Asociación Proveedora</th>
+                            <th class="py-2.5 text-end">Costo Promedio</th>
+                            <th class="py-2.5 text-end">Precio Venta COP</th>
+                            <th class="py-2.5 text-center">Vigencia Precio</th>
+                            <th class="py-2.5 text-center">Stock Disponible</th>
+                            <th class="py-2.5 text-center">Estado</th>
+                            <th class="py-2.5 pe-3 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var prod in ProductosInventarioFiltrados)
+                        {
+                            <tr>
+                                <td class="ps-3 fw-bold text-muted">@prod.Codigo</td>
+                                <td>
+                                    <strong class="text-dark d-block">@prod.Nombre</strong>
+                                    <small class="text-muted">Categoría: @prod.Categoria · @prod.UnidadMedida</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border small text-truncate" style="max-width: 220px;" title="@prod.AsociacionOrigen">
+                                        @prod.AsociacionOrigen
+                                    </span>
+                                </td>
+                                <td class="text-end">
+                                    <span class="text-muted">$@prod.CostoPromedio.ToString("N0")</span>
+                                    <small class="text-muted d-block" style="font-size: 0.68rem;">COP</small>
+                                </td>
+                                <td class="text-end">
+                                    <strong class="text-success">$@prod.PrecioUnitario.ToString("N0")</strong>
+                                    <small class="text-muted d-block" style="font-size: 0.68rem;">COP</small>
+                                </td>
+                                <td class="text-center">
+                                    @if (prod.VigenciaPrecio.HasValue)
+                                    {
+                                        <span class="small text-muted">@prod.VigenciaPrecio.Value.ToString("dd/MM/yyyy")</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-light text-muted border">Indefinida</span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <strong class="fs-6 text-dark">@prod.StockDisponible.ToString("N0")</strong>
+                                    <small class="text-muted d-block" style="font-size: 0.7rem;">Mín: @prod.StockMinimo @prod.UnidadMedida</small>
+                                </td>
+                                <td class="text-center">
+                                    @if (prod.StockDisponible <= 0)
+                                    {
+                                        <span class="badge bg-danger rounded-pill px-2.5 py-1">Agotado</span>
+                                    }
+                                    else if (prod.StockDisponible <= prod.StockMinimo)
+                                    {
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1">
+                                            Bajo Stock (Reponer)
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1">
+                                            Disponible
+                                        </span>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    @if (!esModoConsulta)
+                                    {
+                                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-0.5" 
+                                                @onclick="() => AbrirModalAjusteInventario(prod)">
+                                            <i class="bi bi-sliders"></i> Ajustar
+                                        </button>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">Solo lectura</span>
+                                    }
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <!-- ============================================== -->
+    <!-- ÁREA 4: CIERRE DE TURNO Y ARQUEO DE CAJA       -->
+    <!-- ============================================== -->
+    @if (pestanaActiva == "cierre")
+    {
+        <div class="row g-4 mb-4">
+            <!-- FORMULARIO DE ARQUEO -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <span class="p-2 rounded-3 bg-warning-subtle text-warning">
+                            <i class="bi bi-calculator-fill fs-5"></i>
+                        </span>
+                        <div>
+                            <h5 class="fw-bold text-dark mb-0 fs-6">Arqueo y Cierre de Caja</h5>
+                            <small class="text-muted">Conciliación de ventas contra efectivo físico contado</small>
+                        </div>
+                    </div>
+
+                    <div class="p-3 rounded-4 mb-3" style="background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                        <div class="d-flex justify-content-between text-muted small mb-1">
+                            <span>Ventas en Efectivo del Día:</span>
+                            <strong class="text-dark">$@resumen.TotalEfectivoHoy.ToString("N0") COP</strong>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small mb-1">
+                            <span>Ventas por Transferencia:</span>
+                            <strong class="text-dark">$@resumen.TotalTransferenciasHoy.ToString("N0") COP</strong>
+                        </div>
+                        <div class="d-flex justify-content-between fs-6 fw-bold text-dark pt-2 border-top">
+                            <span>Efectivo Esperado en Gaveta:</span>
+                            <span class="text-success">$@resumen.TotalEfectivoHoy.ToString("N0") COP</span>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold mb-1">
+                            Turno de Operación: <span class="text-danger">* (Obligatorio)</span>
+                        </label>
+                        <select class="form-select form-select-sm" @bind="nuevoCierre.Turno" disabled="@esModoConsulta">
+                            <option value="Mañana">Jornada Mañana (07:00 a 13:00)</option>
+                            <option value="Tarde">Jornada Tarde (13:00 a 19:00)</option>
+                            <option value="Jornada Completa">Jornada Completa</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold mb-1">
+                            Efectivo Físico Contado en Caja (COP): <span class="text-danger">* (Obligatorio)</span>
+                        </label>
+                        <input type="number" class="form-control form-control-sm fs-5 fw-bold text-dark" 
+                               placeholder="Ej: 84000" 
+                               @bind="nuevoCierre.EfectivoContado" 
+                               @bind:event="oninput" 
+                               disabled="@esModoConsulta" />
+                        <small class="text-muted" style="font-size: 0.68rem;">Suma total de billetes y monedas contados al cerrar turno.</small>
+                    </div>
+
+                    <!-- CÁLCULO DE DIFERENCIA EN TIEMPO REAL -->
+                    @{
+                        var dif = nuevoCierre.EfectivoContado - resumen.TotalEfectivoHoy;
+                    }
+                    <div class="p-3 rounded-4 mb-3 @(Math.Abs(dif) < 0.01m ? "bg-success-subtle text-success" : (dif < 0 ? "bg-danger-subtle text-danger" : "bg-warning-subtle text-warning-emphasis"))">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <strong>Diferencia de Caja:</strong>
+                            <span class="fs-5 fw-bold">$@dif.ToString("N0") COP</span>
+                        </div>
+                        <small class="d-block mt-1">
+                            @(Math.Abs(dif) < 0.01m ? "Caja totalmente cuadrada con el sistema." : (dif < 0 ? "Alerta: Faltante de dinero frente a ventas registradas." : "Sobrante de dinero en gaveta."))
+                        </small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold mb-1">
+                            Observaciones de Arqueo: <span class="text-muted fw-normal">(Opcional)</span>
+                        </label>
+                        <textarea class="form-control form-control-sm" rows="2" placeholder="Ej: Arqueo verificado, billetes ordenados y guardados en caja fuerte" @bind="nuevoCierre.Observaciones" disabled="@esModoConsulta"></textarea>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(errorCierre))
+                    {
+                        <div class="alert alert-danger py-2 small mb-3">@errorCierre</div>
+                    }
+
+                    <button type="button" class="btn btn-warning text-dark w-100 rounded-pill py-2 fw-bold" 
+                            disabled="@(esModoConsulta || guardandoCierre)"
+                            @onclick="GuardarCierreCaja">
+                        @if (guardandoCierre)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            <span>Guardando arqueo...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-lock-fill me-1"></i>
+                            <span>Registrar y Cerrar Turno</span>
+                        }
+                    </button>
+                </div>
+            </div>
+
+            <!-- HISTORIAL DE ARQUEOS -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0 fs-6">
+                            <i class="bi bi-clock-history text-success me-1"></i> Historial de Arqueos y Cierres
+                        </h5>
+                        <span class="badge bg-light text-dark border">@cierresCaja.Count registro(s)</span>
+                    </div>
+
+                    <div class="table-responsive aso-table-wrap">
+                        <table class="table table-hover align-middle mb-0" style="font-size: 0.82rem;">
+                            <thead class="aso-thead-unified">
+                                <tr>
+                                    <th class="ps-3 py-2">Fecha / Turno</th>
+                                    <th class="py-2">Responsable</th>
+                                    <th class="py-2 text-end">Efectivo Esp.</th>
+                                    <th class="py-2 text-end">Contado</th>
+                                    <th class="py-2 text-center">Diferencia</th>
+                                    <th class="pe-3 py-2 text-center">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var c in cierresCaja)
+                                {
+                                    <tr>
+                                        <td class="ps-3">
+                                            <strong class="text-dark d-block">@c.FechaCierre.ToString("dd/MM/yyyy HH:mm")</strong>
+                                            <small class="text-muted">@c.Turno</small>
+                                        </td>
+                                        <td>@c.Responsable</td>
+                                        <td class="text-end">$@c.EfectivoEsperado.ToString("N0")</td>
+                                        <td class="text-end fw-bold">$@c.EfectivoContado.ToString("N0")</td>
+                                        <td class="text-center @(c.Diferencia == 0 ? "text-success" : (c.Diferencia < 0 ? "text-danger" : "text-warning"))">
+                                            $@c.Diferencia.ToString("N0")
+                                        </td>
+                                        <td class="text-center">
+                                            <span class="badge @(c.Estado == "Cuadrado" ? "bg-success" : "bg-warning text-dark") rounded-pill px-2 py-1">
+                                                @c.Estado
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ============================================== -->
+    <!-- ÁREA 5: HISTORIAL, DEVOLUCIONES Y ANULACIONES  -->
+    <!-- ============================================== -->
+    @if (pestanaActiva == "historial")
+    {
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div>
+                    <h5 class="fw-bold text-dark mb-0 fs-6">
+                        <i class="bi bi-clock-history text-success me-1"></i> Bitácora de Transacciones y Devoluciones
+                    </h5>
+                    <small class="text-muted">Trazabilidad de ventas y registro de motivos obligatorios para anulaciones</small>
+                </div>
+                <span class="text-muted small">@ventas.Count operación(es) registrada(s)</span>
+            </div>
+
+            <div class="table-responsive aso-table-wrap">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.84rem;">
+                    <thead class="aso-thead-unified">
+                        <tr>
+                            <th class="py-2.5 ps-3">Ticket No.</th>
+                            <th class="py-2.5">Fecha / Hora</th>
+                            <th class="py-2.5">Cliente</th>
+                            <th class="py-2.5">Método Pago</th>
+                            <th class="py-2.5">Asociación Principal</th>
+                            <th class="py-2.5 text-end">Monto Total</th>
+                            <th class="py-2.5 text-center">Estado</th>
+                            <th class="py-2.5 pe-3 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var v in ventas)
+                        {
+                            <tr>
+                                <td class="ps-3 fw-bold text-success">@v.NumeroTicket</td>
+                                <td>@v.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                                <td>
+                                    <strong class="text-dark d-block">@v.ClienteNombre</strong>
+                                    <small class="text-muted">Doc: @v.ClienteDocumento</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="bi bi-credit-card me-1"></i>@v.MetodoPago
+                                    </span>
+                                </td>
+                                <td>
+                                    <small class="text-muted text-truncate d-block" style="max-width: 220px;" title="@v.AsociacionOrigenPrincipal">
+                                        @v.AsociacionOrigenPrincipal
+                                    </small>
+                                </td>
+                                <td class="text-end">
+                                    <strong class="text-dark fs-6">$@v.Total.ToString("N0")</strong>
+                                    <small class="text-muted d-block" style="font-size: 0.7rem;">COP</small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge @(v.Estado == "Completada" ? "bg-success" : "bg-danger") rounded-pill px-2.5 py-1">
+                                        @v.Estado
+                                    </span>
+                                    @if (!string.IsNullOrEmpty(v.MotivoAnulacion))
+                                    {
+                                        <small class="d-block text-danger mt-1 text-truncate" style="max-width: 140px;" title="@v.MotivoAnulacion">
+                                            @v.MotivoAnulacion
+                                        </small>
+                                    }
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-secondary rounded-pill px-2 py-0.5 me-1" 
+                                                @onclick="() => MostrarRecibo(v)">
+                                            <i class="bi bi-receipt"></i> Recibo
+                                        </button>
+                                        @if (!esModoConsulta && v.Estado == "Completada")
+                                        {
+                                            <button type="button" class="btn btn-outline-danger rounded-pill px-2 py-0.5" 
+                                                    @onclick="() => AbrirModalAnulacion(v)">
+                                                <i class="bi bi-x-circle"></i> Anular
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <!-- MODAL DE RECIBO / TICKET OFICIAL -->
+    @if (ventaSeleccionada != null)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(3px);" role="dialog">
+            <div class="modal-dialog modal-sm modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content rounded-4 border-0 shadow-lg">
+                    <div class="modal-header bg-dark text-white p-3">
+                        <div class="text-center w-100">
+                            <h6 class="modal-title fw-bold text-white mb-0">ASOAGRO · FAAUA</h6>
+                            <small class="text-white-50">Comprobante de Venta en Mostrador Solidario</small>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" @onclick="CerrarRecibo"></button>
+                    </div>
+                    <div class="modal-body p-3 font-monospace" style="font-size: 0.8rem;">
+                        <div class="text-center border-bottom pb-2 mb-2">
+                            <strong>@ventaSeleccionada.NumeroTicket</strong><br />
+                            <small>Fecha: @ventaSeleccionada.Fecha.ToString("dd/MM/yyyy HH:mm")</small><br />
+                            <small>Atendido por: @ventaSeleccionada.AtendidoPor</small>
+                        </div>
+                        <div class="border-bottom pb-2 mb-2">
+                            <strong>Cliente:</strong> @ventaSeleccionada.ClienteNombre<br />
+                            <strong>NIT/CC:</strong> @ventaSeleccionada.ClienteDocumento<br />
+                            <strong>Pago:</strong> @ventaSeleccionada.MetodoPago
+                        </div>
+                        <div class="border-bottom pb-2 mb-2">
+                            <table class="w-100">
+                                <thead>
+                                    <tr class="text-muted small">
+                                        <th>Cant</th>
+                                        <th>Desc</th>
+                                        <th class="text-end">Subt</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var it in ventaSeleccionada.Items)
+                                    {
+                                        <tr>
+                                            <td>@it.Cantidad</td>
+                                            <td class="text-truncate" style="max-width: 140px;">@it.NombreProducto</td>
+                                            <td class="text-end">$@it.Subtotal.ToString("N0")</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex justify-content-between fw-bold fs-6 mb-2">
+                            <span>TOTAL:</span>
+                            <span>$@ventaSeleccionada.Total.ToString("N0") COP</span>
+                        </div>
+                        @if (ventaSeleccionada.MetodoPago == "Efectivo" && ventaSeleccionada.MontoRecibido > 0)
+                        {
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span>Recibido:</span>
+                                <span>$@ventaSeleccionada.MontoRecibido.ToString("N0") COP</span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span>Cambio:</span>
+                                <span>$@ventaSeleccionada.Cambio.ToString("N0") COP</span>
+                            </div>
+                        }
+                        <div class="text-center pt-3 text-muted small" style="font-size: 0.65rem;">
+                            ¡Gracias por apoyar a las familias productoras del Urabá Antioqueño!
+                        </div>
+                    </div>
+                    <div class="modal-footer p-2 bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm rounded-pill w-100" @onclick="CerrarRecibo">Cerrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- MODAL DE ANULACIÓN CON MOTIVO OBLIGATORIO -->
+    @if (ventaPorAnular != null)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(3px);" role="dialog">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content rounded-4 border-0 shadow-lg">
+                    <div class="modal-header bg-danger text-white p-3">
+                        <h6 class="modal-title fw-bold text-white mb-0">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Anular Venta @ventaPorAnular.NumeroTicket
+                        </h6>
+                        <button type="button" class="btn-close btn-close-white" @onclick="() => ventaPorAnular = null"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="small text-muted mb-3">
+                            Al anular esta venta, los productos serán reintegrados automáticamente al inventario disponible.
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold mb-1">
+                                Motivo Obligatorio de Anulación o Devolución: <span class="text-danger">* (Obligatorio)</span>
+                            </label>
+                            <textarea class="form-control form-control-sm" rows="3" placeholder="Ej: Devolución por inconformidad del cliente o error de digitación" @bind="motivoAnulacion"></textarea>
+                        </div>
+                        @if (!string.IsNullOrEmpty(errorAnulacion))
+                        {
+                            <div class="alert alert-danger py-2 small">@errorAnulacion</div>
+                        }
+                    </div>
+                    <div class="modal-footer p-3 bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm rounded-pill" @onclick="() => ventaPorAnular = null">Cancelar</button>
+                        <button type="button" class="btn btn-danger btn-sm rounded-pill fw-bold" @onclick="ConfirmarAnulacion">Confirmar Anulación</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- MODAL DE AJUSTE DE INVENTARIO -->
+    @if (productoPorAjustar != null)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(3px);" role="dialog">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content rounded-4 border-0 shadow-lg">
+                    <div class="modal-header bg-dark text-white p-3">
+                        <h6 class="modal-title fw-bold text-white mb-0">
+                            <i class="bi bi-sliders me-1"></i> Ajuste Autorizado de Inventario: @productoPorAjustar.Nombre
+                        </h6>
+                        <button type="button" class="btn-close btn-close-white" @onclick="() => productoPorAjustar = null"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold mb-1">Stock Actual:</label>
+                            <div class="form-control form-control-sm bg-light">
+                                @productoPorAjustar.StockDisponible.ToString("N0") @productoPorAjustar.UnidadMedida
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold mb-1">
+                                Nuevo Stock Físico: <span class="text-danger">* (Obligatorio)</span>
+                            </label>
+                            <input type="number" step="0.01" class="form-control form-control-sm" @bind="nuevoStockAjuste" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold mb-1">
+                                Autorizado por: <span class="text-danger">* (Obligatorio)</span>
+                            </label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Ej: Junta Directiva FAAUA / Auditor" @bind="autorizadoPorAjuste" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold mb-1">
+                                Motivo Justificado: <span class="text-danger">* (Obligatorio)</span>
+                            </label>
+                            <textarea class="form-control form-control-sm" rows="2" placeholder="Ej: Merma biológica natural por maduración o conteo físico de auditoría" @bind="motivoAjuste"></textarea>
+                        </div>
+                        @if (!string.IsNullOrEmpty(errorAjuste))
+                        {
+                            <div class="alert alert-danger py-2 small">@errorAjuste</div>
+                        }
+                    </div>
+                    <div class="modal-footer p-3 bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm rounded-pill" @onclick="() => productoPorAjustar = null">Cancelar</button>
+                        <button type="button" class="btn btn-success btn-sm rounded-pill fw-bold" @onclick="ConfirmarAjusteInventario">Guardar Ajuste</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    private string pestanaActiva = "caja";
+    private string nombreUsuario = "Carlos Mostrador FAAUA";
+    private string rolUsuario = "Administrador del punto de venta";
+    private bool esModoConsulta = false;
+
+    private List<ProductoPdv> productos = new();
+    private List<VentaPdv> ventas = new();
+    private List<RecepcionProductoPdv> recepciones = new();
+    private List<CierreCajaPdv> cierresCaja = new();
+    private ResumenPdv resumen = new();
+    private List<string> listaAsociaciones = new();
+
+    private string filtroCategoriaCatalogo = string.Empty;
+    private string filtroAsocInventario = string.Empty;
+
+    // Feedback
+    private string? mensajeFeedback;
+    private bool esFeedbackExito = true;
+
+    // Carrito de mostrador
+    private List<ItemVentaPdv> carrito = new();
+    private string clienteNombre = string.Empty;
+    private string clienteDocumento = string.Empty;
+    private string metodoPago = "Efectivo";
+    private decimal montoRecibido = 0;
+    private bool guardandoVenta = false;
+    private string errorVenta = string.Empty;
+    private VentaPdv? ventaSeleccionada;
+    private bool aplicaDescuento = false;
+    private decimal descuentoVenta = 0;
+    private string? motivoDescuento;
+    private string? autorizadoPorDescuento;
+    private string? nombreSoportePago;
+
+    // Recepción
+    private RecepcionProductoPdv nuevaRecepcion = new();
+    private bool guardandoRecepcion = false;
+    private string errorRecepcion = string.Empty;
+
+    // Cierre
+    private CierreCajaPdv nuevoCierre = new();
+    private bool guardandoCierre = false;
+    private string errorCierre = string.Empty;
+
+    // Anulación
+    private VentaPdv? ventaPorAnular;
+    private string motivoAnulacion = string.Empty;
+    private string errorAnulacion = string.Empty;
+
+    // Ajuste inventario
+    private ProductoPdv? productoPorAjustar;
+    private decimal nuevoStockAjuste = 0;
+    private string autorizadoPorAjuste = string.Empty;
+    private string motivoAjuste = string.Empty;
+    private string errorAjuste = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            nombreUsuario = user.FindFirst(ClaimTypes.Name)?.Value ?? user.Identity.Name ?? "Carlos Mostrador FAAUA";
+            var rol = user.FindFirst(ClaimTypes.Role)?.Value ?? "AdministradorPdv";
+            rolUsuario = rol switch
+            {
+                "AdministradorPdv" or "PuntoVenta" or "Vendedor" => "Administrador del punto de venta",
+                "Presidenta" or "Presidente" => "Presidente FAAUA",
+                "Tesorero" or "Tesorera" => "Tesorería FAAUA",
+                "Administrador" or "Admin" => "Administrador de la plataforma",
+                _ => rol
+            };
+
+            // Solo Administrador del punto de venta y Vendedor tienen rol operativo
+            esModoConsulta = !(rol.Equals("AdministradorPdv", StringComparison.OrdinalIgnoreCase) ||
+                               rol.Equals("PuntoVenta", StringComparison.OrdinalIgnoreCase) ||
+                               rol.Equals("Vendedor", StringComparison.OrdinalIgnoreCase));
+        }
+
+        listaAsociaciones = DocumentoService.ObtenerAsociaciones().ToList();
+        CargarDatos();
+        InicializarRecepcion();
+        InicializarCierre();
+    }
+
+    private void CargarDatos()
+    {
+        productos = PuntoVentaService.ObtenerProductos().ToList();
+        ventas = PuntoVentaService.ObtenerVentas().ToList();
+        recepciones = PuntoVentaService.ObtenerRecepciones().ToList();
+        cierresCaja = PuntoVentaService.ObtenerCierresCaja().ToList();
+        resumen = PuntoVentaService.ObtenerResumen();
+    }
+
+    private void InicializarRecepcion()
+    {
+        nuevaRecepcion = new RecepcionProductoPdv
+        {
+            FechaRecepcion = DateTime.Today,
+            Cantidad = 0,
+            CostoUnitario = 0
+        };
+        errorRecepcion = string.Empty;
+    }
+
+    private void InicializarCierre()
+    {
+        nuevoCierre = new CierreCajaPdv
+        {
+            FechaCierre = DateTime.Today,
+            Turno = "Jornada Completa",
+            EfectivoEsperado = resumen.TotalEfectivoHoy,
+            EfectivoContado = resumen.TotalEfectivoHoy,
+            Responsable = nombreUsuario
+        };
+        errorCierre = string.Empty;
+    }
+
+    private IEnumerable<ProductoPdv> ProductosCatalogoFiltrados =>
+        productos.Where(p => string.IsNullOrWhiteSpace(filtroCategoriaCatalogo) ||
+                             string.Equals(p.Categoria, filtroCategoriaCatalogo, StringComparison.OrdinalIgnoreCase));
+
+    private IEnumerable<ProductoPdv> ProductosInventarioFiltrados =>
+        productos.Where(p => string.IsNullOrWhiteSpace(filtroAsocInventario) ||
+                             string.Equals(p.AsociacionOrigen, filtroAsocInventario, StringComparison.OrdinalIgnoreCase));
+
+    private decimal SubtotalBrutoCarrito => carrito.Sum(i => i.Cantidad * i.PrecioUnitario);
+    private decimal TotalCarrito => Math.Max(0, SubtotalBrutoCarrito - (aplicaDescuento ? descuentoVenta : 0));
+
+    private void AgregarAlCarrito(ProductoPdv prod)
+    {
+        if (esModoConsulta) return;
+
+        var existente = carrito.FirstOrDefault(i => i.ProductoId == prod.Id);
+        if (existente != null)
+        {
+            if (existente.Cantidad + 1 <= prod.StockDisponible)
+            {
+                existente.Cantidad += 1;
+            }
+        }
+        else
+        {
+            carrito.Add(new ItemVentaPdv
+            {
+                ProductoId = prod.Id,
+                CodigoProducto = prod.Codigo,
+                NombreProducto = prod.Nombre,
+                Categoria = prod.Categoria,
+                AsociacionOrigen = prod.AsociacionOrigen,
+                UnidadMedida = prod.UnidadMedida,
+                Cantidad = 1,
+                PrecioUnitario = prod.PrecioUnitario
+            });
+        }
+
+        if (montoRecibido < TotalCarrito)
+        {
+            montoRecibido = TotalCarrito;
+        }
+    }
+
+    private void ModificarCantidad(ItemVentaPdv item, decimal delta)
+    {
+        if (esModoConsulta) return;
+
+        var nuevaCant = item.Cantidad + delta;
+        if (nuevaCant <= 0)
+        {
+            carrito.Remove(item);
+        }
+        else
+        {
+            var prod = productos.FirstOrDefault(p => p.Id == item.ProductoId);
+            if (prod != null && nuevaCant <= prod.StockDisponible)
+            {
+                item.Cantidad = nuevaCant;
+            }
+        }
+
+        if (montoRecibido < TotalCarrito)
+        {
+            montoRecibido = TotalCarrito;
+        }
+    }
+
+    private void VaciarCarrito()
+    {
+        carrito.Clear();
+        montoRecibido = 0;
+        descuentoVenta = 0;
+        aplicaDescuento = false;
+        errorVenta = string.Empty;
+    }
+
+    private async Task CargarSoportePagoVenta(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            if (file.Size > 10 * 1024 * 1024)
+            {
+                errorVenta = "El comprobante no debe superar los 10 MB.";
+                return;
+            }
+            nombreSoportePago = file.Name;
+        }
+    }
+
+    private void FinalizarVenta()
+    {
+        if (esModoConsulta || !carrito.Any()) return;
+
+        if (string.IsNullOrWhiteSpace(clienteNombre))
+        {
+            errorVenta = "El nombre o razón social del cliente es obligatorio.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(clienteDocumento))
+        {
+            errorVenta = "El documento (Cédula o NIT) del cliente es obligatorio.";
+            return;
+        }
+
+        if (metodoPago == "Efectivo" && montoRecibido < TotalCarrito)
+        {
+            errorVenta = "El monto recibido en efectivo no puede ser inferior al total a cobrar.";
+            return;
+        }
+
+        errorVenta = string.Empty;
+        guardandoVenta = true;
+
+        try
+        {
+            var venta = new VentaPdv
+            {
+                ClienteNombre = clienteNombre.Trim(),
+                ClienteDocumento = clienteDocumento.Trim(),
+                MetodoPago = metodoPago,
+                MontoRecibido = montoRecibido >= TotalCarrito ? montoRecibido : TotalCarrito,
+                DescuentoAutorizado = aplicaDescuento ? descuentoVenta : 0,
+                MotivoDescuento = aplicaDescuento ? motivoDescuento : null,
+                AutorizadoPor = aplicaDescuento ? autorizadoPorDescuento : null,
+                SoportePagoNombre = nombreSoportePago,
+                Items = new List<ItemVentaPdv>(carrito)
+            };
+
+            var res = PuntoVentaService.RegistrarVenta(venta, nombreUsuario, rolUsuario);
+            if (!res.Exitoso)
+            {
+                errorVenta = res.Mensaje;
+                return;
+            }
+
+            ventaSeleccionada = res.Venta;
+            mensajeFeedback = res.Mensaje;
+            esFeedbackExito = true;
+            VaciarCarrito();
+            clienteNombre = string.Empty;
+            clienteDocumento = string.Empty;
+            nombreSoportePago = null;
+            CargarDatos();
+            InicializarCierre();
+        }
+        finally
+        {
+            guardandoVenta = false;
+        }
+    }
+
+    private void ActualizarDatosProductoRecepcion()
+    {
+        var p = productos.FirstOrDefault(x => x.Id == nuevaRecepcion.ProductoId);
+        if (p != null)
+        {
+            nuevaRecepcion.ProductoNombre = p.Nombre;
+            nuevaRecepcion.CodigoProducto = p.Codigo;
+            nuevaRecepcion.UnidadMedida = p.UnidadMedida;
+            nuevaRecepcion.AsociacionOrigen = p.AsociacionOrigen;
+            if (nuevaRecepcion.CostoUnitario <= 0)
+            {
+                nuevaRecepcion.CostoUnitario = p.CostoPromedio;
+            }
+        }
+    }
+
+    private async Task CargarSoporteRecepcion(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file != null)
+        {
+            if (file.Size > 10 * 1024 * 1024)
+            {
+                errorRecepcion = "El archivo supera el límite permitido de 10 MB.";
+                return;
+            }
+            nuevaRecepcion.SoporteNombre = file.Name;
+        }
+    }
+
+    private void GuardarRecepcion()
+    {
+        if (esModoConsulta) return;
+
+        if (nuevaRecepcion.ProductoId == Guid.Empty)
+        {
+            errorRecepcion = "Debe seleccionar un producto del catálogo.";
+            return;
+        }
+
+        if (nuevaRecepcion.Cantidad <= 0)
+        {
+            errorRecepcion = "La cantidad debe ser mayor a cero.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(nuevaRecepcion.ProveedorNombre))
+        {
+            errorRecepcion = "Debe indicar la finca o productor proveedor.";
+            return;
+        }
+
+        errorRecepcion = string.Empty;
+        guardandoRecepcion = true;
+
+        try
+        {
+            var res = PuntoVentaService.RegistrarRecepcion(nuevaRecepcion, nombreUsuario, rolUsuario);
+            if (!res.Exitoso)
+            {
+                errorRecepcion = res.Mensaje;
+                return;
+            }
+
+            mensajeFeedback = res.Mensaje;
+            esFeedbackExito = true;
+            InicializarRecepcion();
+            CargarDatos();
+        }
+        finally
+        {
+            guardandoRecepcion = false;
+        }
+    }
+
+    private void GuardarCierreCaja()
+    {
+        if (esModoConsulta) return;
+
+        errorCierre = string.Empty;
+        guardandoCierre = true;
+
+        try
+        {
+            nuevoCierre.TotalVentasEfectivo = resumen.TotalEfectivoHoy;
+            nuevoCierre.TotalVentasTransferencia = resumen.TotalTransferenciasHoy;
+            nuevoCierre.TotalVentasGeneral = resumen.TotalVentasHoy;
+            nuevoCierre.CantidadVentas = resumen.CantidadTransaccionesHoy;
+            nuevoCierre.EfectivoEsperado = resumen.TotalEfectivoHoy;
+
+            var ok = PuntoVentaService.RegistrarCierreCaja(nuevoCierre, nombreUsuario, rolUsuario);
+            if (ok)
+            {
+                mensajeFeedback = $"Cierre de turno '{nuevoCierre.Turno}' guardado exitosamente. Estado: {nuevoCierre.Estado}.";
+                esFeedbackExito = true;
+                InicializarCierre();
+                CargarDatos();
+            }
+        }
+        finally
+        {
+            guardandoCierre = false;
+        }
+    }
+
+    private void AbrirModalAnulacion(VentaPdv v)
+    {
+        ventaPorAnular = v;
+        motivoAnulacion = string.Empty;
+        errorAnulacion = string.Empty;
+    }
+
+    private void ConfirmarAnulacion()
+    {
+        if (esModoConsulta || ventaPorAnular == null) return;
+
+        if (string.IsNullOrWhiteSpace(motivoAnulacion))
+        {
+            errorAnulacion = "El motivo de la anulación es obligatorio por trazabilidad y auditoría.";
+            return;
+        }
+
+        var ok = PuntoVentaService.AnularVenta(ventaPorAnular.Id, motivoAnulacion.Trim(), nombreUsuario, rolUsuario);
+        if (ok)
+        {
+            mensajeFeedback = $"Venta {ventaPorAnular.NumeroTicket} anulada correctamente y mercancía reintegrada al inventario.";
+            esFeedbackExito = true;
+            ventaPorAnular = null;
+            CargarDatos();
+            InicializarCierre();
+        }
+        else
+        {
+            errorAnulacion = "No fue posible anular la venta.";
+        }
+    }
+
+    private void AbrirModalAjusteInventario(ProductoPdv p)
+    {
+        productoPorAjustar = p;
+        nuevoStockAjuste = p.StockDisponible;
+        autorizadoPorAjuste = string.Empty;
+        motivoAjuste = string.Empty;
+        errorAjuste = string.Empty;
+    }
+
+    private void ConfirmarAjusteInventario()
+    {
+        if (esModoConsulta || productoPorAjustar == null) return;
+
+        if (string.IsNullOrWhiteSpace(autorizadoPorAjuste))
+        {
+            errorAjuste = "Debe indicar quién autorizó el ajuste de inventario.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(motivoAjuste))
+        {
+            errorAjuste = "El motivo justificado del ajuste de inventario es obligatorio.";
+            return;
+        }
+
+        var ok = PuntoVentaService.AjustarInventario(productoPorAjustar.Id, nuevoStockAjuste, motivoAjuste.Trim(), autorizadoPorAjuste.Trim(), nombreUsuario);
+        if (ok)
+        {
+            mensajeFeedback = $"Ajuste de inventario aplicado a {productoPorAjustar.Nombre}: nuevo stock {nuevoStockAjuste} {productoPorAjustar.UnidadMedida}.";
+            esFeedbackExito = true;
+            productoPorAjustar = null;
+            CargarDatos();
+        }
+    }
+
+    private void MostrarRecibo(VentaPdv v) => ventaSeleccionada = v;
+    private void CerrarRecibo() => ventaSeleccionada = null;
+}

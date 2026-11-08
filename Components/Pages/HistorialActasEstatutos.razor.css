@@ -9,14 +9,60 @@
     font-family: var(--ag-texto, 'Asap Sharp', system-ui, sans-serif);
 }
 
-.ah-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 1.5rem; padding: 1.5rem 1.7rem; border-radius: 1.2rem; background: linear-gradient(120deg, #0b2e1c, #17603a); color: #fff; }
-.ah-back { display: inline-block; margin-bottom: .85rem; color: #d7edaf; font-size: .73rem; font-weight: 700; text-decoration: none; }
-.ah-back:hover { text-decoration: underline; }
+.ah-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: flex-end; 
+    gap: 1.5rem; 
+    padding: 1.5rem 1.85rem; 
+    border-radius: 20px; 
+    background: #14532D !important; 
+    background-image: none !important;
+    border: 1.5px solid #166534 !important;
+    border-top: 4px solid #8B5CF6 !important;
+    color: #fff; 
+    box-shadow: 0 12px 28px -12px rgba(20, 83, 45, 0.25) !important;
+}
+.ah-back { 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 6px; 
+    margin-bottom: .85rem; 
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: #1E6B3E;
+    border: 1px solid #4ADE80;
+    color: #ECFCCB; 
+    font-size: .73rem; 
+    font-weight: 700; 
+    text-decoration: none; 
+}
+.ah-back:hover { 
+    background: #247A48;
+    color: #FFFFFF;
+    text-decoration: none; 
+}
 .ah-eyebrow { display: block; color: #789184; font-size: .66rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
-.ah-header .ah-eyebrow { color: #c9e8a4; }
-.ah-header h1 { margin: .25rem 0; color: #fff; font-family: var(--ag-titulo, 'Maname', Georgia, serif); font-size: clamp(1.7rem, 3vw, 2.2rem); }
-.ah-header p { max-width: 650px; margin: 0; color: rgba(255,255,255,.77); font-size: .83rem; line-height: 1.55; }
-.ah-button { flex: 0 0 auto; padding: .68rem .85rem; border-radius: .7rem; background: #d7edaf; color: #173e27; font-size: .76rem; font-weight: 750; text-decoration: none; }
+.ah-header .ah-eyebrow { color: #A78BFA; }
+.ah-header h1 { margin: .25rem 0; color: #fff; font-family: 'Sora', sans-serif; font-size: clamp(1.4rem, 2vw, 1.7rem); font-weight: 800; }
+.ah-header p { max-width: 650px; margin: 0; color: #DCFCE7; font-size: .86rem; line-height: 1.55; }
+.ah-button { 
+    flex: 0 0 auto; 
+    padding: 10px 20px; 
+    border-radius: 12px; 
+    background: #B9E77A !important; 
+    color: #0B261A !important; 
+    border: 1.5px solid #D9F99D !important;
+    font-size: .84rem; 
+    font-weight: 800; 
+    text-decoration: none; 
+    transition: all 0.16s ease;
+}
+.ah-button:hover { 
+    background: #C8F08E !important;
+    transform: translateY(-1px);
+    color: #061A10 !important;
+}
 .ah-summary { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: .75rem; }
 .ah-summary > div { display: grid; gap: .2rem; padding: .9rem 1rem; border: 1px solid #e3ebe1; border-radius: .85rem; background: #fff; }
 .ah-summary small { color: var(--ah-muted); font-size: .68rem; }
@@ -69,37 +115,39 @@
 .ah-header {
     position: relative;
     overflow: hidden;
-    min-height: 170px;
-    padding: clamp(1.2rem, 2.8vw, 1.9rem);
-    background:
-        radial-gradient(circle at 100% 0%, rgba(232, 197, 107, .2), transparent 17rem),
-        linear-gradient(120deg, #0b2e1c, #17603a);
+    min-height: 140px;
+    padding: clamp(1.2rem, 2.5vw, 1.85rem);
+    background: #14532D !important;
+    background-image: none !important;
+    border: 1.5px solid #166534 !important;
+    border-top: 4px solid #8B5CF6 !important;
 }
 
 .ah-summary > div {
     position: relative;
     overflow: hidden;
     min-height: 88px;
-    border-color: #e5ece2;
-    border-left: 4px solid #2e9a5b;
-    background: #eaf4ee;
-    box-shadow: 0 8px 20px -17px rgba(11, 46, 28, .4);
+    border-radius: 16px !important;
+    border: 1.5px solid #CBD5E1 !important;
+    border-top: 4px solid #059669 !important;
+    background: #F0FDF4 !important;
+    box-shadow: 0 8px 20px -17px rgba(11, 46, 28, .2);
     transition: border-color .16s ease, box-shadow .16s ease;
 }
 
 .ah-summary > .ah-summary-movements {
-    border-left-color: #43856a;
-    background: #e9f2ed;
+    border-top-color: #059669 !important;
+    background: #F0FDF4 !important;
 }
 
 .ah-summary > .ah-summary-documents {
-    border-left-color: #d3a33c;
-    background: #fff4d9;
+    border-top-color: #D97706 !important;
+    background: #FEF3C7 !important;
 }
 
 .ah-summary > .ah-summary-visible {
-    border-left-color: #687f9b;
-    background: #edf2f8;
+    border-top-color: #0284C7 !important;
+    background: #F0F9FF !important;
 }
 
 .ah-summary > div:hover {

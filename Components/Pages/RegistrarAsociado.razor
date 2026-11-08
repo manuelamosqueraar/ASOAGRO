@@ -1,5 +1,5 @@
 @page "/registrar-asociado"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Directora,Director")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Presidenta,Presidente")]
 @rendermode InteractiveServer
 @implements IAsyncDisposable
 @using System.Security.Claims
@@ -10,6 +10,7 @@
 @using Microsoft.JSInterop
 @inject NavigationManager NavManager
 @inject IAsociadoService RegistroAsociados
+@inject IDocumentoAsociacionService DocumentoService
 @inject NotificacionService Notificaciones
 @inject AuthenticationStateProvider AuthProvider
 @inject IJSRuntime JS
@@ -17,34 +18,41 @@
 <PageTitle>Asoagro - Registro de Asociado</PageTitle>
 
 <div class="ra">
-    <div class="ra-shell"><aside class="ra-rail"><!-- ENCABEZADO LIMPIO Y DIRECTO -->
-    <section class="ra-hero">
-        <div class="ra-hero-texto">
-            <div class="ra-etiquetas">
-                <span class="ra-etiqueta">
-                    <svg class="ra-ico"><use href="#ico-brote" /></svg>
-                    FAAUA · Urabá
-                </span>
-                <span class="ra-etiqueta ra-etiqueta-trigo">
-                    <svg class="ra-ico"><use href="#ico-escudo" /></svg>
-                    Panel Directivo
-                </span>
-            </div>
-            <h1 class="ra-titulo">Registro de Asociado</h1>
-            <p class="ra-descripcion">Diligencie los datos del productor, predio, línea productiva, componente social y cuotas en 5 pasos.</p>
-        </div>
+    <div class="ra-shell"><aside class="ra-rail"><!-- ENCABEZADO PREMIUM UNIFICADO -->
+    <div class="card aso-hero-card mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="aso-hero-icon-box">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="8.5" cy="7" r="4"></circle>
+                            <line x1="20" y1="8" x2="20" y2="14"></line>
+                            <line x1="23" y1="11" x2="17" y2="11"></line>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="aso-hero-kicker">FAAUA · Urabá</span>
+                            <span class="text-white-50" style="font-size: 0.75rem; font-weight: 600;">Gestión de Secretaría · Paso @pasoActual de 5</span>
+                        </div>
+                        <h1 class="aso-hero-title">Registro de asociado</h1>
+                        <p class="aso-hero-desc">Diligencie los datos del productor, predio, línea productiva, componente social y cuotas en 5 pasos.</p>
+                    </div>
+                </div>
 
-        <div class="ra-hero-progreso">
-            <div class="ra-hero-progreso-top">
-                <span class="ra-hero-etiqueta">Avance</span>
-                <strong class="ra-hero-valor">@(CalcularPorcentajeAvance())%</strong>
+                <div class="d-flex flex-column gap-1.5 px-3 py-2 rounded-3" style="min-width: 220px; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(185, 231, 122, 0.35);">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="text-uppercase fw-bold" style="font-size: 0.68rem; letter-spacing: 0.08em; color: #b9e77a;">Avance del registro</span>
+                        <strong class="text-white fw-bold" style="font-size: 1.05rem;">@(CalcularPorcentajeAvance())%</strong>
+                    </div>
+                    <div class="rounded-pill overflow-hidden" style="height: 7px; background: rgba(255, 255, 255, 0.18);">
+                        <div style="height: 100%; width: @(CalcularPorcentajeAvance())%; background: #b9e77a; transition: width 0.35s ease;"></div>
+                    </div>
+                </div>
             </div>
-            <div class="ra-barra">
-                <div class="ra-barra-relleno" style="width: @(CalcularPorcentajeAvance())%;"></div>
-            </div>
-            <span class="ra-hero-pie">Paso @pasoActual de 5</span>
         </div>
-    </section>
+    </div>
 
     <!-- NAVEGACIÓN DE PASOS (STEPPER) -->
     <nav class="ra-pasos" aria-label="Pasos del registro">
@@ -229,6 +237,24 @@
                                 <span class="ra-error-campo" role="alert">@ValidarDocumentoIdentidad()</span>
                             }
 
+                            @if (productorExistenteIdentificado != null)
+                            {
+                                <div class="ra-alerta-existente p-3 rounded-3 my-2" style="background: rgba(46, 154, 91, 0.08); border: 1.5px solid #2e9a5b;">
+                                    <div class="d-flex align-items-start gap-2">
+                                        <span class="fs-5" style="color: #2e9a5b;">ℹ️</span>
+                                        <div>
+                                            <strong class="d-block" style="color: #17603a; font-size: 0.85rem;">Productor identificado en el padrón único de ASOAGRO</strong>
+                                            <p class="mb-1 small text-dark" style="font-size: 0.78rem; line-height: 1.4;">
+                                                Se encontró el perfil personal de <strong>@productorExistenteIdentificado.NombreCompleto</strong> (Doc: @productorExistenteIdentificado.Cedula). Al continuar, se creará una <strong>nueva afiliación</strong> a la asociación seleccionada sin duplicar su persona ni perder su historial.
+                                            </p>
+                                            <button type="button" class="btn btn-sm btn-outline-success rounded-pill fw-bold py-1 px-3 mt-1" style="font-size: 0.72rem;" @onclick="AutocompletarDesdeExistente">
+                                                Cargar datos personales existentes
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
                             <div class="ra-cedula-adjunto @(string.IsNullOrWhiteSpace(nuevoAsociado.CedulaArchivoNombre) ? "pendiente" : "cargado") @(TieneErrorVisible("cedulaArchivo") ? "con-error" : "")">
                                 <div class="ra-cedula-adjunto-cab">
                                     <div class="ra-cedula-adjunto-titulo">
@@ -294,6 +320,25 @@
                             </div>
                         </div>
 
+                        <div class="ra-campo ra-campo-asociacion">
+                            <label class="ra-label" for="ra-asociacion">Asociación a la que pertenece <span class="ra-req">*</span></label>
+                            <select id="ra-asociacion"
+                                    class="ra-input @(TieneErrorVisible("asociacionPertenece") ? "ra-input-error" : "")"
+                                    value="@nuevoAsociado.AsociacionPertenece"
+                                    @onchange="OnInputAsociacionPertenece"
+                                    @onblur='() => TocarCampo("asociacionPertenece")'>
+                                <option value="">-- Seleccionar asociación registrada (Obligatorio) --</option>
+                                @foreach (var asoc in listaAsociacionesRegistradas)
+                                {
+                                    <option value="@asoc">@asoc</option>
+                                }
+                            </select>
+                            @if (TieneErrorVisible("asociacionPertenece"))
+                            {
+                                <span class="ra-error-campo" role="alert">@ValidarAsociacionPertenece()</span>
+                            }
+                        </div>
+
                         <div class="ra-campo">
                             <label class="ra-label" for="ra-telefono">Celular / WhatsApp <span class="ra-req">*</span></label>
                             <input id="ra-telefono"
@@ -323,6 +368,16 @@
                             {
                                 <span class="ra-error-campo" role="alert">@ValidarCorreo()</span>
                             }
+                        </div>
+
+                        <div class="ra-campo ra-campo-full mt-3 p-3 rounded-3" style="background: #f7faf5; border: 1px solid #dbe7d5;">
+                            <label class="d-flex align-items-start gap-2 cursor-pointer mb-0">
+                                <input type="checkbox" @bind="nuevoAsociado.AutorizacionDatosPersonales" style="margin-top: 3px;" />
+                                <span class="small text-dark" style="font-size: 0.8rem; line-height: 1.4;">
+                                    <strong>Autorización Ley 1581 de 2012 (Tratamiento de Datos Personales):</strong>
+                                    Certifico que el titular otorgó autorización previa y expresa para el uso y custodia de sus datos personales exclusivamente con fines gremiales agropecuarios, afiliación a la federación y convocatorias institucionales de la FAAUA.
+                                </span>
+                            </label>
                         </div>
                     </div>
 
@@ -1428,10 +1483,13 @@
                                 <h2 id="ra-ficha-oficial-titulo">Ficha Oficial del Asociado</h2>
                             </div>
                         </div>
-                        <div class="ra-ficha-folio">
-                            <span>ESTADO</span>
-                            <strong>@(expedienteGuardado.EstadoMembresia == "AlDia" ? "ACTIVO · AL DÍA" : expedienteGuardado.EstadoMembresia.ToUpperInvariant())</strong>
-                            <small>@expedienteGuardado.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</small>
+                        <div class="d-flex align-items-start gap-2">
+                            <div class="ra-ficha-folio">
+                                <span>ESTADO</span>
+                                <strong>@(expedienteGuardado.EstadoMembresia == "AlDia" ? "ACTIVO · AL DÍA" : expedienteGuardado.EstadoMembresia.ToUpperInvariant())</strong>
+                                <small>@expedienteGuardado.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</small>
+                            </div>
+                            <button type="button" class="ra-visor-cerrar" @onclick="CerrarModalFicha" aria-label="Cerrar ficha" title="Cerrar ficha">&times;</button>
                         </div>
                     </div>
 
@@ -1774,6 +1832,20 @@
     private bool mostrarModalFicha;
     private bool desplegableCultivosAbierto;
     private bool municipioAbierto;
+    private bool esAdminSupervisor;
+    private List<string> listaAsociacionesRegistradas = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            await BloquearScrollModalAsync(false);
+        }
+        catch { }
+        listaAsociacionesRegistradas = DocumentoService.ObtenerAsociaciones().ToList();
+        var auth = await AuthProvider.GetAuthenticationStateAsync();
+        esAdminSupervisor = auth.User.IsInRole("Administrador") || auth.User.IsInRole("Admin");
+    }
 
     private readonly HashSet<string> camposTocados = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, string> erroresArchivos = new(StringComparer.OrdinalIgnoreCase);
@@ -1821,8 +1893,8 @@
         {
             case 1:
                 return Paso1Completo
-                    ? $"{nuevoAsociado.NombreCompleto} · {nuevoAsociado.TipoDocumentoIdentidad}: {nuevoAsociado.Cedula} · Fotocopia adjunta"
-                    : "Titular y datos de contacto";
+                    ? $"{nuevoAsociado.NombreCompleto} · {nuevoAsociado.TipoDocumentoIdentidad}: {nuevoAsociado.Cedula} · {nuevoAsociado.AsociacionPertenece}"
+                    : "Titular, asociación y contacto";
             case 2:
                 return Paso2Completo
                     ? $"{nuevoAsociado.NombrePredio} · {NombreMunicipioSeleccionado} · {nuevoAsociado.TenenciaTerreno} · {nuevoAsociado.HectareasPredio:0.##} ha"
@@ -2000,6 +2072,7 @@
         !string.IsNullOrEmpty(ValidarNombreCompleto()) ||
         !string.IsNullOrEmpty(ValidarDocumentoIdentidad()) ||
         !string.IsNullOrEmpty(ValidarArchivoIdentidad()) ||
+        !string.IsNullOrEmpty(ValidarAsociacionPertenece()) ||
         !string.IsNullOrEmpty(ValidarTelefono()) ||
         !string.IsNullOrEmpty(ValidarCorreo());
 
@@ -2104,10 +2177,43 @@
         }
     }
 
+    private Asociado? productorExistenteIdentificado;
+
     private void OnInputCedula(ChangeEventArgs e)
     {
         nuevoAsociado.Cedula = e.Value?.ToString() ?? string.Empty;
         camposTocados.Add("cedula");
+        VerificarCoincidenciaIdentificacion();
+    }
+
+    private void VerificarCoincidenciaIdentificacion()
+    {
+        var cedulaLimpia = (nuevoAsociado.Cedula ?? string.Empty).Trim();
+        if (cedulaLimpia.Length >= 6)
+        {
+            var match = RegistroAsociados.ObtenerTodos().FirstOrDefault(a =>
+                string.Equals(a.Cedula.Trim(), cedulaLimpia, StringComparison.OrdinalIgnoreCase));
+            productorExistenteIdentificado = match;
+        }
+        else
+        {
+            productorExistenteIdentificado = null;
+        }
+    }
+
+    private void AutocompletarDesdeExistente()
+    {
+        if (productorExistenteIdentificado == null) return;
+        nuevoAsociado.NombreCompleto = productorExistenteIdentificado.NombreCompleto;
+        nuevoAsociado.Telefono = productorExistenteIdentificado.Telefono ?? string.Empty;
+        nuevoAsociado.Correo = productorExistenteIdentificado.Correo ?? string.Empty;
+        nuevoAsociado.NombrePredio = productorExistenteIdentificado.NombrePredio ?? string.Empty;
+        nuevoAsociado.VeredaSector = productorExistenteIdentificado.VeredaSector ?? string.Empty;
+        nuevoAsociado.Municipio = productorExistenteIdentificado.Municipio ?? string.Empty;
+        camposTocados.Add("nombre");
+        camposTocados.Add("telefono");
+        camposTocados.Add("predio");
+        camposTocados.Add("vereda");
     }
 
     private void OnInputTelefono(ChangeEventArgs e)
@@ -2453,6 +2559,22 @@
         }
 
         return string.Empty;
+    }
+
+    private string ValidarAsociacionPertenece()
+    {
+        var raw = nuevoAsociado.AsociacionPertenece ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            return "Debe seleccionar la asociación a la que pertenece el productor (obligatorio).";
+        }
+        return string.Empty;
+    }
+
+    private void OnInputAsociacionPertenece(ChangeEventArgs e)
+    {
+        nuevoAsociado.AsociacionPertenece = e.Value?.ToString() ?? string.Empty;
+        camposTocados.Add("asociacionPertenece");
     }
 
     // ==================== VALIDACIONES DE PREDIO RURAL (PASO 2) ====================
@@ -3668,6 +3790,13 @@
 
     private async Task GuardarRegistro()
     {
+        if (esAdminSupervisor)
+        {
+            mensajeAlerta = "Modo supervisión: el rol Administrador supervisa y consulta el padrón. La inscripción oficial de asociados corresponde a Secretaría.";
+            esError = true;
+            return;
+        }
+
         for (var p = 1; p <= 5; p++)
         {
             MarcarCamposPasoComoTocados(p);
@@ -3716,7 +3845,7 @@
                 Icono = "usuario-mas",
                 Categoria = Asoagro.Models.CategoriaNotificacion.Productores,
                 Nivel = Asoagro.Models.NivelNotificacion.Informativa,
-                RolesEnlace = new[] { "Directora", "Director" }
+                RolesEnlace = new[] { "Secretaria", "Administrador" }
             });
 
             expedienteGuardado = new AsociadoModel
@@ -3724,6 +3853,7 @@
                 NombreCompleto = nuevoAsociado.NombreCompleto,
                 TipoDocumentoIdentidad = nuevoAsociado.TipoDocumentoIdentidad,
                 Cedula = nuevoAsociado.Cedula,
+                AsociacionPertenece = nuevoAsociado.AsociacionPertenece,
                 Telefono = nuevoAsociado.Telefono,
                 Correo = nuevoAsociado.Correo,
                 CedulaArchivoNombre = nuevoAsociado.CedulaArchivoNombre,
@@ -3826,7 +3956,7 @@
         var estado = await AuthProvider.GetAuthenticationStateAsync();
         return estado.User.Identity?.Name
             ?? estado.User.FindFirst(ClaimTypes.Email)?.Value
-            ?? "Directora";
+            ?? "Secretaría";
     }
 
     public async ValueTask DisposeAsync()

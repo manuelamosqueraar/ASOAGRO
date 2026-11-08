@@ -1,0 +1,1003 @@
+@page "/panel-administrador"
+@page "/panel-administrador/{Seccion}"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Administrador,Admin")]
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using Asoagro.Models
+@using Asoagro.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject IAsociadoService AsociadoService
+@inject IDocumentoAsociacionService DocumentoService
+@inject IFinanzasService FinanzasService
+@inject IPuntoVentaService PuntoVentaService
+@inject ISeguimientoAsociadoService SeguimientoService
+@inject AuthenticationStateProvider AuthProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Panel Administrador · Supervisión General ASOAGRO</PageTitle>
+
+<div class="container-fluid px-0 pb-5" style="font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+    <!-- ENCABEZADO HERO DE SUPERVISIÓN ADMINISTRATIVA -->
+    <div class="card aso-hero-card mb-4" style="border-top: 4px solid #10B981 !important;">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="aso-hero-icon-box" style="background: #10B981 !important; border: 1.5px solid #34D399 !important; color: #FFFFFF !important;">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="aso-hero-kicker" style="background: #065F46 !important; border-color: #34D399 !important; color: #ECFDF5 !important;">
+                                <i class="bi bi-shield-lock me-1"></i> Supervisión Central ASOAGRO
+                            </span>
+                            <span class="badge px-2.5 py-1 rounded-pill fw-bold bg-success bg-opacity-75" style="font-size: 0.7rem;">
+                                <i class="bi bi-check-circle me-1"></i> Rol Administrador
+                            </span>
+                        </div>
+                        <h1 class="aso-hero-title">Panel de Supervisión Administrativa</h1>
+                        <p class="aso-hero-desc">
+                            Monitoreo integral y supervisión del funcionamiento de ASOAGRO en sus áreas operativa (Secretaría), financiera (Tesorería) y de gobernanza (Presidencia).
+                        </p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <div class="p-3 rounded-4 d-inline-block text-start w-100" style="min-width: 280px; max-width: 320px; background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.18); backdrop-filter: blur(10px);">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 42px; height: 42px; background: #059669; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                                <i class="bi bi-person-gear fs-5"></i>
+                            </div>
+                            <div>
+                                <span class="d-block text-white-50" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Administrador en Sesión</span>
+                                <span class="fw-bold text-white small d-block text-truncate" style="max-width: 210px;">@nombreUsuario</span>
+                                <span class="badge bg-white text-dark mt-1" style="font-size: 0.65rem; font-weight: 700;">@correoUsuario</span>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-top border-white border-opacity-10 d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
+                            <span class="text-white-50">Nivel de Supervisión:</span>
+                            <span class="fw-bold text-white">Supervisión sin alteración de datos</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- NAVEGACIÓN PRINCIPAL DEL ADMINISTRADOR -->
+    <div class="d-flex flex-wrap gap-2 mb-4 border-bottom pb-2">
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(seccionActiva == "supervision" ? "btn-success" : "btn-light text-muted border")"
+                style="@(seccionActiva == "supervision" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
+                @onclick='@(() => seccionActiva = "supervision")'>
+            <i class="bi bi-speedometer2 me-1"></i> 1. Supervisión y KPIs Generales
+        </button>
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(seccionActiva == "usuarios" ? "btn-success" : "btn-light text-muted border")"
+                style="@(seccionActiva == "usuarios" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
+                @onclick='@(() => seccionActiva = "usuarios")'>
+            <i class="bi bi-people-fill me-1"></i> 2. Usuarios, Roles y Permisos
+            <span class="badge bg-white text-dark ms-1">5</span>
+        </button>
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(seccionActiva == "auditoria" ? "btn-success" : "btn-light text-muted border")"
+                style="@(seccionActiva == "auditoria" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
+                @onclick='@(() => seccionActiva = "auditoria")'>
+            <i class="bi bi-shield-shaded me-1"></i> 3. Auditoría de Accesos
+        </button>
+        <button type="button" class="btn btn-sm rounded-pill px-3 py-2 fw-bold transition-all @(seccionActiva == "catalogos" ? "btn-success" : "btn-light text-muted border")"
+                style="@(seccionActiva == "catalogos" ? "background-color: #14532D; border: 1.5px solid #14532D; color: #FFFFFF;" : "background: #FFFFFF; border: 1.5px solid #D5E2D8; color: #4B6A5A;")"
+                @onclick='@(() => seccionActiva = "catalogos")'>
+            <i class="bi bi-sliders me-1"></i> 4. Catálogos y Parámetros
+        </button>
+    </div>
+
+    @if (seccionActiva == "supervision")
+    {
+        <!-- SELECTOR DE FILTRO POR ASOCIACIÓN -->
+        <div class="adm-filter-bar">
+            <div class="adm-filter-label">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                </svg>
+                <span>Filtrar supervisión por asociación:</span>
+            </div>
+            <div class="adm-filter-control">
+                <select class="adm-select" @bind="filtroAsociacion" @bind:after="ActualizarMetricas">
+                    <option value="">Todas las asociaciones federadas</option>
+                    @foreach (var asoc in listaAsociaciones)
+                    {
+                        <option value="@asoc">@asoc</option>
+                    }
+                </select>
+            </div>
+            @if (!string.IsNullOrEmpty(filtroAsociacion))
+            {
+                <button type="button" class="adm-btn-clear" @onclick="LimpiarFiltroAsociacion">
+                    Restablecer todas
+                </button>
+            }
+        </div>
+
+    <!-- TARJETAS DE MÉTRICAS EJECUTIVAS -->
+    <section class="adm-kpi-grid">
+        <!-- 1. Productores y Asociados -->
+        <article class="adm-kpi-card">
+            <div class="adm-kpi-header">
+                <span class="adm-kpi-icon adm-kpi-icon-green">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="8" r="4" />
+                        <path d="M2 21c0-4 3.1-7 7-7s7 3 7 7" />
+                        <circle cx="19" cy="11" r="3" />
+                        <path d="M16 21c0-2.5 2-4.5 4.5-4.5" />
+                    </svg>
+                </span>
+                <span class="adm-kpi-tag">Secretaría</span>
+            </div>
+            <div class="adm-kpi-body">
+                <span class="adm-kpi-value">@conteoProductores</span>
+                <h3 class="adm-kpi-title">Productores y Asociados</h3>
+                <p class="adm-kpi-desc">Padrón de familias agricultoras registradas</p>
+            </div>
+            <ul class="adm-kpi-details">
+                <li>
+                    <span>Vinculados con asociación</span>
+                    <strong>@conteoAsociadosVinculados</strong>
+                </li>
+                <li>
+                    <span>Pendientes de asignar</span>
+                    <strong class="@(conteoAsociadosPendientes > 0 ? "text-warning-emphasis" : "")">@conteoAsociadosPendientes</strong>
+                </li>
+                <li>
+                    <span>Con BPA vigente</span>
+                    <strong>@conteoProductoresBpa</strong>
+                </li>
+            </ul>
+            <a href="/consultar-asociados" class="adm-kpi-link">
+                <span>Supervisar asociados</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+        </article>
+
+        <!-- 2. Expedientes y Documentación -->
+        <article class="adm-kpi-card">
+            <div class="adm-kpi-header">
+                <span class="adm-kpi-icon adm-kpi-icon-blue">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                    </svg>
+                </span>
+                <span class="adm-kpi-tag">Secretaría</span>
+            </div>
+            <div class="adm-kpi-body">
+                <span class="adm-kpi-value">@conteoDocumentos</span>
+                <h3 class="adm-kpi-title">Documentos Institucionales</h3>
+                <p class="adm-kpi-desc">Expedientes legales de las organizaciones</p>
+            </div>
+            <ul class="adm-kpi-details">
+                <li>
+                    <span>Vigentes</span>
+                    <strong>@conteoDocumentosVigentes</strong>
+                </li>
+                <li>
+                    <span>Por vencer (≤30 días)</span>
+                    <strong class="@(conteoDocumentosPorVencer > 0 ? "text-warning-emphasis" : "")">@conteoDocumentosPorVencer</strong>
+                </li>
+                <li>
+                    <span>Vencidos</span>
+                    <strong class="@(conteoDocumentosVencidos > 0 ? "text-danger" : "")">@conteoDocumentosVencidos</strong>
+                </li>
+            </ul>
+            <a href="/consultar-estado-documentos" class="adm-kpi-link">
+                <span>Supervisar documentación</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+        </article>
+
+        <!-- 3. Tesorería y Finanzas -->
+        <article class="adm-kpi-card">
+            <div class="adm-kpi-header">
+                <span class="adm-kpi-icon adm-kpi-icon-emerald">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="5" width="20" height="14" rx="2" />
+                        <line x1="2" y1="10" x2="22" y2="10" />
+                    </svg>
+                </span>
+                <span class="adm-kpi-tag">Tesorería</span>
+            </div>
+            <div class="adm-kpi-body">
+                <span class="adm-kpi-value">@totalSaldoDisponible.ToString("C0")</span>
+                <h3 class="adm-kpi-title">Saldo Disponible Consolidado</h3>
+                <p class="adm-kpi-desc">Balance neto entre ingresos y costos</p>
+            </div>
+            <ul class="adm-kpi-details">
+                <li>
+                    <span>Ingresos registrados</span>
+                    <strong>@totalIngresos.ToString("C0")</strong>
+                </li>
+                <li>
+                    <span>Costos y gastos</span>
+                    <strong>@totalCostos.ToString("C0")</strong>
+                </li>
+                <li>
+                    <span>Cuentas por cobrar</span>
+                    <strong>@totalPorCobrar.ToString("C0")</strong>
+                </li>
+            </ul>
+            <a href="/gestion-financiera/resumen" class="adm-kpi-link">
+                <span>Supervisar finanzas</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+        </article>
+
+        <!-- 4. Seguimiento Asociativo -->
+        <article class="adm-kpi-card">
+            <div class="adm-kpi-header">
+                <span class="adm-kpi-icon adm-kpi-icon-amber">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22v-9" />
+                        <path d="M12 13C12 7.5 7.5 4 2 4c0 5.5 3.5 10 10 10z" />
+                        <path d="M12 13c0-5.5 4.5-9 10-9 0 5.5-3.5 10-10 10z" />
+                    </svg>
+                </span>
+                <span class="adm-kpi-tag">Secretaría</span>
+            </div>
+            <div class="adm-kpi-body">
+                <span class="adm-kpi-value">@conteoSeguimientos</span>
+                <h3 class="adm-kpi-title">Encuentros y Gestiones</h3>
+                <p class="adm-kpi-desc">Reuniones y acuerdos con productores</p>
+            </div>
+            <ul class="adm-kpi-details">
+                <li>
+                    <span>Próximas reuniones</span>
+                    <strong>@conteoProximosEncuentros</strong>
+                </li>
+                <li>
+                    <span>Asociados con seguimiento</span>
+                    <strong>@conteoProductoresConSeguimiento</strong>
+                </li>
+                <li>
+                    <span>Alertas de atención</span>
+                    <strong>@conteoAlertasDocumento</strong>
+                </li>
+            </ul>
+            <a href="/seguimiento-asociados" class="adm-kpi-link">
+                <span>Supervisar encuentros</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+        </article>
+    </section>
+
+    <!-- CENTRAL DE MÓDULOS DE SUPERVISIÓN -->
+    <section class="adm-hub-section">
+        <div class="adm-section-header">
+            <div>
+                <h2>Módulos y Paneles Disponibles para Supervisión</h2>
+                <p>Accede de forma directa a consultar cada módulo institucional con permisos de auditoría y revisión.</p>
+            </div>
+            <span class="adm-tag-supervision">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                Supervisión de solo lectura
+            </span>
+        </div>
+
+        <div class="adm-hub-grid">
+            <!-- 1. Consultar asociados -->
+            <a href="/consultar-asociados" class="adm-hub-card">
+                <div class="adm-hub-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5" />
+                        <rect x="14" y="3" width="7" height="7" rx="1.5" />
+                        <rect x="14" y="14" width="7" height="7" rx="1.5" />
+                        <rect x="3" y="14" width="7" height="7" rx="1.5" />
+                    </svg>
+                </div>
+                <div class="adm-hub-card-body">
+                    <div class="adm-hub-card-top">
+                        <h3>Directorio de Asociados</h3>
+                        <span class="adm-badge-source">Secretaría</span>
+                    </div>
+                    <p>Revisa el padrón completo, predios rurales, cultivos y relaciones asociativas.</p>
+                </div>
+                <div class="adm-hub-card-footer">
+                    <span>Abrir módulo</span>
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- 2. Seguimiento de asociados -->
+            <a href="/seguimiento-asociados" class="adm-hub-card">
+                <div class="adm-hub-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22v-9" />
+                        <path d="M12 13C12 7.5 7.5 4 2 4c0 5.5 3.5 10 10 10z" />
+                        <path d="M12 13c0-5.5 4.5-9 10-9 0 5.5-3.5 10-10 10z" />
+                    </svg>
+                </div>
+                <div class="adm-hub-card-body">
+                    <div class="adm-hub-card-top">
+                        <h3>Seguimiento y Encuentros</h3>
+                        <span class="adm-badge-source">Secretaría</span>
+                    </div>
+                    <p>Audita las reuniones, notas de campo, asesorías técnicas y acuerdos registrados.</p>
+                </div>
+                <div class="adm-hub-card-footer">
+                    <span>Abrir módulo</span>
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- 3. Estado de documentación -->
+            <a href="/consultar-estado-documentos" class="adm-hub-card">
+                <div class="adm-hub-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                </div>
+                <div class="adm-hub-card-body">
+                    <div class="adm-hub-card-top">
+                        <h3>Expedientes Documentales</h3>
+                        <span class="adm-badge-source">Secretaría</span>
+                    </div>
+                    <p>Consulta RUT, Cámara de Comercio, estatutos y resoluciones de las asociaciones.</p>
+                </div>
+                <div class="adm-hub-card-footer">
+                    <span>Abrir módulo</span>
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- 4. Alertas de documentos -->
+            <a href="/alertas-documentos" class="adm-hub-card">
+                <div class="adm-hub-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    </svg>
+                </div>
+                <div class="adm-hub-card-body">
+                    <div class="adm-hub-card-top">
+                        <h3>Alertas de Vencimiento</h3>
+                        <span class="adm-badge-source">Secretaría</span>
+                    </div>
+                    <p>Supervisa plazos legales y documentos próximos a vencer para evitar pérdida de vigencia.</p>
+                </div>
+                <div class="adm-hub-card-footer">
+                    <span>Abrir módulo</span>
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- 5. Resumen Financiero -->
+            <a href="/gestion-financiera/resumen" class="adm-hub-card">
+                <div class="adm-hub-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                        <path d="M22 12A10 10 0 0 0 12 2v10z" />
+                    </svg>
+                </div>
+                <div class="adm-hub-card-body">
+                    <div class="adm-hub-card-top">
+                        <h3>Resumen Financiero</h3>
+                        <span class="adm-badge-source">Tesorería</span>
+                    </div>
+                    <p>Audita los ingresos, egresos y comprobantes contables sin modificar las cuentas.</p>
+                </div>
+                <div class="adm-hub-card-footer">
+                    <span>Abrir módulo</span>
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- 6. Reportes y Balances -->
+            <a href="/gestion-financiera/reportes-balances" class="adm-hub-card">
+                <div class="adm-hub-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                </div>
+                <div class="adm-hub-card-body">
+                    <div class="adm-hub-card-top">
+                        <h3>Reportes y Balances</h3>
+                        <span class="adm-badge-source">Tesorería</span>
+                    </div>
+                    <p>Descarga estados consolidados y reportes oficiales en formato PDF o Excel.</p>
+                </div>
+                <div class="adm-hub-card-footer">
+                    <span>Abrir módulo</span>
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- 7. Repositorio de Actas -->
+            <a href="/actas-estatutos/documentos" class="adm-hub-card">
+                <div class="adm-hub-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+                        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+                    </svg>
+                </div>
+                <div class="adm-hub-card-body">
+                    <div class="adm-hub-card-top">
+                        <h3>Repositorio de Actas y Estatutos</h3>
+                        <span class="adm-badge-source">Presidencia</span>
+                    </div>
+                    <p>Inspecciona las actas de asamblea, estatutos vigentes y decisiones de junta directiva.</p>
+                </div>
+                <div class="adm-hub-card-footer">
+                    <span>Abrir módulo</span>
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- 8. Historial de Actividad -->
+            <a href="/actas-estatutos/historial" class="adm-hub-card">
+                <div class="adm-hub-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <polyline points="12 6 12 16 14" />
+                    </svg>
+                </div>
+                <div class="adm-hub-card-body">
+                    <div class="adm-hub-card-top">
+                        <h3>Historial de Actividad</h3>
+                        <span class="adm-badge-source">Presidencia</span>
+                    </div>
+                    <p>Auditoría cronológica de las acciones institucionales registradas en el sistema.</p>
+                </div>
+                <div class="adm-hub-card-footer">
+                    <span>Abrir módulo</span>
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- 9. Directorio de Asociaciones Base -->
+            <a href="/asociaciones" class="adm-hub-card">
+                <div class="adm-hub-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4M9 11h2M9 15h2M13 11h2M13 15h2" />
+                    </svg>
+                </div>
+                <div class="adm-hub-card-body">
+                    <div class="adm-hub-card-top">
+                        <h3>Directorio de Asociaciones</h3>
+                        <span class="adm-badge-source">Secretaría</span>
+                    </div>
+                    <p>Fichas institucionales de las entidades federadas: personerías, RUES, juntas directivas y sedes.</p>
+                </div>
+                <div class="adm-hub-card-footer">
+                    <span>Abrir módulo</span>
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- 10. Punto de Venta Solidario -->
+            <a href="/punto-de-venta" class="adm-hub-card">
+                <div class="adm-hub-card-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="9" cy="21" r="1" />
+                        <circle cx="20" cy="21" r="1" />
+                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+                    </svg>
+                </div>
+                <div class="adm-hub-card-body">
+                    <div class="adm-hub-card-top">
+                        <h3>Punto de Venta Solidario</h3>
+                        <span class="adm-badge-source">Comercialización</span>
+                    </div>
+                    <p>Supervisa las ventas en mostrador, inventarios de cosechas y arqueos de caja en tiempo real.</p>
+                </div>
+                <div class="adm-hub-card-footer">
+                    <span>Abrir módulo</span>
+                    <i class="bi bi-arrow-right"></i>
+                </div>
+            </a>
+        </div>
+    </section>
+
+        <!-- NOTA DE RESPONSABILIDADES Y GOBERNANZA -->
+        <div class="adm-notice-box">
+            <div class="adm-notice-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="16" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12.01" y2="8" />
+                </svg>
+            </div>
+            <div class="adm-notice-text">
+                <strong>Marco de Supervisión Administrativa de ASOAGRO</strong>
+                <p>
+                    El Administrador de la plataforma supervisa y consulta el conjunto de operaciones de la federación para garantizar el soporte técnico, auditoría y cumplimiento legal. Por separación de funciones de control interno, consultar globalmente un módulo <em>no confiere privilegios para alterar partidas contables, firmar actas o modificar ventas de mostrador</em>.
+                </p>
+            </div>
+        </div>
+    }
+
+    <!-- ============================================== -->
+    <!-- SECCIÓN 2: USUARIOS, ROLES Y PERMISOS          -->
+    <!-- ============================================== -->
+    @if (seccionActiva == "usuarios")
+    {
+        <section class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h2 class="h5 fw-bold text-dark mb-1">
+                        <i class="bi bi-people-fill text-success me-2"></i>Cuentas Institucionales, Roles y Asignaciones
+                    </h2>
+                    <p class="text-muted small mb-0">
+                        Administración central de cuentas de usuario, roles de gobernanza y asociaciones federadas asignadas en ASOAGRO.
+                    </p>
+                </div>
+                <span class="badge bg-success-subtle text-success px-3 py-2 rounded-pill fw-bold">
+                    5 Cuentas Activas
+                </span>
+            </div>
+
+            <!-- TABLA DE USUARIOS Y ROLES -->
+            <div class="table-responsive aso-table-wrap">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.85rem;">
+                    <thead class="aso-thead-unified">
+                        <tr>
+                            <th class="ps-3 py-2.5">Usuario / Identidad</th>
+                            <th class="py-2.5">Rol Institucional</th>
+                            <th class="py-2.5">Asociaciones Asignadas</th>
+                            <th class="py-2.5">Alcance de Operación</th>
+                            <th class="py-2.5 text-center">Nivel de Acceso</th>
+                            <th class="py-2.5 text-center">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="ps-3">
+                                <strong class="text-dark d-block">Administrador Central</strong>
+                                <small class="text-muted">admin@asoagro-faaua.org</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-dark rounded-pill px-2.5 py-1">Administrador de la plataforma</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">Todas las Asociaciones (Federación)</span>
+                            </td>
+                            <td>
+                                <small class="text-muted d-block">Soporte técnico, catálogos, parámetros, auditoría global</small>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-1">
+                                    <i class="bi bi-eye-fill me-1"></i>Supervisión Global
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success rounded-pill px-2.5 py-1">Activo</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3">
+                                <strong class="text-dark d-block">Juan Padilla</strong>
+                                <small class="text-muted">juan.padillamo@amigo.edu.co</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-primary rounded-pill px-2.5 py-1">Presidente</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">Todas las Asociaciones de Base</span>
+                            </td>
+                            <td>
+                                <small class="text-muted d-block">Seguimiento de acuerdos de asamblea, actas, estatutos y consulta directiva</small>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1">
+                                    <i class="bi bi-award-fill me-1"></i>Directivo / Firma
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success rounded-pill px-2.5 py-1">Activo</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3">
+                                <strong class="text-dark d-block">Secretaría General</strong>
+                                <small class="text-muted">secretaria@asoagro-faaua.org</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-success rounded-pill px-2.5 py-1">Secretaría</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">Todas las Asociaciones Federadas</span>
+                            </td>
+                            <td>
+                                <small class="text-muted d-block">Padrón de productores, vinculaciones, expedientes documentales y actas</small>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1">
+                                    <i class="bi bi-pencil-fill me-1"></i>Escritura / Expediente
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success rounded-pill px-2.5 py-1">Activo</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3">
+                                <strong class="text-dark d-block">Tesorería General</strong>
+                                <small class="text-muted">tesoreria@asoagro-faaua.org</small>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning text-dark rounded-pill px-2.5 py-1">Tesorería</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">Todas las Asociaciones Federadas</span>
+                            </td>
+                            <td>
+                                <small class="text-muted d-block">Costos, gastos, ingresos, cuentas por cobrar/pagar, conciliación y reportes COP</small>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1">
+                                    <i class="bi bi-currency-dollar me-1"></i>Control Contable
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success rounded-pill px-2.5 py-1">Activo</span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="ps-3">
+                                <strong class="text-dark d-block">Carlos Mostrador FAAUA</strong>
+                                <small class="text-muted">pdv@asoagro-faaua.org</small>
+                            </td>
+                            <td>
+                                <span class="badge rounded-pill px-2.5 py-1" style="background-color: #17603a; color: white;">Administrador del punto de venta</span>
+                            </td>
+                            <td>
+                                <span class="badge bg-light text-dark border">Punto de Venta Solidario FAAUA</span>
+                            </td>
+                            <td>
+                                <small class="text-muted d-block">Mostrador de ventas, cobro en caja, recepción de cosechas y arqueo diario</small>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1">
+                                    <i class="bi bi-shop me-1"></i>Operativo Comercial
+                                </span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-success rounded-pill px-2.5 py-1">Activo</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-4 p-3 bg-light rounded-4 border">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="p-2 bg-success text-white rounded-3 flex-shrink-0">
+                        <i class="bi bi-shield-lock-fill fs-5"></i>
+                    </div>
+                    <small class="text-muted">
+                        <strong>Principio Institucional de Gobernanza y Separación de Funciones:</strong>
+                        Conforme a los estatutos de la FAAUA y la Ley 2219 de 2022, el Administrador de la plataforma no reemplaza la contabilidad oficial de Tesorería ni la fe pública de Secretaría. El rol de Directora ha sido eliminado definitivamente y sus competencias transferidas a Secretaría y Presidencia.
+                    </small>
+                </div>
+            </div>
+        </section>
+    }
+
+    <!-- ============================================== -->
+    <!-- SECCIÓN 3: AUDITORÍA DE ACCESOS Y EVENTOS      -->
+    <!-- ============================================== -->
+    @if (seccionActiva == "auditoria")
+    {
+        <section class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                <div>
+                    <h2 class="h5 fw-bold text-dark mb-1">
+                        <i class="bi bi-shield-shaded text-success me-2"></i>Auditoría de Accesos y Registro de Eventos
+                    </h2>
+                    <p class="text-muted small mb-0">
+                        Historial inmutable de autenticación, aperturas de sesión y consultas por rol y dirección IP.
+                    </p>
+                </div>
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" @onclick="CargarBitacoraAuditoria">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Actualizar Bitácora
+                </button>
+            </div>
+
+            <div class="table-responsive aso-table-wrap">
+                <table class="table table-hover align-middle mb-0" style="font-size: 0.82rem;">
+                    <thead class="aso-thead-unified">
+                        <tr>
+                            <th class="ps-3 py-2.5">Fecha / Hora</th>
+                            <th class="py-2.5">Usuario</th>
+                            <th class="py-2.5">Rol Institucional</th>
+                            <th class="py-2.5">Módulo / Acción</th>
+                            <th class="py-2.5">Terminal / IP</th>
+                            <th class="py-2.5 text-center">Resultado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var log in listaLogsAuditoria)
+                        {
+                            <tr>
+                                <td class="ps-3 font-monospace text-muted">@log.Fecha.ToString("dd/MM/yyyy HH:mm:ss")</td>
+                                <td>
+                                    <strong class="text-dark d-block">@log.Usuario</strong>
+                                    <small class="text-muted">@log.Correo</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">@log.Rol</span>
+                                </td>
+                                <td>
+                                    <span class="fw-semibold text-dark">@log.Modulo</span>
+                                    <small class="text-muted d-block">@log.Accion</small>
+                                </td>
+                                <td class="font-monospace text-muted">@log.IpTerminal</td>
+                                <td class="text-center">
+                                    <span class="badge @(log.Exitoso ? "bg-success" : "bg-danger") rounded-pill px-2 py-1">
+                                        @(log.Exitoso ? "Autorizado" : "Denegado")
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+
+    <!-- ============================================== -->
+    <!-- SECCIÓN 4: CATÁLOGOS Y PARÁMETROS DEL SISTEMA  -->
+    <!-- ============================================== -->
+    @if (seccionActiva == "catalogos")
+    {
+        <section class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+            <h2 class="h5 fw-bold text-dark mb-1">
+                <i class="bi bi-sliders text-success me-2"></i>Catálogos y Parámetros del Sistema
+            </h2>
+            <p class="text-muted small mb-4">
+                Configuración general de parámetros normativos, productos agropecuarios y tablas maestras.
+            </p>
+
+            <div class="row g-4">
+                <!-- Catálogo del Punto de Venta -->
+                <div class="col-lg-6">
+                    <div class="p-3 border rounded-4 bg-light h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h3 class="h6 fw-bold text-dark mb-0">
+                                <i class="bi bi-shop text-success me-1"></i>Catálogo de Cosechas (Punto de Venta)
+                            </h3>
+                            <a href="/punto-de-venta" class="btn btn-outline-success btn-sm rounded-pill py-0.5 px-2">Ver PDV</a>
+                        </div>
+                        <ul class="list-group list-group-flush rounded-3 small">
+                            <li class="list-group-item d-flex justify-content-between bg-white py-2">
+                                <span>Plátano Hartón Verde Tipo Exportación</span>
+                                <strong class="text-success">$2,400 COP / Kilo</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between bg-white py-2">
+                                <span>Plátano Maduro de Primera (Consumo Nacional)</span>
+                                <strong class="text-success">$42,000 COP / Caja 20kg</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between bg-white py-2">
+                                <span>Cacao Fino de Aroma en Grano Seco</span>
+                                <strong class="text-success">$16,500 COP / Kilo</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between bg-white py-2">
+                                <span>Miel de Abejas Pura Artesanal</span>
+                                <strong class="text-success">$18,000 COP / Frasco 500g</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between bg-white py-2">
+                                <span>Maracuyá Fresco Seleccionado</span>
+                                <strong class="text-success">$4,800 COP / Kilo</strong>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between bg-white py-2">
+                                <span>Abono Orgánico Compostado para Suelos</span>
+                                <strong class="text-success">$28,000 COP / Bulto 50kg</strong>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Parámetros de Alertas y Vencimientos -->
+                <div class="col-lg-6">
+                    <div class="p-3 border rounded-4 bg-light h-100">
+                        <h3 class="h6 fw-bold text-dark mb-3">
+                            <i class="bi bi-bell-fill text-warning me-1"></i>Parámetros de Alertas Normativas
+                        </h3>
+                        <div class="table-responsive aso-table-wrap">
+                            <table class="table table-sm table-bordered bg-white mb-0 small">
+                                <thead class="aso-thead-unified">
+                                    <tr>
+                                        <th class="ps-3 py-2">Tipo de Documento</th>
+                                        <th class="py-2">Antelación de Alerta</th>
+                                        <th class="py-2">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Cámara de Comercio (RUES)</td>
+                                        <td>30 días antes del 31 de marzo</td>
+                                        <td><span class="badge bg-success">Activo</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Registro Único Tributario (RUT)</td>
+                                        <td>Permanente / Actualización por cambio</td>
+                                        <td><span class="badge bg-success">Activo</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Declaración de Renta</td>
+                                        <td>Calendario DIAN personas jurídicas</td>
+                                        <td><span class="badge bg-success">Activo</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Renovación de Junta Directiva</td>
+                                        <td>60 días antes del vencimiento estatutario</td>
+                                        <td><span class="badge bg-success">Activo</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+</div>
+
+
+@code {
+    [Parameter]
+    public string? Seccion { get; set; }
+
+    private string seccionActiva = "supervision";
+    private string nombreUsuario = "Administrador";
+    private string correoUsuario = "admin@asoagro-faaua.org";
+    private string filtroAsociacion = "";
+
+    private List<string> listaAsociaciones = new();
+    private List<LogAuditoriaItem> listaLogsAuditoria = new();
+
+    // Métricas
+    private int conteoProductores = 0;
+    private int conteoAsociadosVinculados = 0;
+    private int conteoAsociadosPendientes = 0;
+    private int conteoProductoresBpa = 0;
+
+    private int conteoDocumentos = 0;
+    private int conteoDocumentosVigentes = 0;
+    private int conteoDocumentosPorVencer = 0;
+    private int conteoDocumentosVencidos = 0;
+
+    private decimal totalSaldoDisponible = 0m;
+    private decimal totalIngresos = 0m;
+    private decimal totalCostos = 0m;
+    private decimal totalPorCobrar = 0m;
+
+    private int conteoSeguimientos = 0;
+    private int conteoProximosEncuentros = 0;
+    private int conteoProductoresConSeguimiento = 0;
+    private int conteoAlertasDocumento = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            nombreUsuario = user.Identity.Name
+                ?? user.FindFirst(ClaimTypes.Name)?.Value
+                ?? "Administrador ASOAGRO";
+            correoUsuario = user.FindFirst(ClaimTypes.Email)?.Value
+                ?? "admin@asoagro-faaua.org";
+        }
+
+        listaAsociaciones = DocumentoService.ObtenerAsociaciones().ToList();
+        ActualizarMetricas();
+        CargarBitacoraAuditoria();
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (!string.IsNullOrWhiteSpace(Seccion))
+        {
+            var sec = Seccion.Trim().ToLowerInvariant();
+            if (sec is "supervision" or "usuarios" or "auditoria" or "catalogos")
+            {
+                seccionActiva = sec;
+            }
+        }
+    }
+
+    private void CargarBitacoraAuditoria()
+    {
+        var ahora = DateTime.Now;
+        listaLogsAuditoria = new List<LogAuditoriaItem>
+        {
+            new() { Fecha = ahora.AddMinutes(-5), Usuario = "Administrador Central", Correo = "admin@asoagro-faaua.org", Rol = "Administrador", Modulo = "Supervisión Central", Accion = "Consulta de KPIs consolidados", IpTerminal = "192.168.1.10", Exitoso = true },
+            new() { Fecha = ahora.AddMinutes(-25), Usuario = "Carlos Mostrador FAAUA", Correo = "pdv@asoagro-faaua.org", Rol = "AdministradorPdv", Modulo = "Punto de Venta", Accion = "Registro de venta TKT-1003", IpTerminal = "192.168.1.25", Exitoso = true },
+            new() { Fecha = ahora.AddMinutes(-45), Usuario = "Tesorería General", Correo = "tesoreria@asoagro-faaua.org", Rol = "Tesorera", Modulo = "Gestión Financiera", Accion = "Conciliación y validación de comprobante", IpTerminal = "192.168.1.14", Exitoso = true },
+            new() { Fecha = ahora.AddHours(-1).AddMinutes(-12), Usuario = "Secretaría General", Correo = "secretaria@asoagro-faaua.org", Rol = "Secretaria", Modulo = "Padrón Asociativo", Accion = "Vinculación de productor a asociación", IpTerminal = "192.168.1.12", Exitoso = true },
+            new() { Fecha = ahora.AddHours(-2).AddMinutes(-30), Usuario = "Juan Padilla", Correo = "juan.padillamo@amigo.edu.co", Rol = "Presidente", Modulo = "Actas y Estatutos", Accion = "Consulta de acuerdos asamblearios", IpTerminal = "186.28.140.22", Exitoso = true },
+            new() { Fecha = ahora.AddHours(-3).AddMinutes(-15), Usuario = "Carlos Mostrador FAAUA", Correo = "pdv@asoagro-faaua.org", Rol = "AdministradorPdv", Modulo = "Recepción de Cosechas", Accion = "Ingreso de lote de plátano verde con remisión", IpTerminal = "192.168.1.25", Exitoso = true },
+            new() { Fecha = ahora.AddHours(-5).AddMinutes(-5), Usuario = "Tesorería General", Correo = "tesoreria@asoagro-faaua.org", Rol = "Tesorera", Modulo = "Costos y Gastos", Accion = "Registro de adquisición de insumos con factura proveedor", IpTerminal = "192.168.1.14", Exitoso = true }
+        };
+    }
+
+    public class LogAuditoriaItem
+    {
+        public DateTime Fecha { get; set; } = DateTime.Now;
+        public string Usuario { get; set; } = string.Empty;
+        public string Correo { get; set; } = string.Empty;
+        public string Rol { get; set; } = string.Empty;
+        public string Modulo { get; set; } = string.Empty;
+        public string Accion { get; set; } = string.Empty;
+        public string IpTerminal { get; set; } = "127.0.0.1";
+        public bool Exitoso { get; set; } = true;
+    }
+
+    private void ActualizarMetricas()
+    {
+        var todosProductores = AsociadoService.ObtenerTodos();
+        var queryProductores = todosProductores.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(filtroAsociacion))
+        {
+            queryProductores = queryProductores.Where(p =>
+                string.Equals(p.AsociacionPertenece, filtroAsociacion, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var listaProdFiltrada = queryProductores.ToList();
+        conteoProductores = listaProdFiltrada.Count;
+        conteoAsociadosVinculados = listaProdFiltrada.Count(p => !string.IsNullOrWhiteSpace(p.AsociacionPertenece));
+        conteoAsociadosPendientes = listaProdFiltrada.Count(p => string.IsNullOrWhiteSpace(p.AsociacionPertenece));
+        conteoProductoresBpa = listaProdFiltrada.Count(p => p.TieneBPA);
+
+        // Documentos institucionales
+        var todosDocumentos = DocumentoService.ObtenerTodos();
+        var queryDocumentos = todosDocumentos.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(filtroAsociacion))
+        {
+            queryDocumentos = queryDocumentos.Where(d =>
+                string.Equals(d.NombreAsociacion, filtroAsociacion, StringComparison.OrdinalIgnoreCase));
+        }
+
+        var listaDocsFiltrada = queryDocumentos.ToList();
+        conteoDocumentos = listaDocsFiltrada.Count;
+        conteoDocumentosVigentes = listaDocsFiltrada.Count(d => d.Aplica && d.EstadoCalculado == "Vigente");
+        conteoDocumentosPorVencer = listaDocsFiltrada.Count(d => d.Aplica && d.EstadoCalculado == "Por vencer");
+        conteoDocumentosVencidos = listaDocsFiltrada.Count(d => d.Aplica && d.EstadoCalculado == "Vencido");
+
+        // Alertas de documentos
+        var alertas = DocumentoService.ObtenerAlertas(DateTime.Today);
+        conteoAlertasDocumento = string.IsNullOrWhiteSpace(filtroAsociacion)
+            ? alertas.Count
+            : alertas.Count(a => string.Equals(a.NombreAsociacion, filtroAsociacion, StringComparison.OrdinalIgnoreCase));
+
+        // Finanzas
+        var asocParam = string.IsNullOrWhiteSpace(filtroAsociacion) ? null : filtroAsociacion;
+        var resumenFinanciero = FinanzasService.ObtenerResumen(asocParam);
+        totalIngresos = resumenFinanciero.TotalIngresos;
+        totalCostos = resumenFinanciero.TotalCostosGastos;
+        totalSaldoDisponible = resumenFinanciero.SaldoNeto;
+        totalPorCobrar = resumenFinanciero.CuentasPorCobrar;
+
+        // Seguimientos
+        var todosSeguimientos = SeguimientoService.ObtenerTodos();
+        var querySeguimientos = todosSeguimientos.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(filtroAsociacion))
+        {
+            var idsAsoc = listaProdFiltrada.Select(p => p.Id).ToHashSet();
+            querySeguimientos = querySeguimientos.Where(s => idsAsoc.Contains(s.AsociadoId));
+        }
+
+        var listaSegFiltrada = querySeguimientos.ToList();
+        conteoSeguimientos = listaSegFiltrada.Count;
+        var hoy = DateOnly.FromDateTime(DateTime.Today);
+        conteoProximosEncuentros = listaSegFiltrada.Count(s => s.ProximaGestion.HasValue && s.ProximaGestion.Value >= hoy);
+        conteoProductoresConSeguimiento = listaSegFiltrada.Select(s => s.AsociadoId).Distinct().Count();
+    }
+
+    private void LimpiarFiltroAsociacion()
+    {
+        filtroAsociacion = "";
+        ActualizarMetricas();
+    }
+}
+
+

@@ -13,6 +13,7 @@ public class InMemoryAsociadoService : IAsociadoService
             Id = 1,
             Cedula = "10234567",
             NombreCompleto = "Carlos Julio Ramírez",
+            AsociacionPertenece = "ASOAGRO - Asociación Agropecuaria de Urabá",
             FincaVereda = "Finca La Esperanza - Vereda El Silencio",
             Telefono = "3104567890",
             Correo = "carlos.ramirez@asoagro.com",
@@ -89,6 +90,23 @@ public class InMemoryAsociadoService : IAsociadoService
                     }
                 }
             },
+            Afiliaciones = new List<AfiliacionAsociado>
+            {
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    AsociadoId = 1,
+                    AsociadoCedula = "10234567",
+                    AsociacionNombre = "ASOAGRO - Asociación Agropecuaria de Urabá",
+                    FechaSolicitud = DateTime.Today.AddMonths(-6),
+                    FechaAprobacion = DateTime.Today.AddMonths(-6),
+                    Estado = "Activa",
+                    AprobadoPor = "Secretaría FAAUA",
+                    CumpleRequisitosEstatutos = true
+                }
+            },
+            AutorizacionDatosPersonales = true,
+            FechaAutorizacionHabeasData = DateTime.Today.AddMonths(-6),
             EstadoMembresia = "AlDia",
             FechaRegistro = DateTime.UtcNow.AddDays(-20),
             FechaActualizacion = DateTime.UtcNow.AddDays(-5),
@@ -155,12 +173,56 @@ public class InMemoryAsociadoService : IAsociadoService
             FechaActualizacion = DateTime.UtcNow.AddDays(-2),
             CreadoPor = "Semilla",
             ActualizadoPor = "Semilla"
+        },
+        new Asociado
+        {
+            Id = 3,
+            Cedula = "1045123987",
+            NombreCompleto = "Jorge Iván Arboleda",
+            AsociacionPertenece = "ASOPLÁTANO - Asociación de Productores de Plátano de Urabá",
+            FincaVereda = "Finca Villa María - Vereda La Balsa",
+            Telefono = "3129876543",
+            Correo = "jorge.arboleda@asoplatanouraba.org",
+            NombrePredio = "Finca Villa María",
+            VeredaSector = "Vereda La Balsa",
+            Municipio = "Carepa",
+            TenenciaTerreno = "Propio",
+            HectareasPredio = 8.0m,
+            HectareasLineaProductiva = 7.5m,
+            TipoActividadProductiva = "Agrícola",
+            ProduccionAproximada = "26 toneladas/año",
+            CultivoPrincipal = "Platano",
+            CultivosSeleccionados = new List<string> { "Platano" },
+            TieneBPA = true,
+            EsVictima = false,
+            Afiliaciones = new List<AfiliacionAsociado>
+            {
+                new()
+                {
+                    Id = Guid.NewGuid(),
+                    AsociadoId = 3,
+                    AsociadoCedula = "98765432",
+                    AsociacionNombre = "ASOPLÁTANO - Asociación de Productores de Plátano de Urabá",
+                    FechaSolicitud = DateTime.Today.AddMonths(-4),
+                    FechaAprobacion = DateTime.Today.AddMonths(-4),
+                    Estado = "Activa",
+                    AprobadoPor = "Secretaría FAAUA",
+                    CumpleRequisitosEstatutos = true
+                }
+            },
+            AutorizacionDatosPersonales = true,
+            FechaAutorizacionHabeasData = DateTime.Today.AddMonths(-4),
+            EstadoMembresia = "AlDia",
+            FechaRegistro = DateTime.UtcNow.AddDays(-30),
+            FechaActualizacion = DateTime.UtcNow.AddDays(-10),
+            CreadoPor = "Semilla",
+            ActualizadoPor = "Semilla"
         }
     };
 
     private readonly object sync = new();
     private readonly string usuarioAuditoria;
-    private int siguienteId = 3;
+    private int siguienteId = 4;
 
     public InMemoryAsociadoService(IOptions<AsoagroOptions>? options = null)
     {
@@ -187,18 +249,69 @@ public class InMemoryAsociadoService : IAsociadoService
 
         lock (sync)
         {
-            if (asociados.Any(a => string.Equals(a.Cedula, cedulaLimpia, StringComparison.OrdinalIgnoreCase)))
+            var existente = asociados.FirstOrDefault(a => string.Equals(a.Cedula, cedulaLimpia, StringComparison.OrdinalIgnoreCase));
+            if (existente != null)
             {
+                var nuevaAsoc = asociado.AsociacionPertenece?.Trim() ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(nuevaAsoc))
+                {
+                    var afiliacionExistente = existente.Afiliaciones.FirstOrDefault(af =>
+                        string.Equals(af.AsociacionNombre, nuevaAsoc, StringComparison.OrdinalIgnoreCase));
+
+                    if (afiliacionExistente != null && afiliacionExistente.Estado == "Activa")
+                    {
+                        return new ResultadoRegistroAsociado
+                        {
+                            Exitoso = false,
+                            Mensaje = $"El productor {existente.NombreCompleto} ya cuenta con afiliación activa en {nuevaAsoc}."
+                        };
+                    }
+
+                    if (afiliacionExistente != null)
+                    {
+                        afiliacionExistente.Estado = "Activa";
+                        afiliacionExistente.FechaAprobacion = ahora;
+                    }
+                    else
+                    {
+                        existente.Afiliaciones.Add(new AfiliacionAsociado
+                        {
+                            Id = Guid.NewGuid(),
+                            AsociadoId = existente.Id,
+                            AsociadoCedula = cedulaLimpia,
+                            AsociacionNombre = nuevaAsoc,
+                            FechaSolicitud = ahora,
+                            FechaAprobacion = ahora,
+                            Estado = "Activa",
+                            AprobadoPor = usuarioAuditoria,
+                            CumpleRequisitosEstatutos = true,
+                            FechaRegistro = ahora
+                        });
+                    }
+
+                    existente.AsociacionPertenece = nuevaAsoc;
+                    existente.FechaActualizacion = ahora;
+                    existente.ActualizadoPor = usuarioAuditoria;
+
+                    return new ResultadoRegistroAsociado
+                    {
+                        Exitoso = true,
+                        Mensaje = $"Perfil único vinculado: El productor {existente.NombreCompleto} fue asociado exitosamente a {nuevaAsoc} conservando su expediente único.",
+                        Asociado = Clonar(existente)
+                    };
+                }
+
                 return new ResultadoRegistroAsociado
                 {
                     Exitoso = false,
-                    Mensaje = "Ya existe un asociado registrado con esa cédula."
+                    Mensaje = $"El productor con cédula {cedulaLimpia} ya existe en el sistema. Seleccione la asociación a la que desea afiliarlo."
                 };
             }
 
             var entidad = Clonar(asociado);
             entidad.Id = siguienteId++;
             entidad.Cedula = cedulaLimpia;
+            entidad.AsociacionPertenece = asociado.AsociacionPertenece?.Trim();
             entidad.NombreCompleto = asociado.NombreCompleto.Trim();
             entidad.FincaVereda = asociado.FincaVereda.Trim();
             entidad.CultivoPrincipal = asociado.CultivoPrincipal.Trim();
@@ -215,6 +328,23 @@ public class InMemoryAsociadoService : IAsociadoService
             entidad.FechaActualizacion = ahora;
             entidad.CreadoPor = usuarioAuditoria;
             entidad.ActualizadoPor = usuarioAuditoria;
+
+            if (entidad.Afiliaciones.Count == 0 && !string.IsNullOrWhiteSpace(entidad.AsociacionPertenece))
+            {
+                entidad.Afiliaciones.Add(new AfiliacionAsociado
+                {
+                    Id = Guid.NewGuid(),
+                    AsociadoId = entidad.Id,
+                    AsociadoCedula = cedulaLimpia,
+                    AsociacionNombre = entidad.AsociacionPertenece,
+                    FechaSolicitud = ahora,
+                    FechaAprobacion = ahora,
+                    Estado = "Activa",
+                    AprobadoPor = usuarioAuditoria,
+                    CumpleRequisitosEstatutos = true,
+                    FechaRegistro = ahora
+                });
+            }
 
             asociados.Add(entidad);
 
@@ -256,6 +386,7 @@ public class InMemoryAsociadoService : IAsociadoService
             }
 
             existente.Cedula = cedulaLimpia;
+            existente.AsociacionPertenece = asociado.AsociacionPertenece?.Trim();
             existente.NombreCompleto = asociado.NombreCompleto.Trim();
             existente.FincaVereda = asociado.FincaVereda.Trim();
             existente.Telefono = asociado.Telefono?.Trim();
@@ -305,6 +436,7 @@ public class InMemoryAsociadoService : IAsociadoService
         {
             Id = origen.Id,
             Cedula = origen.Cedula,
+            AsociacionPertenece = origen.AsociacionPertenece,
             NombreCompleto = origen.NombreCompleto,
             FincaVereda = origen.FincaVereda,
             Telefono = origen.Telefono,
@@ -335,6 +467,26 @@ public class InMemoryAsociadoService : IAsociadoService
                 origen.SoportesGruposUrls,
                 StringComparer.OrdinalIgnoreCase),
             CuotasAportes = origen.CuotasAportes.Select(c => c.Clonar()).ToList(),
+            Afiliaciones = origen.Afiliaciones.Select(a => new AfiliacionAsociado
+            {
+                Id = a.Id,
+                AsociadoId = a.AsociadoId,
+                AsociadoCedula = a.AsociadoCedula,
+                AsociacionNombre = a.AsociacionNombre,
+                FechaSolicitud = a.FechaSolicitud,
+                FechaAprobacion = a.FechaAprobacion,
+                FechaRetiro = a.FechaRetiro,
+                Estado = a.Estado,
+                AprobadoPor = a.AprobadoPor,
+                MotivoRetiro = a.MotivoRetiro,
+                Observaciones = a.Observaciones,
+                CumpleRequisitosEstatutos = a.CumpleRequisitosEstatutos,
+                RequisitosCumplidos = new List<string>(a.RequisitosCumplidos),
+                SoportesAnexos = a.SoportesAnexos,
+                FechaRegistro = a.FechaRegistro
+            }).ToList(),
+            AutorizacionDatosPersonales = origen.AutorizacionDatosPersonales,
+            FechaAutorizacionHabeasData = origen.FechaAutorizacionHabeasData,
             EstadoMembresia = origen.EstadoMembresia,
             FechaRegistro = origen.FechaRegistro,
             FechaActualizacion = origen.FechaActualizacion,

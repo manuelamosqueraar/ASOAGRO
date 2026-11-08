@@ -165,7 +165,7 @@
    ========================================================================== */
 .ra-pasos {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     padding: 0.25rem 0 0.1rem;
 }
 
@@ -1002,7 +1002,8 @@
 .ra-modal-velo {
     position: fixed;
     inset: 0;
-    z-index: 1000;
+    z-index: 2500 !important;
+    pointer-events: auto !important;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1014,7 +1015,7 @@
 }
 
 .ra-modal-velo-visor {
-    z-index: 1100;
+    z-index: 2600 !important;
 }
 
 /* --- Ficha formal --- */
@@ -1027,6 +1028,8 @@
     border-radius: 14px;
     overflow: hidden;
     box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
+    pointer-events: auto !important;
+    margin: auto;
 }
 
 .ra-ficha-cabecera {
@@ -1854,97 +1857,97 @@
 .ra-barra { background: #ece9dc; }
 .ra-barra-relleno { background: linear-gradient(90deg, var(--ink), #4f8a3c); }
 
-/* Pasos en píldora */
+/* Pasos en rejilla de 5 columnas equilibradas */
 .ra-pasos {
-    display: flex;
-    gap: 0.4rem;
-    padding: 0.4rem;
-    border: 1px solid var(--linea-t);
-    border-radius: 999px;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.65rem;
+    padding: 0.75rem 0.9rem;
+    border: 1.5px solid #c7ddd0;
+    border-top: 4px solid #059669;
+    border-radius: 16px;
     background: #ffffff;
-    box-shadow: 0 1px 2px rgba(23, 55, 42, 0.05);
+    box-shadow: 0 8px 20px -12px rgba(10, 36, 24, 0.08);
 }
 
 .ra-paso {
     flex: 1 1 0;
     flex-direction: row;
-    justify-content: center;
-    gap: 0.6rem;
-    padding: 0.55rem 0.9rem;
-    border-radius: 999px;
-    color: #55675c;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.65rem;
+    padding: 0.6rem 0.8rem;
+    border: 1.5px solid #dce7df;
+    border-radius: 12px;
+    background: #f7faf8;
+    color: #2d4739;
+    min-width: 0;
 }
 
 .ra-paso::before { display: none; }
-.ra-paso-info { max-width: 100%; align-items: flex-start; text-align: left; }
-.ra-paso-sub { display: none; }
-.ra-paso:hover { background: #f3f6ec; color: var(--ink); }
-.ra-paso.activo { background: var(--ink); color: #ffffff; }
+.ra-paso-info { max-width: 100%; align-items: flex-start; text-align: left; min-width: 0; }
+.ra-paso-sub { display: block; font-size: 0.69rem; color: #527060; }
+.ra-paso:hover { background: #ecfdf5; border-color: #6ee7b7; color: var(--ink); }
+.ra-paso.activo { background: #0b2e1c; border-color: #0b2e1c; color: #ffffff; }
+.ra-paso.activo .ra-paso-sub { color: #d9f99d; }
 
-.ra-paso-num { width: 28px; height: 28px; border: 0; background: #efede2; color: var(--ink); font-size: 0.82rem; box-shadow: none; }
-.ra-paso:hover .ra-paso-num { border: 0; }
-.ra-paso.activo .ra-paso-num { background: var(--lima); color: var(--ink); box-shadow: none; }
-.ra-paso.completo:not(.activo) .ra-paso-num { background: var(--pastel-1); color: #2d6a3c; }
+.ra-paso-num { width: 30px; height: 30px; border: 1.5px solid #b7dec5; background: #ffffff; color: #0b2e1c; font-size: 0.82rem; box-shadow: none; flex-shrink: 0; }
+.ra-paso:hover .ra-paso-num { border-color: #34d399; }
+.ra-paso.activo .ra-paso-num { background: #b9e77a; border-color: #b9e77a; color: #0b2e1c; box-shadow: none; }
+.ra-paso.completo:not(.activo) { background: #ecfdf5; border-color: #34d399; color: #065f46; }
+.ra-paso.completo:not(.activo) .ra-paso-num { background: #059669; border-color: #059669; color: #ffffff; }
 
-/* Tarjeta del paso: bloque pastel a la izquierda + formulario a la derecha */
-.ra-panel { display: block; }
+/* Tarjeta del paso a ancho completo con encabezado horizontal superior */
+.ra-panel { display: block; background: transparent; border: 0; box-shadow: none; }
 
 .ra-seccion {
-    display: grid;
-    grid-template-columns: 290px minmax(0, 1fr);
-    column-gap: 1.75rem;
-    row-gap: 1.5rem;
-    padding: 1.1rem;
-    border: 1px solid var(--linea-t);
-    border-radius: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    border: 1.5px solid #c7ddd0;
+    border-radius: 18px;
     background: #ffffff;
-    box-shadow: 0 2px 4px rgba(23, 55, 42, 0.04), 0 28px 50px -30px rgba(23, 55, 42, 0.28);
+    box-shadow: 0 12px 28px -14px rgba(10, 36, 24, 0.12);
 }
 
-.ra-seccion > * { grid-column: 2; min-width: 0; }
+.ra-seccion > * { grid-column: auto; min-width: 0; }
 
 .ra-seccion > .ra-grid,
-.ra-seccion > .ra-subtarjeta { margin: 0 0.9rem 0 0; }
+.ra-seccion > .ra-subtarjeta { margin: 0; padding: 1.5rem 1.65rem; }
 
-.ra-seccion > :nth-child(2) { margin-top: 0.9rem; }
+.ra-seccion > :nth-child(2) { margin-top: 0; }
 
 .ra-seccion > .ra-acciones {
-    margin: 0 0.9rem 0.9rem 0;
-    padding: 1.1rem 0 0;
-    border-top: 1px solid var(--linea-t);
-    border-radius: 0;
-    background: transparent;
+    margin: 0;
+    padding: 1rem 1.65rem;
+    border-top: 1.5px solid #d5e2d8;
+    border-radius: 0 0 16px 16px;
+    background: #f8faf8;
 }
 
 .ra-seccion-cab {
-    grid-column: 1;
-    grid-row: 1 / span 2;
-    position: sticky;
-    top: 1rem;
-    align-self: start;
+    position: relative;
+    top: auto;
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1rem;
-    min-height: 320px;
-    padding: 1.6rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.9rem 1.25rem;
+    min-height: 0;
+    padding: 1rem 1.65rem;
     border: 0;
-    border-radius: 22px;
+    border-bottom: 2px solid #b7dec5;
+    border-radius: 16px 16px 0 0;
     background: var(--pastel-1);
     overflow: hidden;
 }
 
 .ra-seccion-cab::before,
 .ra-seccion-cab::after {
-    content: "";
-    position: absolute;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.4);
-    pointer-events: none;
+    display: none;
 }
-
-.ra-seccion-cab::before { width: 190px; height: 190px; left: auto; top: auto; right: -70px; bottom: -80px; }
-.ra-seccion-cab::after { width: 90px; height: 90px; right: 60px; bottom: 50px; background: rgba(255, 255, 255, 0.3); }
 
 .ra-seccion:has(use[href="#ico-mapa"]) .ra-seccion-cab { background: var(--pastel-2); }
 .ra-seccion:has(use[href="#ico-brote"]) .ra-seccion-cab { background: var(--pastel-3); }
@@ -1953,39 +1956,40 @@
 .ra-seccion-ico {
     position: relative;
     z-index: 1;
-    width: 64px;
-    height: 64px;
-    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
     background: #ffffff;
     color: var(--ink);
-    box-shadow: 0 8px 16px -8px rgba(23, 55, 42, 0.4);
+    box-shadow: none;
 }
 
-.ra-seccion-ico .ra-ico { width: 1.7rem; height: 1.7rem; }
+.ra-seccion-ico .ra-ico { width: 1.35rem; height: 1.35rem; }
 
-.ra-seccion-texto { position: relative; z-index: 1; flex: none; }
-.ra-kicker { color: #4b6155; font-weight: 700; }
-.ra-seccion-texto h2 { margin-top: 0.35rem; font-size: 1.7rem; font-weight: 800; line-height: 1.1; letter-spacing: -0.02em; color: var(--ink); }
+.ra-seccion-texto { position: relative; z-index: 1; flex: 1 1 220px; min-width: 0; }
+.ra-kicker { color: #166534; font-weight: 800; }
+.ra-seccion-texto h2 { margin-top: 0.15rem; font-size: 1.25rem; font-weight: 800; line-height: 1.2; letter-spacing: -0.02em; color: var(--ink); }
 
 .ra-estado {
     position: relative;
     z-index: 1;
-    margin-top: auto;
-    padding: 0.3rem 0.85rem;
+    margin-top: 0;
+    margin-left: auto;
+    padding: 0.35rem 0.9rem;
     background: #ffffff;
     color: var(--ink);
-    font-size: 0.72rem;
+    font-size: 0.74rem;
 }
 
 .ra-estado-ok { background: var(--lima); color: var(--ink); }
 
-.ra-resumen-social-badges { position: relative; z-index: 1; margin-top: auto; }
+.ra-resumen-social-badges { position: relative; z-index: 1; margin-top: 0; margin-left: auto; }
 .ra-seccion-cab .ra-contador-pildora,
 .ra-seccion-cab .ra-contador-pildora.trigo { background: #ffffff; border-color: #ffffff; color: var(--ink); }
 
 /* Campos */
-.ra-grid { grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.25rem 1.25rem; }
-.ra-label { color: var(--ink); font-weight: 700; font-size: 0.82rem; }
+.ra-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem 1.5rem; }
+.ra-label { color: var(--ink); font-weight: 800; font-size: 0.76rem; white-space: normal; overflow: visible; text-overflow: clip; }
 
 .ra-input,
 .ra-desplegable-boton {
@@ -2009,19 +2013,18 @@
 .ra-unidad-badge { margin: 5px; padding: 0 0.85rem; border: 0; border-radius: 10px; background: var(--lima-suave); color: var(--ink); }
 
 .ra-desplegable-panel,
-.ra-muni-panel { border-radius: 18px; border-color: var(--linea-t); box-shadow: 0 24px 44px -18px rgba(23, 55, 42, 0.4); }
+.ra-muni-panel { width: 100%; min-width: 100%; max-width: calc(100vw - 24px); max-height: min(310px, 52vh); overflow-y: auto; z-index: 2500; border-radius: 11px; border: 1.5px solid #059669; box-shadow: 0 14px 32px -8px rgba(10, 36, 24, 0.28); padding: 6px; }
 
-.ra-opcion-cultivo { border-radius: 14px; border-color: var(--linea-t); }
-.ra-opcion-cultivo:hover { background: #f8fbee; border-color: var(--lima-borde); }
-.ra-opcion-cultivo.seleccionado { background: var(--lima-suave); border-color: var(--lima-borde); box-shadow: inset 0 0 0 1px var(--lima-borde); }
-.ra-opcion-emoji { border-radius: 12px; background: var(--pastel-2); }
-.ra-casilla { border-radius: 50%; }
+.ra-desplegable-grid { display: flex; flex-direction: column; gap: 2px; max-height: none; overflow: visible; padding: 0; }
+.ra-opcion-cultivo { border-radius: 7px; border: 0; padding: 8px 12px; }
+.ra-opcion-cultivo:hover { background: #e8f8ee; }
+.ra-opcion-cultivo.seleccionado { background: #059669; color: #ffffff; box-shadow: none; }
+.ra-opcion-emoji, .ra-muni-punto, .ra-muni-pin, .ra-muni-flecha, .ra-desplegable-der { display: none; }
+.ra-casilla { border-radius: 5px; }
 .ra-casilla.activa { background: var(--ink); border-color: var(--ink); }
-.ra-muni-opcion { border-radius: 12px; }
-.ra-muni-opcion:hover { background: #f8fbee; }
-.ra-muni-opcion.activa { background: var(--lima-suave); color: var(--ink); }
-.ra-desplegable-der,
-.ra-muni-flecha { background-color: var(--lima-suave); border-radius: 999px; }
+.ra-muni-opcion { border-radius: 7px; padding: 8px 12px; }
+.ra-muni-opcion:hover { background: #e8f8ee; }
+.ra-muni-opcion.activa { background: #059669; color: #ffffff; }
 .ra-btn-mini { border-radius: 999px; }
 .ra-btn-mini-ok { background: var(--ink); }
 

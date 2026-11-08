@@ -1,5 +1,5 @@
 @page "/seguimiento-asociados"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Directora,Director,Presidenta,Presidente")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Presidenta,Presidente")]
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
@@ -8,6 +8,7 @@
 @using Asoagro.Services
 @inject IAsociadoService AsociadoService
 @inject ISeguimientoAsociadoService SeguimientoService
+@inject IDocumentoAsociacionService DocumentoService
 @inject NotificacionService Notificaciones
 @inject AuthenticationStateProvider AuthProvider
 @implements IDisposable
@@ -15,47 +16,47 @@
 <PageTitle>Seguimiento de asociados · ASOAGRO</PageTitle>
 
 <main class="sa">
-    <section class="sa-hero">
-        <div class="sa-hero-copy">
-            <div class="sa-eyebrows">
-                <span class="sa-eyebrow">
-                    <svg class="sa-icon" width="15" height="15" viewBox="0 0 24 24"><use href="#ico-usuario" /></svg>
-                    FAAUA · Seguimiento asociativo
-                </span>
-                <span class="sa-eyebrow sa-eyebrow-light">@(esSoloConsulta ? "Consulta Directiva · Presidencia" : "Panel de la directora")</span>
-            </div>
-            <h1>Seguimiento de asociados y encuentros</h1>
-            <p>Consulta a las personas asociadas, revisa sus reuniones próximas y anteriores, verifica el estado de atención de cada integrante y revisa notas o acuerdos de cada encuentro.</p>
-        </div>
-        <div class="sa-hero-aside">
-            <div class="sa-hero-summary">
-                <span>Personas asociadas</span>
-                <strong>@asociados.Count</strong>
-                <small>@seguimientos.Count encuentro(s) en el historial</small>
-            </div>
-            @if (!esSoloConsulta)
-            {
-                <button type="button" class="sa-hero-cta" @onclick="AbrirFormularioGeneral">
-                    <svg class="sa-icon" width="18" height="18" viewBox="0 0 24 24"><use href="#ico-usuario-mas" /></svg>
-                    <span>Registrar encuentro</span>
-                </button>
-            }
-            else
-            {
-                <span class="badge bg-light text-muted border px-3 py-2 rounded-pill small" title="Presidencia tiene acceso de consulta y supervisión directiva">
-                    <i class="bi bi-eye me-1"></i> Modo Consulta Directiva
-                </span>
-            }
-        </div>
-    </section>
+    <div class="card aso-hero-card mb-3">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="aso-hero-icon-box">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                            <path d="M9 16l2 2 4-4"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="aso-hero-kicker">FAAUA · Seguimiento Asociativo</span>
+                            <span class="text-white-50" style="font-size: 0.75rem; font-weight: 600;">@(esSoloConsulta ? (esAdmin ? "Supervisión Administrativa" : "Consulta Directiva · Presidencia") : "Gestión de Secretaría") · @asociados.Count integrantes</span>
+                        </div>
+                        <h1 class="aso-hero-title">Seguimiento de asociados y encuentros</h1>
+                        <p class="aso-hero-desc">Consulta a las personas asociadas, revisa sus reuniones próximas y anteriores, y registra los acuerdos de cada encuentro.</p>
+                    </div>
+                </div>
 
-    @if (!AsociadoService.UsaAlmacenamientoPermanente || !SeguimientoService.UsaAlmacenamientoPermanente)
-    {
-        <div class="sa-storage-note" role="status">
-            <svg class="sa-icon" width="19" height="19" viewBox="0 0 24 24"><use href="#ico-alerta" /></svg>
-            <span><strong>Modo de desarrollo:</strong> los datos están en memoria durante esta sesión. Configura la conexión a Supabase para conservar los encuentros permanentemente.</span>
+                <div class="d-flex flex-wrap align-items-center gap-2">
+                    @if (!esSoloConsulta)
+                    {
+                        <button type="button" class="aso-btn-hero-primary" @onclick="AbrirFormularioGeneral">
+                            <svg class="sa-icon" width="16" height="16" viewBox="0 0 24 24"><use href="#ico-usuario-mas" /></svg>
+                            <span>Registrar encuentro</span>
+                        </button>
+                    }
+                    else
+                    {
+                        <span class="aso-btn-hero-secondary" title="Modo de consulta y supervisión directiva">
+                            @(esAdmin ? "Modo Supervisión Administrativa" : "Modo Consulta Directiva")
+                        </span>
+                    }
+                </div>
+            </div>
         </div>
-    }
+    </div>
 
     @if (!string.IsNullOrWhiteSpace(mensajeExito))
     {
@@ -67,51 +68,51 @@
     }
 
     <!-- Resumen operativo interactivo -->
-    <section class="sa-metrics" aria-label="Resumen del seguimiento de asociados">
-        <button type="button" class="sa-metric @(filtroEstado == "Todos" ? "sa-metric-active" : "")" @onclick='() => SeleccionarFiltroEstado("Todos")'>
-            <span class="sa-metric-icon sa-icon-green">
-                <svg class="sa-icon" width="20" height="20" viewBox="0 0 24 24"><use href="#ico-usuario" /></svg>
-            </span>
-            <div>
-                <small>Personas asociadas</small>
-                <strong>@asociados.Count</strong>
-                <span>Padrón general activo</span>
+    <div class="aso-kpi-grid" aria-label="Resumen del seguimiento de asociados">
+        <div class="aso-kpi-card kpi-emerald" style="cursor: pointer;" @onclick='() => SeleccionarFiltroEstado("Todos")'>
+            <div class="aso-kpi-icon">
+                <svg class="sa-icon" width="22" height="22" viewBox="0 0 24 24"><use href="#ico-usuario" /></svg>
             </div>
-        </button>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Personas Asociadas</span>
+                <strong class="aso-kpi-value">@asociados.Count</strong>
+                <span class="aso-kpi-sub">Padrón general activo</span>
+            </div>
+        </div>
 
-        <button type="button" class="sa-metric @(filtroEstado == "Contacto programado" ? "sa-metric-active" : "")" @onclick='() => SeleccionarFiltroEstado("Contacto programado")'>
-            <span class="sa-metric-icon sa-icon-amber">
-                <svg class="sa-icon" width="20" height="20" viewBox="0 0 24 24"><use href="#ico-doc" /></svg>
-            </span>
-            <div>
-                <small>Reuniones próximas</small>
-                <strong>@ContarConProximaGestion</strong>
-                <span>Programadas para hoy o después</span>
+        <div class="aso-kpi-card kpi-amber" style="cursor: pointer;" @onclick='() => SeleccionarFiltroEstado("Contacto programado")'>
+            <div class="aso-kpi-icon">
+                <svg class="sa-icon" width="22" height="22" viewBox="0 0 24 24"><use href="#ico-doc" /></svg>
             </div>
-        </button>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Reuniones Próximas</span>
+                <strong class="aso-kpi-value">@ContarConProximaGestion</strong>
+                <span class="aso-kpi-sub">Programadas para hoy o después</span>
+            </div>
+        </div>
 
-        <button type="button" class="sa-metric @(filtroEstado == "Contacto vencido" ? "sa-metric-active" : "")" @onclick='() => SeleccionarFiltroEstado("Contacto vencido")'>
-            <span class="sa-metric-icon sa-icon-red">
-                <svg class="sa-icon" width="20" height="20" viewBox="0 0 24 24"><use href="#ico-alerta" /></svg>
-            </span>
-            <div>
-                <small>Encuentros vencidos</small>
-                <strong>@ContarVencidos</strong>
-                <span>Fecha programada ya cumplida</span>
+        <div class="aso-kpi-card kpi-rose" style="cursor: pointer;" @onclick='() => SeleccionarFiltroEstado("Contacto vencido")'>
+            <div class="aso-kpi-icon">
+                <svg class="sa-icon" width="22" height="22" viewBox="0 0 24 24"><use href="#ico-alerta" /></svg>
             </div>
-        </button>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Encuentros Vencidos</span>
+                <strong class="aso-kpi-value">@ContarVencidos</strong>
+                <span class="aso-kpi-sub">Fecha programada ya cumplida</span>
+            </div>
+        </div>
 
-        <button type="button" class="sa-metric @(filtroEstado == "Sin seguimiento" ? "sa-metric-active" : "")" @onclick='() => SeleccionarFiltroEstado("Sin seguimiento")'>
-            <span class="sa-metric-icon sa-icon-slate">
-                <svg class="sa-icon" width="20" height="20" viewBox="0 0 24 24"><use href="#ico-lista" /></svg>
-            </span>
-            <div>
-                <small>Sin encuentros</small>
-                <strong>@ContarSinSeguimiento</strong>
-                <span>Pendientes de primer contacto</span>
+        <div class="aso-kpi-card kpi-sky" style="cursor: pointer;" @onclick='() => SeleccionarFiltroEstado("Sin seguimiento")'>
+            <div class="aso-kpi-icon">
+                <svg class="sa-icon" width="22" height="22" viewBox="0 0 24 24"><use href="#ico-lista" /></svg>
             </div>
-        </button>
-    </section>
+            <div class="aso-kpi-meta">
+                <span class="aso-kpi-label">Sin Encuentros</span>
+                <strong class="aso-kpi-value">@ContarSinSeguimiento</strong>
+                <span class="aso-kpi-sub">Pendientes de primer contacto</span>
+            </div>
+        </div>
+    </div>
 
     <!-- Agenda de reuniones próximas / anteriores y panorama de atención -->
     <section class="sa-overview-grid" aria-label="Agenda de encuentros y estado de atención">
@@ -346,6 +347,17 @@
                 }
             </div>
             <label class="sa-filter-select">
+                <span>Filtrar por asociación</span>
+                <select @bind="filtroAsociacion" aria-label="Filtrar por asociación">
+                    <option value="">Todas las asociaciones (@asociados.Count)</option>
+                    <option value="__PENDIENTES__">⚠️ Pendientes de asignar (@asociados.Count(a => string.IsNullOrWhiteSpace(a.AsociacionPertenece)))</option>
+                    @foreach (var asoc in listaAsociaciones)
+                    {
+                        <option value="@asoc">@asoc</option>
+                    }
+                </select>
+            </label>
+            <label class="sa-filter-select">
                 <span>Filtrar por estado de seguimiento</span>
                 <select @bind="filtroEstado" aria-label="Filtrar por estado del seguimiento">
                     <option value="Todos">Todos los estados (@asociados.Count)</option>
@@ -375,6 +387,14 @@
                                     <h3>@asociado.NombreCompleto</h3>
                                     <span>CC @asociado.Cedula</span>
                                     <div class="sa-tags">
+                                        @if (!string.IsNullOrWhiteSpace(asociado.AsociacionPertenece))
+                                        {
+                                            <span class="sa-tag" style="background: #e6f5eb; color: #17603a; font-weight: 600;" title="@asociado.AsociacionPertenece">@asociado.AsociacionPertenece</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="sa-tag" style="background: #fff8e6; color: #b45309; font-weight: 600;">⚠️ Pendiente de asignar</span>
+                                        }
                                         @if (!string.IsNullOrWhiteSpace(asociado.Municipio))
                                         {
                                             <span class="sa-tag">@asociado.Municipio</span>
@@ -537,64 +557,67 @@
                 <div class="sa-alert sa-alert-error" role="alert">@mensajeError</div>
             }
 
-            <EditForm Model="formulario" OnValidSubmit="GuardarSeguimiento">
+            <EditForm Model="formulario" OnValidSubmit="GuardarSeguimiento" class="sa-modal-form">
                 <DataAnnotationsValidator />
-                <ValidationSummary class="sa-validation-summary" />
 
-                <div class="sa-form-grid">
-                    <label class="sa-field sa-field-full">
-                        <span>Persona asociada <b>*</b></span>
-                        <select value="@(asociadoEnFormulario?.Id.ToString() ?? string.Empty)"
-                                @onchange="CambiarAsociadoFormulario"
-                                aria-label="Seleccionar persona asociada">
-                            <option value="">-- Selecciona un asociado del padrón --</option>
-                            @foreach (var asoc in asociados)
-                            {
-                                <option value="@asoc.Id">@asoc.NombreCompleto · CC @asoc.Cedula (@(string.IsNullOrWhiteSpace(asoc.Municipio) ? "Urabá" : asoc.Municipio))</option>
-                            }
-                        </select>
-                    </label>
+                <div class="sa-modal-body">
+                    <ValidationSummary class="sa-validation-summary" />
 
-                    <label class="sa-field sa-field-full">
-                        <span>Modalidad del encuentro <b>*</b></span>
-                        <InputSelect @bind-Value="formulario.TipoGestion">
-                            <option value="">Selecciona el tipo de encuentro</option>
-                            <option value="Llamada">Llamada telefónica</option>
-                            <option value="Visita">Reunión o visita presencial</option>
-                            <option value="Asesoria">Asesoría o acompañamiento</option>
-                            <option value="Documentos">Revisión de documentación</option>
-                            <option value="Otro">Otro encuentro asociativo</option>
-                        </InputSelect>
-                        <ValidationMessage For="@(() => formulario.TipoGestion)" />
-                    </label>
+                    <div class="sa-form-grid">
+                        <label class="sa-field sa-field-full">
+                            <span>Persona asociada <b>*</b></span>
+                            <select value="@(asociadoEnFormulario?.Id.ToString() ?? string.Empty)"
+                                    @onchange="CambiarAsociadoFormulario"
+                                    aria-label="Seleccionar persona asociada">
+                                <option value="">-- Selecciona un asociado del padrón --</option>
+                                @foreach (var asoc in asociados)
+                                {
+                                    <option value="@asoc.Id">@asoc.NombreCompleto · CC @asoc.Cedula (@(string.IsNullOrWhiteSpace(asoc.Municipio) ? "Urabá" : asoc.Municipio))</option>
+                                }
+                            </select>
+                        </label>
 
-                    <label class="sa-field">
-                        <span>Fecha de la reunión <b>*</b></span>
-                        <InputDate @bind-Value="formulario.ProximaGestion" />
-                        <ValidationMessage For="@(() => formulario.ProximaGestion)" />
-                        <small class="sa-field-hint">Día acordado para el encuentro (hoy o fecha futura).</small>
-                    </label>
+                        <label class="sa-field sa-field-full">
+                            <span>Modalidad del encuentro <b>*</b></span>
+                            <InputSelect @bind-Value="formulario.TipoGestion">
+                                <option value="">Selecciona el tipo de encuentro</option>
+                                <option value="Llamada">Llamada telefónica</option>
+                                <option value="Visita">Reunión o visita presencial</option>
+                                <option value="Asesoria">Asesoría o acompañamiento</option>
+                                <option value="Documentos">Revisión de documentación</option>
+                                <option value="Otro">Otro encuentro asociativo</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => formulario.TipoGestion)" />
+                        </label>
 
-                    <label class="sa-field">
-                        <span>Hora de la reunión <b>*</b></span>
-                        <InputSelect @bind-Value="formulario.HoraReunion" aria-label="Hora de la reunión">
-                            <option value="">-- Selecciona hora (8:00 a. m. a 5:00 p. m.) --</option>
-                            @foreach (var horario in HorariosDisponibles)
-                            {
-                                <option value="@horario.Valor">@horario.Etiqueta</option>
-                            }
-                        </InputSelect>
-                        <ValidationMessage For="@(() => formulario.HoraReunion)" />
-                        <small class="sa-field-hint">Horarios permitidos únicamente entre 8:00 a. m. y 5:00 p. m.</small>
-                    </label>
+                        <label class="sa-field">
+                            <span>Fecha de la reunión <b>*</b></span>
+                            <InputDate @bind-Value="formulario.ProximaGestion" />
+                            <ValidationMessage For="@(() => formulario.ProximaGestion)" />
+                            <small class="sa-field-hint">Día acordado para el encuentro (hoy o fecha futura).</small>
+                        </label>
 
-                    <label class="sa-field sa-field-full">
-                        <span>Notas y acuerdos del encuentro <b>*</b></span>
-                        <InputTextArea @bind-Value="formulario.Descripcion"
-                                       rows="5"
-                                       placeholder="Describe los temas tratados con la persona asociada, sus solicitudes y los compromisos o acuerdos establecidos (mínimo 10 caracteres)." />
-                        <ValidationMessage For="@(() => formulario.Descripcion)" />
-                    </label>
+                        <label class="sa-field">
+                            <span>Hora de la reunión <b>*</b></span>
+                            <InputSelect @bind-Value="formulario.HoraReunion" aria-label="Hora de la reunión">
+                                <option value="">-- Selecciona hora (8:00 a. m. a 5:00 p. m.) --</option>
+                                @foreach (var horario in HorariosDisponibles)
+                                {
+                                    <option value="@horario.Valor">@horario.Etiqueta</option>
+                                }
+                            </InputSelect>
+                            <ValidationMessage For="@(() => formulario.HoraReunion)" />
+                            <small class="sa-field-hint">Horarios permitidos únicamente entre 8:00 a. m. y 5:00 p. m.</small>
+                        </label>
+
+                        <label class="sa-field sa-field-full">
+                            <span>Notas y acuerdos del encuentro <b>*</b></span>
+                            <InputTextArea @bind-Value="formulario.Descripcion"
+                                           rows="4"
+                                           placeholder="Describe los temas tratados con la persona asociada, sus solicitudes y los compromisos o acuerdos establecidos (mínimo 10 caracteres)." />
+                            <ValidationMessage For="@(() => formulario.Descripcion)" />
+                        </label>
+                    </div>
                 </div>
 
                 <footer class="sa-modal-actions">
@@ -643,9 +666,13 @@
 
     private IEnumerable<AsociadoModel> AsociadosFiltrados =>
         asociados.Where(asociado =>
-                (string.IsNullOrWhiteSpace(textoBusqueda)
+                (string.IsNullOrWhiteSpace(filtroAsociacion)
+                 || (filtroAsociacion == "__PENDIENTES__" && string.IsNullOrWhiteSpace(asociado.AsociacionPertenece))
+                 || string.Equals(asociado.AsociacionPertenece, filtroAsociacion, StringComparison.OrdinalIgnoreCase))
+                && (string.IsNullOrWhiteSpace(textoBusqueda)
                  || asociado.NombreCompleto.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
                  || asociado.Cedula.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)
+                 || (!string.IsNullOrWhiteSpace(asociado.AsociacionPertenece) && asociado.AsociacionPertenece.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
                  || (!string.IsNullOrWhiteSpace(asociado.Telefono) && asociado.Telefono.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
                  || (!string.IsNullOrWhiteSpace(asociado.Correo) && asociado.Correo.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase))
                  || (!string.IsNullOrWhiteSpace(asociado.Municipio) && asociado.Municipio.Contains(textoBusqueda, StringComparison.OrdinalIgnoreCase)))
@@ -715,11 +742,17 @@
         new(etiqueta, cantidad, total == 0 ? 0 : (int)Math.Round((double)cantidad * 100 / total), cantidad == 0 ? 0 : 100, clase);
 
     private bool esSoloConsulta = false;
+    private bool esAdmin = false;
+    private string filtroAsociacion = string.Empty;
+    private List<string> listaAsociaciones = new();
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthProvider.GetAuthenticationStateAsync();
-        esSoloConsulta = authState.User.IsInRole("Presidenta") || authState.User.IsInRole("Presidente");
+        esAdmin = authState.User.IsInRole("Administrador") || authState.User.IsInRole("Admin");
+        var esPresidencia = authState.User.IsInRole("Presidenta") || authState.User.IsInRole("Presidente");
+        esSoloConsulta = esAdmin || esPresidencia;
+        listaAsociaciones = DocumentoService.ObtenerAsociaciones().ToList();
         CargarDatos();
         Notificaciones.NotificacionPublicada += EnNuevaNotificacion;
     }
@@ -923,7 +956,7 @@
             var estado = await AuthProvider.GetAuthenticationStateAsync();
             var autor = estado.User.Identity?.Name
                 ?? estado.User.FindFirst(ClaimTypes.Email)?.Value
-                ?? "Directora";
+                ?? "Secretaría";
 
             var horaLimpia = formulario.HoraReunion.Trim();
             var resultado = SeguimientoService.Registrar(new SeguimientoAsociado
@@ -951,8 +984,8 @@
                 Icono = "check",
                 Categoria = CategoriaNotificacion.Seguimiento,
                 Nivel = NivelNotificacion.Informativa,
-                RolesDestino = new[] { "Directora", "Director" },
-                RolesEnlace = new[] { "Directora", "Director" }
+                RolesDestino = new[] { "Secretaria", "Administrador" },
+                RolesEnlace = new[] { "Secretaria", "Administrador" }
             });
 
             var nombreGuardado = asociadoEnFormulario.NombreCompleto;
