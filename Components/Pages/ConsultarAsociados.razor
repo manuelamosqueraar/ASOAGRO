@@ -6,6 +6,7 @@
 @inject IAsociadoService RegistroAsociados
 @inject IDocumentoAsociacionService DocumentoService
 @inject IJSRuntime JS
+@inject ILogger<ConsultarAsociados> Logger
  
 <PageTitle>Directorio de Productores · ASOAGRO & FAAUA</PageTitle>
 
@@ -179,6 +180,22 @@
     </div>
 
     <!-- 3. TABLA EJECUTIVA DE PRODUCTORES -->
+    @if (!string.IsNullOrEmpty(errorCarga))
+    {
+        <div class="alert alert-warning d-flex flex-wrap align-items-center justify-content-between p-3 my-3 shadow-sm rounded-3" role="alert" style="background: #fff8e6; border: 1px solid #f6d28b; color: #8a5300;">
+            <div class="d-flex align-items-center gap-2">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <div>
+                    <strong>Aviso de conexión con el directorio:</strong>
+                    <div style="font-size: 0.88rem;">@errorCarga</div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-dark fw-bold px-3 py-1.5" @onclick="CargarDatos" disabled="@cargando">
+                @(cargando ? "Reintentando..." : "Reintentar")
+            </button>
+        </div>
+    }
+
     @if (AsociadosFiltrados.Any())
     {
         <div class="aso-table-card">
@@ -258,8 +275,8 @@
                                 <!-- Estado y BPA -->
                                 <td class="text-center">
                                     <div class="d-flex flex-column align-items-center gap-1">
-                                        <span class="@(asociado.EstadoMembresia == "AlDia" ? "aso-badge-activa" : "aso-badge-pendiente")">
-                                            @(asociado.EstadoMembresia == "AlDia" ? "Al día" : "En gracia")
+                                        <span class="@(asociado.EstadoMembresia is "AlDia" or "Activo" ? "aso-badge-activa" : asociado.EstadoMembresia == "Suspendido" ? "aso-badge-pendiente" : "aso-badge-neutro")">
+                                            @(asociado.EstadoMembresia is "AlDia" or "Activo" ? "Activo" : asociado.EstadoMembresia)
                                         </span>
                                         <span class="@(asociado.TieneBPA ? "aso-badge-activa" : "aso-badge-neutro")" style="font-size: 0.70rem !important;">
                                             @(asociado.TieneBPA ? "BPA Vigente" : "Sin BPA")
@@ -352,7 +369,7 @@
                                         : "No registra")
                                 </dd>
                             </div>
-                            <div><dt>Membresía</dt><dd>@(asociadoSeleccionado.EstadoMembresia == "AlDia" ? "Al día" : "En gracia")</dd></div>
+                            <div><dt>Membresía</dt><dd>@(asociadoSeleccionado.EstadoMembresia is "AlDia" or "Activo" ? "Activo" : asociadoSeleccionado.EstadoMembresia)</dd></div>
                         </dl>
                     </section>
 
@@ -458,20 +475,43 @@
         }
     }
 
+    private bool cargando;
+    private string? errorCarga;
+
     protected override void OnInitialized()
     {
-        listaAsociaciones = DocumentoService.ObtenerAsociaciones().ToList();
-        listaAsociados = RegistroAsociados.ObtenerTodos()
-            .Select(AsociadoMapper.ToModel)
-            .Where(a => !string.IsNullOrWhiteSpace(a.NombreCompleto)
-                     && !string.IsNullOrWhiteSpace(a.Cedula)
-                     && !string.IsNullOrWhiteSpace(a.Telefono)
-                     && !string.IsNullOrWhiteSpace(a.NombrePredio)
-                     && !string.IsNullOrWhiteSpace(a.VeredaSector)
-                     && !string.IsNullOrWhiteSpace(a.Municipio)
-                     && a.HectareasPredio > 0
-                     && !string.IsNullOrWhiteSpace(a.CultivoPrincipal))
-            .ToList();
+        CargarDatos();
+    }
+
+    private void CargarDatos()
+    {
+        cargando = true;
+        errorCarga = null;
+        try
+        {
+            listaAsociaciones = DocumentoService.ObtenerAsociaciones().ToList();
+            listaAsociados = RegistroAsociados.ObtenerTodos()
+                .Select(AsociadoMapper.ToModel)
+                .Where(a => !string.IsNullOrWhiteSpace(a.NombreCompleto)
+                         && !string.IsNullOrWhiteSpace(a.Cedula)
+                         && !string.IsNullOrWhiteSpace(a.Telefono)
+                         && !string.IsNullOrWhiteSpace(a.NombrePredio)
+                         && !string.IsNullOrWhiteSpace(a.VeredaSector)
+                         && !string.IsNullOrWhiteSpace(a.Municipio)
+                         && a.HectareasPredio > 0
+                         && !string.IsNullOrWhiteSpace(a.CultivoPrincipal))
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error al cargar el directorio de asociados desde la base de datos.");
+            errorCarga = "No fue posible cargar el directorio de asociados. Por favor, verifique su conexión y pulse Reintentar.";
+            listaAsociados = new List<AsociadoModel>();
+        }
+        finally
+        {
+            cargando = false;
+        }
     }
 
     private IEnumerable<AsociadoModel> AsociadosFiltrados =>
@@ -568,7 +608,7 @@
             asociado.EstadoGeneralCuotas,
             asociado.ValorTotalPagadoAcumulado.ToString("0"),
             asociado.ValorTotalPendienteAcumulado.ToString("0"),
-            asociado.EstadoMembresia == "AlDia" ? "Al día" : asociado.EstadoMembresia,
+            asociado.EstadoMembresia is "AlDia" or "Activo" ? "Activo" : asociado.EstadoMembresia,
             asociado.FechaRegistro.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture))));
 
         var nombre = $"asociados-{DateTime.Now:yyyyMMdd-HHmm}.csv";

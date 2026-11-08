@@ -78,13 +78,19 @@
 .ra-ico-izquierda { transform: rotate(90deg); }
 .ra-rotar-180 { transform: rotate(180deg); }
 
+::deep .ra-hidden-file-input,
+::deep input[type="file"].ra-hidden-file-input,
 .ra-hidden-file-input {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-    opacity: 0 !important;
     position: absolute !important;
-    pointer-events: none !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
 }
 
 @keyframes ra-entra {
@@ -918,7 +924,7 @@
 
 .ra-soporte-inactivo { font-size: 0.76rem; color: #a9a38c; font-style: italic; }
 
-.ra-membresia-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.7rem; }
+.ra-membresia-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 0.7rem; }
 
 .ra-membresia-card {
     display: flex;
@@ -941,6 +947,7 @@
 .ra-membresia-punto.verde { background: var(--musgo); }
 .ra-membresia-punto.ambar { background: var(--trigo); }
 .ra-membresia-punto.gris { background: #9a9582; }
+.ra-membresia-punto.rojo { background: #b33939; }
 
 .ra-membresia-texto { min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
 .ra-membresia-texto strong { font-size: 0.84rem; color: var(--tinta); }

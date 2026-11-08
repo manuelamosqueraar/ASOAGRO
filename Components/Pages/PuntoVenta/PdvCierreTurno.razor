@@ -1,0 +1,460 @@
+@page "/punto-de-venta/cierre-turno"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "AdministradorPdv,PuntoVenta,Vendedor,Presidenta,Presidente,Tesorera,Tesorero,Administrador,Admin")]
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Asoagro.Models
+@using Asoagro.Services
+@inject IPuntoVentaService PuntoVentaService
+@inject AuthenticationStateProvider AuthProvider
+@inject IJSRuntime JS
+
+<PageTitle>Cierre de Turno y Arqueo · Punto de Venta FAAUA</PageTitle>
+
+<div class="container-fluid px-0 pb-5" style="font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+
+    <!-- HERO BANNER DEL MÓDULO -->
+    <div class="card aso-hero-card mb-4" style="border-top: 4px solid #10B981 !important;">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="aso-hero-icon-box" style="background: #10B981 !important; border: 1.5px solid #34D399 !important; color: #FFFFFF !important;">
+                        <i class="bi bi-calculator fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="aso-hero-kicker" style="background: #065F46 !important; border-color: #34D399 !important; color: #ECFDF5 !important;">
+                                <i class="bi bi-shop me-1"></i> Punto de Venta Solidario · FAAUA
+                            </span>
+                            <span class="badge px-2.5 py-1 rounded-pill fw-bold bg-success bg-opacity-75" style="font-size: 0.7rem;">
+                                <i class="bi bi-cash-stack me-1"></i> Módulo 4: Cierre de Turno y Arqueo
+                            </span>
+                            @if (esModoConsulta)
+                            {
+                                <span class="badge px-2.5 py-1 rounded-pill fw-bold bg-info bg-opacity-75" style="font-size: 0.7rem;">
+                                    <i class="bi bi-eye-fill me-1"></i> Modo Consulta / Supervisión
+                                </span>
+                            }
+                        </div>
+                        <h1 class="aso-hero-title">Cierre de Turno y Arqueo de Caja</h1>
+                        <p class="aso-hero-desc">
+                            Conciliación de ventas en mostrador, conteo físico de billetes y monedas en gaveta, control de transferencias bancarias y auditoría de diferencias de caja en pesos colombianos (COP).
+                        </p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <div class="p-3 rounded-4 d-inline-block text-start w-100" style="min-width: 280px; max-width: 320px; background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.18); backdrop-filter: blur(10px);">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 42px; height: 42px; background: #059669; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                                <i class="bi bi-person-badge-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <span class="d-block text-white-50" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Cajero Responsable</span>
+                                <span class="fw-bold text-white small d-block text-truncate" style="max-width: 210px;">@nombreUsuario</span>
+                                <span class="badge bg-white text-dark mt-1" style="font-size: 0.65rem; font-weight: 700;">@rolUsuario</span>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-top border-white border-opacity-10 d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
+                            <span class="text-white-50">Permiso Operativo:</span>
+                            <span class="fw-bold @(esModoConsulta ? "text-warning" : "text-light")">
+                                @(esModoConsulta ? "Auditoría y Supervisión" : "Arqueo y Cierre Activo")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEEDBACK ALERT -->
+    @if (!string.IsNullOrEmpty(mensajeFeedback))
+    {
+        <div class="alert @(esFeedbackExito ? "alert-success border-success" : "alert-danger border-danger") alert-dismissible fade show rounded-4 shadow-sm mb-4 d-flex align-items-center justify-content-between" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi @(esFeedbackExito ? "bi-check-circle-fill text-success" : "bi-exclamation-triangle-fill text-danger") fs-5"></i>
+                <span class="small fw-semibold">@mensajeFeedback</span>
+            </div>
+            <button type="button" class="btn-close small" @onclick="() => mensajeFeedback = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <!-- AVISO DE MODO SUPERVISIÓN -->
+    @if (esModoConsulta)
+    {
+        <div class="alert alert-light border border-info-subtle rounded-4 p-3 mb-4 shadow-sm">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-2 bg-info-subtle text-info rounded-3 flex-shrink-0">
+                    <i class="bi bi-shield-lock-fill fs-5"></i>
+                </div>
+                <div class="small text-muted flex-grow-1">
+                    <strong class="text-dark d-block">Supervisión Institucional (Modo Consulta)</strong>
+                    Usted ha ingresado con el rol de <strong>@rolUsuario</strong>. Puede consultar el estado de la caja de hoy y el histórico de arqueos registrados por los cajeros. El registro y cierre físico de caja corresponde exclusivamente al <em>Administrador del punto de venta</em>.
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- TARJETAS DE INDICADORES DE CAJA DEL DÍA -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #059669 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Total Recaudado Hoy</span>
+                    <span class="p-2 rounded-3 bg-success-subtle text-success">
+                        <i class="bi bi-cash-stack fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">$@resumen.TotalVentasHoy.ToString("N0")</h2>
+                    <span class="text-muted small">COP</span>
+                </div>
+                <span class="text-success small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-receipt"></i> @resumen.CantidadTransaccionesHoy operaciones cerradas
+                </span>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #D97706 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Efectivo Esperado en Caja</span>
+                    <span class="p-2 rounded-3 bg-warning-subtle text-warning">
+                        <i class="bi bi-wallet2 fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">$@resumen.TotalEfectivoHoy.ToString("N0")</h2>
+                    <span class="text-muted small">COP</span>
+                </div>
+                <span class="text-warning-emphasis small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-shield-check"></i> Base física exigible en gaveta
+                </span>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #0284C7 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Ventas por Transferencia</span>
+                    <span class="p-2 rounded-3 bg-primary-subtle text-primary">
+                        <i class="bi bi-credit-card-2-front-fill fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">$@resumen.TotalTransferenciasHoy.ToString("N0")</h2>
+                    <span class="text-muted small">COP</span>
+                </div>
+                <span class="text-primary small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-bank"></i> Conciliadas con soporte digital
+                </span>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #6366F1 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Arqueos Registrados</span>
+                    <span class="p-2 rounded-3 bg-indigo-subtle text-indigo" style="background-color: #EEF2FF; color: #4F46E5;">
+                        <i class="bi bi-journal-check fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">@cierresCaja.Count</h2>
+                    <span class="text-muted small">cierres históricos</span>
+                </div>
+                <span class="text-muted small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-clock-history"></i> Trazabilidad de turnos
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECCIÓN PRINCIPAL: FORMULARIO DE CIERRE + HISTORIAL DE ARQUEOS -->
+    <div class="row g-4 mb-4">
+        
+        <!-- COLUMNA IZQUIERDA: FORMULARIO DE ARQUEO -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                    <span class="p-2 rounded-3 bg-warning-subtle text-warning">
+                        <i class="bi bi-calculator-fill fs-5"></i>
+                    </span>
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0 fs-6">Arqueo y Cierre de Turno</h5>
+                        <small class="text-muted">Conciliación de gaveta contra sistema comercial</small>
+                    </div>
+                </div>
+
+                <!-- RESUMEN PREVIO -->
+                <div class="p-3 rounded-4 mb-3" style="background-color: #F8FAFC; border: 1px solid #E2E8F0;">
+                    <div class="d-flex justify-content-between text-muted small mb-1.5">
+                        <span>Ventas en Efectivo del Día:</span>
+                        <strong class="text-dark">$@resumen.TotalEfectivoHoy.ToString("N0") COP</strong>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small mb-1.5">
+                        <span>Ventas por Transferencia:</span>
+                        <strong class="text-dark">$@resumen.TotalTransferenciasHoy.ToString("N0") COP</strong>
+                    </div>
+                    <div class="d-flex justify-content-between fs-6 fw-bold text-dark pt-2 border-top">
+                        <span>Efectivo Esperado en Gaveta:</span>
+                        <span class="text-success">$@resumen.TotalEfectivoHoy.ToString("N0") COP</span>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold mb-1">
+                        Turno de Operación: <span class="text-danger">* (Obligatorio)</span>
+                    </label>
+                    <select class="form-select form-select-sm" @bind="nuevoCierre.Turno" disabled="@esModoConsulta">
+                        <option value="Mañana">Jornada Mañana (07:00 a 13:00)</option>
+                        <option value="Tarde">Jornada Tarde (13:00 a 19:00)</option>
+                        <option value="Jornada Completa">Jornada Completa</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold mb-1">
+                        Efectivo Físico Contado en Caja (COP): <span class="text-danger">* (Obligatorio)</span>
+                    </label>
+                    <div class="input-group input-group-sm">
+                        <span class="input-group-text bg-light text-muted fw-bold">$</span>
+                        <input type="number" class="form-control form-control-sm fs-5 fw-bold text-dark" 
+                               placeholder="Ej: 84000" 
+                               @bind="nuevoCierre.EfectivoContado" 
+                               @bind:event="oninput" 
+                               disabled="@esModoConsulta" />
+                        <span class="input-group-text bg-light text-muted">COP</span>
+                    </div>
+                    <small class="text-muted d-block mt-1" style="font-size: 0.68rem;">Suma total de billetes y monedas físicos en la gaveta.</small>
+                </div>
+
+                <!-- CÁLCULO DE DIFERENCIA EN TIEMPO REAL -->
+                @{
+                    var dif = nuevoCierre.EfectivoContado - resumen.TotalEfectivoHoy;
+                    var esCuadrado = Math.Abs(dif) < 0.01m;
+                    var esFaltante = dif < 0;
+                }
+                <div class="p-3 rounded-4 mb-3 @(esCuadrado ? "bg-success-subtle text-success border border-success-subtle" : (esFaltante ? "bg-danger-subtle text-danger border border-danger-subtle" : "bg-warning-subtle text-warning-emphasis border border-warning-subtle"))">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold">Diferencia de Caja:</span>
+                        <span class="fs-5 fw-bold">@(dif >= 0 ? "+" : "")$@dif.ToString("N0") COP</span>
+                    </div>
+                    <small class="d-block mt-1 fw-semibold">
+                        @(esCuadrado 
+                            ? "✓ Caja perfectamente cuadrada con el sistema." 
+                            : (esFaltante 
+                                ? "⚠ Alerta: Faltante de dinero frente a las ventas en efectivo registradas." 
+                                : "ℹ Sobrante de dinero en gaveta frente a ventas registradas."))
+                    </small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-bold mb-1">
+                        Observaciones de Arqueo: <span class="text-muted fw-normal">(Opcional)</span>
+                    </label>
+                    <textarea class="form-control form-control-sm" rows="3" 
+                              placeholder="Ej: Billetes revisados y entregados a tesorería. Todo cuadrado." 
+                              @bind="nuevoCierre.Observaciones" 
+                              disabled="@esModoConsulta"></textarea>
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorCierre))
+                {
+                    <div class="alert alert-danger py-2 small mb-3">@errorCierre</div>
+                }
+
+                <button type="button" class="btn btn-warning text-dark w-100 rounded-pill py-2.5 fw-bold shadow-sm" 
+                        disabled="@(esModoConsulta || guardandoCierre)"
+                        @onclick="GuardarCierreCaja">
+                    @if (guardandoCierre)
+                    {
+                        <span class="spinner-border spinner-border-sm me-1"></span>
+                        <span>Guardando arqueo...</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-lock-fill me-1"></i>
+                        <span>Registrar y Cerrar Turno</span>
+                    }
+                </button>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: HISTORIAL DE ARQUEOS Y CIERRES -->
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 pb-2 border-bottom">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0 fs-6">
+                            <i class="bi bi-clock-history text-success me-1"></i> Bitácora de Arqueos y Cierres
+                        </h5>
+                        <small class="text-muted">Registro histórico para control fiscal y entrega a Tesorería</small>
+                    </div>
+                    <span class="badge bg-light text-dark border">@cierresCaja.Count registro(s)</span>
+                </div>
+
+                <div class="table-responsive aso-table-wrap">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.82rem;">
+                        <thead class="aso-thead-unified">
+                            <tr>
+                                <th class="ps-3 py-2.5">Fecha / Turno</th>
+                                <th class="py-2.5">Responsable</th>
+                                <th class="py-2.5 text-end">Efectivo Esp.</th>
+                                <th class="py-2.5 text-end">Contado</th>
+                                <th class="py-2.5 text-center">Diferencia</th>
+                                <th class="pe-3 py-2.5 text-center">Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!cierresCaja.Any())
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center py-4 text-muted">
+                                        No hay arqueos registrados previamente.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var c in cierresCaja)
+                                {
+                                    <tr>
+                                        <td class="ps-3">
+                                            <strong class="text-dark d-block">@c.FechaCierre.ToString("dd/MM/yyyy HH:mm")</strong>
+                                            <span class="badge bg-light text-muted border" style="font-size: 0.68rem;">@c.Turno</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-dark fw-semibold d-block">@c.Responsable</span>
+                                            @if (!string.IsNullOrEmpty(c.Observaciones))
+                                            {
+                                                <small class="text-muted d-block text-truncate" style="max-width: 180px;" title="@c.Observaciones">
+                                                    @c.Observaciones
+                                                </small>
+                                            }
+                                        </td>
+                                        <td class="text-end">$@c.EfectivoEsperado.ToString("N0")</td>
+                                        <td class="text-end fw-bold text-dark">$@c.EfectivoContado.ToString("N0")</td>
+                                        <td class="text-center">
+                                            @if (c.Diferencia == 0)
+                                            {
+                                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                                    $0 COP
+                                                </span>
+                                            }
+                                            else if (c.Diferencia < 0)
+                                            {
+                                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                                    -$@Math.Abs(c.Diferencia).ToString("N0")
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                                    +$@c.Diferencia.ToString("N0")
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class="text-center pe-3">
+                                            <span class="badge @(c.Estado == "Cuadrado" ? "bg-success" : (c.Diferencia < 0 ? "bg-danger" : "bg-warning text-dark")) rounded-pill px-2.5 py-1">
+                                                @c.Estado
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    private string nombreUsuario = "Carlos Mostrador FAAUA";
+    private string rolUsuario = "Administrador del punto de venta";
+    private bool esModoConsulta = false;
+
+    private List<CierreCajaPdv> cierresCaja = new();
+    private ResumenPdv resumen = new();
+
+    private CierreCajaPdv nuevoCierre = new() { Turno = "Mañana" };
+    private bool guardandoCierre = false;
+    private string errorCierre = string.Empty;
+
+    // Feedback
+    private string? mensajeFeedback;
+    private bool esFeedbackExito = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            nombreUsuario = user.FindFirst(ClaimTypes.Name)?.Value ?? user.Identity.Name ?? "Carlos Mostrador FAAUA";
+            var rol = user.FindFirst(ClaimTypes.Role)?.Value ?? "AdministradorPdv";
+            rolUsuario = rol switch
+            {
+                "AdministradorPdv" or "PuntoVenta" or "Vendedor" => "Administrador del punto de venta",
+                "Presidenta" or "Presidente" => "Presidente FAAUA",
+                "Tesorero" or "Tesorera" => "Tesorería FAAUA",
+                "Administrador" or "Admin" => "Administrador de la plataforma",
+                _ => rol
+            };
+
+            esModoConsulta = !(rol.Equals("AdministradorPdv", StringComparison.OrdinalIgnoreCase) ||
+                               rol.Equals("PuntoVenta", StringComparison.OrdinalIgnoreCase) ||
+                               rol.Equals("Vendedor", StringComparison.OrdinalIgnoreCase));
+        }
+
+        CargarDatos();
+    }
+
+    private void CargarDatos()
+    {
+        cierresCaja = PuntoVentaService.ObtenerCierresCaja().OrderByDescending(c => c.FechaCierre).ToList();
+        resumen = PuntoVentaService.ObtenerResumen();
+        nuevoCierre.EfectivoContado = resumen.TotalEfectivoHoy;
+    }
+
+    private async Task GuardarCierreCaja()
+    {
+        if (esModoConsulta) return;
+
+        errorCierre = string.Empty;
+        guardandoCierre = true;
+
+        try
+        {
+            nuevoCierre.Responsable = nombreUsuario;
+            nuevoCierre.EfectivoEsperado = resumen.TotalEfectivoHoy;
+
+            var guardado = PuntoVentaService.RegistrarCierreCaja(nuevoCierre, nombreUsuario, rolUsuario);
+            if (guardado)
+            {
+                mensajeFeedback = $"Cierre de caja para el turno '{nuevoCierre.Turno}' registrado con estado '{nuevoCierre.Estado}' exitosamente.";
+                esFeedbackExito = true;
+                nuevoCierre = new CierreCajaPdv { Turno = "Tarde" };
+                CargarDatos();
+            }
+            else
+            {
+                errorCierre = "No fue posible registrar el arqueo de caja.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorCierre = $"Error al registrar cierre: {ex.Message}";
+        }
+        finally
+        {
+            guardandoCierre = false;
+        }
+    }
+}
+

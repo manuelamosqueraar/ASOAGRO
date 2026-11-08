@@ -1,0 +1,757 @@
+@page "/punto-de-venta/historial"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "AdministradorPdv,PuntoVenta,Vendedor,Presidenta,Presidente,Tesorera,Tesorero,Administrador,Admin")]
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Asoagro.Models
+@using Asoagro.Services
+@inject IPuntoVentaService PuntoVentaService
+@inject AuthenticationStateProvider AuthProvider
+@inject IJSRuntime JS
+
+<PageTitle>Historial, Devoluciones y Anulaciones · Punto de Venta FAAUA</PageTitle>
+
+<div class="container-fluid px-0 pb-5" style="font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+
+    <!-- HERO BANNER DEL MÓDULO -->
+    <div class="card aso-hero-card mb-4" style="border-top: 4px solid #10B981 !important;">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="aso-hero-icon-box" style="background: #10B981 !important; border: 1.5px solid #34D399 !important; color: #FFFFFF !important;">
+                        <i class="bi bi-clock-history fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="aso-hero-kicker" style="background: #065F46 !important; border-color: #34D399 !important; color: #ECFDF5 !important;">
+                                <i class="bi bi-shop me-1"></i> Punto de Venta Solidario · FAAUA
+                            </span>
+                            <span class="badge px-2.5 py-1 rounded-pill fw-bold bg-success bg-opacity-75" style="font-size: 0.7rem;">
+                                <i class="bi bi-shield-check me-1"></i> Módulo 5: Historial y Devoluciones
+                            </span>
+                            @if (esModoConsulta)
+                            {
+                                <span class="badge px-2.5 py-1 rounded-pill fw-bold bg-info bg-opacity-75" style="font-size: 0.7rem;">
+                                    <i class="bi bi-eye-fill me-1"></i> Modo Consulta / Supervisión
+                                </span>
+                            }
+                        </div>
+                        <h1 class="aso-hero-title">Historial, Devoluciones y Anulaciones</h1>
+                        <p class="aso-hero-desc">
+                            Bitácora completa de ventas en mostrador, auditoría de medios de pago, anulación justificada con reintegro automático a inventario y descarga de recibos y comprobantes internos en PDF.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <div class="p-3 rounded-4 d-inline-block text-start w-100" style="min-width: 280px; max-width: 320px; background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.18); backdrop-filter: blur(10px);">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 42px; height: 42px; background: #059669; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                                <i class="bi bi-person-badge-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <span class="d-block text-white-50" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Operador Responsable</span>
+                                <span class="fw-bold text-white small d-block text-truncate" style="max-width: 210px;">@nombreUsuario</span>
+                                <span class="badge bg-white text-dark mt-1" style="font-size: 0.65rem; font-weight: 700;">@rolUsuario</span>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-top border-white border-opacity-10 d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
+                            <span class="text-white-50">Permiso Operativo:</span>
+                            <span class="fw-bold @(esModoConsulta ? "text-warning" : "text-light")">
+                                @(esModoConsulta ? "Consulta y Auditoría" : "Trazabilidad y Anulación Activa")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEEDBACK ALERT -->
+    @if (!string.IsNullOrEmpty(mensajeFeedback))
+    {
+        <div class="alert @(esFeedbackExito ? "alert-success border-success" : "alert-danger border-danger") alert-dismissible fade show rounded-4 shadow-sm mb-4 d-flex align-items-center justify-content-between" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi @(esFeedbackExito ? "bi-check-circle-fill text-success" : "bi-exclamation-triangle-fill text-danger") fs-5"></i>
+                <span class="small fw-semibold">@mensajeFeedback</span>
+            </div>
+            <button type="button" class="btn-close small" @onclick="() => mensajeFeedback = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <!-- AVISO DE MODO SUPERVISIÓN -->
+    @if (esModoConsulta)
+    {
+        <div class="alert alert-light border border-info-subtle rounded-4 p-3 mb-4 shadow-sm">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-2 bg-info-subtle text-info rounded-3 flex-shrink-0">
+                    <i class="bi bi-shield-lock-fill fs-5"></i>
+                </div>
+                <div class="small text-muted flex-grow-1">
+                    <strong class="text-dark d-block">Supervisión Institucional (Modo Consulta)</strong>
+                    Usted ha ingresado con el rol de <strong>@rolUsuario</strong>. Puede consultar el detalle de cualquier operación comercial y descargar los comprobantes internos en PDF. Por salvaguarda del inventario y la contabilidad, la anulación de ventas corresponde al <em>Administrador del punto de venta</em>.
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- RESUMEN DE INDICADORES -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #059669 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Operaciones Totales</span>
+                    <span class="p-2 rounded-3 bg-success-subtle text-success">
+                        <i class="bi bi-receipt fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">@ventas.Count</h2>
+                    <span class="text-muted small">tickets emitidos</span>
+                </div>
+                <span class="text-success small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-check2-circle"></i> @ventas.Count(v => v.Estado == "Completada") transacciones completadas
+                </span>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #0284C7 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Ventas Netas Acumuladas</span>
+                    <span class="p-2 rounded-3 bg-primary-subtle text-primary">
+                        <i class="bi bi-cash-stack fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">$@ventas.Where(v => v.Estado == "Completada").Sum(v => v.Total).ToString("N0")</h2>
+                    <span class="text-muted small">COP</span>
+                </div>
+                <span class="text-primary small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-shield-check"></i> Excluye transacciones anuladas
+                </span>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #E11D48 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Devoluciones / Anulaciones</span>
+                    <span class="p-2 rounded-3 bg-danger-subtle text-danger">
+                        <i class="bi bi-arrow-counterclockwise fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">@ventas.Count(v => v.Estado == "Anulada")</h2>
+                    <span class="text-muted small">operaciones</span>
+                </div>
+                <span class="text-danger small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-box-seam"></i> Stock reintegrado automáticamente
+                </span>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-3">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #D97706 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Valor Anulado</span>
+                    <span class="p-2 rounded-3 bg-warning-subtle text-warning">
+                        <i class="bi bi-x-octagon-fill fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">$@ventas.Where(v => v.Estado == "Anulada").Sum(v => v.Total).ToString("N0")</h2>
+                    <span class="text-muted small">COP</span>
+                </div>
+                <span class="text-muted small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-file-earmark-diff"></i> Auditado con motivo formal
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- BITÁCORA DE TRANSACCIONES -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
+            <div>
+                <h5 class="fw-bold text-dark mb-1 fs-5">
+                    <i class="bi bi-journal-text text-success me-2"></i>Bitácora de Transacciones y Operaciones
+                </h5>
+                <p class="text-muted small mb-0">
+                    Consulte el detalle completo, estado de pago, medios utilizados y genere los documentos internos en PDF.
+                </p>
+            </div>
+
+            <!-- BÚSQUEDA Y FILTRO DE ESTADO -->
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                <div class="input-group input-group-sm" style="min-width: 260px;">
+                    <span class="input-group-text bg-light border-end-0 text-muted">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" class="form-control border-start-0" 
+                           placeholder="Buscar por ticket, cliente o doc..." 
+                           @bind="filtroBusqueda" 
+                           @bind:event="oninput" />
+                </div>
+
+                <select class="form-select form-select-sm" style="max-width: 170px;" @bind="filtroEstado">
+                    <option value="">Todos los estados</option>
+                    <option value="Completada">Completadas</option>
+                    <option value="Anulada">Anuladas</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="table-responsive aso-table-wrap">
+            <table class="table table-hover align-middle mb-0" style="font-size: 0.84rem;">
+                <thead class="aso-thead-unified">
+                    <tr>
+                        <th class="py-2.5 ps-3">Ticket No.</th>
+                        <th class="py-2.5">Fecha y Hora</th>
+                        <th class="py-2.5">Cliente / Comprador</th>
+                        <th class="py-2.5">Medio de Pago</th>
+                        <th class="py-2.5">Asociación Proveedora</th>
+                        <th class="py-2.5 text-end">Monto Total</th>
+                        <th class="py-2.5 text-center">Estado</th>
+                        <th class="py-2.5 pe-3 text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!VentasFiltradas.Any())
+                    {
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <i class="bi bi-search fs-2 d-block mb-2 text-muted opacity-50"></i>
+                                <span class="fw-semibold">No se encontraron transacciones con los criterios seleccionados.</span>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var v in VentasFiltradas)
+                        {
+                            <tr>
+                                <td class="ps-3 fw-bold text-success">
+                                    <button type="button" class="btn btn-link text-decoration-none fw-bold p-0 text-success" 
+                                            @onclick="() => MostrarFichaTransaccion(v)">
+                                        @v.NumeroTicket
+                                    </button>
+                                </td>
+                                <td>
+                                    <span class="text-dark d-block">@v.Fecha.ToString("dd/MM/yyyy HH:mm")</span>
+                                    <small class="text-muted">Por: @v.AtendidoPor</small>
+                                </td>
+                                <td>
+                                    <strong class="text-dark d-block">@v.ClienteNombre</strong>
+                                    <small class="text-muted">Doc: @v.ClienteDocumento</small>
+                                </td>
+                                <td>
+                                    <span class="badge bg-light text-dark border">
+                                        <i class="bi @(v.EsPagoMixto ? "bi-layers-half text-primary" : "bi-credit-card text-success") me-1"></i>
+                                        @v.MetodoPago
+                                    </span>
+                                    @if (!string.IsNullOrEmpty(v.ReferenciaPago))
+                                    {
+                                        <small class="text-muted d-block font-monospace" style="font-size: 0.68rem;">Ref: @v.ReferenciaPago</small>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="text-muted text-truncate d-block" style="max-width: 200px;" title="@v.AsociacionOrigenPrincipal">
+                                        @v.AsociacionOrigenPrincipal
+                                    </small>
+                                </td>
+                                <td class="text-end">
+                                    <strong class="text-dark fs-6">$@v.Total.ToString("N0")</strong>
+                                    <small class="text-muted d-block" style="font-size: 0.68rem;">COP</small>
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge @(v.Estado == "Completada" ? "bg-success" : "bg-danger") rounded-pill px-2.5 py-1">
+                                        @v.Estado
+                                    </span>
+                                    @if (v.Estado == "Anulada" && !string.IsNullOrEmpty(v.ConsecutivoAnulacion))
+                                    {
+                                        <small class="d-block text-danger mt-1 fw-bold font-monospace" style="font-size: 0.68rem;">
+                                            @v.ConsecutivoAnulacion
+                                        </small>
+                                    }
+                                </td>
+                                <td class="text-center pe-3">
+                                    <div class="btn-group btn-group-sm">
+                                        <!-- VER FICHA -->
+                                        <button type="button" class="btn btn-outline-secondary rounded-pill px-2.5 py-1 me-1" 
+                                                title="Ver Ficha Detallada"
+                                                @onclick="() => MostrarFichaTransaccion(v)">
+                                            <i class="bi bi-eye me-1"></i> Detalle
+                                        </button>
+
+                                        <!-- DESCARGAR RECIBO PDF -->
+                                        <button type="button" class="btn btn-outline-success rounded-pill px-2 py-1 me-1" 
+                                                title="Descargar Recibo Interno de Venta (PDF)"
+                                                @onclick="() => DescargarReciboPdf(v)">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </button>
+
+                                        <!-- DESCARGAR COMPROBANTE DE ANULACIÓN PDF (SI APLICA) -->
+                                        @if (v.Estado == "Anulada")
+                                        {
+                                            <button type="button" class="btn btn-outline-danger rounded-pill px-2 py-1 me-1" 
+                                                    title="Descargar Comprobante de Anulación (PDF)"
+                                                    @onclick="() => DescargarComprobanteAnulacionPdf(v)">
+                                                <i class="bi bi-file-earmark-x"></i>
+                                            </button>
+                                        }
+
+                                        <!-- BOTÓN ANULAR (SI ESTÁ COMPLETADA Y NO ES MODO CONSULTA) -->
+                                        @if (!esModoConsulta && v.Estado == "Completada")
+                                        {
+                                            <button type="button" class="btn btn-outline-danger rounded-pill px-2.5 py-1" 
+                                                    title="Anular Transacción"
+                                                    @onclick="() => AbrirModalAnulacion(v)">
+                                                <i class="bi bi-x-circle me-1"></i> Anular
+                                            </button>
+                                        }
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- ======================================================== -->
+    <!-- FICHA / COMPROBANTE ESTRUCTURADO DE TRANSACCIÓN (MODAL)  -->
+    <!-- Organizado con claridad por secciones requeridas         -->
+    <!-- ======================================================== -->
+    @if (ventaDetalle != null)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);" role="dialog">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content rounded-4 border-0 shadow-24">
+                    
+                    <!-- CABECERA DE LA FICHA -->
+                    <div class="modal-header text-white p-3.5 @(ventaDetalle.Estado == "Anulada" ? "bg-danger" : "bg-dark")">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi @(ventaDetalle.Estado == "Anulada" ? "bi-shield-x" : "bi-receipt-cutoff") fs-4"></i>
+                            <div>
+                                <h6 class="modal-title fw-bold text-white mb-0">
+                                    Ficha de Operación · @ventaDetalle.NumeroTicket
+                                </h6>
+                                <small class="text-white-50">ASOAGRO · FAAUA · Soporte Operativo Interno</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" @onclick="() => ventaDetalle = null"></button>
+                    </div>
+
+                    <div class="modal-body p-4 bg-light bg-opacity-25">
+                        
+                        <!-- AVISO DE DOCUMENTO INTERNO -->
+                        <div class="alert alert-light border small text-muted mb-4 py-2 px-3 d-flex align-items-center justify-content-between">
+                            <span>
+                                <i class="bi bi-info-circle text-primary me-1"></i>
+                                Documento de soporte operativo interno para control del punto de venta y comercialización. No constituye factura electrónica ni documento fiscal validado por la DIAN.
+                            </span>
+                            <span class="badge @(ventaDetalle.Estado == "Completada" ? "bg-success" : "bg-danger") px-2.5 py-1 rounded-pill">
+                                @ventaDetalle.Estado.ToUpper()
+                            </span>
+                        </div>
+
+                        <!-- SECCIÓN 1: DATOS DE LA OPERACIÓN -->
+                        <div class="card border rounded-3 p-3 mb-3 bg-white shadow-sm">
+                            <span class="text-muted fw-bold text-uppercase d-block mb-2" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                1. Datos de la Operación
+                            </span>
+                            <div class="row g-2 small">
+                                <div class="col-sm-3">
+                                    <span class="text-muted d-block" style="font-size: 0.7rem;">Consecutivo:</span>
+                                    <strong class="text-success font-monospace">@ventaDetalle.NumeroTicket</strong>
+                                </div>
+                                <div class="col-sm-3">
+                                    <span class="text-muted d-block" style="font-size: 0.7rem;">Fecha y Hora:</span>
+                                    <span class="text-dark fw-semibold">@ventaDetalle.Fecha.ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                                <div class="col-sm-3">
+                                    <span class="text-muted d-block" style="font-size: 0.7rem;">Estado Transacción:</span>
+                                    <span class="badge @(ventaDetalle.Estado == "Completada" ? "bg-success" : "bg-danger")">@ventaDetalle.Estado</span>
+                                </div>
+                                <div class="col-sm-3">
+                                    <span class="text-muted d-block" style="font-size: 0.7rem;">Responsable en Caja:</span>
+                                    <span class="text-dark fw-semibold">@ventaDetalle.AtendidoPor</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 2: DATOS DEL COMPRADOR -->
+                        <div class="card border rounded-3 p-3 mb-3 bg-white shadow-sm">
+                            <span class="text-muted fw-bold text-uppercase d-block mb-2" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                2. Datos del Comprador
+                            </span>
+                            <div class="row g-2 small">
+                                <div class="col-sm-5">
+                                    <span class="text-muted d-block" style="font-size: 0.7rem;">Nombre / Razón Social:</span>
+                                    <strong class="text-dark">@ventaDetalle.ClienteNombre</strong>
+                                </div>
+                                <div class="col-sm-4">
+                                    <span class="text-muted d-block" style="font-size: 0.7rem;">Documento (NIT / CC):</span>
+                                    <span class="text-dark font-monospace">@ventaDetalle.ClienteDocumento</span>
+                                </div>
+                                <div class="col-sm-3">
+                                    <span class="text-muted d-block" style="font-size: 0.7rem;">Teléfono de Contacto:</span>
+                                    <span class="text-dark">@(string.IsNullOrEmpty(ventaDetalle.ClienteTelefono) ? "No registrado" : ventaDetalle.ClienteTelefono)</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 3: DETALLE DE PRODUCTOS VENDIDOS -->
+                        <div class="card border rounded-3 p-3 mb-3 bg-white shadow-sm">
+                            <span class="text-muted fw-bold text-uppercase d-block mb-2" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                3. Detalle de Cosechas y Productos Vendidos
+                            </span>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered align-middle mb-0" style="font-size: 0.8rem;">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>Producto</th>
+                                            <th>Asociación Origen</th>
+                                            <th class="text-center">Cant.</th>
+                                            <th class="text-center">Unidad</th>
+                                            <th class="text-end">Precio Unit. (COP)</th>
+                                            <th class="text-end">Subtotal (COP)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var it in ventaDetalle.Items)
+                                        {
+                                            <tr>
+                                                <td class="fw-semibold">@it.NombreProducto</td>
+                                                <td class="text-muted small">@it.AsociacionOrigen</td>
+                                                <td class="text-center fw-bold">@it.Cantidad</td>
+                                                <td class="text-center text-muted">@it.UnidadMedida</td>
+                                                <td class="text-end">$@it.PrecioUnitario.ToString("N0")</td>
+                                                <td class="text-end fw-bold">$@it.Subtotal.ToString("N0")</td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 4 & 5: RESUMEN ECONÓMICO Y MEDIO DE PAGO -->
+                        <div class="row g-3 mb-3">
+                            <!-- RESUMEN ECONÓMICO -->
+                            <div class="col-md-6">
+                                <div class="card border rounded-3 p-3 bg-white shadow-sm h-100">
+                                    <span class="text-muted fw-bold text-uppercase d-block mb-2" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                        4. Resumen Económico (COP)
+                                    </span>
+                                    <div class="d-flex justify-content-between text-muted small mb-1">
+                                        <span>Subtotal Bruto:</span>
+                                        <span>$@ventaDetalle.Subtotal.ToString("N0") COP</span>
+                                    </div>
+                                    @if (ventaDetalle.Descuento > 0)
+                                    {
+                                        <div class="d-flex justify-content-between text-danger small mb-1">
+                                            <span>Descuento Comercial:</span>
+                                            <span>-$@ventaDetalle.Descuento.ToString("N0") COP</span>
+                                        </div>
+                                    }
+                                    <div class="d-flex justify-content-between text-muted small mb-1">
+                                        <span>Impuestos Aplicables:</span>
+                                        <span>$0 COP (Régimen Solidario)</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between fw-bold fs-5 text-success pt-2 border-top mt-1">
+                                        <span>Total Neto:</span>
+                                        <span>$@ventaDetalle.Total.ToString("N0") COP</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- MEDIO DE PAGO Y REFERENCIAS -->
+                            <div class="col-md-6">
+                                <div class="card border rounded-3 p-3 bg-white shadow-sm h-100">
+                                    <span class="text-muted fw-bold text-uppercase d-block mb-2" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                        5. Medio y Estado de Pago
+                                    </span>
+                                    <div class="d-flex justify-content-between small mb-1.5">
+                                        <span class="text-muted">Modalidad de Pago:</span>
+                                        <span class="fw-bold text-dark">@ventaDetalle.MetodoPago</span>
+                                    </div>
+                                    <div class="d-flex justify-content-between small mb-1.5">
+                                        <span class="text-muted">Estado del Recaudo:</span>
+                                        <span class="badge @(ventaDetalle.Estado == "Completada" ? "bg-success" : "bg-secondary")">
+                                            @(ventaDetalle.Estado == "Completada" ? "Pagado y Conciliado" : "Reversado")
+                                        </span>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(ventaDetalle.ReferenciaPago))
+                                    {
+                                        <div class="d-flex justify-content-between small mb-1.5">
+                                            <span class="text-muted">No. de Referencia:</span>
+                                            <span class="font-monospace text-dark fw-semibold">@ventaDetalle.ReferenciaPago</span>
+                                        </div>
+                                    }
+
+                                    <!-- DESGLOSE DE PAGO MIXTO SI APLICA -->
+                                    @if (ventaDetalle.EsPagoMixto && ventaDetalle.PagosDetalle != null && ventaDetalle.PagosDetalle.Any())
+                                    {
+                                        <div class="pt-2 border-top mt-2">
+                                            <span class="text-muted d-block small fw-bold mb-1">Desglose Pago Mixto:</span>
+                                            @foreach (var p in ventaDetalle.PagosDetalle)
+                                            {
+                                                <div class="d-flex justify-content-between small text-muted mb-0.5">
+                                                    <span>• @p.MetodoPago @(!string.IsNullOrEmpty(p.Referencia) ? $"({p.Referencia})" : ""):</span>
+                                                    <strong class="text-dark">$@p.Monto.ToString("N0") COP</strong>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 6: DETALLE DE DEVOLUCIÓN O ANULACIÓN (SI CORRESPONDE) -->
+                        @if (ventaDetalle.Estado == "Anulada")
+                        {
+                            <div class="card border border-danger-subtle rounded-3 p-3 bg-danger-subtle bg-opacity-25 shadow-sm">
+                                <span class="text-danger fw-bold text-uppercase d-block mb-2" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> 6. Detalle de Devolución o Anulación
+                                </span>
+                                <div class="row g-2 small">
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block" style="font-size: 0.7rem;">Consecutivo Anulación:</span>
+                                        <strong class="text-danger font-monospace">@ventaDetalle.ConsecutivoAnulacion</strong>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block" style="font-size: 0.7rem;">Fecha de Anulación:</span>
+                                        <span class="text-dark fw-semibold">@(ventaDetalle.FechaAnulacion.HasValue ? ventaDetalle.FechaAnulacion.Value.ToString("dd/MM/yyyy HH:mm") : "-")</span>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block" style="font-size: 0.7rem;">Responsable del Trámite:</span>
+                                        <span class="text-dark fw-semibold">@ventaDetalle.AnuladoPor</span>
+                                    </div>
+                                    <div class="col-12 mt-2">
+                                        <span class="text-muted d-block" style="font-size: 0.7rem;">Motivo Justificado Registrado:</span>
+                                        <div class="p-2 rounded bg-white border border-danger-subtle text-danger fw-semibold">
+                                            @ventaDetalle.MotivoAnulacion
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+
+                    <!-- PIE DEL MODAL CON ACCIONES DE DESCARGA PDF -->
+                    <div class="modal-footer p-3 bg-light d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" @onclick="() => ventaDetalle = null">
+                            Cerrar Ficha
+                        </button>
+
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold" 
+                                    @onclick="() => DescargarReciboPdf(ventaDetalle)">
+                                <i class="bi bi-file-earmark-pdf me-1"></i> Recibo Interno de Venta (PDF)
+                            </button>
+
+                            @if (ventaDetalle.Estado == "Anulada")
+                            {
+                                <button type="button" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold" 
+                                        @onclick="() => DescargarComprobanteAnulacionPdf(ventaDetalle)">
+                                    <i class="bi bi-file-earmark-x me-1"></i> Comprobante de Anulación (PDF)
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- MODAL DE ANULACIÓN CON MOTIVO OBLIGATORIO -->
+    @if (ventaPorAnular != null)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(3px);" role="dialog">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content rounded-4 border-0 shadow-lg">
+                    <div class="modal-header bg-danger text-white p-3">
+                        <h6 class="modal-title fw-bold text-white mb-0">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> Anular Venta @ventaPorAnular.NumeroTicket
+                        </h6>
+                        <button type="button" class="btn-close btn-close-white" @onclick="() => ventaPorAnular = null"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="small text-muted mb-3">
+                            Al confirmar esta anulación, la transacción original conservará su historial intacto y los productos serán reintegrados automáticamente al inventario disponible.
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label text-muted small fw-bold mb-1">
+                                Motivo Justificado de Anulación o Devolución: <span class="text-danger">* (Obligatorio)</span>
+                            </label>
+                            <textarea class="form-control form-control-sm" rows="3" 
+                                      placeholder="Ej: Inconformidad en calidad de fruta o error al digitar la cantidad en mostrador" 
+                                      @bind="motivoAnulacion"></textarea>
+                        </div>
+                        @if (!string.IsNullOrEmpty(errorAnulacion))
+                        {
+                            <div class="alert alert-danger py-2 small mb-0">@errorAnulacion</div>
+                        }
+                    </div>
+                    <div class="modal-footer p-3 bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm rounded-pill" @onclick="() => ventaPorAnular = null">Cancelar</button>
+                        <button type="button" class="btn btn-danger btn-sm rounded-pill fw-bold" @onclick="ConfirmarAnulacion">
+                            <i class="bi bi-x-circle me-1"></i> Confirmar Anulación
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    private string nombreUsuario = "Carlos Mostrador FAAUA";
+    private string rolUsuario = "Administrador del punto de venta";
+    private bool esModoConsulta = false;
+
+    private List<VentaPdv> ventas = new();
+    private string filtroBusqueda = string.Empty;
+    private string filtroEstado = string.Empty;
+
+    // Detalle de transacción
+    private VentaPdv? ventaDetalle;
+
+    // Anulación
+    private VentaPdv? ventaPorAnular;
+    private string motivoAnulacion = string.Empty;
+    private string errorAnulacion = string.Empty;
+
+    // Feedback
+    private string? mensajeFeedback;
+    private bool esFeedbackExito = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            nombreUsuario = user.FindFirst(ClaimTypes.Name)?.Value ?? user.Identity.Name ?? "Carlos Mostrador FAAUA";
+            var rol = user.FindFirst(ClaimTypes.Role)?.Value ?? "AdministradorPdv";
+            rolUsuario = rol switch
+            {
+                "AdministradorPdv" or "PuntoVenta" or "Vendedor" => "Administrador del punto de venta",
+                "Presidenta" or "Presidente" => "Presidente FAAUA",
+                "Tesorero" or "Tesorera" => "Tesorería FAAUA",
+                "Administrador" or "Admin" => "Administrador de la plataforma",
+                _ => rol
+            };
+
+            esModoConsulta = !(rol.Equals("AdministradorPdv", StringComparison.OrdinalIgnoreCase) ||
+                               rol.Equals("PuntoVenta", StringComparison.OrdinalIgnoreCase) ||
+                               rol.Equals("Vendedor", StringComparison.OrdinalIgnoreCase));
+        }
+
+        CargarDatos();
+    }
+
+    private void CargarDatos()
+    {
+        ventas = PuntoVentaService.ObtenerVentas().OrderByDescending(v => v.Fecha).ToList();
+    }
+
+    private IEnumerable<VentaPdv> VentasFiltradas => ventas.Where(v =>
+        (string.IsNullOrWhiteSpace(filtroBusqueda) ||
+         v.NumeroTicket.Contains(filtroBusqueda, StringComparison.OrdinalIgnoreCase) ||
+         v.ClienteNombre.Contains(filtroBusqueda, StringComparison.OrdinalIgnoreCase) ||
+         v.ClienteDocumento.Contains(filtroBusqueda, StringComparison.OrdinalIgnoreCase) ||
+         (!string.IsNullOrEmpty(v.ConsecutivoAnulacion) && v.ConsecutivoAnulacion.Contains(filtroBusqueda, StringComparison.OrdinalIgnoreCase))) &&
+        (string.IsNullOrWhiteSpace(filtroEstado) || v.Estado.Equals(filtroEstado, StringComparison.OrdinalIgnoreCase))
+    );
+
+    private void MostrarFichaTransaccion(VentaPdv v)
+    {
+        ventaDetalle = v;
+    }
+
+    private void AbrirModalAnulacion(VentaPdv v)
+    {
+        ventaPorAnular = v;
+        motivoAnulacion = string.Empty;
+        errorAnulacion = string.Empty;
+    }
+
+    private async Task ConfirmarAnulacion()
+    {
+        if (ventaPorAnular == null || esModoConsulta) return;
+
+        if (string.IsNullOrWhiteSpace(motivoAnulacion))
+        {
+            errorAnulacion = "El motivo de anulación es obligatorio por políticas de control interno.";
+            return;
+        }
+
+        var exito = PuntoVentaService.AnularVenta(
+            ventaPorAnular.Id, 
+            motivoAnulacion.Trim(), 
+            nombreUsuario,
+            rolUsuario
+        );
+
+        if (exito)
+        {
+            mensajeFeedback = $"La venta '{ventaPorAnular.NumeroTicket}' ha sido anulada exitosamente y sus existencias fueron reintegradas al inventario.";
+            esFeedbackExito = true;
+            ventaPorAnular = null;
+            CargarDatos();
+            if (ventaDetalle != null)
+            {
+                ventaDetalle = ventas.FirstOrDefault(v => v.Id == ventaDetalle.Id);
+            }
+        }
+        else
+        {
+            errorAnulacion = "No fue posible anular la venta. Verifique el estado de la transacción.";
+        }
+    }
+
+    private async Task DescargarReciboPdf(VentaPdv v)
+    {
+        try
+        {
+            var pdfBytes = PuntoVentaPdfGenerator.GenerarReciboVentaPdf(v, nombreUsuario);
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var nombreArchivo = $"Recibo_Interno_Venta_{v.NumeroTicket}_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+            await JS.InvokeVoidAsync("descargarArchivoBase64", nombreArchivo, base64, "application/pdf");
+            mensajeFeedback = $"Descargando '{nombreArchivo}'...";
+            esFeedbackExito = true;
+        }
+        catch (Exception ex)
+        {
+            mensajeFeedback = $"Error al generar el recibo en PDF: {ex.Message}";
+            esFeedbackExito = false;
+        }
+    }
+
+    private async Task DescargarComprobanteAnulacionPdf(VentaPdv v)
+    {
+        try
+        {
+            var pdfBytes = PuntoVentaPdfGenerator.GenerarComprobanteAnulacionPdf(v, nombreUsuario);
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var consecutivo = !string.IsNullOrEmpty(v.ConsecutivoAnulacion) ? v.ConsecutivoAnulacion : v.NumeroTicket;
+            var nombreArchivo = $"Comprobante_Anulacion_{consecutivo}_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+            await JS.InvokeVoidAsync("descargarArchivoBase64", nombreArchivo, base64, "application/pdf");
+            mensajeFeedback = $"Descargando comprobante '{nombreArchivo}'...";
+            esFeedbackExito = true;
+        }
+        catch (Exception ex)
+        {
+            mensajeFeedback = $"Error al generar el comprobante de anulación en PDF: {ex.Message}";
+            esFeedbackExito = false;
+        }
+    }
+}
+

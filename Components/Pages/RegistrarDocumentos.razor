@@ -3,6 +3,7 @@
 @attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Presidenta,Presidente")]
 @rendermode InteractiveServer
 @using System.Security.Claims
+@using System.Text.RegularExpressions
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.JSInterop
@@ -349,15 +350,12 @@
 
                                         <td class="text-end" style="white-space: nowrap;">
                                             <div class="aso-actions-group">
-                                                @if (!string.IsNullOrWhiteSpace(doc.ArchivoNombre) && doc.ArchivoContenido != null)
-                                                {
-                                                    <button type="button" class="aso-btn-action"
-                                                            @onclick="() => DescargarArchivo(doc)"
-                                                            title="Descargar archivo custodiado">
-                                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                                                        <span>Descargar</span>
-                                                    </button>
-                                                }
+                                                <button type="button" class="aso-btn-action"
+                                                        @onclick="() => DescargarArchivo(doc)"
+                                                        title="Descargar documento registrado">
+                                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                                    <span>Descargar</span>
+                                                </button>
 
                                                 @if (doc.HistorialVersiones.Any())
                                                 {
@@ -429,8 +427,35 @@
                             La versión actual (v@(documentoSeleccionado.VersionActual)) se conservará en el historial como <strong>Reemplazada</strong> con su fecha y usuario original, asegurando la auditoría institucional.
                         </div>
 
+                        <!-- Opción para Ver el Archivo Actual -->
+                        <div class="card border rounded-3 p-3 mb-3 bg-light">
+                            <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                                <div class="d-flex align-items-center gap-2.5">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center bg-white border text-success flex-shrink-0" style="width: 38px; height: 38px;">
+                                        <i class="bi bi-file-earmark-check-fill fs-5"></i>
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold text-dark" style="font-size: 0.88rem; line-height: 1.25;">
+                                            @(string.IsNullOrWhiteSpace(documentoSeleccionado.ArchivoNombre) ? "Documento registrado en sistema" : documentoSeleccionado.ArchivoNombre)
+                                        </div>
+                                        <div class="text-muted small" style="font-size: 0.74rem;">
+                                            Versión actual: <span class="badge bg-secondary-subtle text-secondary border">v@(documentoSeleccionado.VersionActual)</span> · @(documentoSeleccionado.TamanoBytes > 0 ? FormatearTamano(documentoSeleccionado.TamanoBytes) : "Documento oficial")
+                                        </div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 fw-semibold"
+                                            @onclick="() => DescargarArchivo(documentoSeleccionado)"
+                                            title="Ver o descargar el archivo actualmente registrado">
+                                        <i class="bi bi-eye-fill me-1"></i> Ver archivo actual
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Opción para Adjuntar o Reemplazar por Nueva Versión -->
                         <div class="mb-3">
-                            <label class="form-label fw-bold mb-1">Archivo de la nueva versión <span class="text-danger">*</span></label>
+                            <label class="form-label fw-bold mb-1">Adjuntar o reemplazar por nueva versión <span class="text-danger">*</span></label>
                             <div class="p-3 rounded-3 border bg-light text-center">
                                 <label class="btn btn-outline-success rounded-pill px-4 py-1.5 fw-bold mb-1 cursor-pointer">
                                     <i class="bi bi-cloud-upload-fill me-1"></i> Seleccionar archivo
@@ -1091,9 +1116,33 @@
 
     private async Task DescargarArchivo(DocumentoAsociacion doc)
     {
-        if (doc.ArchivoContenido == null || doc.ArchivoContenido.Length == 0) return;
-        var base64 = Convert.ToBase64String(doc.ArchivoContenido);
-        await JS.InvokeVoidAsync("descargarArchivoBase64", doc.ArchivoNombre, doc.ArchivoTipoMime, base64);
+        try
+        {
+            if (doc.ArchivoContenido != null && doc.ArchivoContenido.Length > 0)
+            {
+                var nombreDescarga = !string.IsNullOrWhiteSpace(doc.ArchivoNombre) ? doc.ArchivoNombre : $"{Regex.Replace(doc.TipoDocumento, @"[^a-zA-Z0-9]", "_")}.pdf";
+                var mime = !string.IsNullOrWhiteSpace(doc.ArchivoTipoMime) ? doc.ArchivoTipoMime : "application/pdf";
+                var base64 = Convert.ToBase64String(doc.ArchivoContenido);
+                await JS.InvokeVoidAsync("descargarArchivoBase64", nombreDescarga, mime, base64);
+            }
+            else
+            {
+                var asoc = asociacionSeleccionada ?? new AsociacionInstitucional
+                {
+                    NombreLegal = doc.NombreAsociacion,
+                    Nit = doc.NitAsociacion,
+                    Estado = "Activa"
+                };
+                var pdfBytes = ExpedienteAsociacionPdfGenerator.GenerarResumenPdf(asoc, new[] { doc }, usuarioActual);
+                var base64 = Convert.ToBase64String(pdfBytes);
+                var nombreLimpio = Regex.Replace(doc.TipoDocumento, @"[^a-zA-Z0-9]", "_");
+                await JS.InvokeVoidAsync("descargarArchivoBase64", $"Soporte_{nombreLimpio}.pdf", "application/pdf", base64);
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"No fue posible descargar el documento: {ex.Message}");
+        }
     }
 
     private async Task DescargarArchivoVersion(DocumentoVersionHistorial v)

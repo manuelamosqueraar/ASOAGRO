@@ -156,12 +156,13 @@ static string? NormalizarConexionSupabase(string? raw)
         return null;
     }
 
+    NpgsqlConnectionStringBuilder connBuilder;
     if (s.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
         s.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
     {
         var uri = new Uri(s);
         var userInfo = uri.UserInfo.Split(':', 2);
-        var connBuilder = new NpgsqlConnectionStringBuilder
+        connBuilder = new NpgsqlConnectionStringBuilder
         {
             Host = uri.Host,
             Port = uri.Port > 0 ? uri.Port : 5432,
@@ -170,10 +171,27 @@ static string? NormalizarConexionSupabase(string? raw)
             Password = userInfo.Length > 1 ? Uri.UnescapeDataString(userInfo[1]) : string.Empty,
             SslMode = SslMode.Require
         }; 
-        return connBuilder.ConnectionString;
+    }
+    else
+    {
+        connBuilder = new NpgsqlConnectionStringBuilder(s);
     }
 
-    return s;
+    // Configuración óptima para el pooler de Supabase (Supavisor)
+    if (connBuilder.KeepAlive == 0)
+    {
+        connBuilder.KeepAlive = 15; // Evita desconexiones por inactividad del pooler
+    }
+    if (connBuilder.Timeout < 30)
+    {
+        connBuilder.Timeout = 30; // Margen para latencia internacional
+    }
+    if (connBuilder.CommandTimeout < 30)
+    {
+        connBuilder.CommandTimeout = 30;
+    }
+
+    return connBuilder.ConnectionString;
 }
 
 var supabaseConnection = NormalizarConexionSupabase(rawSupabaseConnection);
@@ -181,7 +199,14 @@ var supabaseConnection = NormalizarConexionSupabase(rawSupabaseConnection);
 if (!string.IsNullOrWhiteSpace(supabaseConnection))
 {
     builder.Services.AddDbContextFactory<AsoagroDbContext>(options =>
-        options.UseNpgsql(supabaseConnection));
+        options.UseNpgsql(supabaseConnection, npgsqlOptions =>
+        {
+            npgsqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(5),
+                errorCodesToAdd: null);
+            npgsqlOptions.CommandTimeout(30);
+        }));
 
     builder.Services.AddSingleton<IDocumentoAsociacionService, InMemoryDocumentoAsociacionService>();
     builder.Services.AddSingleton<IAsociadoService, PostgresAsociadoService>();

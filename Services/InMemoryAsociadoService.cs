@@ -168,7 +168,7 @@ public class InMemoryAsociadoService : IAsociadoService
                     }
                 }
             },
-            EstadoMembresia = "Pendiente",
+            EstadoMembresia = "Suspendido",
             FechaRegistro = DateTime.UtcNow.AddDays(-12),
             FechaActualizacion = DateTime.UtcNow.AddDays(-2),
             CreadoPor = "Semilla",

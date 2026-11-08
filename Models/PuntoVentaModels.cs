@@ -34,6 +34,13 @@ public class ItemVentaPdv
     public decimal Subtotal => Math.Max(0, (Cantidad * PrecioUnitario) - Descuento);
 }
 
+public class PagoDetallePdv
+{
+    public string MetodoPago { get; set; } = "Efectivo"; // "Efectivo", "Transferencia", "Tarjeta", "Otro"
+    public decimal Monto { get; set; }
+    public string? Referencia { get; set; }
+}
+
 public class VentaPdv
 {
     public Guid Id { get; set; } = Guid.NewGuid();
@@ -42,10 +49,15 @@ public class VentaPdv
     public string ClienteNombre { get; set; } = "Cliente de Mostrador";
     public string ClienteDocumento { get; set; } = "222222222222";
     public string ClienteTelefono { get; set; } = string.Empty;
-    public string MetodoPago { get; set; } = "Efectivo"; // "Efectivo", "Transferencia", "Tarjeta", "Crédito Solidario"
+    public string MetodoPago { get; set; } = "Efectivo"; // "Efectivo", "Transferencia", "Tarjeta", "Otro", "Pago Mixto"
+    public string? ReferenciaPago { get; set; }
+    public bool EsPagoMixto { get; set; }
+    public List<PagoDetallePdv> PagosDetalle { get; set; } = new();
     public string AsociacionOrigenPrincipal { get; set; } = "ASOAGRO - Asociación Agropecuaria de Urabá";
     public decimal Total { get; set; }
     public decimal DescuentoAutorizado { get; set; }
+    public decimal Subtotal => Total + DescuentoAutorizado;
+    public decimal Descuento => DescuentoAutorizado;
     public string? MotivoDescuento { get; set; }
     public string? AutorizadoPor { get; set; }
     public decimal MontoRecibido { get; set; }
@@ -53,6 +65,9 @@ public class VentaPdv
     public string AtendidoPor { get; set; } = "Vendedor FAAUA";
     public string Estado { get; set; } = "Completada"; // "Completada", "Anulada"
     public string? MotivoAnulacion { get; set; }
+    public DateTime? FechaAnulacion { get; set; }
+    public string? AnuladoPor { get; set; }
+    public string? ConsecutivoAnulacion { get; set; }
     public string? SoportePagoNombre { get; set; }
     public byte[]? SoportePagoContenido { get; set; }
     public List<ItemVentaPdv> Items { get; set; } = new();
@@ -61,6 +76,7 @@ public class VentaPdv
 public class RecepcionProductoPdv
 {
     public Guid Id { get; set; } = Guid.NewGuid();
+    public string ConsecutivoRecepcion { get; set; } = string.Empty;
     public Guid ProductoId { get; set; }
     public string CodigoProducto { get; set; } = string.Empty;
     public string ProductoNombre { get; set; } = string.Empty;
@@ -72,6 +88,7 @@ public class RecepcionProductoPdv
     public decimal CostoUnitario { get; set; }
     public decimal CostoTotal => Cantidad * CostoUnitario;
     public string? NumeroComprobante { get; set; } // Remisión o Factura
+    public string EstadoRecepcion { get; set; } = "Ingresado al inventario";
     public string? SoporteNombre { get; set; }
     public byte[]? SoporteContenido { get; set; }
     public string? Observaciones { get; set; }

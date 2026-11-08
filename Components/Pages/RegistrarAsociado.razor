@@ -268,11 +268,12 @@
                                 </div>
                                 @if (string.IsNullOrWhiteSpace(nuevoAsociado.CedulaArchivoNombre))
                                 {
-                                    <label class="ra-btn ra-btn-adjuntar ra-btn-adjuntar-cedula">
-                                        <InputFile OnChange="CargarFotocopiaCedula"
+                                    <label class="ra-btn ra-btn-adjuntar ra-btn-adjuntar-cedula" for="cedula_file_input">
+                                        <InputFile id="cedula_file_input"
+                                                   OnChange="CargarFotocopiaCedula"
                                                    accept=".pdf,.jpg,.jpeg,.png"
                                                    class="ra-hidden-file-input"
-                                                   style="display:none !important; position:absolute; width:0; height:0; opacity:0; pointer-events:none;" />
+                                                   style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; opacity: 0;" />
                                         <svg class="ra-ico"><use href="#ico-doc" /></svg>
                                         <span>Adjuntar @(nuevoAsociado.TipoDocumentoIdentidad == "NIT" ? "documento de NIT" : "fotocopia de cédula")</span>
                                     </label>
@@ -297,11 +298,12 @@
                                                 <svg class="ra-ico"><use href="#ico-doc" /></svg>
                                                 <span>Ver</span>
                                             </button>
-                                            <label class="ra-btn-accion ra-btn-accion-cambiar" title="Reemplazar documento">
-                                                <InputFile OnChange="CargarFotocopiaCedula"
+                                            <label class="ra-btn-accion ra-btn-accion-cambiar" title="Reemplazar documento" for="cedula_replace_file_input">
+                                                <InputFile id="cedula_replace_file_input"
+                                                           OnChange="CargarFotocopiaCedula"
                                                            accept=".pdf,.jpg,.jpeg,.png"
                                                            class="ra-hidden-file-input"
-                                                           style="display:none !important; position:absolute; width:0; height:0; opacity:0; pointer-events:none;" />
+                                                           style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; opacity: 0;" />
                                                 <span>Cambiar</span>
                                             </label>
                                             <button type="button"
@@ -795,11 +797,12 @@
                                 <div class="ra-bpa-anexo-control">
                                     @if (string.IsNullOrWhiteSpace(nuevoAsociado.CertificadoBpaNombre))
                                     {
-                                        <label class="ra-btn ra-btn-adjuntar">
-                                            <InputFile OnChange="CargarCertificadoBpa"
+                                        <label class="ra-btn ra-btn-adjuntar" for="bpa_file_input">
+                                            <InputFile id="bpa_file_input"
+                                                       OnChange="CargarCertificadoBpa"
                                                        accept=".pdf,.jpg,.jpeg,.png"
                                                        class="ra-hidden-file-input"
-                                                       style="display:none !important; position:absolute; width:0; height:0; opacity:0; pointer-events:none;" />
+                                                       style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; opacity: 0;" />
                                             <svg class="ra-ico"><use href="#ico-doc" /></svg>
                                             <span>Adjuntar certificado BPA</span>
                                         </label>
@@ -824,11 +827,12 @@
                                                     <svg class="ra-ico"><use href="#ico-doc" /></svg>
                                                     <span>Ver</span>
                                                 </button>
-                                                <label class="ra-btn-accion ra-btn-accion-cambiar" title="Reemplazar certificado">
-                                                    <InputFile OnChange="CargarCertificadoBpa"
+                                                <label class="ra-btn-accion ra-btn-accion-cambiar" title="Reemplazar certificado" for="bpa_replace_file_input">
+                                                    <InputFile id="bpa_replace_file_input"
+                                                               OnChange="CargarCertificadoBpa"
                                                                accept=".pdf,.jpg,.jpeg,.png"
                                                                class="ra-hidden-file-input"
-                                                               style="display:none !important; position:absolute; width:0; height:0; opacity:0; pointer-events:none;" />
+                                                               style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; opacity: 0;" />
                                                     <span>Cambiar</span>
                                                 </label>
                                                 <button type="button"
@@ -937,11 +941,12 @@
                                             {
                                                 <div class="ra-soporte-acciones-vacio">
                                                     <span class="ra-badge-pendiente">Requerido</span>
-                                                    <label class="ra-btn ra-btn-adjuntar-fila">
-                                                        <InputFile OnChange="@(e => CargarSoporteGrupoVulnerable(grupo.Codigo, e))"
+                                                    <label class="ra-btn ra-btn-adjuntar-fila" for="@($"grupo_soporte_input_{grupo.Codigo}")">
+                                                        <InputFile id="@($"grupo_soporte_input_{grupo.Codigo}")"
+                                                                   OnChange="@(e => CargarSoporteGrupoVulnerable(grupo.Codigo, e))"
                                                                    accept=".pdf,.jpg,.jpeg,.png"
                                                                    class="ra-hidden-file-input"
-                                                                   style="display:none !important; position:absolute; width:0; height:0; opacity:0; pointer-events:none;" />
+                                                                   style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; opacity: 0;" />
                                                         <svg class="ra-ico"><use href="#ico-doc" /></svg>
                                                         <span>Adjuntar soporte</span>
                                                     </label>
@@ -967,11 +972,12 @@
                                                             <svg class="ra-ico"><use href="#ico-doc" /></svg>
                                                             <span>Ver</span>
                                                         </button>
-                                                        <label class="ra-btn-accion ra-btn-accion-cambiar" title="Reemplazar documento">
-                                                            <InputFile OnChange="@(e => CargarSoporteGrupoVulnerable(grupo.Codigo, e))"
+                                                        <label class="ra-btn-accion ra-btn-accion-cambiar" title="Reemplazar documento" for="@($"grupo_replace_input_{grupo.Codigo}")">
+                                                            <InputFile id="@($"grupo_replace_input_{grupo.Codigo}")"
+                                                                       OnChange="@(e => CargarSoporteGrupoVulnerable(grupo.Codigo, e))"
                                                                        accept=".pdf,.jpg,.jpeg,.png"
                                                                        class="ra-hidden-file-input"
-                                                                       style="display:none !important; position:absolute; width:0; height:0; opacity:0; pointer-events:none;" />
+                                                                       style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; opacity: 0;" />
                                                             <span>Cambiar</span>
                                                         </label>
                                                         <button type="button"
@@ -1000,25 +1006,15 @@
 
                     <!-- ESTADO DE MEMBRESÍA -->
                     <div class="ra-subtarjeta">
-                        <label class="ra-label">Estado de membresía</label>
+                        <label class="ra-label">Estado de membresía <span class="ra-requerido">*</span></label>
                         <div class="ra-membresia-grid">
                             <button type="button"
-                                    class="ra-membresia-card @(nuevoAsociado.EstadoMembresia == "AlDia" ? "activa" : "")"
-                                    @onclick='() => nuevoAsociado.EstadoMembresia = "AlDia"'>
+                                    class="ra-membresia-card @(nuevoAsociado.EstadoMembresia is "Activo" or "AlDia" ? "activa" : "")"
+                                    @onclick='() => nuevoAsociado.EstadoMembresia = "Activo"'>
                                 <span class="ra-membresia-punto verde"></span>
                                 <div class="ra-membresia-texto">
-                                    <strong>Activo · Al día</strong>
+                                    <strong>Activo</strong>
                                     <small>Habilitado en padrón</small>
-                                </div>
-                            </button>
-
-                            <button type="button"
-                                    class="ra-membresia-card @(nuevoAsociado.EstadoMembresia == "Pendiente" ? "activa" : "")"
-                                    @onclick='() => nuevoAsociado.EstadoMembresia = "Pendiente"'>
-                                <span class="ra-membresia-punto ambar"></span>
-                                <div class="ra-membresia-texto">
-                                    <strong>En revisión</strong>
-                                    <small>Verificación técnica</small>
                                 </div>
                             </button>
 
@@ -1028,7 +1024,27 @@
                                 <span class="ra-membresia-punto gris"></span>
                                 <div class="ra-membresia-texto">
                                     <strong>Inactivo</strong>
-                                    <small>Archivo temporal</small>
+                                    <small>Sin actividad en padrón</small>
+                                </div>
+                            </button>
+
+                            <button type="button"
+                                    class="ra-membresia-card @(nuevoAsociado.EstadoMembresia == "Suspendido" ? "activa" : "")"
+                                    @onclick='() => nuevoAsociado.EstadoMembresia = "Suspendido"'>
+                                <span class="ra-membresia-punto ambar"></span>
+                                <div class="ra-membresia-texto">
+                                    <strong>Suspendido</strong>
+                                    <small>Suspensión estatutaria</small>
+                                </div>
+                            </button>
+
+                            <button type="button"
+                                    class="ra-membresia-card @(nuevoAsociado.EstadoMembresia == "Retirado" ? "activa" : "")"
+                                    @onclick='() => nuevoAsociado.EstadoMembresia = "Retirado"'>
+                                <span class="ra-membresia-punto rojo"></span>
+                                <div class="ra-membresia-texto">
+                                    <strong>Retirado</strong>
+                                    <small>Desvinculado del padrón</small>
                                 </div>
                             </button>
                         </div>
@@ -1258,7 +1274,7 @@
                                                        readonly
                                                        disabled
                                                        class="ra-input ra-input-readonly"
-                                                       value="@cuota.ValorTotalPendiente.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"
+                                                       value="@(cuota.ValorTotalPendiente % 1 == 0 ? cuota.ValorTotalPendiente.ToString("N0") : cuota.ValorTotalPendiente.ToString("N2"))"
                                                        aria-label="Valor total pendiente calculado automáticamente" />
                                                 <span class="ra-unidad-badge">COP $</span>
                                             </div>
@@ -1327,12 +1343,12 @@
                                                 </div>
                                                 <small>Cada cuota o aporte registrado debe contar con su propio soporte o comprobante adjunto (PDF, JPG o PNG, máx. 10 MB).</small>
                                             </div>
-                                            <label class="ra-btn ra-btn-adjuntar-fila">
-                                                <InputFile OnChange="@(e => CargarSoportesCuota(cuota, indiceCuota + 1, e))"
-                                                           multiple
+                                            <label class="ra-btn ra-btn-adjuntar-fila" for="@($"cuota_soporte_input_{cuota.Id}")">
+                                                <InputFile id="@($"cuota_soporte_input_{cuota.Id}")"
+                                                           OnChange="@(e => CargarSoportesCuota(cuota, indiceCuota + 1, e))"
                                                            accept=".pdf,.jpg,.jpeg,.png"
                                                            class="ra-hidden-file-input"
-                                                           style="display:none !important; position:absolute; width:0; height:0; opacity:0; pointer-events:none;" />
+                                                           style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; opacity: 0;" />
                                                 <svg class="ra-ico"><use href="#ico-doc" /></svg>
                                                 <span>+ Adjuntar comprobante(s) de @cuota.TipoCuota</span>
                                             </label>
@@ -1367,11 +1383,12 @@
                                                                 <svg class="ra-ico"><use href="#ico-doc" /></svg>
                                                                 <span>Ver</span>
                                                             </button>
-                                                            <label class="ra-btn-accion ra-btn-accion-cambiar" title="Reemplazar este comprobante">
-                                                                <InputFile OnChange="@(e => ReemplazarSoporteCuota(cuota, indiceCuota + 1, soporte, e))"
+                                                            <label class="ra-btn-accion ra-btn-accion-cambiar" title="Reemplazar este comprobante" for="@($"replace_soporte_input_{soporte.Id}")">
+                                                                <InputFile id="@($"replace_soporte_input_{soporte.Id}")"
+                                                                           OnChange="@(e => ReemplazarSoporteCuota(cuota, indiceCuota + 1, soporte, e))"
                                                                            accept=".pdf,.jpg,.jpeg,.png"
                                                                            class="ra-hidden-file-input"
-                                                                           style="display:none !important; position:absolute; width:0; height:0; opacity:0; pointer-events:none;" />
+                                                                           style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); border: 0; opacity: 0;" />
                                                                 <span>Cambiar</span>
                                                             </label>
                                                             <button type="button"
@@ -1395,6 +1412,20 @@
                         </div>
                     </div>
 
+                    @if (!string.IsNullOrEmpty(mensajeAlerta) && esError)
+                    {
+                        <div class="ra-alerta ra-alerta-error my-3" role="alert">
+                            <span class="ra-alerta-ico">
+                                <svg class="ra-ico"><use href="#ico-alerta" /></svg>
+                            </span>
+                            <div class="ra-alerta-texto">
+                                <strong>Atención requerida:</strong>
+                                <span>@mensajeAlerta</span>
+                            </div>
+                            <button type="button" class="ra-alerta-cerrar" @onclick='() => mensajeAlerta = ""' aria-label="Cerrar">&times;</button>
+                        </div>
+                    }
+
                     <footer class="ra-acciones">
                         <button type="button" class="ra-btn ra-btn-secundario" @onclick="PasoAnterior">
                             <svg class="ra-ico ra-ico-izquierda"><use href="#ico-flecha" /></svg>
@@ -1402,7 +1433,7 @@
                         </button>
                         <button type="button"
                                 class="ra-btn ra-btn-guardar"
-                                disabled="@(guardando || TieneErroresActivosPaso(5))"
+                                disabled="@guardando"
                                 @onclick="GuardarRegistro">
                             <svg class="ra-ico"><use href="#ico-check" /></svg>
                             <span>@(guardando ? "Guardando..." : "Guardar Registro")</span>
@@ -1453,7 +1484,7 @@
                     </div>
                     <div class="ra-exito-fila-dato">
                         <span class="ra-exito-fila-etiqueta">Estado y cuotas</span>
-                        <strong class="ra-exito-fila-valor">@(expedienteGuardado.EstadoMembresia == "AlDia" ? "Activo · Al día" : expedienteGuardado.EstadoMembresia) · @expedienteGuardado.EstadoGeneralCuotas</strong>
+                        <strong class="ra-exito-fila-valor">@(expedienteGuardado.EstadoMembresia is "Activo" or "AlDia" ? "Activo" : expedienteGuardado.EstadoMembresia) · @expedienteGuardado.EstadoGeneralCuotas</strong>
                     </div>
                 </div>
 
@@ -1486,7 +1517,7 @@
                         <div class="d-flex align-items-start gap-2">
                             <div class="ra-ficha-folio">
                                 <span>ESTADO</span>
-                                <strong>@(expedienteGuardado.EstadoMembresia == "AlDia" ? "ACTIVO · AL DÍA" : expedienteGuardado.EstadoMembresia.ToUpperInvariant())</strong>
+                                <strong>@(expedienteGuardado.EstadoMembresia is "Activo" or "AlDia" ? "ACTIVO" : expedienteGuardado.EstadoMembresia.ToUpperInvariant())</strong>
                                 <small>@expedienteGuardado.FechaRegistro.ToString("dd/MM/yyyy HH:mm")</small>
                             </div>
                             <button type="button" class="ra-visor-cerrar" @onclick="CerrarModalFicha" aria-label="Cerrar ficha" title="Cerrar ficha">&times;</button>
@@ -2091,6 +2122,7 @@
         !string.IsNullOrEmpty(ValidarCertificadoBpa());
 
     private bool TieneErroresPaso4() =>
+        !string.IsNullOrEmpty(ValidarEstadoMembresia()) ||
         nuevoAsociado.GruposVulnerables.Any(g =>
             !string.IsNullOrEmpty(ValidarSoporteGrupoVulnerable(g, AsociadoModel.TraducirGrupoVulnerable(g))));
 
@@ -2851,6 +2883,22 @@
         return string.Empty;
     }
 
+    private string ValidarEstadoMembresia()
+    {
+        var est = nuevoAsociado.EstadoMembresia?.Trim();
+        if (string.IsNullOrWhiteSpace(est))
+        {
+            return "Debe seleccionar un estado de membresía obligatorio (Activo, Inactivo, Suspendido o Retirado).";
+        }
+
+        if (est is not ("Activo" or "AlDia" or "Inactivo" or "Suspendido" or "Retirado"))
+        {
+            return $"El estado de membresía '{est}' no es válido. Seleccione Activo, Inactivo, Suspendido o Retirado.";
+        }
+
+        return string.Empty;
+    }
+
     // ==================== VALIDACIONES DE CUOTAS SOCIALES Y APORTES (PASO 5) ====================
 
     private string ObtenerTextoValorCuota(CuotaAporteAsociado cuota)
@@ -3057,7 +3105,7 @@
 
     private static string ValidarMontoDesdeCeroConDosDecimales(string raw, string etiquetaCampo)
     {
-        var limpio = raw.Trim();
+        var limpio = raw.Trim().Replace("$", "").Replace("COP", "", StringComparison.OrdinalIgnoreCase).Trim();
         if (limpio.StartsWith('-'))
         {
             return $"{etiquetaCampo} no puede ser un valor negativo.";
@@ -3067,39 +3115,111 @@
         {
             if (limpio.Any(c => !char.IsAsciiDigit(c) && c != '.' && c != ','))
             {
-                return $"{etiquetaCampo} solo permite números desde cero (sin letras ni símbolos).";
+                return $"{etiquetaCampo} solo permite números válidos desde cero (sin letras ni símbolos).";
             }
-            return $"{etiquetaCampo} permite máximo 2 decimales.";
+            return $"{etiquetaCampo} permite números enteros o con máximo 2 decimales (ej: 50000 o 50.000).";
         }
 
         return string.Empty;
     }
 
-    private static bool IntentarParsearDecimalPositivoConDosDecimales(string texto, out decimal valor)
+    public static bool IntentarParsearDecimalPositivoConDosDecimales(string texto, out decimal valor)
     {
         valor = 0m;
         if (string.IsNullOrWhiteSpace(texto)) return false;
 
-        var normalizado = texto.Trim().Replace(',', '.');
-        if (normalizado.StartsWith('.') || normalizado.EndsWith('.')) return false;
+        var limpio = texto.Trim()
+            .Replace("$", "")
+            .Replace("COP", "", StringComparison.OrdinalIgnoreCase)
+            .Trim();
 
-        var partes = normalizado.Split('.');
-        if (partes.Length > 2) return false;
-        if (!partes[0].All(char.IsAsciiDigit)) return false;
+        if (string.IsNullOrWhiteSpace(limpio)) return false;
+        if (limpio.StartsWith('-')) return false;
 
-        if (partes.Length == 2)
+        if (limpio.Any(c => !char.IsAsciiDigit(c) && c != '.' && c != ','))
         {
-            if (partes[1].Length == 0 || partes[1].Length > 2 || !partes[1].All(char.IsAsciiDigit))
+            return false;
+        }
+
+        var tienePunto = limpio.Contains('.');
+        var tieneComa = limpio.Contains(',');
+
+        if (tienePunto && tieneComa)
+        {
+            var ultimoPunto = limpio.LastIndexOf('.');
+            var ultimaComa = limpio.LastIndexOf(',');
+
+            if (ultimaComa > ultimoPunto)
             {
-                return false;
+                // Formato es-CO: 1.500.000,50 -> quitar puntos de miles, cambiar coma por punto
+                limpio = limpio.Replace(".", "").Replace(',', '.');
+            }
+            else
+            {
+                // Formato en-US: 1,500,000.50 -> quitar comas de miles
+                limpio = limpio.Replace(",", "");
+            }
+        }
+        else if (tienePunto)
+        {
+            var partes = limpio.Split('.');
+            if (partes.Length > 2)
+            {
+                // Múltiples puntos: "1.500.000" -> miles
+                limpio = limpio.Replace(".", "");
+            }
+            else if (partes.Length == 2)
+            {
+                // Si la parte derecha tiene 3 dígitos ("50.000"), en COP son miles
+                if (partes[1].Length == 3 && partes[0].Length > 0 && partes[0].All(char.IsAsciiDigit) && partes[1].All(char.IsAsciiDigit))
+                {
+                    limpio = limpio.Replace(".", "");
+                }
+                else if (partes[1].Length > 2)
+                {
+                    return false;
+                }
+            }
+        }
+        else if (tieneComa)
+        {
+            var partes = limpio.Split(',');
+            if (partes.Length > 2)
+            {
+                // Múltiples comas: "1,500,000" -> miles
+                limpio = limpio.Replace(",", "");
+            }
+            else if (partes.Length == 2)
+            {
+                // Si la parte derecha tiene 3 dígitos ("50,000"), en COP son miles
+                if (partes[1].Length == 3 && partes[0].Length > 0 && partes[0].All(char.IsAsciiDigit) && partes[1].All(char.IsAsciiDigit))
+                {
+                    limpio = limpio.Replace(",", "");
+                }
+                else if (partes[1].Length <= 2)
+                {
+                    limpio = limpio.Replace(',', '.');
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
 
-        return decimal.TryParse(
-            normalizado,
+        if (!decimal.TryParse(
+            limpio,
             System.Globalization.NumberStyles.AllowDecimalPoint,
             System.Globalization.CultureInfo.InvariantCulture,
-            out valor);
+            out valor))
+        {
+            return false;
+        }
+
+        if (valor < 0m) return false;
+
+        valor = Math.Round(valor, 2);
+        return true;
     }
 
     private static string ValidarArchivoSubido(IBrowserFile archivo)
@@ -3419,6 +3539,7 @@
         {
             textosPagadoCuota[cuota.Id] = cuota.ValorTotalPagado.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
         }
+        StateHasChanged();
     }
 
     private void CambiarFechaVencimientoCuota(CuotaAporteAsociado cuota, string? fechaTexto)
@@ -3437,6 +3558,7 @@
         }
 
         cuota.ActualizarEstadoYSoportes();
+        StateHasChanged();
     }
 
     private void CambiarCantidadPendientes(CuotaAporteAsociado cuota, string? cantidadTexto)
@@ -3450,12 +3572,17 @@
         {
             cuota.CantidadCuotasPendientes = cantidad;
         }
+        else if (string.IsNullOrWhiteSpace(limpio))
+        {
+            cuota.CantidadCuotasPendientes = 0;
+        }
 
         cuota.RecalcularAutomaticamente();
         if (!cuota.PagadoEditadoManualmente)
         {
             textosPagadoCuota[cuota.Id] = cuota.ValorTotalPagado.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
         }
+        StateHasChanged();
     }
 
     private void CambiarValorPagado(CuotaAporteAsociado cuota, string? valorTexto)
@@ -3469,35 +3596,59 @@
         {
             cuota.ValorTotalPagado = valor;
         }
+        else if (string.IsNullOrWhiteSpace(txt))
+        {
+            cuota.ValorTotalPagado = 0m;
+        }
 
         cuota.ActualizarEstadoYSoportes();
+        StateHasChanged();
     }
 
     private void AsignarPagoTotalEstablecido(CuotaAporteAsociado cuota)
     {
         cuota.PagadoEditadoManualmente = true;
         cuota.ValorTotalPagado = cuota.TotalEstablecido;
+        cuota.CantidadCuotasPendientes = 0;
+        textosCantidadCuota[cuota.Id] = "0";
         textosPagadoCuota[cuota.Id] = cuota.ValorTotalPagado.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
         camposTocados.Add($"cuota_{cuota.Id}_pagado");
         cuota.ActualizarEstadoYSoportes();
+        StateHasChanged();
     }
 
     private void AsignarCuotasPagadas(CuotaAporteAsociado cuota, int cuotasPagadas)
     {
         cuota.PagadoEditadoManualmente = true;
         cuota.ValorTotalPagado = Math.Max(0, cuotasPagadas) * cuota.ValorCuota;
+        if (cuota.ValorTotalPagado == 0 && cuota.CantidadCuotasPendientes == 0 && cuota.ValorCuota > 0)
+        {
+            cuota.CantidadCuotasPendientes = 1;
+            textosCantidadCuota[cuota.Id] = "1";
+        }
         textosPagadoCuota[cuota.Id] = cuota.ValorTotalPagado.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture);
         camposTocados.Add($"cuota_{cuota.Id}_pagado");
         cuota.ActualizarEstadoYSoportes();
+        StateHasChanged();
     }
 
     private async Task CargarSoportesCuota(CuotaAporteAsociado cuota, int numeroRegistro, InputFileChangeEventArgs e)
     {
-        var archivos = e.GetMultipleFiles(10);
-        if (archivos is null || archivos.Count == 0) return;
-
         var claveSoporte = $"cuota_{cuota.Id}_soporte";
         camposTocados.Add(claveSoporte);
+        erroresArchivos.Remove(claveSoporte);
+
+        IReadOnlyList<IBrowserFile> archivos;
+        try
+        {
+            archivos = e.GetMultipleFiles(10);
+        }
+        catch
+        {
+            archivos = e.File != null ? new[] { e.File } : Array.Empty<IBrowserFile>();
+        }
+
+        if (archivos is null || archivos.Count == 0) return;
 
         foreach (var archivo in archivos)
         {
@@ -3505,6 +3656,9 @@
             if (!string.IsNullOrEmpty(err))
             {
                 erroresArchivos[claveSoporte] = $"Registro #{numeroRegistro}: {err}";
+                mensajeAlerta = erroresArchivos[claveSoporte];
+                esError = true;
+                StateHasChanged();
                 return;
             }
         }
@@ -3515,6 +3669,9 @@
             if (string.IsNullOrEmpty(dataUrl))
             {
                 erroresArchivos[claveSoporte] = $"Registro #{numeroRegistro}: No se pudo leer el archivo \"{archivo.Name}\".";
+                mensajeAlerta = erroresArchivos[claveSoporte];
+                esError = true;
+                StateHasChanged();
                 return;
             }
 
@@ -3534,6 +3691,8 @@
         erroresArchivos.Remove(claveSoporte);
         cuota.ActualizarEstadoYSoportes();
         mensajeAlerta = "";
+        esError = false;
+        StateHasChanged();
     }
 
     private async Task ReemplazarSoporteCuota(CuotaAporteAsociado cuota, int numeroRegistro, SoporteCuotaAsociado soporte, InputFileChangeEventArgs e)
@@ -3548,6 +3707,9 @@
         if (!string.IsNullOrEmpty(err))
         {
             erroresArchivos[claveSoporte] = $"Registro #{numeroRegistro}: {err}";
+            mensajeAlerta = erroresArchivos[claveSoporte];
+            esError = true;
+            StateHasChanged();
             return;
         }
 
@@ -3555,6 +3717,9 @@
         if (string.IsNullOrEmpty(dataUrl))
         {
             erroresArchivos[claveSoporte] = $"Registro #{numeroRegistro}: No se pudo procesar el archivo \"{archivo.Name}\".";
+            mensajeAlerta = erroresArchivos[claveSoporte];
+            esError = true;
+            StateHasChanged();
             return;
         }
 
@@ -3565,7 +3730,10 @@
         soporte.TipoCuota = cuota.TipoCuota;
         soporte.Periodicidad = cuota.Periodicidad;
         soporte.FechaCarga = DateTime.Now;
+        cuota.ActualizarEstadoYSoportes();
         mensajeAlerta = "";
+        esError = false;
+        StateHasChanged();
     }
 
     private void QuitarSoporteCuota(CuotaAporteAsociado cuota, string soporteId)
@@ -3574,6 +3742,8 @@
         var claveSoporte = $"cuota_{cuota.Id}_soporte";
         erroresArchivos.Remove(claveSoporte);
         camposTocados.Add(claveSoporte);
+        cuota.ActualizarEstadoYSoportes();
+        StateHasChanged();
     }
 
     private static string ObtenerClaseEstadoCuota(string estado)
@@ -3591,7 +3761,7 @@
     {
         try
         {
-            const long maxBytes = 10 * 1024 * 1024;
+            const long maxBytes = 15L * 1024L * 1024L;
             await using var stream = archivo.OpenReadStream(maxBytes);
             using var ms = new MemoryStream();
             await stream.CopyToAsync(ms);
@@ -3721,6 +3891,7 @@
                     ValidarNombreCompleto(),
                     ValidarDocumentoIdentidad(),
                     ValidarArchivoIdentidad(),
+                    ValidarAsociacionPertenece(),
                     ValidarTelefono(),
                     ValidarCorreo());
             case 2:
@@ -3738,6 +3909,8 @@
                     ValidarProduccionAproximada(),
                     ValidarCertificadoBpa());
             case 4:
+                var errorEstado = ValidarEstadoMembresia();
+                if (!string.IsNullOrEmpty(errorEstado)) return errorEstado;
                 foreach (var g in nuevoAsociado.GruposVulnerables)
                 {
                     var err = ValidarSoporteGrupoVulnerable(g, AsociadoModel.TraducirGrupoVulnerable(g));
@@ -3892,9 +4065,15 @@
             mostrarModalFicha = false;
             await BloquearScrollModalAsync(true);
         }
+        catch (Exception ex)
+        {
+            mensajeAlerta = $"Error al procesar el guardado del asociado: {ex.Message}";
+            esError = true;
+        }
         finally
         {
             guardando = false;
+            StateHasChanged();
         }
     }
 

@@ -176,9 +176,7 @@ public static class AsociadoMapper
                         : new List<AfiliacionAsociado>(),
             AutorizacionDatosPersonales = asociado.AutorizacionDatosPersonales,
             FechaAutorizacionHabeasData = asociado.FechaAutorizacionHabeasData ?? meta?.FechaAutorizacionHabeasData ?? DateTime.Now,
-            EstadoMembresia = string.IsNullOrWhiteSpace(asociado.EstadoMembresia)
-                ? "AlDia"
-                : asociado.EstadoMembresia,
+            EstadoMembresia = MapearEstadoMembresiaParaUi(asociado.EstadoMembresia),
             FechaRegistro = asociado.FechaRegistro
         };
     }
@@ -286,13 +284,49 @@ public static class AsociadoMapper
                 model.SoportesGruposUrls,
                 StringComparer.OrdinalIgnoreCase),
             CuotasAportes = cuotasClonadas,
-            EstadoMembresia = string.IsNullOrWhiteSpace(model.EstadoMembresia)
-                ? "AlDia"
-                : model.EstadoMembresia.Trim(),
+            EstadoMembresia = MapearEstadoMembresiaParaBd(model.EstadoMembresia),
             FechaRegistro = model.FechaRegistro == default ? DateTime.UtcNow : model.FechaRegistro,
             FechaActualizacion = DateTime.UtcNow,
             CreadoPor = usuarioActual,
             ActualizadoPor = usuarioActual
+        };
+    }
+
+    public static string MapearEstadoMembresiaParaBd(string? estadoUi)
+    {
+        if (string.IsNullOrWhiteSpace(estadoUi))
+        {
+            throw new ArgumentException("El estado de membresía es obligatorio y no puede estar vacío.", nameof(estadoUi));
+        }
+
+        return estadoUi.Trim() switch
+        {
+            "AlDia" => "Activo",
+            "Activo" => "Activo",
+            "Inactivo" => "Inactivo",
+            "Suspendido" => "Suspendido",
+            "Retirado" => "Retirado",
+            _ => throw new InvalidOperationException(
+                $"El estado de membresía '{estadoUi}' no es válido o no está admitido por el sistema. " +
+                "Los estados válidos en Supabase son: Activo, Inactivo, Suspendido o Retirado.")
+        };
+    }
+
+    public static string MapearEstadoMembresiaParaUi(string? estadoBd)
+    {
+        if (string.IsNullOrWhiteSpace(estadoBd))
+        {
+            return "Activo";
+        }
+
+        return estadoBd.Trim() switch
+        {
+            "Activo" => "Activo",
+            "AlDia" => "Activo",
+            "Inactivo" => "Inactivo",
+            "Suspendido" => "Suspendido",
+            "Retirado" => "Retirado",
+            _ => estadoBd.Trim()
         };
     }
 

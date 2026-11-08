@@ -40,7 +40,7 @@ namespace Asoagro.Services
         public List<string> GruposVulnerables { get; set; } = new();
         public Dictionary<string, string> SoportesGruposVulnerables { get; set; } = new(StringComparer.OrdinalIgnoreCase);
         public Dictionary<string, string> SoportesGruposUrls { get; set; } = new(StringComparer.OrdinalIgnoreCase);
-        public string EstadoMembresia { get; set; } = "AlDia";
+        public string EstadoMembresia { get; set; } = "Activo";
         public DateTime FechaRegistro { get; set; } = DateTime.Now;
         public List<CuotaAporteAsociado> CuotasAportes { get; set; } = new()
         {

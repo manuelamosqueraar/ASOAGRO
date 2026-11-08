@@ -13,7 +13,9 @@ public class InMemoryPuntoVentaService : IPuntoVentaService
     private static readonly ConcurrentDictionary<Guid, RecepcionProductoPdv> Recepciones = new();
     private static readonly ConcurrentDictionary<Guid, CierreCajaPdv> CierresCaja = new();
     private static readonly object SyncLock = new();
-    private static int SiguienteConsecutivo = 1001;
+    private static int SiguienteConsecutivo = 1004;
+    private static int SiguienteConsecutivoRecepcion = 1003;
+    private static int SiguienteConsecutivoAnulacion = 1001;
 
     static InMemoryPuntoVentaService()
     {
@@ -126,6 +128,7 @@ public class InMemoryPuntoVentaService : IPuntoVentaService
         var r1 = new RecepcionProductoPdv
         {
             Id = Guid.NewGuid(),
+            ConsecutivoRecepcion = "REC-1001",
             ProductoId = p1.Id,
             CodigoProducto = p1.Codigo,
             ProductoNombre = p1.Nombre,
@@ -136,6 +139,7 @@ public class InMemoryPuntoVentaService : IPuntoVentaService
             ProveedorNombre = "Finca La Esperanza - Carlos Julio Ramírez",
             CostoUnitario = p1.CostoPromedio,
             NumeroComprobante = "REM-0452-ASO",
+            EstadoRecepcion = "Ingresado al inventario",
             SoporteNombre = "Remision_Cosecha_Esperanza.pdf",
             Observaciones = "Cosecha entregada en punto de acopio con calibración óptima y pesaje certificado.",
             RegistradoPor = "Administrador PDV FAAUA",
@@ -145,6 +149,7 @@ public class InMemoryPuntoVentaService : IPuntoVentaService
         var r2 = new RecepcionProductoPdv
         {
             Id = Guid.NewGuid(),
+            ConsecutivoRecepcion = "REC-1002",
             ProductoId = p3.Id,
             CodigoProducto = p3.Codigo,
             ProductoNombre = p3.Nombre,
@@ -155,6 +160,7 @@ public class InMemoryPuntoVentaService : IPuntoVentaService
             ProveedorNombre = "Cooperativa Cacaotera - Lote San Pedro",
             CostoUnitario = p3.CostoPromedio,
             NumeroComprobante = "FAC-PROV-9982",
+            EstadoRecepcion = "Ingresado al inventario",
             SoporteNombre = "Factura_Proveedor_Cacao_9982.pdf",
             Observaciones = "Grano fermentado con constancia de humedad al 7% y certificación de origen.",
             RegistradoPor = "Administrador PDV FAAUA",
@@ -379,9 +385,32 @@ public class InMemoryPuntoVentaService : IPuntoVentaService
             venta.Estado = "Completada";
             venta.Total = venta.Items.Sum(i => i.Subtotal);
 
-            if (venta.MontoRecibido < venta.Total && venta.MetodoPago == "Efectivo")
+            // Validar coherencia de medios de pago
+            if (venta.EsPagoMixto)
             {
+                var sumaPagos = venta.PagosDetalle.Sum(p => p.Monto);
+                if (Math.Abs(sumaPagos - venta.Total) > 0.01m)
+                {
+                    return ResultadoRegistroVenta.Error($"La suma de los medios de pago (${sumaPagos:N0} COP) no coincide con el total de la venta (${venta.Total:N0} COP).");
+                }
                 venta.MontoRecibido = venta.Total;
+            }
+            else
+            {
+                if (venta.MontoRecibido < venta.Total && venta.MetodoPago == "Efectivo")
+                {
+                    venta.MontoRecibido = venta.Total;
+                }
+
+                if (venta.PagosDetalle.Count == 0)
+                {
+                    venta.PagosDetalle.Add(new PagoDetallePdv
+                    {
+                        MetodoPago = venta.MetodoPago,
+                        Monto = venta.Total,
+                        Referencia = venta.ReferenciaPago
+                    });
+                }
             }
 
             if (string.IsNullOrWhiteSpace(venta.AsociacionOrigenPrincipal) && venta.Items.Count > 0)
@@ -409,7 +438,10 @@ public class InMemoryPuntoVentaService : IPuntoVentaService
             }
 
             venta.Estado = "Anulada";
-            venta.MotivoAnulacion = $"{motivo} (Anulado por {usuario} - {rol} el {DateTime.Now:dd/MM/yyyy HH:mm})";
+            venta.FechaAnulacion = DateTime.Now;
+            venta.AnuladoPor = usuario;
+            venta.MotivoAnulacion = motivo;
+            venta.ConsecutivoAnulacion = $"ANUL-{SiguienteConsecutivoAnulacion++}";
 
             // Reintegrar inventario
             foreach (var item in venta.Items)
@@ -457,6 +489,11 @@ public class InMemoryPuntoVentaService : IPuntoVentaService
         lock (SyncLock)
         {
             if (recepcion.Id == Guid.Empty) recepcion.Id = Guid.NewGuid();
+            if (string.IsNullOrWhiteSpace(recepcion.ConsecutivoRecepcion))
+            {
+                recepcion.ConsecutivoRecepcion = $"REC-{SiguienteConsecutivoRecepcion++}";
+            }
+            recepcion.EstadoRecepcion = "Ingresado al inventario";
             recepcion.RegistradoPor = usuario;
             recepcion.FechaRegistro = DateTime.Now;
 

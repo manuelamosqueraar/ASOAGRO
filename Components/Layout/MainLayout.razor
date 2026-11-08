@@ -531,7 +531,11 @@ else
                 "gestion-financiera/conciliacion-movimientos" or "financiera/conciliacion" => "Revisión y conciliación",
                 "gestion-financiera/facturacion-soportes" or "financiera/facturacion" => "Facturación y soportes",
                 "gestion-financiera/reportes-balances" or "financiera/reportes" => "Reportes y balances",
-                "punto-de-venta" or "pos/ventas" => "Punto de venta agropecuario",
+                "punto-de-venta" or "punto-de-venta/terminal" or "pos/ventas" => "Terminal de ventas",
+                "punto-de-venta/recepcion" => "Recepción de cosechas",
+                "punto-de-venta/catalogo" => "Catálogo e inventario",
+                "punto-de-venta/cierre-turno" => "Cierre de turno y arqueo",
+                "punto-de-venta/historial" => "Historial, devoluciones y anulaciones",
                 "panel-administrador" => "Supervisión central del sistema",
                 "panel-administrador/usuarios" or "admin/usuarios" => "Usuarios y cuentas",
                 "panel-administrador/auditoria" or "admin/auditoria" => "Auditoría técnica",
@@ -547,6 +551,7 @@ else
         {
             var r = RutaLimpiaActual;
             if (r.StartsWith("editar-asociado")) return "Padrón de Productores";
+            if (r.StartsWith("punto-de-venta")) return "Punto de Venta Agropecuario";
             return r switch
             {
                 "asociaciones" or "directorio-asociaciones" => "Asociaciones Federadas",
@@ -566,6 +571,7 @@ else
         {
             var r = RutaLimpiaActual;
             if (r.StartsWith("editar-asociado")) return "hv-theme-editar-asociado";
+            if (r.StartsWith("punto-de-venta")) return "hv-theme-pos";
             return r switch
             {
                 "asociaciones" or "directorio-asociaciones" => "hv-theme-asociaciones",

@@ -1,0 +1,771 @@
+@page "/punto-de-venta"
+@page "/punto-de-venta/terminal"
+@page "/panel-punto-venta"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "AdministradorPdv,PuntoVenta,Vendedor,Presidenta,Presidente,Tesorera,Tesorero,Administrador,Admin")]
+@rendermode InteractiveServer
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Asoagro.Models
+@using Asoagro.Services
+@inject IPuntoVentaService PuntoVentaService
+@inject AuthenticationStateProvider AuthProvider
+@inject IJSRuntime JS
+
+<PageTitle>Terminal de Ventas · Punto de Venta FAAUA</PageTitle>
+
+<div class="container-fluid px-0 pb-5" style="font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+
+    <!-- HERO BANNER DEL MÓDULO -->
+    <div class="card aso-hero-card mb-4" style="border-top: 4px solid #10B981 !important;">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="aso-hero-icon-box" style="background: #10B981 !important; border: 1.5px solid #34D399 !important; color: #FFFFFF !important;">
+                        <i class="bi bi-cart3 fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="aso-hero-kicker" style="background: #065F46 !important; border-color: #34D399 !important; color: #ECFDF5 !important;">
+                                <i class="bi bi-shop me-1"></i> Punto de Venta Solidario · FAAUA
+                            </span>
+                            <span class="badge px-2.5 py-1 rounded-pill fw-bold bg-success bg-opacity-75" style="font-size: 0.7rem;">
+                                <i class="bi bi-check-circle-fill me-1"></i> Módulo 1: Terminal de Ventas
+                            </span>
+                            @if (esModoConsulta)
+                            {
+                                <span class="badge px-2.5 py-1 rounded-pill fw-bold bg-info bg-opacity-75" style="font-size: 0.7rem;">
+                                    <i class="bi bi-eye-fill me-1"></i> Modo Consulta / Supervisión
+                                </span>
+                            }
+                        </div>
+                        <h1 class="aso-hero-title">Terminal Mostrador y Ventas de Cosechas</h1>
+                        <p class="aso-hero-desc">
+                            Facturación interna y venta directa de cosechas federadas de Urabá (plátano, cacao, miel, frutas e insumos), con control de medios de pago, tickets y descarga de recibos internos de venta.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <div class="p-3 rounded-4 d-inline-block text-start w-100" style="min-width: 280px; max-width: 320px; background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.18); backdrop-filter: blur(10px);">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 42px; height: 42px; background: #059669; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                                <i class="bi bi-person-badge-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <span class="d-block text-white-50" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Operador Responsable</span>
+                                <span class="fw-bold text-white small d-block text-truncate" style="max-width: 210px;">@nombreUsuario</span>
+                                <span class="badge bg-white text-dark mt-1" style="font-size: 0.65rem; font-weight: 700;">@rolUsuario</span>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-top border-white border-opacity-10 d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
+                            <span class="text-white-50">Permiso Operativo:</span>
+                            <span class="fw-bold @(esModoConsulta ? "text-warning" : "text-light")">
+                                @(esModoConsulta ? "Consulta y Supervisión" : "Venta Activa en Caja")
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FEEDBACK ALERT -->
+    @if (!string.IsNullOrEmpty(mensajeFeedback))
+    {
+        <div class="alert @(esFeedbackExito ? "alert-success border-success" : "alert-danger border-danger") alert-dismissible fade show rounded-4 shadow-sm mb-4 d-flex align-items-center justify-content-between" role="alert">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi @(esFeedbackExito ? "bi-check-circle-fill text-success" : "bi-exclamation-triangle-fill text-danger") fs-5"></i>
+                <span class="small fw-semibold">@mensajeFeedback</span>
+            </div>
+            <button type="button" class="btn-close small" @onclick="() => mensajeFeedback = null" aria-label="Cerrar"></button>
+        </div>
+    }
+
+    <!-- AVISO DE MODO SUPERVISIÓN -->
+    @if (esModoConsulta)
+    {
+        <div class="alert alert-light border border-info-subtle rounded-4 p-3 mb-4 shadow-sm">
+            <div class="d-flex align-items-center gap-3">
+                <div class="p-2 bg-info-subtle text-info rounded-3 flex-shrink-0">
+                    <i class="bi bi-shield-lock-fill fs-5"></i>
+                </div>
+                <div class="small text-muted flex-grow-1">
+                    <strong class="text-dark d-block">Supervisión Institucional (Modo Consulta)</strong>
+                    Usted ha ingresado con el rol de <strong>@rolUsuario</strong>. Puede consultar el catálogo de cosechas disponibles y simular precios de mostrador. Por separación estatutaria de funciones, las operaciones de cobro y recaudo corresponden exclusivamente al <em>Administrador del punto de venta</em>.
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- RESUMEN RÁPIDO DE CAJA DE HOY -->
+    <div class="row g-3 mb-4">
+        <div class="col-sm-6 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #059669 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Ventas Cerradas Hoy</span>
+                    <span class="p-2 rounded-3 bg-success-subtle text-success">
+                        <i class="bi bi-cash-stack fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">$@resumen.TotalVentasHoy.ToString("N0")</h2>
+                    <span class="text-muted small">COP</span>
+                </div>
+                <span class="text-success small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-receipt"></i> @resumen.CantidadTransaccionesHoy operaciones cerradas
+                </span>
+            </div>
+        </div>
+
+        <div class="col-sm-6 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #D97706 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Efectivo en Caja</span>
+                    <span class="p-2 rounded-3 bg-warning-subtle text-warning">
+                        <i class="bi bi-wallet2 fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">$@resumen.TotalEfectivoHoy.ToString("N0")</h2>
+                    <span class="text-muted small">COP</span>
+                </div>
+                <span class="text-muted small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-arrow-left-right"></i> Transferencias hoy: $@resumen.TotalTransferenciasHoy.ToString("N0") COP
+                </span>
+            </div>
+        </div>
+
+        <div class="col-sm-12 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #0284C7 !important;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">Cosechas Disponibles</span>
+                    <span class="p-2 rounded-3 bg-primary-subtle text-primary">
+                        <i class="bi bi-boxes fs-5"></i>
+                    </span>
+                </div>
+                <div class="d-flex align-items-baseline gap-2">
+                    <h2 class="fw-bold text-dark mb-0 fs-3">@productos.Count</h2>
+                    <span class="text-muted small">referencias en catálogo</span>
+                </div>
+                <span class="text-primary small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                    <i class="bi bi-check2-circle"></i> Disponibles para venta directa en mostrador
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TERMINAL: CATÁLOGO A LA IZQUIERDA Y CANASTA A LA DERECHA -->
+    <div class="row g-4">
+        <!-- CATÁLOGO DE PRODUCTOS -->
+        <div class="col-lg-7 col-xl-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                    <div>
+                        <h2 class="fw-bold text-dark mb-0 fs-6">
+                            <i class="bi bi-grid-fill text-success me-1"></i> Cosechas Disponibles para Venta
+                        </h2>
+                        <small class="text-muted">Seleccione los productos para agregarlos a la canasta</small>
+                    </div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="input-group input-group-sm" style="max-width: 200px;">
+                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0" placeholder="Buscar producto..." @bind="busquedaCatalogo" @bind:event="oninput" />
+                        </div>
+                        <select class="form-select form-select-sm" style="max-width: 170px;" @bind="filtroCategoriaCatalogo">
+                            <option value="">Todas las categorías</option>
+                            <option value="Plátano">Plátano</option>
+                            <option value="Cacao">Cacao</option>
+                            <option value="Apicultura">Apicultura</option>
+                            <option value="Frutas">Frutas</option>
+                            <option value="Insumos">Insumos</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row g-3">
+                    @foreach (var prod in ProductosFiltrados)
+                    {
+                        <div class="col-sm-6 col-md-4">
+                            <div class="card h-100 border rounded-4 p-3 d-flex flex-column shadow-sm"
+                                 style="transition: all 0.2s ease; border-color: rgba(23, 96, 58, 0.15) !important;">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-light text-success border fw-bold" style="font-size: 0.68rem;">
+                                        @prod.Categoria
+                                    </span>
+                                    <span class="badge @(prod.StockDisponible <= 0 ? "bg-danger" : (prod.StockDisponible <= prod.StockMinimo ? "bg-warning text-dark" : "bg-success")) rounded-pill" style="font-size: 0.65rem;">
+                                        @(prod.StockDisponible <= 0 ? "Agotado" : $"Stock: {prod.StockDisponible:N0} {prod.UnidadMedida}")
+                                    </span>
+                                </div>
+                                <h3 class="fw-bold text-dark mb-1" style="font-size: 0.88rem; line-height: 1.3;">
+                                    @prod.Nombre
+                                </h3>
+                                <small class="text-muted mb-2 d-block text-truncate" title="@prod.AsociacionOrigen" style="font-size: 0.72rem;">
+                                    <i class="bi bi-building me-1"></i>@prod.AsociacionOrigen
+                                </small>
+
+                                @if (prod.VigenciaPrecio.HasValue)
+                                {
+                                    <small class="text-muted d-block mb-2" style="font-size: 0.68rem;">
+                                        <i class="bi bi-calendar-event me-1"></i>Vigencia: @prod.VigenciaPrecio.Value.ToString("dd/MM/yyyy")
+                                    </small>
+                                }
+
+                                <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <span class="d-block text-muted" style="font-size: 0.65rem;">Precio COP</span>
+                                        <strong class="text-success fs-6">$@prod.PrecioUnitario.ToString("N0")</strong>
+                                        <span class="text-muted" style="font-size: 0.65rem;">/@prod.UnidadMedida</span>
+                                    </div>
+                                    <button type="button"
+                                            class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
+                                            disabled="@(esModoConsulta || prod.StockDisponible <= 0)"
+                                            @onclick="() => AgregarAlCarrito(prod)">
+                                        <i class="bi bi-plus-lg"></i> Agregar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @if (!ProductosFiltrados.Any())
+                    {
+                        <div class="col-12 py-5 text-center text-muted">
+                            <i class="bi bi-search fs-1 text-muted opacity-50 d-block mb-2"></i>
+                            <p class="mb-0 fw-semibold">No se encontraron productos con los filtros seleccionados.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- CANASTA Y RADICACIÓN DE VENTA -->
+        <div class="col-lg-5 col-xl-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 90px;">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h2 class="fw-bold text-dark mb-0 fs-6">
+                        <i class="bi bi-cart-fill text-success me-1"></i> Canasta de Venta
+                    </h2>
+                    @if (carrito.Any())
+                    {
+                        <button type="button" class="btn btn-link text-danger p-0 small text-decoration-none" @onclick="VaciarCarrito">
+                            <i class="bi bi-trash"></i> Vaciar
+                        </button>
+                    }
+                </div>
+
+                @if (carrito.Any())
+                {
+                    <div class="list-group list-group-flush mb-3" style="max-height: 240px; overflow-y: auto;">
+                        @foreach (var item in carrito)
+                        {
+                            <div class="list-group-item px-0 py-2 border-light-subtle d-flex justify-content-between align-items-center">
+                                <div style="max-width: 170px;">
+                                    <strong class="text-dark small d-block text-truncate" title="@item.NombreProducto">@item.NombreProducto</strong>
+                                    <span class="text-muted" style="font-size: 0.7rem;">$@item.PrecioUnitario.ToString("N0") COP x @item.Cantidad @item.UnidadMedida</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-1">
+                                    <button type="button" class="btn btn-sm btn-light border p-1" style="width: 26px; height: 26px; line-height: 1;"
+                                            disabled="@esModoConsulta" @onclick="() => ModificarCantidad(item, -1)">-</button>
+                                    <span class="fw-bold small px-1">@item.Cantidad</span>
+                                    <button type="button" class="btn btn-sm btn-light border p-1" style="width: 26px; height: 26px; line-height: 1;"
+                                            disabled="@esModoConsulta" @onclick="() => ModificarCantidad(item, 1)">+</button>
+                                    <strong class="text-success small ms-2">$@item.Subtotal.ToString("N0")</strong>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- TOTALES -->
+                    <div class="border-top pt-3 mb-3">
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Subtotal Cosechas:</span>
+                            <span>$@SubtotalCarrito.ToString("N0") COP</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-baseline pt-2 border-top">
+                            <strong class="text-dark">TOTAL A COBRAR:</strong>
+                            <strong class="text-success fs-4">$@TotalCarrito.ToString("N0") <span class="fs-6 text-muted">COP</span></strong>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-success w-100 rounded-pill py-2.5 fw-bold shadow-sm"
+                            disabled="@esModoConsulta" @onclick="AbrirModalCobro">
+                        <i class="bi bi-cash-stack me-1"></i> Cobrar y Registrar Venta
+                    </button>
+                }
+                else
+                {
+                    <div class="text-center py-5 text-muted">
+                        <i class="bi bi-cart-x fs-1 text-muted opacity-50 d-block mb-2"></i>
+                        <p class="small mb-0">La canasta de ventas está vacía.</p>
+                        <small>Haga clic en "+ Agregar" sobre cualquier cosecha del catálogo.</small>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE COBRO CON MEDIOS DE PAGO CONFIGURABLES -->
+@if (mostrarModalCobro)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(3px);" role="dialog">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content rounded-4 border-0 shadow-lg">
+                <div class="modal-header bg-success text-white p-3">
+                    <h5 class="modal-title fw-bold fs-6">
+                        <i class="bi bi-credit-card-2-front-fill me-2"></i> Registro de Pago y Facturación Interna
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" @onclick="() => mostrarModalCobro = false"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label text-muted small fw-bold mb-1">Nombre del Comprador / Razón Social: <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Ej: Distribuidora La Cosecha" @bind="clienteNombre" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-muted small fw-bold mb-1">Cédula o NIT: <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Ej: 900876543-1" @bind="clienteDocumento" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label text-muted small fw-bold mb-1">Teléfono:</label>
+                            <input type="text" class="form-control form-control-sm" placeholder="Ej: 3128904567" @bind="clienteTelefono" />
+                        </div>
+                    </div>
+
+                    <!-- SELECCIÓN DEL MEDIO DE PAGO -->
+                    <div class="p-3 rounded-4 bg-light border mb-3">
+                        <label class="form-label text-dark fw-bold small mb-2 d-block">
+                            Medio de Pago Principal: <span class="text-danger">* (Obligatorio)</span>
+                        </label>
+                        <div class="d-flex flex-wrap gap-2 mb-3">
+                            @foreach (var medio in opcionesMedioPago)
+                            {
+                                <button type="button" class="btn btn-sm rounded-pill px-3 py-1.5 fw-semibold @(metodoPagoSeleccionado == medio ? "btn-success" : "btn-outline-secondary")"
+                                        @onclick="() => SeleccionarMetodoPago(medio)">
+                                    <i class="bi @ObtenerIconoMedio(medio) me-1"></i> @medio
+                                </button>
+                            }
+                        </div>
+
+                        <!-- SI ES TRANSFERENCIA, TARJETA U OTRO MEDIO ELECTRÓNICO -->
+                        @if (metodoPagoSeleccionado is "Transferencia" or "Tarjeta" or "Otro")
+                        {
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-7">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Número de Referencia o Comprobante Bancario: <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" placeholder="Ej: TRF-88912 o No. Aprobación" @bind="referenciaPago" />
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label text-muted small fw-bold mb-1">Monto Pagado COP:</label>
+                                    <input type="text" class="form-control form-control-sm bg-light" value="@TotalCarrito.ToString("N0") COP" readonly />
+                                </div>
+                            </div>
+                        }
+
+                        <!-- SI ES EFECTIVO -->
+                        @if (metodoPagoSeleccionado == "Efectivo")
+                        {
+                            <div class="row g-2 mb-2">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted small fw-bold mb-1">Efectivo Recibido COP:</label>
+                                    <input type="number" class="form-control form-control-sm" @bind="montoRecibidoEfectivo" @bind:event="oninput" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted small fw-bold mb-1">Cambio a Entregar COP:</label>
+                                    <div class="form-control form-control-sm bg-light fw-bold @(CambioEfectivo >= 0 ? "text-success" : "text-danger")">
+                                        $@CambioEfectivo.ToString("N0") COP
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <!-- SI ES PAGO MIXTO -->
+                        @if (metodoPagoSeleccionado == "Pago Mixto")
+                        {
+                            <div class="p-3 bg-white border rounded-3 mt-2">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <strong class="text-dark small">Desglose de Medios de Pago Mixtos</strong>
+                                    <button type="button" class="btn btn-outline-success btn-sm rounded-pill py-0.5 px-2" @onclick="AgregarFilaPagoMixto">
+                                        <i class="bi bi-plus-circle"></i> Agregar medio
+                                    </button>
+                                </div>
+
+                                @for (int i = 0; i < pagosMixtos.Count; i++)
+                                {
+                                    var idx = i;
+                                    var p = pagosMixtos[idx];
+                                    <div class="row g-2 align-items-center mb-2">
+                                        <div class="col-md-4">
+                                            <select class="form-select form-select-sm" @bind="p.MetodoPago">
+                                                <option value="Efectivo">Efectivo</option>
+                                                <option value="Transferencia">Transferencia</option>
+                                                <option value="Tarjeta">Tarjeta</option>
+                                                <option value="Otro">Otro</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <input type="number" step="100" class="form-control form-control-sm" placeholder="Monto COP" @bind="p.Monto" @bind:event="oninput" />
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="text" class="form-control form-control-sm" placeholder="Ref. / Comprobante" @bind="p.Referencia" />
+                                        </div>
+                                        <div class="col-md-1 text-end">
+                                            @if (pagosMixtos.Count > 1)
+                                            {
+                                                <button type="button" class="btn btn-link text-danger p-0" @onclick="() => pagosMixtos.RemoveAt(idx)">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+
+                                <div class="d-flex justify-content-between align-items-center pt-2 border-top mt-2 small">
+                                    <span>Total requerido: <strong>$@TotalCarrito.ToString("N0") COP</strong></span>
+                                    <span>Suma abonada: <strong class="@(SumaPagosMixtos == TotalCarrito ? "text-success" : "text-danger")">$@SumaPagosMixtos.ToString("N0") COP</strong></span>
+                                </div>
+                                @if (SumaPagosMixtos != TotalCarrito)
+                                {
+                                    <div class="alert alert-warning py-1 px-2 mt-2 small mb-0">
+                                        <i class="bi bi-exclamation-triangle me-1"></i>
+                                        La suma de los medios ($@SumaPagosMixtos.ToString("N0") COP) no coincide con el total ($@TotalCarrito.ToString("N0") COP). Diferencia: $@Math.Abs(TotalCarrito - SumaPagosMixtos).ToString("N0") COP.
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <!-- TOTAL FINAL A PAGAR -->
+                    <div class="p-3 rounded-4 bg-success bg-opacity-10 border border-success d-flex justify-content-between align-items-center">
+                        <div>
+                            <span class="text-muted small d-block">VALOR TOTAL DE LA OPERACIÓN</span>
+                            <span class="text-dark small">@carrito.Sum(c => c.Cantidad) unidades de cosecha</span>
+                        </div>
+                        <strong class="text-success fs-3">$@TotalCarrito.ToString("N0") <span class="fs-6">COP</span></strong>
+                    </div>
+
+                    <div class="small text-muted mt-2">
+                        <i class="bi bi-info-circle me-1"></i> Al completar, se descontará el stock y se generará el <strong>Recibo interno de venta</strong> en PDF.
+                    </div>
+                </div>
+                <div class="modal-footer p-3 bg-light">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" @onclick="() => mostrarModalCobro = false">Cancelar</button>
+                    <button type="button" class="btn btn-success rounded-pill px-4 fw-bold"
+                            disabled="@(!EsPagoValido)" @onclick="ProcesarVentaFinal">
+                        <i class="bi bi-check2-circle me-1"></i> Confirmar Venta y Emitir Recibo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- MODAL DE ÉXITO CON BOTÓN DE DESCARGA PDF -->
+@if (ventaExitosaReciente != null)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(3px);" role="dialog">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg text-center p-4">
+                <div class="mx-auto mb-3 rounded-circle bg-success bg-opacity-10 d-flex align-items-center justify-content-center text-success" style="width: 70px; height: 70px;">
+                    <i class="bi bi-check-lg fs-1"></i>
+                </div>
+                <h4 class="fw-bold text-dark mb-1">¡Venta Registrada Exitosamente!</h4>
+                <p class="text-muted small mb-3">Ticket No. <strong class="text-success">@ventaExitosaReciente.NumeroTicket</strong> registrado con éxito.</p>
+
+                <div class="card border rounded-3 p-3 bg-light text-start small mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Fecha y hora:</span>
+                        <strong>@ventaExitosaReciente.Fecha.ToString("dd/MM/yyyy HH:mm")</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Cliente:</span>
+                        <strong>@ventaExitosaReciente.ClienteNombre</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <span class="text-muted">Medio de pago:</span>
+                        <strong>@ventaExitosaReciente.MetodoPago</strong>
+                    </div>
+                    <div class="d-flex justify-content-between border-top pt-1 mt-1">
+                        <span class="text-muted">Total pagado:</span>
+                        <strong class="text-success">$@ventaExitosaReciente.Total.ToString("N0") COP</strong>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-outline-success rounded-pill px-4 fw-bold"
+                            disabled="@descargandoRecibo" @onclick="() => DescargarReciboPdf(ventaExitosaReciente)">
+                        @if (descargandoRecibo)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            <span>Generando PDF...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-file-earmark-pdf-fill me-1"></i>
+                            <span>Descargar Recibo PDF</span>
+                        }
+                    </button>
+                    <button type="button" class="btn btn-success rounded-pill px-4 fw-bold" @onclick="CerrarModalExito">
+                        Nueva Venta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private List<ProductoPdv> productos = new();
+    private List<ItemVentaPdv> carrito = new();
+    private ResumenPdv resumen = new();
+
+    private string? busquedaCatalogo;
+    private string filtroCategoriaCatalogo = "";
+
+    private string nombreUsuario = "Administrador PDV";
+    private string rolUsuario = "AdministradorPdv";
+    private bool esModoConsulta = false;
+
+    private string? mensajeFeedback;
+    private bool esFeedbackExito;
+
+    // Modal de Cobro
+    private bool mostrarModalCobro;
+    private string clienteNombre = "Cliente de Mostrador";
+    private string clienteDocumento = "222222222222";
+    private string clienteTelefono = "";
+    private string metodoPagoSeleccionado = "Efectivo";
+    private string referenciaPago = "";
+    private decimal montoRecibidoEfectivo;
+    private List<PagoDetallePdv> pagosMixtos = new();
+    private readonly string[] opcionesMedioPago = { "Efectivo", "Transferencia", "Tarjeta", "Otro", "Pago Mixto" };
+
+    private VentaPdv? ventaExitosaReciente;
+    private bool descargandoRecibo;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthProvider.GetAuthenticationStateAsync();
+        var user = auth.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            nombreUsuario = user.Identity.Name ?? "Usuario PDV";
+            rolUsuario = user.FindFirst(ClaimTypes.Role)?.Value ?? "AdministradorPdv";
+            esModoConsulta = !user.IsInRole("AdministradorPdv") && !user.IsInRole("PuntoVenta") && !user.IsInRole("Vendedor");
+        }
+
+        CargarDatos();
+    }
+
+    private void CargarDatos()
+    {
+        productos = PuntoVentaService.ObtenerProductos().ToList();
+        resumen = PuntoVentaService.ObtenerResumen();
+    }
+
+    private IEnumerable<ProductoPdv> ProductosFiltrados =>
+        productos.Where(p =>
+            p.Activo &&
+            (string.IsNullOrWhiteSpace(filtroCategoriaCatalogo) || p.Categoria == filtroCategoriaCatalogo) &&
+            (string.IsNullOrWhiteSpace(busquedaCatalogo) ||
+             p.Nombre.Contains(busquedaCatalogo, StringComparison.OrdinalIgnoreCase) ||
+             p.Codigo.Contains(busquedaCatalogo, StringComparison.OrdinalIgnoreCase)));
+
+    private decimal SubtotalCarrito => carrito.Sum(i => i.Cantidad * i.PrecioUnitario);
+    private decimal TotalCarrito => carrito.Sum(i => i.Subtotal);
+
+    private decimal CambioEfectivo => montoRecibidoEfectivo > TotalCarrito ? montoRecibidoEfectivo - TotalCarrito : 0;
+    private decimal SumaPagosMixtos => pagosMixtos.Sum(p => p.Monto);
+
+    private bool EsPagoValido
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(clienteNombre)) return false;
+            if (TotalCarrito <= 0) return false;
+
+            if (metodoPagoSeleccionado == "Efectivo")
+            {
+                return montoRecibidoEfectivo >= TotalCarrito;
+            }
+            if (metodoPagoSeleccionado is "Transferencia" or "Tarjeta" or "Otro")
+            {
+                return !string.IsNullOrWhiteSpace(referenciaPago);
+            }
+            if (metodoPagoSeleccionado == "Pago Mixto")
+            {
+                return Math.Abs(SumaPagosMixtos - TotalCarrito) < 0.01m;
+            }
+            return true;
+        }
+    }
+
+    private void AgregarAlCarrito(ProductoPdv prod)
+    {
+        if (esModoConsulta || prod.StockDisponible <= 0) return;
+
+        var existente = carrito.FirstOrDefault(c => c.ProductoId == prod.Id);
+        if (existente != null)
+        {
+            if (existente.Cantidad + 1 <= prod.StockDisponible)
+            {
+                existente.Cantidad++;
+            }
+        }
+        else
+        {
+            carrito.Add(new ItemVentaPdv
+            {
+                ProductoId = prod.Id,
+                CodigoProducto = prod.Codigo,
+                NombreProducto = prod.Nombre,
+                Categoria = prod.Categoria,
+                AsociacionOrigen = prod.AsociacionOrigen,
+                UnidadMedida = prod.UnidadMedida,
+                Cantidad = 1,
+                PrecioUnitario = prod.PrecioUnitario
+            });
+        }
+    }
+
+    private void ModificarCantidad(ItemVentaPdv item, int delta)
+    {
+        if (esModoConsulta) return;
+        var prod = productos.FirstOrDefault(p => p.Id == item.ProductoId);
+        if (prod == null) return;
+
+        var nuevaCantidad = item.Cantidad + delta;
+        if (nuevaCantidad <= 0)
+        {
+            carrito.Remove(item);
+        }
+        else if (nuevaCantidad <= prod.StockDisponible)
+        {
+            item.Cantidad = nuevaCantidad;
+        }
+    }
+
+    private void VaciarCarrito()
+    {
+        carrito.Clear();
+    }
+
+    private void AbrirModalCobro()
+    {
+        if (!carrito.Any() || esModoConsulta) return;
+        metodoPagoSeleccionado = "Efectivo";
+        referenciaPago = "";
+        montoRecibidoEfectivo = TotalCarrito;
+        pagosMixtos = new List<PagoDetallePdv>
+        {
+            new() { MetodoPago = "Efectivo", Monto = TotalCarrito }
+        };
+        mostrarModalCobro = true;
+    }
+
+    private void SeleccionarMetodoPago(string medio)
+    {
+        metodoPagoSeleccionado = medio;
+        if (medio == "Efectivo")
+        {
+            montoRecibidoEfectivo = TotalCarrito;
+        }
+        else if (medio == "Pago Mixto")
+        {
+            if (pagosMixtos.Count == 0)
+            {
+                pagosMixtos.Add(new PagoDetallePdv { MetodoPago = "Efectivo", Monto = Math.Round(TotalCarrito / 2, 0) });
+                pagosMixtos.Add(new PagoDetallePdv { MetodoPago = "Transferencia", Monto = TotalCarrito - Math.Round(TotalCarrito / 2, 0) });
+            }
+        }
+    }
+
+    private void AgregarFilaPagoMixto()
+    {
+        var pendiente = Math.Max(0, TotalCarrito - SumaPagosMixtos);
+        pagosMixtos.Add(new PagoDetallePdv { MetodoPago = "Transferencia", Monto = pendiente });
+    }
+
+    private static string ObtenerIconoMedio(string medio) => medio switch
+    {
+        "Efectivo" => "bi-cash",
+        "Transferencia" => "bi-bank",
+        "Tarjeta" => "bi-credit-card",
+        "Otro" => "bi-wallet2",
+        "Pago Mixto" => "bi-pie-chart-fill",
+        _ => "bi-cash"
+    };
+
+    private void ProcesarVentaFinal()
+    {
+        if (!EsPagoValido || esModoConsulta) return;
+
+        var venta = new VentaPdv
+        {
+            ClienteNombre = clienteNombre.Trim(),
+            ClienteDocumento = clienteDocumento.Trim(),
+            ClienteTelefono = clienteTelefono.Trim(),
+            MetodoPago = metodoPagoSeleccionado,
+            ReferenciaPago = referenciaPago.Trim(),
+            EsPagoMixto = metodoPagoSeleccionado == "Pago Mixto",
+            MontoRecibido = metodoPagoSeleccionado == "Efectivo" ? montoRecibidoEfectivo : TotalCarrito,
+            Items = new List<ItemVentaPdv>(carrito)
+        };
+
+        if (venta.EsPagoMixto)
+        {
+            venta.PagosDetalle = new List<PagoDetallePdv>(pagosMixtos);
+        }
+        else
+        {
+            venta.PagosDetalle = new List<PagoDetallePdv>
+            {
+                new() { MetodoPago = metodoPagoSeleccionado, Monto = TotalCarrito, Referencia = referenciaPago }
+            };
+        }
+
+        var res = PuntoVentaService.RegistrarVenta(venta, nombreUsuario, rolUsuario);
+        if (res.Exitoso && res.Venta != null)
+        {
+            ventaExitosaReciente = res.Venta;
+            mostrarModalCobro = false;
+            carrito.Clear();
+            CargarDatos();
+        }
+        else
+        {
+            mensajeFeedback = res.Mensaje;
+            esFeedbackExito = false;
+        }
+    }
+
+    private void CerrarModalExito()
+    {
+        ventaExitosaReciente = null;
+    }
+
+    private async Task DescargarReciboPdf(VentaPdv v)
+    {
+        if (descargandoRecibo) return;
+        descargandoRecibo = true;
+        try
+        {
+            var pdfBytes = PuntoVentaPdfGenerator.GenerarReciboVentaPdf(v, nombreUsuario);
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var nombreArchivo = $"Recibo_Venta_{v.NumeroTicket}_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+            await JS.InvokeVoidAsync("descargarArchivoBase64", nombreArchivo, "application/pdf", base64);
+        }
+        catch (Exception ex)
+        {
+            mensajeFeedback = $"Error al generar el recibo en PDF: {ex.Message}";
+            esFeedbackExito = false;
+        }
+        finally
+        {
+            descargandoRecibo = false;
+        }
+    }
+}
+

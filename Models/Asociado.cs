@@ -142,8 +142,8 @@ public class CuotaAporteAsociado
     public List<SoporteCuotaAsociado> Soportes { get; set; } = new();
 
     public decimal TotalEstablecido => CantidadCuotasPendientes > 0
-        ? ValorCuota * CantidadCuotasPendientes
-        : ValorCuota;
+        ? Math.Max(0m, ValorCuota * CantidadCuotasPendientes)
+        : Math.Max(0m, ValorCuota);
 
     public void RecalcularAutomaticamente()
     {
@@ -152,23 +152,29 @@ public class CuotaAporteAsociado
 
         if (!PagadoEditadoManualmente)
         {
-            ValorTotalPagado = CantidadCuotasPendientes == 0 && ValorCuota > 0
-                ? ValorCuota
-                : 0m;
+            if (CantidadCuotasPendientes == 0 && ValorCuota > 0)
+            {
+                ValorTotalPagado = ValorCuota;
+            }
+            else
+            {
+                ValorTotalPagado = 0m;
+            }
         }
 
         if (ValorTotalPagado < 0) ValorTotalPagado = 0;
 
-        ValorTotalPendiente = Math.Max(0m, TotalEstablecido - ValorTotalPagado);
-
+        CalcularSaldoPendiente();
         ActualizarEstadoYSoportes();
     }
 
     public void ActualizarEstadoYSoportes()
     {
+        if (ValorCuota < 0) ValorCuota = 0;
+        if (CantidadCuotasPendientes < 0) CantidadCuotasPendientes = 0;
         if (ValorTotalPagado < 0) ValorTotalPagado = 0;
-        ValorTotalPendiente = Math.Max(0m, TotalEstablecido - ValorTotalPagado);
 
+        CalcularSaldoPendiente();
         EstadoPago = CalcularEstadoAutomatico();
 
         foreach (var soporte in Soportes)
@@ -176,6 +182,26 @@ public class CuotaAporteAsociado
             soporte.CuotaId = Id;
             soporte.TipoCuota = TipoCuota;
             soporte.Periodicidad = Periodicidad;
+        }
+    }
+
+    private void CalcularSaldoPendiente()
+    {
+        if (CantidadCuotasPendientes > 0)
+        {
+            var baseTotal = Math.Max(0m, ValorCuota * CantidadCuotasPendientes);
+            ValorTotalPendiente = Math.Max(0m, baseTotal - ValorTotalPagado);
+        }
+        else
+        {
+            if (ValorTotalPagado >= ValorCuota)
+            {
+                ValorTotalPendiente = 0m;
+            }
+            else
+            {
+                ValorTotalPendiente = Math.Max(0m, ValorCuota - ValorTotalPagado);
+            }
         }
     }
 

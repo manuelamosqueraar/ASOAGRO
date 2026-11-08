@@ -7609,6 +7609,15 @@ select option:checked {
     border: none !important;
 }
 
+/* Opciones de menú lateral sin cortes de texto */
+.hv-nav-txt {
+    white-space: normal !important;
+    word-break: normal !important;
+    line-height: 1.25 !important;
+    text-overflow: clip !important;
+}
+
+
 
 
 

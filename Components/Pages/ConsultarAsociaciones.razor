@@ -768,6 +768,21 @@
                             <button type="button" class="btn btn-secondary rounded-pill px-3 py-1.5" @onclick="CerrarFicha">Cerrar</button>
                         </div>
                         <div class="d-flex align-items-center gap-2">
+                            <button type="button" class="btn btn-outline-danger rounded-pill px-3 py-1.5 fw-semibold"
+                                    @onclick="() => DescargarPdfAsociacion(asociacionSeleccionada)"
+                                    disabled="@descargandoPdf"
+                                    title="Descargar PDF con la información institucional de la asociación">
+                                @if (descargandoPdf)
+                                {
+                                    <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                    <span>Generando...</span>
+                                }
+                                else
+                                {
+                                    <i class="bi bi-file-earmark-pdf-fill me-1"></i>
+                                    <span>Descargar PDF</span>
+                                }
+                            </button>
                             <a href="@($"/consultar-asociados?asociacion={Uri.EscapeDataString(nombreAsocCompleto)}")" class="btn btn-outline-success rounded-pill px-3 py-1.5 fw-semibold">
                                 <i class="bi bi-people-fill me-1"></i> Ver Padrón
                             </a>
@@ -1771,6 +1786,40 @@
     {
         asociacionSeleccionada = null;
         await BloquearScrollModalAsync(false);
+    }
+
+    private bool descargandoPdf = false;
+
+    private async Task DescargarPdfAsociacion(AsociacionInstitucional? asoc)
+    {
+        if (asoc == null || descargandoPdf) return;
+        descargandoPdf = true;
+        try
+        {
+            var nombreCompleto = string.IsNullOrWhiteSpace(asoc.Sigla)
+                ? asoc.NombreLegal
+                : $"{asoc.Sigla} - {asoc.NombreLegal}";
+
+            var docs = DocumentoService.ObtenerPorAsociacion(nombreCompleto).ToList();
+            if (!docs.Any() && !string.IsNullOrWhiteSpace(asoc.NombreLegal))
+            {
+                docs = DocumentoService.ObtenerPorAsociacion(asoc.NombreLegal).ToList();
+            }
+
+            var funcionario = !string.IsNullOrWhiteSpace(usuarioActual) ? usuarioActual : "Secretaría FAAUA";
+            var pdfBytes = ExpedienteAsociacionPdfGenerator.GenerarResumenPdf(asoc, docs, funcionario);
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var nombreLimpio = Regex.Replace(asoc.NombreLegal, @"[^a-zA-Z0-9]", "_");
+            await JS.InvokeVoidAsync("descargarArchivoBase64", $"Informe_{nombreLimpio}.pdf", "application/pdf", base64);
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"No fue posible generar el informe PDF: {ex.Message}");
+        }
+        finally
+        {
+            descargandoPdf = false;
+        }
     }
 
     private void InicializarDocumentosParaAsociacion(AsociacionInstitucional? asoc)
