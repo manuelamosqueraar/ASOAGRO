@@ -274,7 +274,13 @@
                 <h2>Inicia sesión</h2>
                 <p class="ag-caja-sub">Usa tu correo o usuario para administrar tu asociación.</p>
 
-                @if (Error == "google_oauth")
+                @if (Error == "invalid_credentials")
+                {
+                    <p class="ag-error" role="alert">
+                        Usuario o contraseña incorrectos. Por favor verifica tus credenciales.
+                    </p>
+                }
+                else if (Error == "google_oauth")
                 {
                     <p class="ag-error" role="alert">
                         Google no pudo completar el inicio de sesión. Revisa las credenciales OAuth y la URI de redirección; el detalle técnico está en el registro de la aplicación.
@@ -375,8 +381,9 @@
         StateHasChanged();
         try
         {
-            var emailParam = Uri.EscapeDataString(loginModel.Usuario?.Trim() ?? "");
-            Navigation.NavigateTo($"/Auth/login-local?email={emailParam}", forceLoad: true);
+            var userParam = Uri.EscapeDataString(loginModel.Usuario?.Trim() ?? "");
+            var passParam = Uri.EscapeDataString(loginModel.Password?.Trim() ?? "");
+            Navigation.NavigateTo($"/Auth/login-local?email={userParam}&password={passParam}", forceLoad: true);
             await Task.CompletedTask;
         }
         finally
