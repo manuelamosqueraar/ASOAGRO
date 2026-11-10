@@ -74,7 +74,7 @@
         <div class="hv-main-col @TemaModuloActual">
             @if (mostrarMenuUsuario || mostrarNotificaciones)
             {
-                <div class="hv-backdrop-close" style="position: fixed; inset: 0; z-index: 950; background: transparent;" @onclick="CerrarTodo"></div>
+                <div class="hv-backdrop-close" @onclick="CerrarTodo" aria-label="Cerrar menú flotante"></div>
             }
 
             <!-- Barra superior de navegación ejecutiva flotante -->
@@ -100,47 +100,103 @@
                         <span class="hv-region-dot"></span>
                         <span>Urabá Antioqueño · En línea</span>
                     </div>
-                    <!-- Campana de notificaciones exactamente con las mismas funciones y panel de antes -->
-                    <div class="ag-desplegable" @onclick:stopPropagation="true">
+                    <!-- Campana de notificaciones con diseño renovado ASOAGRO Harvest -->
+                    <div class="hv-notif-wrap" @onclick:stopPropagation="true">
                         <button type="button" 
-                                class="hv-action-circle" 
+                                class="hv-action-circle @(mostrarNotificaciones ? "activo" : "")" 
                                 @onclick="ToggleNotificaciones" 
                                 @onkeydown="ManejarTeclaNotificaciones"
-                                title="Centro de alertas" 
+                                title="Centro de alertas (@NoLeidas pendientes)" 
                                 aria-label="Centro de alertas y notificaciones" 
                                 aria-haspopup="true"
                                 aria-expanded="@(mostrarNotificaciones ? "true" : "false")">
-                            <svg class="ag-ico"><use href="#ico-campana" /></svg>
+                            <i class="bi bi-bell-fill fs-5"></i>
                             @if (NoLeidas > 0)
                             {
-                                <span class="hv-badge-count">@NoLeidas</span>
+                                <span class="hv-badge-count @(NoLeidas > 9 ? "ancho" : "")">@(NoLeidas > 99 ? "99+" : NoLeidas.ToString())</span>
                             }
                         </button>
 
                         @if (mostrarNotificaciones)
                         {
                             var lista = NotificacionesVisibles;
+                            var totalVisibles = NotificacionesTotalVisibles;
 
-                            <div class="ag-panel" style="z-index: 1300;" @onclick:stopPropagation @onkeydown="@(e => { if (e.Key == "Escape") CerrarTodo(); })">
-                                <div class="ag-panel-cab">
-                                    <div>
-                                        <strong>Alertas del sistema</strong>
-                                        <small>Registros, cambios y vencimientos</small>
+                            <div class="hv-notif-popover" tabindex="-1" @onclick:stopPropagation="true" @onkeydown="@(e => { if (e.Key == "Escape") CerrarTodo(); })">
+                                <!-- CABECERA DEL PANEL -->
+                                <div class="hv-notif-pop-head">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="hv-notif-head-ico">
+                                            <i class="bi bi-bell-fill"></i>
+                                        </div>
+                                        <div>
+                                            <strong class="hv-notif-title">Centro de Notificaciones</strong>
+                                            <span class="hv-notif-subtitle">Avisos y alertas operacionales</span>
+                                        </div>
                                     </div>
-                                    <span class="ag-pildora">@NoLeidas sin leer</span>
+                                    <div class="d-flex align-items-center gap-2">
+                                        @if (NoLeidas > 0)
+                                        {
+                                            <span class="badge rounded-pill bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 fw-bold px-2.5 py-1" style="font-size: 0.72rem;">
+                                                @NoLeidas pendientes
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 fw-bold px-2.5 py-1" style="font-size: 0.72rem;">
+                                                <i class="bi bi-check2 me-1"></i> Al día
+                                            </span>
+                                        }
+                                        <button type="button" class="btn btn-sm btn-link text-decoration-none p-1 text-muted" title="Cerrar panel" @onclick="CerrarTodo">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
                                 </div>
 
-                                <div class="ag-filtros">
-                                    @foreach (var f in Filtros)
+                                <!-- BARRA DE ACCIÓN SUPERIOR RÁPIDA -->
+                                <div class="hv-notif-actions-bar">
+                                    <button type="button" 
+                                            class="hv-btn-marcar-todo" 
+                                            @onclick="MarcarTodasComoLeidas" 
+                                            disabled="@(NoLeidas == 0 || cargandoAccionNotif)">
+                                        <i class="bi bi-check2-all me-1"></i> Marcar todas como leídas
+                                    </button>
+                                    <span class="text-muted small" style="font-size: 0.72rem;">
+                                        @lista.Count de @totalVisibles avisos
+                                    </span>
+                                </div>
+
+                                <!-- FILTROS POR CATEGORÍA -->
+                                <div class="hv-notif-filters">
+                                    @foreach (var f in FiltrosNotificaciones)
                                     {
-                                        <button type="button" class="ag-chip @(filtroActivo == f ? "activo" : "")" @onclick="() => FiltrarNotificaciones(f)">@f</button>
+                                        <button type="button" 
+                                                class="hv-notif-chip @(filtroActivo == f.Clave ? "activo" : "")" 
+                                                @onclick="() => FiltrarNotificaciones(f.Clave)">
+                                            @if (f.Clave == "NoLeidas" && NoLeidas > 0)
+                                            {
+                                                <span class="hv-chip-dot"></span>
+                                            }
+                                            <span>@f.Etiqueta</span>
+                                        </button>
                                     }
                                 </div>
 
-                                <div class="ag-lista-notif">
+                                <!-- LISTA DE NOTIFICACIONES -->
+                                <div class="hv-notif-list">
                                     @if (lista.Count == 0)
                                     {
-                                        <p class="ag-vacio">No hay alertas en esta categoría.</p>
+                                        <div class="hv-notif-empty">
+                                            <div class="hv-notif-empty-ico">
+                                                <i class="bi bi-bell-slash"></i>
+                                            </div>
+                                            <strong class="text-dark d-block mb-1">No hay notificaciones</strong>
+                                            <p class="text-muted small mb-0">
+                                                @(filtroActivo == "NoLeidas" 
+                                                    ? "¡Excelente! Has leído todas tus notificaciones." 
+                                                    : "No hay registros ni alertas en esta categoría.")
+                                            </p>
+                                        </div>
                                     }
                                     else
                                     {
@@ -149,27 +205,69 @@
                                             var leida = EstaLeida(n);
                                             var puedeIr = PuedeAbrir(n);
 
-                                            <a href="@(puedeIr ? n.Enlace : null)"
-                                               class="ag-notif @(leida ? "ag-nv-leida" : "")"
-                                               @onclick="() => AbrirNotificacion(n)">
-                                                <span class="ag-notif-ico @ObtenerTono(n)"><svg class="ag-ico"><use href="#ico-@n.Icono" /></svg></span>
-                                                <span style="display: flex; flex-direction: column; flex: 1; min-width: 0;">
-                                                    <span class="ag-notif-meta"><small>@n.Etiqueta</small><small>@TiempoTranscurrido(n.FechaCreacion)</small></span>
-                                                    <strong>@n.Titulo</strong>
-                                                    <em>@n.Descripcion</em>
-                                                </span>
-                                                @if (!leida)
-                                                {
-                                                    <span class="ag-nv-punto" style="flex: 0 0 8px; width: 8px; height: 8px; min-width: 8px; max-width: 8px;" title="Sin leer"></span>
-                                                }
-                                            </a>
+                                            <div class="hv-notif-card @(leida ? "leida" : "no-leida") @(ObtenerClaseNivel(n))"
+                                                 @key="n.Id">
+                                               
+                                                <!-- ÍCONO CATEGORÍA -->
+                                                <div class="hv-notif-item-ico @ObtenerTono(n)">
+                                                    <i class="@ObtenerIconoBootstrap(n)"></i>
+                                                </div>
+
+                                                <!-- CONTENIDO CENTRAL -->
+                                                <div class="hv-notif-body" @onclick="() => AbrirNotificacion(n)" style="@(puedeIr ? "cursor: pointer;" : "cursor: default;")">
+                                                    <div class="hv-notif-card-meta">
+                                                        <span class="hv-notif-tag @ObtenerTono(n)">@n.Etiqueta</span>
+                                                        <span class="hv-notif-time">@TiempoTranscurrido(n.FechaCreacion)</span>
+                                                    </div>
+
+                                                    <h6 class="hv-notif-item-title">@n.Titulo</h6>
+                                                    <p class="hv-notif-desc">@n.Descripcion</p>
+
+                                                    @if (puedeIr)
+                                                    {
+                                                        <span class="hv-notif-ir">
+                                                            <span>Ir al registro relacionado</span>
+                                                            <i class="bi bi-arrow-right-short fs-6"></i>
+                                                        </span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span class="hv-notif-informativo">
+                                                            <i class="bi bi-info-circle me-1"></i> Aviso institucional
+                                                        </span>
+                                                    }
+                                                </div>
+
+                                                <!-- ACCIÓN INLINE: MARCAR LEÍDA/NO LEÍDA -->
+                                                <div class="hv-notif-actions-col">
+                                                    <button type="button" 
+                                                            class="hv-btn-toggle-read @(leida ? "leida" : "pendiente")" 
+                                                            title="@(leida ? "Marcar como no leída" : "Marcar como leída")"
+                                                            @onclick="() => AlternarLecturaNotificacion(n)"
+                                                            @onclick:stopPropagation="true">
+                                                        <i class="bi @(leida ? "bi-check-circle text-muted" : "bi-circle-fill text-success")"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
                                         }
                                     }
                                 </div>
 
-                                <div class="ag-panel-pie ag-nv-pie">
-                                    <button type="button" class="ag-nv-marcar" @onclick="MarcarTodasComoLeidas" disabled="@(NoLeidas == 0)">Marcar todas como leídas</button>
-                                    <a href="/alertas-documentos" @onclick="IrAPanelCompleto">Ver panel completo</a>
+                                <!-- PIE DEL PANEL -->
+                                <div class="hv-notif-pop-footer">
+                                    @if (PuedeVerPanelAlertasCompleto)
+                                    {
+                                        <a href="/alertas-documentos" class="hv-notif-footer-link" @onclick="IrAPanelCompleto">
+                                            <i class="bi bi-shield-exclamation me-1"></i> Ver panel central de alertas
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted small">ASOAGRO · Control en tiempo real</span>
+                                    }
+                                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3 py-1" style="font-size: 0.74rem;" @onclick="CerrarTodo">
+                                        Cerrar
+                                    </button>
                                 </div>
                             </div>
                         }
@@ -205,7 +303,7 @@
 
                         @if (mostrarMenuUsuario)
                         {
-                            <div class="hv-user-popover" @onclick:stopPropagation @onkeydown="@(e => { if (e.Key == "Escape") CerrarTodo(); })">
+                            <div class="hv-user-popover" tabindex="-1" @onclick:stopPropagation="true" @onkeydown="@(e => { if (e.Key == "Escape") CerrarTodo(); })">
                                 <div class="hv-user-pop-cab">
                                     @if (!string.IsNullOrWhiteSpace(fotoUsuarioActual))
                                     {
@@ -215,45 +313,52 @@
                                     {
                                         <span class="hv-user-avatar-lg">@inicialesUsuarioActual</span>
                                     }
-                                    <div>
-                                        <strong>@nombreUsuarioActual</strong>
-                                        <small>@correoUsuarioActual</small>
+                                    <div style="flex: 1; min-width: 0;">
+                                        <strong style="font-size: 0.88rem; color: #0d2c1c; font-weight: 700; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@nombreUsuarioActual</strong>
+                                        <small style="font-size: 0.72rem; color: #64748b; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@correoUsuarioActual</small>
+                                        <span class="badge rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25 mt-1" style="font-size: 0.65rem; font-weight: 700;">@rolUsuarioLegible</span>
                                     </div>
                                 </div>
 
-                                <p class="hv-pop-section-title">Mi cuenta</p>
-                                <button type="button" class="hv-pop-action-item" @onclick='() => AbrirModalUsuario("Perfil de usuario")'>
-                                    <svg class="hv-pop-action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7" /></svg>
+                                <div class="hv-pop-section-title">Cuenta y Sesión</div>
+
+                                <button type="button" class="hv-pop-action-item" @onclick='() => AbrirModalUsuario("Perfil de usuario")' title="Ver datos de la sesión activa">
+                                    <svg class="hv-pop-action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="12" cy="7" r="4"></circle>
+                                    </svg>
                                     <div>
-                                        <strong>Perfil de usuario</strong>
-                                        <small>Editar datos e información</small>
+                                        <strong>Ficha de cuenta</strong>
+                                        <small>Ver información de la sesión institucional</small>
                                     </div>
                                 </button>
-                                <button type="button" class="hv-pop-action-item" @onclick='() => AbrirModalUsuario("Seguridad y clave")'>
-                                    <svg class="hv-pop-action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z" /></svg>
+
+                                <a href="/login" class="hv-pop-action-item" @onclick="CerrarTodo" title="Cambiar de rol o acceder con otra cuenta">
+                                    <svg class="hv-pop-action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="8.5" cy="7" r="4"></circle>
+                                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                                    </svg>
                                     <div>
-                                        <strong>Seguridad y clave</strong>
-                                        <small>Verificación de acceso</small>
+                                        <strong>Cambiar de usuario o rol</strong>
+                                        <small>Seleccionar otra credencial del sistema</small>
                                     </div>
-                                </button>
+                                </a>
 
                                 <div class="hv-pop-divider"></div>
 
-                                <p class="hv-pop-section-title">Organización</p>
-                                <button type="button" class="hv-pop-action-item" @onclick='() => AbrirModalUsuario("Asociación base")'>
-                                    <svg class="hv-pop-action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="2.5" /><circle cx="5" cy="18" r="2.5" /><circle cx="19" cy="18" r="2.5" /><path d="M12 7.5v4M12 11.5l-5 4M12 11.5l5 4" /></svg>
+                                <a href="/Auth/logout" class="hv-pop-action-item peligro" title="Cerrar sesión de Asoagro" @onclick="CerrarTodo">
+                                    <svg class="hv-pop-action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                                        <polyline points="16 17 21 12 16 7" />
+                                        <line x1="21" y1="12" x2="9" y2="12" />
+                                    </svg>
                                     <div>
-                                        <strong>Asociación base</strong>
-                                        <small>Asoagro · FAAUA</small>
+                                        <strong>Cerrar sesión</strong>
+                                        <small>Salir de la plataforma de forma segura</small>
                                     </div>
-                                </button>
-                                <button type="button" class="hv-pop-action-item" @onclick='() => AbrirModalUsuario("Soporte técnico")'>
-                                    <svg class="hv-pop-action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M22 6l-10 7L2 6" /></svg>
-                                    <div>
-                                        <strong>Soporte técnico</strong>
-                                        <small>Asistencia de la plataforma</small>
-                                    </div>
-                                </button>
+                                </a>
                             </div>
                         }
                     </div>
@@ -371,60 +476,41 @@ else
 <!-- ======================================================== -->
 @if (modalUsuarioActivo != null)
 {
-    <div class="hv-modal-backdrop" @onclick="CerrarModalUsuario">
-        <div class="hv-modal-dialog" @onclick:stopPropagation>
+    <div class="hv-modal-backdrop" @onclick="CerrarModalUsuario" @onkeydown="@(e => { if (e.Key == "Escape") CerrarModalUsuario(); })" tabindex="-1">
+        <div class="hv-modal-dialog" @onclick:stopPropagation="true">
             <header class="hv-modal-head">
                 <div>
-                    <h3>@modalUsuarioActivo</h3>
-                    <p>Configuración de cuenta y organización</p>
+                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #0d2c1c;">Ficha de Sesión y Cuenta</h3>
+                    <p style="margin: 2px 0 0; font-size: 0.78rem; color: #64748b;">Credenciales y datos de la sesión institucional activa</p>
                 </div>
-                <button type="button" class="hv-modal-close" @onclick="CerrarModalUsuario">&times;</button>
+                <button type="button" class="hv-modal-close" @onclick="CerrarModalUsuario" aria-label="Cerrar ficha">&times;</button>
             </header>
 
             <div class="hv-modal-body">
-                @if (modalUsuarioActivo == "Perfil de usuario")
-                {
-                    <p class="hv-modal-desc">Información del usuario y credenciales institucionales de la sesión activa.</p>
-                    <div class="hv-form-group">
-                        <label>Nombre completo</label>
-                        <input type="text" class="hv-form-input" value="@nombreUsuarioActual" readonly />
-                    </div>
-                    <div class="hv-form-group">
-                        <label>Correo institucional</label>
-                        <input type="email" class="hv-form-input" value="@correoUsuarioActual" readonly />
-                    </div>
-                    <div class="hv-form-group">
-                        <label>Cargo o función</label>
-                        <input type="text" class="hv-form-input" value="@($"{rolUsuarioLegible} · Federación FAAUA")" readonly />
-                    </div>
-                }
-                else if (modalUsuarioActivo == "Seguridad y clave")
-                {
-                    <div class="hv-modal-security-box">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l8 3v6c0 4.5-3.4 8.2-8 9-4.6-.8-8-4.5-8-9V6z" /></svg>
-                        <span>Autenticación gestionada vía Google OAuth 2.0.</span>
-                    </div>
-                    <p class="hv-modal-desc">Tu acceso está vinculado de forma segura con tu cuenta institucional de Google.</p>
-                }
-                else if (modalUsuarioActivo == "Asociación base")
-                {
-                    <h4 style="margin: 0; color: #0d2c1c;">Asoagro</h4>
-                    <p class="hv-modal-desc">Asociación de base agropecuaria adscrita a la Federación de Asociaciones Agropecuarias del Urabá Antioqueño (FAAUA).</p>
-                    <p style="font-size: 0.82rem; color: #4a6152;">Jurisdicción: Subregión de Urabá (Apartadó, Turbo, Carepa, Chigorodó, Necoclí).</p>
-                }
-                else if (modalUsuarioActivo == "Soporte técnico")
-                {
-                    <p class="hv-modal-desc">¿Presentas inconvenientes técnicos con la plataforma?</p>
-                    <div class="hv-modal-security-box">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="M22 6l-10 7L2 6" /></svg>
-                        <strong>soporte@faaua.org</strong>
-                    </div>
-                }
+                <div class="hv-form-group">
+                    <label>Nombre del titular</label>
+                    <input type="text" class="hv-form-input" value="@nombreUsuarioActual" readonly />
+                </div>
+                <div class="hv-form-group">
+                    <label>Correo institucional</label>
+                    <input type="email" class="hv-form-input" value="@correoUsuarioActual" readonly />
+                </div>
+                <div class="hv-form-group">
+                    <label>Rol operativo asignado</label>
+                    <input type="text" class="hv-form-input" value="@($"{rolUsuarioLegible} · Federación FAAUA")" readonly />
+                </div>
+                <div class="hv-form-group">
+                    <label>Asociación base y jurisdicción</label>
+                    <input type="text" class="hv-form-input" value="ASOAGRO · Subregión de Urabá Antioqueño" readonly />
+                </div>
+                <div class="p-2.5 rounded-3 bg-light border d-flex align-items-center gap-2 mt-3" style="font-size: 0.75rem; color: #475569;">
+                    <i class="bi bi-shield-check text-success fs-5"></i>
+                    <span>Sesión autenticada en línea con cifrado seguro y permisos estricto por rol.</span>
+                </div>
             </div>
 
             <footer class="hv-modal-foot">
-                <button type="button" class="hv-btn-outline" @onclick="CerrarModalUsuario">Cerrar</button>
-                <button type="button" class="hv-btn-primary" @onclick="CerrarModalUsuario">Aceptar</button>
+                <button type="button" class="hv-btn-primary" @onclick="CerrarModalUsuario">Entendido</button>
             </footer>
         </div>
     </div>
@@ -434,7 +520,15 @@ else
     private record ItemMenu(string Texto, string Descripcion, string Icono, string Ruta);
     private record GrupoMenu(string Titulo, List<ItemMenu> Items);
 
-    private static readonly string[] Filtros = { "Todas", "Documentos", "Productores", "Seguimiento" };
+    private record FiltroOpcion(string Clave, string Etiqueta);
+    private static readonly FiltroOpcion[] FiltrosNotificaciones = {
+        new("Todas", "Todas"),
+        new("NoLeidas", "Sin leer"),
+        new("Documentos", "Documentos"),
+        new("Productores", "Productores"),
+        new("Seguimiento", "Seguimiento"),
+        new("Finanzas", "Finanzas")
+    };
     private static readonly string[] RutasPublicas = { "home", "historia/origenes", "historia/impacto", "financiacion" };
 
     private readonly List<GrupoMenu> menu = new()
@@ -536,6 +630,7 @@ else
                 "punto-de-venta/catalogo" => "Catálogo e inventario",
                 "punto-de-venta/cierre-turno" => "Cierre de turno y arqueo",
                 "punto-de-venta/historial" => "Historial, devoluciones y anulaciones",
+                "punto-de-venta/reportes" => "Reportes del punto de venta",
                 "panel-administrador" => "Supervisión central del sistema",
                 "panel-administrador/usuarios" or "admin/usuarios" => "Usuarios y cuentas",
                 "panel-administrador/auditoria" or "admin/auditoria" => "Auditoría técnica",
@@ -590,9 +685,16 @@ else
     // Se calculan en cada render, así siempre reflejan el estado actual del servicio
     private int NoLeidas => autenticado ? Notificaciones.ContarNoLeidas(claveUsuario, roles) : 0;
 
+    private int NotificacionesTotalVisibles => autenticado ? Notificaciones.ObtenerVisiblesPara(roles).Count : 0;
+
+    private bool cargandoAccionNotif;
+
+    private bool PuedeVerPanelAlertasCompleto =>
+        roles.Any(r => r is "Administrador" or "Admin" or "Presidenta" or "Presidente" or "Secretaria" or "Secretaría");
+
     private IReadOnlyList<Notificacion> NotificacionesVisibles => autenticado
-        ? Notificaciones.ObtenerVisiblesPara(roles).Where(CoincideFiltro).Take(30).ToList()
-        : new List<Notificacion>();
+        ? Notificaciones.ObtenerVisiblesPara(roles).Where(CoincideFiltro).Take(40).ToList()
+        : Array.Empty<Notificacion>();
 
     protected override async Task OnInitializedAsync()
     {
@@ -803,13 +905,19 @@ else
         modalUsuarioActivo = null;
     }
 
-    private void FiltrarNotificaciones(string filtro) => filtroActivo = filtro;
+    private void FiltrarNotificaciones(string filtro)
+    {
+        filtroActivo = filtro;
+        StateHasChanged();
+    }
 
     private bool CoincideFiltro(Notificacion notificacion) => filtroActivo switch
     {
+        "NoLeidas" => !EstaLeida(notificacion),
         "Documentos" => notificacion.Categoria == CategoriaNotificacion.Documentos,
         "Productores" => notificacion.Categoria == CategoriaNotificacion.Productores,
         "Seguimiento" => notificacion.Categoria == CategoriaNotificacion.Seguimiento,
+        "Finanzas" => notificacion.Categoria == CategoriaNotificacion.Finanzas,
         _ => true
     };
 
@@ -820,14 +928,29 @@ else
     private bool PuedeAbrir(Notificacion notificacion) =>
         autenticado && NotificacionService.PuedeAbrirEnlace(notificacion, roles);
 
+    private void AlternarLecturaNotificacion(Notificacion notificacion)
+    {
+        if (!autenticado) return;
+        Notificaciones.AlternarLeida(claveUsuario, notificacion.Id);
+        StateHasChanged();
+    }
+
     private void AbrirNotificacion(Notificacion notificacion)
     {
-        if (autenticado) Notificaciones.MarcarComoLeida(claveUsuario, notificacion.Id);
-        var destino = PuedeAbrir(notificacion) ? notificacion.Enlace : null;
-        CerrarTodo();
-        if (!string.IsNullOrWhiteSpace(destino))
+        if (autenticado)
         {
-            Navigation.NavigateTo(destino);
+            Notificaciones.MarcarComoLeida(claveUsuario, notificacion.Id);
+        }
+
+        var puedeIr = PuedeAbrir(notificacion);
+        if (puedeIr && !string.IsNullOrWhiteSpace(notificacion.Enlace))
+        {
+            CerrarTodo();
+            Navigation.NavigateTo(notificacion.Enlace);
+        }
+        else
+        {
+            StateHasChanged();
         }
     }
 
@@ -839,8 +962,27 @@ else
 
     private void MarcarTodasComoLeidas()
     {
-        if (autenticado) Notificaciones.MarcarTodasComoLeidas(claveUsuario, roles);
+        if (!autenticado) return;
+        cargandoAccionNotif = true;
+        try
+        {
+            Notificaciones.MarcarTodasComoLeidas(claveUsuario, roles);
+        }
+        finally
+        {
+            cargandoAccionNotif = false;
+            StateHasChanged();
+        }
     }
+
+    private static string ObtenerIconoBootstrap(Notificacion n) => n.Categoria switch
+    {
+        CategoriaNotificacion.Documentos => n.Nivel == NivelNotificacion.Urgente ? "bi bi-exclamation-triangle-fill" : "bi bi-file-earmark-text-fill",
+        CategoriaNotificacion.Productores => "bi bi-person-check-fill",
+        CategoriaNotificacion.Seguimiento => "bi bi-calendar2-check-fill",
+        CategoriaNotificacion.Finanzas => "bi bi-cash-stack",
+        _ => "bi bi-bell-fill"
+    };
 
     private static string ObtenerTono(Notificacion notificacion) => notificacion.Nivel switch
     {
@@ -867,9 +1009,11 @@ else
     private static string TiempoTranscurrido(DateTime fecha)
     {
         var transcurrido = DateTime.Now - fecha;
-        if (transcurrido.TotalMinutes < 1) return "Ahora";
+        if (transcurrido.TotalSeconds < 45) return "Ahora";
         if (transcurrido.TotalMinutes < 60) return $"Hace {(int)transcurrido.TotalMinutes} min";
         if (transcurrido.TotalHours < 24) return $"Hace {(int)transcurrido.TotalHours} h";
+        if (transcurrido.TotalDays < 2) return "Ayer";
+        if (transcurrido.TotalDays < 7) return $"Hace {(int)transcurrido.TotalDays} d";
         return fecha.ToString("dd/MM/yyyy");
     }
 

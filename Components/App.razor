@@ -17,15 +17,24 @@
     <Routes @rendermode="InteractiveServer" />
     <script src="_framework/blazor.web.js"></script>
     <script>
-        window.descargarArchivoBase64 = function (nombre, tipoMime, base64) {
+        window.descargarArchivoBase64 = function (nombre, param2, param3) {
             try {
+                let base64 = param2;
+                let tipoMime = param3 || 'application/octet-stream';
+                if (typeof param2 === 'string' && param2.length < 50 && param2.includes('/')) {
+                    tipoMime = param2;
+                    base64 = param3;
+                } else if (typeof param3 === 'string' && param3.length < 50 && param3.includes('/')) {
+                    tipoMime = param3;
+                    base64 = param2;
+                }
                 const byteCharacters = atob(base64);
                 const byteNumbers = new Array(byteCharacters.length);
                 for (let i = 0; i < byteCharacters.length; i++) {
                     byteNumbers[i] = byteCharacters.charCodeAt(i);
                 }
                 const byteArray = new Uint8Array(byteNumbers);
-                const blob = new Blob([byteArray], { type: tipoMime || 'application/octet-stream' });
+                const blob = new Blob([byteArray], { type: tipoMime });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;

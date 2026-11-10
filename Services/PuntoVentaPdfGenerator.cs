@@ -374,6 +374,114 @@ public static class PuntoVentaPdfGenerator
         return PdfInformeEngine.CompilarPdf(ctx.Paginas);
     }
 
+    /// <summary>
+    /// Columna para la tabla de reportes operativos.
+    /// </summary>
+    public sealed class ColumnaReportePdv
+    {
+        public string Titulo { get; set; } = string.Empty;
+        public double Ancho { get; set; }
+        public bool AlinearDerecha { get; set; }
+        public bool Negrita { get; set; }
+    }
+
+    /// <summary>
+    /// Genera un Reporte Operativo consolidado del Punto de Venta en formato formal PDF.
+    /// </summary>
+    public static byte[] GenerarReportePdvPdf(
+        string tituloReporte,
+        string periodo,
+        IReadOnlyList<ColumnaReportePdv> columnas,
+        IReadOnlyList<string[]> filas,
+        string resumenTexto,
+        string funcionario = "Administrador Punto de Venta",
+        IReadOnlyList<(string Etiqueta, string Valor)>? kpis = null)
+    {
+        var generadoEn = DateTime.Now;
+
+        var ctx = new PdfInformeEngine.DocumentoInformeContexto
+        {
+            AreaInstitucional = "PUNTO DE VENTA SOLIDARIO · COMERCIALIZACIÓN AGROPECUARIA",
+            TituloDocumento = "REPORTE OPERATIVO DE PUNTO DE VENTA",
+            SubtituloDocumento = $"{tituloReporte.ToUpperInvariant()}  |  Período: {periodo}",
+            ReferenciaDerecha = $"Período: {periodo}",
+            TituloCortoContinuacion = $"REPORTE PDV — {tituloReporte.ToUpperInvariant()}",
+            NotaPieLinea1 = $"Reporte operativo interno expedido por el sistema ASOAGRO el {generadoEn:dd/MM/yyyy a las HH:mm} · Generado por: {ValorONoRegistrado(funcionario)}.",
+            NotaPieLinea2 = "Documento de control administrativo interno de la Federación FAAUA. No constituye factura electrónica ni documento equivalente DIAN.",
+            FechaGeneracion = generadoEn
+        };
+
+        ctx.IniciarDocumento();
+
+        // SECCIÓN I: PARÁMETROS Y RESUMEN EJECUTIVO
+        PdfInformeEngine.DibujarTituloSeccion(ctx, "I", "Parámetros y Resumen Ejecutivo");
+
+        var parrafoParams = new List<PdfInformeEngine.FragmentoTexto>
+        {
+            new("El presente reporte consolida los datos operacionales del módulo "),
+            new(tituloReporte, true),
+            new(" correspondiente al período "),
+            new(periodo, true),
+            new(". Generado a solicitud de "),
+            new(ValorONoRegistrado(funcionario), true),
+            new(" para efectos de supervisión, auditoría de existencias y control financiero de la comercialización agropecuaria.")
+        };
+        PdfInformeEngine.DibujarParrafoMixto(ctx, parrafoParams);
+
+        if (!string.IsNullOrWhiteSpace(resumenTexto))
+        {
+            var parrafoResumen = new List<PdfInformeEngine.FragmentoTexto>
+            {
+                new("Resumen operacional: "),
+                new(resumenTexto, true)
+            };
+            PdfInformeEngine.DibujarParrafoMixto(ctx, parrafoResumen);
+        }
+
+        if (kpis != null && kpis.Count > 0)
+        {
+            var parrafoKpis = new List<PdfInformeEngine.FragmentoTexto>();
+            for (int i = 0; i < kpis.Count; i++)
+            {
+                if (i > 0) parrafoKpis.Add(new("  |  "));
+                parrafoKpis.Add(new($"{kpis[i].Etiqueta}: "));
+                parrafoKpis.Add(new(kpis[i].Valor, true));
+            }
+            PdfInformeEngine.DibujarParrafoMixto(ctx, parrafoKpis);
+        }
+
+        // SECCIÓN II: TABLA DE DATOS
+        PdfInformeEngine.DibujarTituloSeccion(ctx, "II", "Detalle de Registros y Movimientos");
+
+        if (filas == null || filas.Count == 0)
+        {
+            var parrafoVacio = new List<PdfInformeEngine.FragmentoTexto>
+            {
+                new("No se registraron movimientos u operaciones para los filtros y fechas seleccionados.", false)
+            };
+            PdfInformeEngine.DibujarParrafoMixto(ctx, parrafoVacio);
+        }
+        else
+        {
+            var columnasEngine = columnas.Select(c => new PdfInformeEngine.ColumnaTabla
+            {
+                Titulo = c.Titulo,
+                Ancho = c.Ancho,
+                AlinearDerecha = c.AlinearDerecha,
+                Negrita = c.Negrita
+            }).ToList();
+
+            PdfInformeEngine.DibujarTablaFormal(ctx, columnasEngine, filas, 8.0);
+        }
+
+        // SECCIÓN III: RESPONSABILIDADES Y FIRMAS
+        PdfInformeEngine.DibujarTituloSeccion(ctx, "III", "Constancia de Generación y Validación");
+        DibujarFirmas(ctx, ValorONoRegistrado(funcionario), "Responsable Generación PDV", "Federación FAAUA - ASOAGRO", "Supervisión Comercial");
+
+        PdfInformeEngine.DibujarPiePaginas(ctx);
+        return PdfInformeEngine.CompilarPdf(ctx.Paginas);
+    }
+
     private static void DibujarFirmas(PdfInformeEngine.DocumentoInformeContexto ctx, string responsable, string cargo1, string segundo, string cargo2)
     {
         ctx.AsegurarEspacio(70.0);

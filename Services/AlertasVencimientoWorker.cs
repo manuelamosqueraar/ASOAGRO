@@ -8,9 +8,11 @@ public class AlertasVencimientoWorker : BackgroundService
 {
     private static readonly TimeSpan Intervalo = TimeSpan.FromHours(1);
 
-    // Solo estos cargos reciben los avisos de vencimientos
-        // Lista vacía: los avisos de vencimientos los ve cualquier usuario con sesión
-    private static readonly string[] RolesVencimientos = Array.Empty<string>();
+    // Solo estos cargos reciben los avisos de vencimientos documentales
+    private static readonly string[] RolesVencimientos = new[]
+    {
+        "Presidenta", "Presidente", "Secretaria", "Secretaría", "Administrador", "Admin"
+    };
 
     private readonly IAlertaDocumentoService _alertas;
     private readonly IDocumentoInstitucionalService _documentosInstitucionales;

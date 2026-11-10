@@ -235,6 +235,15 @@
                         </svg>
                         <span class="hv-nav-txt">5. Historial, devoluciones y anulaciones</span>
                     </NavLink>
+
+                    <NavLink class="hv-nav-item" href="punto-de-venta/reportes">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10" />
+                            <line x1="12" y1="20" x2="12" y2="4" />
+                            <line x1="6" y1="20" x2="6" y2="14" />
+                        </svg>
+                        <span class="hv-nav-txt">6. Reportes del punto de venta</span>
+                    </NavLink>
                 }
                 @* 2. SECRETARÍA: Solo módulos de Secretaría, Asociaciones y Padrón *@
                 else if (context.User.IsInRole("Secretaria") || context.User.IsInRole("Secretaría"))
@@ -436,6 +445,15 @@
                         </svg>
                         <span class="hv-nav-txt">Historial, devoluciones y anulaciones</span>
                     </NavLink>
+
+                    <NavLink class="hv-nav-item" href="punto-de-venta/reportes">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10" />
+                            <line x1="12" y1="20" x2="12" y2="4" />
+                            <line x1="6" y1="20" x2="6" y2="14" />
+                        </svg>
+                        <span class="hv-nav-txt">Reportes del punto de venta</span>
+                    </NavLink>
                 }
                 @* 4. ADMINISTRADOR DEL PUNTO DE VENTA (PDV): Solo Punto de Venta *@
                 else if (context.User.IsInRole("AdministradorPdv") || context.User.IsInRole("PuntoVenta") || context.User.IsInRole("Vendedor"))
@@ -488,6 +506,15 @@
                             <polyline points="12 6 12 12 16 14" />
                         </svg>
                         <span class="hv-nav-txt">5. Historial, devoluciones y anulaciones</span>
+                    </NavLink>
+
+                    <NavLink class="hv-nav-item" href="punto-de-venta/reportes">
+                        <svg class="hv-nav-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10" />
+                            <line x1="12" y1="20" x2="12" y2="4" />
+                            <line x1="6" y1="20" x2="6" y2="14" />
+                        </svg>
+                        <span class="hv-nav-txt">6. Reportes del punto de venta</span>
                     </NavLink>
                 }
                 @* 5. ADMINISTRADOR DE LA PLATAFORMA: Solo módulos técnicos *@

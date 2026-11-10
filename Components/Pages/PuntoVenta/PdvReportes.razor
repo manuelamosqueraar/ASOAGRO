@@ -1,0 +1,1029 @@
+@page "/punto-de-venta/reportes"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "AdministradorPdv,PuntoVenta,Vendedor,Presidenta,Presidente,Tesorera,Tesorero,Administrador,Admin")]
+@rendermode InteractiveServer
+@using System.Globalization
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Asoagro.Models
+@using Asoagro.Services
+@inject IPuntoVentaService PuntoVentaService
+@inject IDocumentoAsociacionService DocumentoService
+@inject AuthenticationStateProvider AuthProvider
+@inject IJSRuntime JS
+
+<PageTitle>Reportes Operativos · Punto de Venta FAAUA</PageTitle>
+
+<div class="container-fluid px-0 pb-5" style="font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+
+    <!-- HERO BANNER DEL MÓDULO -->
+    <div class="card aso-hero-card mb-4" style="border-top: 4px solid #10B981 !important;">
+        <div class="card-body">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-4">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="aso-hero-icon-box" style="background: #10B981 !important; border: 1.5px solid #34D399 !important; color: #FFFFFF !important;">
+                        <i class="bi bi-file-earmark-bar-graph-fill fs-4"></i>
+                    </div>
+                    <div>
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+                            <span class="aso-hero-kicker" style="background: #065F46 !important; border-color: #34D399 !important; color: #ECFDF5 !important;">
+                                <i class="bi bi-shop me-1"></i> Punto de Venta Solidario · FAAUA
+                            </span>
+                            <span class="badge px-2.5 py-1 rounded-pill fw-bold bg-success bg-opacity-75" style="font-size: 0.7rem;">
+                                <i class="bi bi-bar-chart-steps me-1"></i> Módulo 6: Reportes del Punto de Venta
+                            </span>
+                            <span class="badge px-2.5 py-1 rounded-pill fw-bold bg-dark bg-opacity-50 text-white-50" style="font-size: 0.7rem;">
+                                <i class="bi bi-shield-lock me-1"></i> Control Interno
+                            </span>
+                        </div>
+                        <h1 class="aso-hero-title">Reportes y Trazabilidad Operacional</h1>
+                        <p class="aso-hero-desc">
+                            Consolidado de ventas, ingresos, rotación de cosechas, existencias en bodega, compras por asociación proveedora, arqueos de caja y auditoría de Kardex en pesos colombianos (COP).
+                        </p>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <div class="p-3 rounded-4 d-inline-block text-start w-100" style="min-width: 280px; max-width: 320px; background: rgba(255, 255, 255, 0.08); border: 1.5px solid rgba(255, 255, 255, 0.18); backdrop-filter: blur(10px);">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 42px; height: 42px; background: #059669; box-shadow: 0 4px 10px rgba(0,0,0,0.25);">
+                                <i class="bi bi-person-badge-fill fs-5"></i>
+                            </div>
+                            <div>
+                                <span class="d-block text-white-50" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Funcionario Emisor</span>
+                                <span class="fw-bold text-white small d-block text-truncate" style="max-width: 210px;">@nombreUsuario</span>
+                                <span class="badge bg-white text-dark mt-1" style="font-size: 0.65rem; font-weight: 700;">@rolUsuario</span>
+                            </div>
+                        </div>
+                        <div class="pt-2 border-top border-white border-opacity-10 d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
+                            <span class="text-white-50">Transparencia:</span>
+                            <span class="text-success fw-bold">Auditoría en tiempo real</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(mensajeFeedback))
+    {
+        <div class="alert @(esFeedbackExito ? "alert-success" : "alert-danger") alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
+            <i class="bi @(esFeedbackExito ? "bi-check-circle-fill text-success" : "bi-exclamation-triangle-fill text-danger") me-2 fs-5"></i>
+            <span>@mensajeFeedback</span>
+            <button type="button" class="btn-close" @onclick="() => mensajeFeedback = null"></button>
+        </div>
+    }
+
+    <!-- AVISO DE TRANSPARENCIA DIAN -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-light" style="border-left: 4px solid #059669 !important;">
+        <div class="d-flex align-items-center gap-3">
+            <span class="p-2 rounded-3 bg-white text-success shadow-sm">
+                <i class="bi bi-info-circle-fill fs-5"></i>
+            </span>
+            <div class="small text-muted">
+                <strong class="text-dark">Aviso legal y contable:</strong> Los reportes emitidos reflejan operaciones de comercialización solidaria directa de las asociaciones federadas de Urabá. Son documentos de soporte interno para trazabilidad comunitaria y no reemplazan comprobantes de facturación electrónica DIAN.
+            </div>
+        </div>
+    </div>
+
+    <!-- SELECTOR DE REPORTES (TABS ESTILO PÍLDORAS) -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 mb-4 bg-white">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 border-bottom pb-3 mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-diagram-3-fill text-success fs-5"></i>
+                <h5 class="fw-bold mb-0 text-dark">Catálogo de Reportes Operativos</h5>
+            </div>
+            <span class="badge bg-light text-muted border px-3 py-2 rounded-pill small">
+                8 Informes oficiales disponibles
+            </span>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 py-2 @(tipoReporteActivo == "ventas_periodo" ? "btn-success" : "btn-outline-secondary")"
+                    @onclick='() => CambiarReporte("ventas_periodo")'>
+                <i class="bi bi-cash-stack me-1"></i> 1. Ventas por Período y Producto
+            </button>
+            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 py-2 @(tipoReporteActivo == "top_ventas" ? "btn-success" : "btn-outline-secondary")"
+                    @onclick='() => CambiarReporte("top_ventas")'>
+                <i class="bi bi-trophy me-1"></i> 2. Productos Más Vendidos
+            </button>
+            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 py-2 @(tipoReporteActivo == "existencias" ? "btn-success" : "btn-outline-secondary")"
+                    @onclick='() => CambiarReporte("existencias")'>
+                <i class="bi bi-boxes me-1"></i> 3. Existencias y Stock Bajo
+            </button>
+            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 py-2 @(tipoReporteActivo == "recepciones" ? "btn-success" : "btn-outline-secondary")"
+                    @onclick='() => CambiarReporte("recepciones")'>
+                <i class="bi bi-truck me-1"></i> 4. Recepciones por Asociación
+            </button>
+            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 py-2 @(tipoReporteActivo == "devoluciones" ? "btn-success" : "btn-outline-secondary")"
+                    @onclick='() => CambiarReporte("devoluciones")'>
+                <i class="bi bi-arrow-counterclockwise me-1"></i> 5. Devoluciones y Anulaciones
+            </button>
+            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 py-2 @(tipoReporteActivo == "kardex" ? "btn-success" : "btn-outline-secondary")"
+                    @onclick='() => CambiarReporte("kardex")'>
+                <i class="bi bi-journal-text me-1"></i> 6. Movimientos (Kardex General)
+            </button>
+            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 py-2 @(tipoReporteActivo == "medios_pago" ? "btn-success" : "btn-outline-secondary")"
+                    @onclick='() => CambiarReporte("medios_pago")'>
+                <i class="bi bi-credit-card-2-front me-1"></i> 7. Ventas por Medio de Pago
+            </button>
+            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 py-2 @(tipoReporteActivo == "cierres_caja" ? "btn-success" : "btn-outline-secondary")"
+                    @onclick='() => CambiarReporte("cierres_caja")'>
+                <i class="bi bi-calculator me-1"></i> 8. Cierres de Turno y Arqueos
+            </button>
+        </div>
+    </div>
+
+    <!-- PANEL DE FILTROS AVANZADOS -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-funnel-fill text-success fs-5"></i>
+                <h6 class="fw-bold mb-0 text-dark">Filtros de Período y Segmentación</h6>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" @onclick="RestablecerFiltros">
+                    <i class="bi bi-arrow-clockwise me-1"></i> Restablecer Filtros
+                </button>
+            </div>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Período de Consulta</label>
+                <select class="form-select form-select-sm rounded-3 shadow-none" @bind="periodoFiltro" @bind:after="AplicarFiltros">
+                    <option value="hoy">Hoy (@DateTime.Today.ToString("dd/MM/yyyy"))</option>
+                    <option value="semana">Esta Semana (Últimos 7 días)</option>
+                    <option value="mes">Este Mes (@DateTime.Today.ToString("MMMM yyyy", culturaCop))</option>
+                    <option value="ano">Este Año (@DateTime.Today.Year)</option>
+                    <option value="personalizado">Rango Personalizado...</option>
+                </select>
+            </div>
+
+            @if (periodoFiltro == "personalizado")
+            {
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted">Desde</label>
+                    <input type="date" class="form-control form-control-sm rounded-3 shadow-none" @bind="fechaDesde" @bind:after="AplicarFiltros" />
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-muted">Hasta</label>
+                    <input type="date" class="form-control form-control-sm rounded-3 shadow-none" @bind="fechaHasta" @bind:after="AplicarFiltros" />
+                </div>
+            }
+
+            <div class="col-md-2">
+                <label class="form-label small fw-bold text-muted">Categoría</label>
+                <select class="form-select form-select-sm rounded-3 shadow-none" @bind="categoriaFiltro" @bind:after="AplicarFiltros">
+                    <option value="todas">-- Todas las categorías --</option>
+                    @foreach (var cat in categoriasDisponibles)
+                    {
+                        <option value="@cat">@cat</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Asociación Proveedora</label>
+                <select class="form-select form-select-sm rounded-3 shadow-none" @bind="asociacionFiltro" @bind:after="AplicarFiltros">
+                    <option value="todas">-- Todas las asociaciones --</option>
+                    @foreach (var asoc in asociacionesDisponibles)
+                    {
+                        <option value="@asoc">@asoc</option>
+                    }
+                </select>
+            </div>
+
+            <div class="col-md-2">
+                <label class="form-label small fw-bold text-muted">Producto Específico</label>
+                <select class="form-select form-select-sm rounded-3 shadow-none" @bind="productoIdFiltro" @bind:after="AplicarFiltros">
+                    <option value="">-- Todos los productos --</option>
+                    @foreach (var p in productosCatalogo)
+                    {
+                        <option value="@p.Id">@p.Nombre (@p.Codigo)</option>
+                    }
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- BARRA DE ACCIÓN Y EXPORTACIÓN -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold mb-1 text-dark">@ObtenerTituloReporteActivo()</h4>
+            <span class="text-muted small">
+                Período auditado: <strong class="text-dark">@ObtenerTextoPeriodo()</strong> · Total registros: <strong class="text-success">@filasGeneradas.Count</strong>
+            </span>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-success rounded-pill fw-bold px-3 py-2 shadow-sm d-flex align-items-center gap-2"
+                    @onclick="DescargarReportePdf" disabled="@estaExportando">
+                <i class="bi bi-file-earmark-pdf-fill fs-5"></i>
+                <span>@(estaExportando ? "Generando..." : "Descargar Reporte PDF")</span>
+            </button>
+            <button type="button" class="btn btn-outline-success rounded-pill fw-bold px-3 py-2 shadow-sm d-flex align-items-center gap-2 bg-white"
+                    @onclick="DescargarReporteCsv" disabled="@estaExportando">
+                <i class="bi bi-file-earmark-spreadsheet-fill fs-5 text-success"></i>
+                <span>Descargar CSV / Excel</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- TARJETAS DE INDICADORES (KPIS DEL REPORTE ACTIVO) -->
+    <div class="row g-3 mb-4">
+        @foreach (var kpi in kpisReporteActivo)
+        {
+            <div class="col-sm-6 col-xl-3">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white h-100" style="border-top: 4px solid #10B981 !important;">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.68rem; letter-spacing: 0.05em;">@kpi.Etiqueta</span>
+                        <span class="p-2 rounded-3 bg-success-subtle text-success">
+                            <i class="bi bi-graph-up-arrow fs-5"></i>
+                        </span>
+                    </div>
+                    <h3 class="fw-bold text-dark mb-0 fs-4">@kpi.Valor</h3>
+                    <span class="text-muted small mt-2" style="font-size: 0.73rem;">Dato consolidado del período</span>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- TABLA DE DETALLES DEL REPORTE -->
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden bg-white mb-4">
+        <div class="card-header bg-white py-3 px-4 border-bottom d-flex align-items-center justify-content-between">
+            <span class="fw-bold text-dark small text-uppercase" style="letter-spacing: 0.05em;">
+                <i class="bi bi-table me-2 text-success"></i> Detalle de Operaciones y Registros
+            </span>
+            <span class="badge bg-light text-muted border">Mostrando @filasGeneradas.Count filas</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size: 0.84rem;">
+                <thead class="table-light text-muted text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.04em;">
+                    <tr>
+                        @foreach (var col in columnasGeneradas)
+                        {
+                            <th class="@(col.AlinearDerecha ? "text-end" : "text-start") py-3 px-3" style="width: @(col.Ancho)px;">
+                                @col.Titulo
+                            </th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (filasGeneradas.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="@Math.Max(1, columnasGeneradas.Count)" class="text-center py-5">
+                                <div class="py-4 text-muted">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2 text-secondary opacity-50"></i>
+                                    <strong class="d-block text-dark">No se encontraron operaciones registradas</strong>
+                                    <span class="small">Modifique el período o los filtros seleccionados para ampliar la búsqueda.</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var fila in filasGeneradas)
+                        {
+                            <tr>
+                                @for (int i = 0; i < fila.Length; i++)
+                                {
+                                    var align = (i < columnasGeneradas.Count && columnasGeneradas[i].AlinearDerecha) ? "text-end" : "text-start";
+                                    var negrita = (i < columnasGeneradas.Count && columnasGeneradas[i].Negrita);
+                                    <td class="@align px-3 py-2.5">
+                                        @if (negrita)
+                                        {
+                                            <strong class="text-dark">@fila[i]</strong>
+                                        }
+                                        else
+                                        {
+                                            <span>@fila[i]</span>
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    private readonly CultureInfo culturaCop = new("es-CO");
+
+    private string nombreUsuario = "Administrador Punto de Venta";
+    private string rolUsuario = "Administrador PDV";
+    private bool estaExportando = false;
+    private string? mensajeFeedback;
+    private bool esFeedbackExito = true;
+
+    // Filtros
+    private string tipoReporteActivo = "ventas_periodo";
+    private string periodoFiltro = "mes";
+    private DateTime fechaDesde = DateTime.Today.AddDays(-30);
+    private DateTime fechaHasta = DateTime.Today;
+    private string categoriaFiltro = "todas";
+    private string asociacionFiltro = "todas";
+    private string productoIdFiltro = "";
+
+    // Listas base
+    private IReadOnlyList<ProductoPdv> productosCatalogo = Array.Empty<ProductoPdv>();
+    private List<string> categoriasDisponibles = new();
+    private List<string> asociacionesDisponibles = new();
+
+    // Estructura calculada para la vista actual
+    private List<PuntoVentaPdfGenerator.ColumnaReportePdv> columnasGeneradas = new();
+    private List<string[]> filasGeneradas = new();
+    private List<(string Etiqueta, string Valor)> kpisReporteActivo = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarUsuario();
+        CargarListasFiltros();
+        AjustarFechasSegunPeriodo();
+        CalcularReporteActual();
+    }
+
+    private async Task CargarUsuario()
+    {
+        var authState = await AuthProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity?.IsAuthenticated == true)
+        {
+            nombreUsuario = user.FindFirst(ClaimTypes.Name)?.Value
+                            ?? user.FindFirst("NombreCompleto")?.Value
+                            ?? user.Identity.Name
+                            ?? "Administrador Punto de Venta";
+            rolUsuario = user.FindFirst(ClaimTypes.Role)?.Value ?? "AdministradorPdv";
+        }
+    }
+
+    private void CargarListasFiltros()
+    {
+        productosCatalogo = PuntoVentaService.ObtenerProductos();
+        categoriasDisponibles = productosCatalogo
+            .Select(p => p.Categoria)
+            .Where(c => !string.IsNullOrWhiteSpace(c))
+            .Distinct()
+            .OrderBy(c => c)
+            .ToList();
+
+        var asocsPdv = productosCatalogo
+            .Select(p => p.AsociacionOrigen)
+            .Where(a => !string.IsNullOrWhiteSpace(a));
+
+        var asocsFederadas = DocumentoService.ObtenerAsociaciones();
+
+        asociacionesDisponibles = asocsPdv
+            .Concat(asocsFederadas)
+            .Distinct()
+            .OrderBy(a => a)
+            .ToList();
+    }
+
+    private void CambiarReporte(string nuevoTipo)
+    {
+        tipoReporteActivo = nuevoTipo;
+        CalcularReporteActual();
+    }
+
+    private void RestablecerFiltros()
+    {
+        periodoFiltro = "mes";
+        AjustarFechasSegunPeriodo();
+        categoriaFiltro = "todas";
+        asociacionFiltro = "todas";
+        productoIdFiltro = "";
+        CalcularReporteActual();
+    }
+
+    private void AplicarFiltros()
+    {
+        if (periodoFiltro != "personalizado")
+        {
+            AjustarFechasSegunPeriodo();
+        }
+        CalcularReporteActual();
+    }
+
+    private void AjustarFechasSegunPeriodo()
+    {
+        var hoy = DateTime.Today;
+        switch (periodoFiltro)
+        {
+            case "hoy":
+                fechaDesde = hoy;
+                fechaHasta = hoy;
+                break;
+            case "semana":
+                fechaDesde = hoy.AddDays(-7);
+                fechaHasta = hoy;
+                break;
+            case "mes":
+                fechaDesde = new DateTime(hoy.Year, hoy.Month, 1);
+                fechaHasta = hoy;
+                break;
+            case "ano":
+                fechaDesde = new DateTime(hoy.Year, 1, 1);
+                fechaHasta = hoy;
+                break;
+        }
+    }
+
+    private void CalcularReporteActual()
+    {
+        columnasGeneradas.Clear();
+        filasGeneradas.Clear();
+        kpisReporteActivo.Clear();
+
+        var inicioDia = fechaDesde.Date;
+        var finDia = fechaHasta.Date.AddDays(1).AddTicks(-1);
+        Guid? prodGuid = Guid.TryParse(productoIdFiltro, out var g) ? g : null;
+
+        switch (tipoReporteActivo)
+        {
+            case "ventas_periodo":
+                GenerarReporteVentasPeriodo(inicioDia, finDia, prodGuid);
+                break;
+            case "top_ventas":
+                GenerarReporteTopVentas(inicioDia, finDia, prodGuid);
+                break;
+            case "existencias":
+                GenerarReporteExistencias(prodGuid);
+                break;
+            case "recepciones":
+                GenerarReporteRecepciones(inicioDia, finDia, prodGuid);
+                break;
+            case "devoluciones":
+                GenerarReporteDevoluciones(inicioDia, finDia);
+                break;
+            case "kardex":
+                GenerarReporteKardex(inicioDia, finDia, prodGuid);
+                break;
+            case "medios_pago":
+                GenerarReporteMediosPago(inicioDia, finDia);
+                break;
+            case "cierres_caja":
+                GenerarReporteCierresCaja(inicioDia, finDia);
+                break;
+            default:
+                GenerarReporteVentasPeriodo(inicioDia, finDia, prodGuid);
+                break;
+        }
+    }
+
+    private void GenerarReporteVentasPeriodo(DateTime inicio, DateTime fin, Guid? prodId)
+    {
+        columnasGeneradas = new List<PuntoVentaPdfGenerator.ColumnaReportePdv>
+        {
+            new() { Titulo = "Fecha / Hora", Ancho = 75.0 },
+            new() { Titulo = "Ticket", Ancho = 60.0, Negrita = true },
+            new() { Titulo = "Cliente", Ancho = 80.0 },
+            new() { Titulo = "Producto Agropecuario", Ancho = 110.0 },
+            new() { Titulo = "Cant.", Ancho = 35.0, AlinearDerecha = true },
+            new() { Titulo = "Precio Unit. COP", Ancho = 55.0, AlinearDerecha = true },
+            new() { Titulo = "Total COP", Ancho = 60.0, AlinearDerecha = true, Negrita = true },
+            new() { Titulo = "Medio", Ancho = 41.0 }
+        };
+
+        var ventas = PuntoVentaService.ObtenerVentas(null, inicio, fin)
+            .Where(v => v.Estado == "Completada")
+            .OrderByDescending(v => v.Fecha)
+            .ToList();
+
+        decimal totalVendido = 0;
+        decimal totalUnidades = 0;
+        int operacionesCount = 0;
+
+        foreach (var v in ventas)
+        {
+            foreach (var item in v.Items)
+            {
+                if (prodId.HasValue && item.ProductoId != prodId.Value) continue;
+                if (categoriaFiltro != "todas" && !string.Equals(item.Categoria, categoriaFiltro, StringComparison.OrdinalIgnoreCase)) continue;
+                if (asociacionFiltro != "todas" && !string.Equals(item.AsociacionOrigen, asociacionFiltro, StringComparison.OrdinalIgnoreCase)) continue;
+
+                filasGeneradas.Add(new[]
+                {
+                    v.Fecha.ToString("dd/MM/yy HH:mm"),
+                    v.NumeroTicket,
+                    string.IsNullOrWhiteSpace(v.ClienteNombre) ? "Mostrador" : v.ClienteNombre,
+                    item.NombreProducto,
+                    item.Cantidad.ToString("N0", culturaCop),
+                    $"${item.PrecioUnitario.ToString("N0", culturaCop)}",
+                    $"${item.Subtotal.ToString("N0", culturaCop)}",
+                    v.MetodoPago
+                });
+
+                totalVendido += item.Subtotal;
+                totalUnidades += item.Cantidad;
+            }
+            operacionesCount++;
+        }
+
+        kpisReporteActivo.Add(("Ventas Totales", $"${totalVendido.ToString("N0", culturaCop)} COP"));
+        kpisReporteActivo.Add(("Unidades Vendidas", $"{totalUnidades:N0}"));
+        kpisReporteActivo.Add(("Operaciones Realizadas", $"{operacionesCount}"));
+        var promedio = operacionesCount > 0 ? (totalVendido / operacionesCount) : 0;
+        kpisReporteActivo.Add(("Ticket Promedio", $"${promedio.ToString("N0", culturaCop)} COP"));
+    }
+
+    private void GenerarReporteTopVentas(DateTime inicio, DateTime fin, Guid? prodId)
+    {
+        columnasGeneradas = new List<PuntoVentaPdfGenerator.ColumnaReportePdv>
+        {
+            new() { Titulo = "#", Ancho = 25.0, Negrita = true },
+            new() { Titulo = "Código", Ancho = 60.0 },
+            new() { Titulo = "Producto", Ancho = 130.0 },
+            new() { Titulo = "Categoría", Ancho = 75.0 },
+            new() { Titulo = "Cant. Vendida", Ancho = 55.0, AlinearDerecha = true, Negrita = true },
+            new() { Titulo = "Total COP", Ancho = 75.0, AlinearDerecha = true, Negrita = true },
+            new() { Titulo = "% Venta", Ancho = 45.0, AlinearDerecha = true },
+            new() { Titulo = "Stock Actual", Ancho = 51.0, AlinearDerecha = true }
+        };
+
+        var ventas = PuntoVentaService.ObtenerVentas(null, inicio, fin)
+            .Where(v => v.Estado == "Completada")
+            .SelectMany(v => v.Items)
+            .ToList();
+
+        if (prodId.HasValue) ventas = ventas.Where(i => i.ProductoId == prodId.Value).ToList();
+        if (categoriaFiltro != "todas") ventas = ventas.Where(i => string.Equals(i.Categoria, categoriaFiltro, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (asociacionFiltro != "todas") ventas = ventas.Where(i => string.Equals(i.AsociacionOrigen, asociacionFiltro, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        var totalGlobalVendido = ventas.Sum(i => i.Subtotal);
+
+        var agrupados = ventas
+            .GroupBy(i => new { i.ProductoId, i.CodigoProducto, i.NombreProducto, i.Categoria })
+            .Select(g => new
+            {
+                g.Key.ProductoId,
+                g.Key.CodigoProducto,
+                g.Key.NombreProducto,
+                g.Key.Categoria,
+                Cantidad = g.Sum(x => x.Cantidad),
+                Total = g.Sum(x => x.Subtotal)
+            })
+            .OrderByDescending(x => x.Total)
+            .ToList();
+
+        int pos = 1;
+        foreach (var item in agrupados)
+        {
+            var p = productosCatalogo.FirstOrDefault(x => x.Id == item.ProductoId);
+            var pct = totalGlobalVendido > 0 ? (item.Total / totalGlobalVendido * 100) : 0;
+            var stock = p != null ? p.StockDisponible.ToString("N0", culturaCop) : "-";
+
+            filasGeneradas.Add(new[]
+            {
+                pos.ToString(),
+                item.CodigoProducto,
+                item.NombreProducto,
+                item.Categoria,
+                item.Cantidad.ToString("N0", culturaCop),
+                $"${item.Total.ToString("N0", culturaCop)}",
+                $"{pct:N1}%",
+                stock
+            });
+            pos++;
+        }
+
+        kpisReporteActivo.Add(("Ventas Totales Top", $"${totalGlobalVendido.ToString("N0", culturaCop)} COP"));
+        kpisReporteActivo.Add(("Referencias Rotadas", $"{agrupados.Count}"));
+        kpisReporteActivo.Add(("Producto Líder", agrupados.FirstOrDefault()?.NombreProducto ?? "Ninguno"));
+        kpisReporteActivo.Add(("Total Cantidades", $"{ventas.Sum(i => i.Cantidad):N0}"));
+    }
+
+    private void GenerarReporteExistencias(Guid? prodId)
+    {
+        columnasGeneradas = new List<PuntoVentaPdfGenerator.ColumnaReportePdv>
+        {
+            new() { Titulo = "Código", Ancho = 60.0, Negrita = true },
+            new() { Titulo = "Producto", Ancho = 120.0 },
+            new() { Titulo = "Categoría", Ancho = 65.0 },
+            new() { Titulo = "Asociación", Ancho = 90.0 },
+            new() { Titulo = "Stock Físico", Ancho = 45.0, AlinearDerecha = true, Negrita = true },
+            new() { Titulo = "Costo Unit.", Ancho = 45.0, AlinearDerecha = true },
+            new() { Titulo = "Valor Costo", Ancho = 50.0, AlinearDerecha = true, Negrita = true },
+            new() { Titulo = "Estado", Ancho = 41.0 }
+        };
+
+        var prods = productosCatalogo.AsEnumerable();
+        if (prodId.HasValue) prods = prods.Where(p => p.Id == prodId.Value);
+        if (categoriaFiltro != "todas") prods = prods.Where(p => string.Equals(p.Categoria, categoriaFiltro, StringComparison.OrdinalIgnoreCase));
+        if (asociacionFiltro != "todas") prods = prods.Where(p => string.Equals(p.AsociacionOrigen, asociacionFiltro, StringComparison.OrdinalIgnoreCase));
+
+        var lista = prods.OrderBy(p => p.StockDisponible).ToList();
+
+        decimal valorInventarioCosto = 0;
+        decimal valorInventarioVenta = 0;
+        int bajoStock = 0;
+        int agotados = 0;
+
+        foreach (var p in lista)
+        {
+            var costoTotal = p.StockDisponible * p.CostoPromedio;
+            var ventaTotal = p.StockDisponible * p.PrecioUnitario;
+            valorInventarioCosto += costoTotal;
+            valorInventarioVenta += ventaTotal;
+
+            if (p.StockDisponible <= 0) agotados++;
+            else if (p.StockDisponible <= p.StockMinimo) bajoStock++;
+
+            filasGeneradas.Add(new[]
+            {
+                p.Codigo,
+                p.Nombre,
+                p.Categoria,
+                string.IsNullOrWhiteSpace(p.AsociacionOrigen) ? "Sin Asoc." : p.AsociacionOrigen,
+                p.StockDisponible.ToString("N0", culturaCop),
+                $"${p.CostoPromedio.ToString("N0", culturaCop)}",
+                $"${costoTotal.ToString("N0", culturaCop)}",
+                p.Estado
+            });
+        }
+
+        kpisReporteActivo.Add(("Valuación a Costo", $"${valorInventarioCosto.ToString("N0", culturaCop)} COP"));
+        kpisReporteActivo.Add(("Valuación a Venta", $"${valorInventarioVenta.ToString("N0", culturaCop)} COP"));
+        kpisReporteActivo.Add(("Referencias Bajo Stock", $"{bajoStock}"));
+        kpisReporteActivo.Add(("Agotados", $"{agotados}"));
+    }
+
+    private void GenerarReporteRecepciones(DateTime inicio, DateTime fin, Guid? prodId)
+    {
+        columnasGeneradas = new List<PuntoVentaPdfGenerator.ColumnaReportePdv>
+        {
+            new() { Titulo = "Consecutivo", Ancho = 65.0, Negrita = true },
+            new() { Titulo = "Fecha", Ancho = 55.0 },
+            new() { Titulo = "Asociación", Ancho = 95.0 },
+            new() { Titulo = "Producto", Ancho = 110.0 },
+            new() { Titulo = "Remisión/Doc", Ancho = 50.0 },
+            new() { Titulo = "Cant.", Ancho = 40.0, AlinearDerecha = true },
+            new() { Titulo = "Costo Total COP", Ancho = 65.0, AlinearDerecha = true, Negrita = true },
+            new() { Titulo = "Receptor", Ancho = 36.0 }
+        };
+
+        var recepciones = PuntoVentaService.ObtenerRecepciones()
+            .Where(r => r.FechaRecepcion >= inicio && r.FechaRecepcion <= fin)
+            .OrderByDescending(r => r.FechaRecepcion)
+            .ToList();
+
+        if (prodId.HasValue) recepciones = recepciones.Where(r => r.ProductoId == prodId.Value).ToList();
+        if (asociacionFiltro != "todas") recepciones = recepciones.Where(r => string.Equals(r.AsociacionOrigen, asociacionFiltro, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        decimal costoTotalAcopio = 0;
+        decimal unidadesRecibidas = 0;
+
+        foreach (var r in recepciones)
+        {
+            filasGeneradas.Add(new[]
+            {
+                r.ConsecutivoRecepcion,
+                r.FechaRecepcion.ToString("dd/MM/yyyy"),
+                r.AsociacionOrigen,
+                r.ProductoNombre,
+                string.IsNullOrWhiteSpace(r.NumeroComprobante) ? "S/D" : r.NumeroComprobante,
+                r.Cantidad.ToString("N0", culturaCop),
+                $"${r.CostoTotal.ToString("N0", culturaCop)}",
+                r.RegistradoPor
+            });
+
+            costoTotalAcopio += r.CostoTotal;
+            unidadesRecibidas += r.Cantidad;
+        }
+
+        kpisReporteActivo.Add(("Inversión Acopio Cosechas", $"${costoTotalAcopio.ToString("N0", culturaCop)} COP"));
+        kpisReporteActivo.Add(("Unidades/Kilos Recibidos", $"{unidadesRecibidas:N0}"));
+        kpisReporteActivo.Add(("Actas de Recepción", $"{recepciones.Count}"));
+        var asociacionesUnicas = recepciones.Select(r => r.AsociacionOrigen).Distinct().Count();
+        kpisReporteActivo.Add(("Asociaciones Participantes", $"{asociacionesUnicas}"));
+    }
+
+    private void GenerarReporteDevoluciones(DateTime inicio, DateTime fin)
+    {
+        columnasGeneradas = new List<PuntoVentaPdfGenerator.ColumnaReportePdv>
+        {
+            new() { Titulo = "Consecutivo Anul.", Ancho = 80.0, Negrita = true },
+            new() { Titulo = "Ticket Original", Ancho = 70.0 },
+            new() { Titulo = "Fecha Anul.", Ancho = 65.0 },
+            new() { Titulo = "Cliente", Ancho = 80.0 },
+            new() { Titulo = "Motivo de Anulación", Ancho = 110.0 },
+            new() { Titulo = "Total Revertido COP", Ancho = 65.0, AlinearDerecha = true, Negrita = true },
+            new() { Titulo = "Autorizado Por", Ancho = 46.0 }
+        };
+
+        var anulaciones = PuntoVentaService.ObtenerVentas(null, inicio, fin)
+            .Where(v => v.Estado == "Anulada")
+            .OrderByDescending(v => v.FechaAnulacion ?? v.Fecha)
+            .ToList();
+
+        decimal totalRevertido = 0;
+
+        foreach (var a in anulaciones)
+        {
+            filasGeneradas.Add(new[]
+            {
+                string.IsNullOrWhiteSpace(a.ConsecutivoAnulacion) ? "DEV-S/N" : a.ConsecutivoAnulacion,
+                a.NumeroTicket,
+                (a.FechaAnulacion ?? a.Fecha).ToString("dd/MM/yy HH:mm"),
+                string.IsNullOrWhiteSpace(a.ClienteNombre) ? "Mostrador" : a.ClienteNombre,
+                string.IsNullOrWhiteSpace(a.MotivoAnulacion) ? "No especificado" : a.MotivoAnulacion,
+                $"${a.Total.ToString("N0", culturaCop)}",
+                string.IsNullOrWhiteSpace(a.AnuladoPor) ? "Admin PDV" : a.AnuladoPor
+            });
+
+            totalRevertido += a.Total;
+        }
+
+        kpisReporteActivo.Add(("Total Revertido", $"${totalRevertido.ToString("N0", culturaCop)} COP"));
+        kpisReporteActivo.Add(("Operaciones Anuladas", $"{anulaciones.Count}"));
+        kpisReporteActivo.Add(("Impacto de Retorno", anulaciones.Count > 0 ? "Stock Reintegrado" : "Sin incidencias"));
+    }
+
+    private void GenerarReporteKardex(DateTime inicio, DateTime fin, Guid? prodId)
+    {
+        columnasGeneradas = new List<PuntoVentaPdfGenerator.ColumnaReportePdv>
+        {
+            new() { Titulo = "Fecha", Ancho = 60.0 },
+            new() { Titulo = "Tipo", Ancho = 60.0, Negrita = true },
+            new() { Titulo = "Doc. Ref.", Ancho = 65.0 },
+            new() { Titulo = "Producto", Ancho = 95.0 },
+            new() { Titulo = "Entrada", Ancho = 35.0, AlinearDerecha = true },
+            new() { Titulo = "Salida", Ancho = 35.0, AlinearDerecha = true },
+            new() { Titulo = "Saldo", Ancho = 40.0, AlinearDerecha = true, Negrita = true },
+            new() { Titulo = "Unit. COP", Ancho = 50.0, AlinearDerecha = true },
+            new() { Titulo = "Responsable", Ancho = 76.0 }
+        };
+
+        var kardex = PuntoVentaService.ObtenerKardexGeneral(inicio, fin, prodId)
+            .OrderByDescending(k => k.Fecha)
+            .ToList();
+
+        decimal totalEntradas = 0;
+        decimal totalSalidas = 0;
+
+        foreach (var k in kardex)
+        {
+            filasGeneradas.Add(new[]
+            {
+                k.Fecha.ToString("dd/MM/yy HH:mm"),
+                k.TipoMovimiento,
+                k.DocumentoReferencia,
+                k.NombreProducto,
+                k.CantidadEntrada > 0 ? k.CantidadEntrada.ToString("N0", culturaCop) : "-",
+                k.CantidadSalida > 0 ? k.CantidadSalida.ToString("N0", culturaCop) : "-",
+                k.SaldoResultante.ToString("N0", culturaCop),
+                $"${k.CostoOPrecioUnitario.ToString("N0", culturaCop)}",
+                k.Responsable
+            });
+
+            totalEntradas += k.CantidadEntrada;
+            totalSalidas += k.CantidadSalida;
+        }
+
+        kpisReporteActivo.Add(("Total Entradas", $"{totalEntradas:N0}"));
+        kpisReporteActivo.Add(("Total Salidas", $"{totalSalidas:N0}"));
+        kpisReporteActivo.Add(("Balance Neto", $"{(totalEntradas - totalSalidas):N0}"));
+        kpisReporteActivo.Add(("Movimientos Registrados", $"{kardex.Count}"));
+    }
+
+    private void GenerarReporteMediosPago(DateTime inicio, DateTime fin)
+    {
+        columnasGeneradas = new List<PuntoVentaPdfGenerator.ColumnaReportePdv>
+        {
+            new() { Titulo = "Medio de Recaudo", Ancho = 130.0, Negrita = true },
+            new() { Titulo = "Operaciones", Ancho = 65.0, AlinearDerecha = true },
+            new() { Titulo = "% Transacciones", Ancho = 75.0, AlinearDerecha = true },
+            new() { Titulo = "Total Recaudado COP", Ancho = 130.0, AlinearDerecha = true, Negrita = true },
+            new() { Titulo = "% Participación COP", Ancho = 80.0, AlinearDerecha = true },
+            new() { Titulo = "Ticket Promedio", Ancho = 36.0, AlinearDerecha = true }
+        };
+
+        var ventas = PuntoVentaService.ObtenerVentas(null, inicio, fin)
+            .Where(v => v.Estado == "Completada")
+            .ToList();
+
+        var totalGlobal = ventas.Sum(v => v.Total);
+        var totalOps = ventas.Count;
+
+        var agrupados = ventas
+            .GroupBy(v => string.IsNullOrWhiteSpace(v.MetodoPago) ? "Efectivo" : v.MetodoPago)
+            .Select(g => new
+            {
+                Medio = g.Key,
+                Ops = g.Count(),
+                Total = g.Sum(x => x.Total)
+            })
+            .OrderByDescending(x => x.Total)
+            .ToList();
+
+        foreach (var g in agrupados)
+        {
+            var pctOps = totalOps > 0 ? ((decimal)g.Ops / totalOps * 100) : 0;
+            var pctCop = totalGlobal > 0 ? (g.Total / totalGlobal * 100) : 0;
+            var prom = g.Ops > 0 ? (g.Total / g.Ops) : 0;
+
+            filasGeneradas.Add(new[]
+            {
+                g.Medio,
+                g.Ops.ToString(),
+                $"{pctOps:N1}%",
+                $"${g.Total.ToString("N0", culturaCop)}",
+                $"{pctCop:N1}%",
+                $"${prom.ToString("N0", culturaCop)}"
+            });
+        }
+
+        kpisReporteActivo.Add(("Total Recaudado", $"${totalGlobal.ToString("N0", culturaCop)} COP"));
+        kpisReporteActivo.Add(("Total Transacciones", $"{totalOps}"));
+        kpisReporteActivo.Add(("Medio Principal", agrupados.FirstOrDefault()?.Medio ?? "Sin datos"));
+        var enEfectivo = agrupados.FirstOrDefault(x => x.Medio.Contains("Efectivo", StringComparison.OrdinalIgnoreCase))?.Total ?? 0;
+        kpisReporteActivo.Add(("Efectivo en Caja", $"${enEfectivo.ToString("N0", culturaCop)} COP"));
+    }
+
+    private void GenerarReporteCierresCaja(DateTime inicio, DateTime fin)
+    {
+        columnasGeneradas = new List<PuntoVentaPdfGenerator.ColumnaReportePdv>
+        {
+            new() { Titulo = "Fecha Cierre", Ancho = 75.0 },
+            new() { Titulo = "Turno", Ancho = 60.0 },
+            new() { Titulo = "Responsable", Ancho = 80.0 },
+            new() { Titulo = "Total Ventas COP", Ancho = 75.0, AlinearDerecha = true },
+            new() { Titulo = "Efectivo Esperado", Ancho = 65.0, AlinearDerecha = true },
+            new() { Titulo = "Efectivo Contado", Ancho = 65.0, AlinearDerecha = true, Negrita = true },
+            new() { Titulo = "Diferencia COP", Ancho = 65.0, AlinearDerecha = true, Negrita = true },
+            new() { Titulo = "Estado Arqueo", Ancho = 31.0 }
+        };
+
+        var cierres = PuntoVentaService.ObtenerCierresCaja()
+            .Where(c => c.FechaCierre >= inicio && c.FechaCierre <= fin)
+            .OrderByDescending(c => c.FechaCierre)
+            .ToList();
+
+        decimal totalVendidoTurnos = 0;
+        decimal totalDiferencias = 0;
+        int cuadrados = 0;
+
+        foreach (var c in cierres)
+        {
+            filasGeneradas.Add(new[]
+            {
+                c.FechaCierre.ToString("dd/MM/yy HH:mm"),
+                c.Turno,
+                c.Responsable,
+                $"${c.TotalVentasGeneral.ToString("N0", culturaCop)}",
+                $"${c.EfectivoEsperado.ToString("N0", culturaCop)}",
+                $"${c.EfectivoContado.ToString("N0", culturaCop)}",
+                $"${c.Diferencia.ToString("N0", culturaCop)}",
+                c.Estado
+            });
+
+            totalVendidoTurnos += c.TotalVentasGeneral;
+            totalDiferencias += c.Diferencia;
+            if (c.Estado == "Cuadrado") cuadrados++;
+        }
+
+        kpisReporteActivo.Add(("Turnos Auditados", $"{cierres.Count}"));
+        kpisReporteActivo.Add(("Ventas en Turnos", $"${totalVendidoTurnos.ToString("N0", culturaCop)} COP"));
+        kpisReporteActivo.Add(("Arqueos Cuadrados", $"{cuadrados} de {cierres.Count}"));
+        kpisReporteActivo.Add(("Diferencia Neta Caja", $"${totalDiferencias.ToString("N0", culturaCop)} COP"));
+    }
+
+    private string ObtenerTituloReporteActivo() => tipoReporteActivo switch
+    {
+        "ventas_periodo" => "1. Reporte de Ventas por Período y Producto",
+        "top_ventas" => "2. Reporte de Productos Más Vendidos y Rotación",
+        "existencias" => "3. Reporte de Existencias, Valuación y Alertas de Stock",
+        "recepciones" => "4. Reporte de Recepciones y Acopio por Asociación",
+        "devoluciones" => "5. Reporte de Devoluciones, Anulaciones y Reintegros",
+        "kardex" => "6. Kardex General y Auditoría de Movimientos",
+        "medios_pago" => "7. Reporte de Ventas y Recaudos por Medio de Pago",
+        "cierres_caja" => "8. Reporte Consolidado de Cierres de Turno y Arqueos",
+        _ => "Reporte Operativo del Punto de Venta"
+    };
+
+    private string ObtenerTextoPeriodo() => periodoFiltro switch
+    {
+        "hoy" => $"Hoy ({fechaDesde:dd/MM/yyyy})",
+        "semana" => $"Semana ({fechaDesde:dd/MM/yyyy} al {fechaHasta:dd/MM/yyyy})",
+        "mes" => $"Mes de {fechaDesde:MMMM yyyy} ({fechaDesde:dd/MM/yyyy} al {fechaHasta:dd/MM/yyyy})",
+        "ano" => $"Año {fechaDesde.Year} ({fechaDesde:dd/MM/yyyy} al {fechaHasta:dd/MM/yyyy})",
+        _ => $"Rango ({fechaDesde:dd/MM/yyyy} al {fechaHasta:dd/MM/yyyy})"
+    };
+
+    private async Task DescargarReportePdf()
+    {
+        try
+        {
+            estaExportando = true;
+            mensajeFeedback = "Generando reporte formal en PDF...";
+            esFeedbackExito = true;
+            StateHasChanged();
+
+            var titulo = ObtenerTituloReporteActivo();
+            var periodo = ObtenerTextoPeriodo();
+            var resumen = $"Auditoría interna FAAUA. Total registros: {filasGeneradas.Count}. Filtros: Categoría='{categoriaFiltro}', Asociación='{asociacionFiltro}'.";
+
+            var pdfBytes = PuntoVentaPdfGenerator.GenerarReportePdvPdf(
+                titulo,
+                periodo,
+                columnasGeneradas,
+                filasGeneradas,
+                resumen,
+                nombreUsuario,
+                kpisReporteActivo
+            );
+
+            var base64 = Convert.ToBase64String(pdfBytes);
+            var nombreArchivo = $"Reporte_{tipoReporteActivo}_{DateTime.Now:yyyyMMdd_HHmm}.pdf";
+
+            await JS.InvokeVoidAsync("descargarArchivoBase64", nombreArchivo, "application/pdf", base64);
+            mensajeFeedback = $"Reporte descargado exitosamente: '{nombreArchivo}'.";
+            esFeedbackExito = true;
+        }
+        catch (Exception ex)
+        {
+            mensajeFeedback = $"Error al compilar el reporte PDF: {ex.Message}";
+            esFeedbackExito = false;
+        }
+        finally
+        {
+            estaExportando = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DescargarReporteCsv()
+    {
+        try
+        {
+            estaExportando = true;
+            mensajeFeedback = "Generando archivo CSV para Excel...";
+            esFeedbackExito = true;
+            StateHasChanged();
+
+            var sb = new System.Text.StringBuilder();
+
+            // Encabezado institucional
+            sb.AppendLine($"# REPORTE OPERATIVO - PUNTO DE VENTA SOLIDARIO FAAUA - ASOAGRO");
+            sb.AppendLine($"# Reporte:;{ObtenerTituloReporteActivo()}");
+            sb.AppendLine($"# Período auditado:;{ObtenerTextoPeriodo()}");
+            sb.AppendLine($"# Generado por:;{nombreUsuario} ({rolUsuario}) el {DateTime.Now:dd/MM/yyyy HH:mm}");
+            sb.AppendLine($"# Nota:;Documento interno de control operacional. No constituye factura electrónica DIAN.");
+            sb.AppendLine();
+
+            // KPIs
+            if (kpisReporteActivo.Count > 0)
+            {
+                sb.AppendLine("# RESUMEN EJECUTIVO (KPIS)");
+                foreach (var k in kpisReporteActivo)
+                {
+                    sb.AppendLine($"# {k.Etiqueta}:;{k.Valor}");
+                }
+                sb.AppendLine();
+            }
+
+            // Cabeceras de columnas
+            var headers = columnasGeneradas.Select(c => EscaparCsv(c.Titulo));
+            sb.AppendLine(string.Join(";", headers));
+
+            // Filas
+            foreach (var fila in filasGeneradas)
+            {
+                var rowItems = fila.Select(EscaparCsv);
+                sb.AppendLine(string.Join(";", rowItems));
+            }
+
+            // UTF-8 con BOM para que Excel abra acentos y pesos colombianos correctamente
+            var utf8BOM = new System.Text.UTF8Encoding(true);
+            var csvBytes = utf8BOM.GetBytes(sb.ToString());
+            var base64 = Convert.ToBase64String(csvBytes);
+            var nombreArchivo = $"Reporte_{tipoReporteActivo}_{DateTime.Now:yyyyMMdd_HHmm}.csv";
+
+            await JS.InvokeVoidAsync("descargarArchivoBase64", nombreArchivo, "text/csv;charset=utf-8", base64);
+            mensajeFeedback = $"Reporte CSV exportado exitosamente: '{nombreArchivo}'.";
+            esFeedbackExito = true;
+        }
+        catch (Exception ex)
+        {
+            mensajeFeedback = $"Error al generar el archivo CSV: {ex.Message}";
+            esFeedbackExito = false;
+        }
+        finally
+        {
+            estaExportando = false;
+            StateHasChanged();
+        }
+    }
+
+    private static string EscaparCsv(string valor)
+    {
+        if (string.IsNullOrEmpty(valor)) return "\"\"";
+        var limpio = valor.Replace("\"", "\"\"");
+        return $"\"{limpio}\"";
+    }
+}

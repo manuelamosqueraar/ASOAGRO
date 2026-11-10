@@ -6,11 +6,17 @@ namespace Asoagro.Services;
 
 public interface IPuntoVentaService
 {
-    IReadOnlyList<ProductoPdv> ObtenerProductos(string? asociacion = null, string? categoria = null);
+    IReadOnlyList<ProductoPdv> ObtenerProductos(string? asociacion = null, string? categoria = null, bool incluirInactivos = true);
     ProductoPdv? ObtenerProductoPorId(Guid id);
     void GuardarProducto(ProductoPdv producto);
+    bool RegistrarProducto(ProductoPdv producto, string usuario, string rol, out string mensajeError);
+    bool ActualizarProducto(ProductoPdv producto, string usuario, string rol, out string mensajeError);
+    bool CambiarEstadoProducto(Guid productoId, string nuevoEstado, string usuario, string rol, out string mensajeError);
     bool ActualizarStock(Guid productoId, decimal nuevoStock);
     bool AjustarInventario(Guid productoId, decimal nuevoStock, string motivo, string autorizadoPor, string usuario);
+    IReadOnlyList<AjusteInventarioPdv> ObtenerAjustesInventario(Guid? productoId = null);
+    IReadOnlyList<MovimientoKardexPdv> ObtenerKardexProducto(Guid productoId);
+    IReadOnlyList<MovimientoKardexPdv> ObtenerKardexGeneral(DateTime? desde = null, DateTime? hasta = null, Guid? productoId = null, string? asociacion = null);
 
     ResultadoRegistroVenta RegistrarVenta(VentaPdv venta, string usuario, string rol);
     bool AnularVenta(Guid ventaId, string motivo, string usuario, string rol);

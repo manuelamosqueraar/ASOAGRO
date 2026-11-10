@@ -1,0 +1,445 @@
+{
+  "Notificaciones": [
+    {
+      "Id": "f9038ffa-e860-4f2e-8062-84bac707b500",
+      "FechaCreacion": "2026-11-09T22:07:36.4504259-05:00",
+      "Titulo": "Contacto programado en 6 d\u00EDas: Ana Martinez",
+      "Descripcion": "3008134986 \u00B7 pr\u00F3xima gesti\u00F3n: 15/11/2026.",
+      "Etiqueta": "Seguimiento",
+      "Enlace": "/seguimiento-asociados",
+      "Icono": "alerta",
+      "Categoria": 2,
+      "Nivel": 1,
+      "RolesDestino": [
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin",
+        "Presidenta",
+        "Presidente"
+      ],
+      "RolesEnlace": [
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin",
+        "Presidenta",
+        "Presidente"
+      ],
+      "ClaveUnica": "seguimiento|51|2026-11-15|7"
+    },
+    {
+      "Id": "d827039c-57e0-4705-bbcc-211c7a6f686a",
+      "FechaCreacion": "2026-11-09T22:07:36.4498444-05:00",
+      "Titulo": "Declaraci\u00F3n de Renta e Ingresos Institucionales - Declaraci\u00F3n Anual de Ingresos vence en 25 d\u00EDas",
+      "Descripcion": "ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1 \u00B7 fecha de vencimiento: 04/12/2026.",
+      "Etiqueta": "Por vencer",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 0,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [],
+      "ClaveUnica": "documento|ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1|Declaraci\u00F3n de Renta e Ingresos Institucionales - Declaraci\u00F3n Anual de Ingresos|2026-12-04|30"
+    },
+    {
+      "Id": "e55982cb-234e-43cd-af79-262f12cbfc35",
+      "FechaCreacion": "2026-11-09T22:07:36.4498412-05:00",
+      "Titulo": "Certificado BPA vence en 24 d\u00EDas",
+      "Descripcion": "Ana Martinez \u00B7 fecha de vencimiento: 03/12/2026.",
+      "Etiqueta": "Por vencer",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 0,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [],
+      "ClaveUnica": "documento|Ana Martinez|Certificado BPA|2026-12-03|30"
+    },
+    {
+      "Id": "5e083f84-d81c-478e-9ad9-61c7de5db4e6",
+      "FechaCreacion": "2026-11-09T22:07:36.449839-05:00",
+      "Titulo": "Declaraci\u00F3n de ingresos vence en 19 d\u00EDas",
+      "Descripcion": "DEC-2025 \u00B7 fecha de vencimiento: 28/11/2026.",
+      "Etiqueta": "Por vencer",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 0,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [],
+      "ClaveUnica": "documento|DEC-2025|Declaraci\u00F3n de ingresos|2026-11-28|30"
+    },
+    {
+      "Id": "53744e84-f267-4c24-b33c-49a178521b5d",
+      "FechaCreacion": "2026-11-09T22:07:36.4498369-05:00",
+      "Titulo": "P\u00F3liza de Responsabilidad y Cumplimiento - P\u00F3liza Seguros del Estado vence en 12 d\u00EDas",
+      "Descripcion": "ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1 \u00B7 fecha de vencimiento: 21/11/2026.",
+      "Etiqueta": "Por vencer",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 1,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [],
+      "ClaveUnica": "documento|ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1|P\u00F3liza de Responsabilidad y Cumplimiento - P\u00F3liza Seguros del Estado|2026-11-21|15"
+    },
+    {
+      "Id": "bd151fa1-77bc-493b-95e8-24a44a25f894",
+      "FechaCreacion": "2026-11-09T22:07:36.449834-05:00",
+      "Titulo": "RUT vence en 9 d\u00EDas",
+      "Descripcion": "900000002-2 \u00B7 fecha de vencimiento: 18/11/2026.",
+      "Etiqueta": "Por vencer",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 1,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [],
+      "ClaveUnica": "documento|900000002-2|RUT|2026-11-18|15"
+    },
+    {
+      "Id": "a08ec4ae-2404-43f0-b9b1-1e201d509bc0",
+      "FechaCreacion": "2026-11-09T22:07:36.4498259-05:00",
+      "Titulo": "Certificado de Existencia y Representaci\u00F3n Legal (C\u00E1mara de Comercio) - C\u00E1mara de Comercio de Urab\u00E1 vence en 5 d\u00EDas",
+      "Descripcion": "ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1 \u00B7 fecha de vencimiento: 14/11/2026.",
+      "Etiqueta": "Por vencer",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 2,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [],
+      "ClaveUnica": "documento|ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1|Certificado de Existencia y Representaci\u00F3n Legal (C\u00E1mara de Comercio) - C\u00E1mara de Comercio de Urab\u00E1|2026-11-14|7"
+    },
+    {
+      "Id": "85b60add-f0d6-44e4-ae3d-4fb2da12a00c",
+      "FechaCreacion": "2026-11-09T22:07:36.4498201-05:00",
+      "Titulo": "RUT ya venci\u00F3",
+      "Descripcion": "900000003-3 \u00B7 fecha de vencimiento: 03/11/2026.",
+      "Etiqueta": "Vencido",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 2,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [],
+      "ClaveUnica": "documento|900000003-3|RUT|2026-11-03|0"
+    },
+    {
+      "Id": "d88a9e93-4f10-40f1-8067-5d4f6878122c",
+      "FechaCreacion": "2026-11-09T22:07:36.4497216-05:00",
+      "Titulo": "C\u00E1mara de Comercio ya venci\u00F3",
+      "Descripcion": "CC-0456 \u00B7 fecha de vencimiento: 24/10/2026.",
+      "Etiqueta": "Vencido",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 2,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [],
+      "ClaveUnica": "documento|CC-0456|C\u00E1mara de Comercio|2026-10-24|0"
+    },
+    {
+      "Id": "39ce57e3-46f8-4fdf-bbfc-1fbbe25a98e1",
+      "FechaCreacion": "2026-11-09T22:07:36.4441654-05:00",
+      "Titulo": "Certificado BPA ya venci\u00F3",
+      "Descripcion": "Laura Torres \u00B7 fecha de vencimiento: 09/10/2026.",
+      "Etiqueta": "Vencido",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 2,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [],
+      "ClaveUnica": "documento|Laura Torres|Certificado BPA|2026-10-09|0"
+    },
+    {
+      "Id": "81093529-d423-4664-89cd-bdbb532d19ab",
+      "FechaCreacion": "2026-11-09T21:18:51.6161159-05:00",
+      "Titulo": "Contacto vencido: Maria Gomez",
+      "Descripcion": "3008524811 \u00B7 pr\u00F3xima gesti\u00F3n: 06/11/2026.",
+      "Etiqueta": "Vencido",
+      "Enlace": "/seguimiento-asociados",
+      "Icono": "alerta",
+      "Categoria": 2,
+      "Nivel": 2,
+      "RolesDestino": [
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin",
+        "Presidenta",
+        "Presidente"
+      ],
+      "RolesEnlace": [
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin",
+        "Presidenta",
+        "Presidente"
+      ],
+      "ClaveUnica": "seguimiento|49|2026-11-06|-1"
+    },
+    {
+      "Id": "cf7e0a43-7da0-4392-9513-d02586965737",
+      "FechaCreacion": "2026-11-09T21:18:51.6161231-05:00",
+      "Titulo": "Declaraci\u00F3n de Renta e Ingresos Institucionales vence en 25 d\u00EDas",
+      "Descripcion": "ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1 \u00B7 vencimiento: 04/12/2026.",
+      "Etiqueta": "Por vencer",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 0,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "ClaveUnica": "documento|ASOAGRO|DeclaracionRenta|2026-12-04"
+    },
+    {
+      "Id": "b9a679be-a1ec-41dd-84b8-9844e3dd02b0",
+      "FechaCreacion": "2026-11-09T21:18:51.6161182-05:00",
+      "Titulo": "Certificado BPA vence en 24 d\u00EDas",
+      "Descripcion": "Ana Martinez \u00B7 fecha de vencimiento: 03/12/2026.",
+      "Etiqueta": "Por vencer",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 0,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "ClaveUnica": "documento|AnaMartinez|BPA|2026-12-03"
+    },
+    {
+      "Id": "a1111111-2222-3333-4444-555555555555",
+      "FechaCreacion": "2026-11-09T21:40:00-05:00",
+      "Titulo": "Alerta de Inventario: Miel de Abejas Pura",
+      "Descripcion": "Stock disponible en 45 frascos. Verificar reposici\u00F3n con ASOPROMAGRO.",
+      "Etiqueta": "Inventario",
+      "Enlace": "/punto-de-venta/catalogo",
+      "Icono": "alerta",
+      "Categoria": 3,
+      "Nivel": 1,
+      "RolesDestino": [
+        "AdministradorPdv",
+        "PuntoVenta",
+        "Vendedor",
+        "Presidenta",
+        "Presidente",
+        "Tesorero",
+        "Tesorera"
+      ],
+      "RolesEnlace": [
+        "AdministradorPdv",
+        "PuntoVenta",
+        "Vendedor",
+        "Presidenta",
+        "Presidente",
+        "Tesorero",
+        "Tesorera"
+      ],
+      "ClaveUnica": "pdv|stock|miel-abejas|2026-11-09"
+    },
+    {
+      "Id": "b2222222-3333-4444-5555-666666666666",
+      "FechaCreacion": "2026-11-09T21:35:00-05:00",
+      "Titulo": "Lote de Cosecha ingresado: Pl\u00E1tano Maduro",
+      "Descripcion": "80 cajas recibidas de ASOPL\u00C1TANO. Comprobante de recepci\u00F3n disponible.",
+      "Etiqueta": "Recepci\u00F3n",
+      "Enlace": "/punto-de-venta/recepcion",
+      "Icono": "doc",
+      "Categoria": 3,
+      "Nivel": 0,
+      "RolesDestino": [
+        "AdministradorPdv",
+        "PuntoVenta",
+        "Vendedor",
+        "Presidenta",
+        "Presidente",
+        "Tesorero",
+        "Tesorera"
+      ],
+      "RolesEnlace": [
+        "AdministradorPdv",
+        "PuntoVenta",
+        "Vendedor",
+        "Presidenta",
+        "Presidente",
+        "Tesorero",
+        "Tesorera"
+      ],
+      "ClaveUnica": "pdv|recepcion|platano|2026-11-09"
+    },
+    {
+      "Id": "c3333333-4444-5555-6666-777777777777",
+      "FechaCreacion": "2026-11-09T21:20:00-05:00",
+      "Titulo": "Turno y Caja: Recordatorio de Cierre",
+      "Descripcion": "3 ventas cerradas hoy. Realizar conciliaci\u00F3n de efectivo y arqueo en gaveta.",
+      "Etiqueta": "Caja",
+      "Enlace": "/punto-de-venta/cierre-turno",
+      "Icono": "check",
+      "Categoria": 3,
+      "Nivel": 1,
+      "RolesDestino": [
+        "AdministradorPdv",
+        "PuntoVenta",
+        "Vendedor",
+        "Presidenta",
+        "Presidente",
+        "Tesorero",
+        "Tesorera"
+      ],
+      "RolesEnlace": [
+        "AdministradorPdv",
+        "PuntoVenta",
+        "Vendedor",
+        "Presidenta",
+        "Presidente",
+        "Tesorero",
+        "Tesorera"
+      ],
+      "ClaveUnica": "pdv|cierre|arqueo|2026-11-09"
+    },
+    {
+      "Id": "d4444444-5555-6666-7777-888888888888",
+      "FechaCreacion": "2026-11-09T21:10:00-05:00",
+      "Titulo": "Reportes Operativos PDV Actualizados",
+      "Descripcion": "Consolidado de ventas, rotaci\u00F3n de cosechas y Kardex valorizado en COP.",
+      "Etiqueta": "Reportes",
+      "Enlace": "/punto-de-venta/reportes",
+      "Icono": "doc",
+      "Categoria": 3,
+      "Nivel": 0,
+      "RolesDestino": [
+        "AdministradorPdv",
+        "PuntoVenta",
+        "Vendedor",
+        "Presidenta",
+        "Presidente",
+        "Tesorero",
+        "Tesorera"
+      ],
+      "RolesEnlace": [
+        "AdministradorPdv",
+        "PuntoVenta",
+        "Vendedor",
+        "Presidenta",
+        "Presidente",
+        "Tesorero",
+        "Tesorera"
+      ],
+      "ClaveUnica": "pdv|reportes|kardex|2026-11-09"
+    }
+  ],
+  "ClavesUsadas": [
+    "pdv|stock|miel-abejas|2026-11-09",
+    "pdv|recepcion|platano|2026-11-09",
+    "pdv|cierre|arqueo|2026-11-09",
+    "pdv|reportes|kardex|2026-11-09",
+    "documento|ASOAGRO|DeclaracionRenta|2026-12-04",
+    "documento|AnaMartinez|BPA|2026-12-03",
+    "seguimiento|49|2026-11-06|-1",
+    "documento|Laura Torres|Certificado BPA|2026-10-09|0",
+    "documento|CC-0456|C\u00E1mara de Comercio|2026-10-24|0",
+    "documento|900000003-3|RUT|2026-11-03|0",
+    "documento|ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1|Certificado de Existencia y Representaci\u00F3n Legal (C\u00E1mara de Comercio) - C\u00E1mara de Comercio de Urab\u00E1|2026-11-14|7",
+    "documento|900000002-2|RUT|2026-11-18|15",
+    "documento|ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1|P\u00F3liza de Responsabilidad y Cumplimiento - P\u00F3liza Seguros del Estado|2026-11-21|15",
+    "documento|DEC-2025|Declaraci\u00F3n de ingresos|2026-11-28|30",
+    "documento|Ana Martinez|Certificado BPA|2026-12-03|30",
+    "documento|ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1|Declaraci\u00F3n de Renta e Ingresos Institucionales - Declaraci\u00F3n Anual de Ingresos|2026-12-04|30",
+    "seguimiento|51|2026-11-15|7"
+  ],
+  "LeidasPorUsuario": {}
+}

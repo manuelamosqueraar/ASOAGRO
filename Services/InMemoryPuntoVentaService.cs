@@ -12,6 +12,7 @@ public class InMemoryPuntoVentaService : IPuntoVentaService
     private static readonly ConcurrentDictionary<Guid, VentaPdv> Ventas = new();
     private static readonly ConcurrentDictionary<Guid, RecepcionProductoPdv> Recepciones = new();
     private static readonly ConcurrentDictionary<Guid, CierreCajaPdv> CierresCaja = new();
+    private static readonly ConcurrentDictionary<Guid, AjusteInventarioPdv> AjustesInventario = new();
     private static readonly object SyncLock = new();
     private static int SiguienteConsecutivo = 1004;
     private static int SiguienteConsecutivoRecepcion = 1003;
@@ -288,9 +289,14 @@ public class InMemoryPuntoVentaService : IPuntoVentaService
         CierresCaja[cierreAyer.Id] = cierreAyer;
     }
 
-    public IReadOnlyList<ProductoPdv> ObtenerProductos(string? asociacion = null, string? categoria = null)
+    public IReadOnlyList<ProductoPdv> ObtenerProductos(string? asociacion = null, string? categoria = null, bool incluirInactivos = true)
     {
-        var q = Productos.Values.Where(p => p.Activo).AsEnumerable();
+        var q = Productos.Values.AsEnumerable();
+
+        if (!incluirInactivos)
+        {
+            q = q.Where(p => p.Activo && p.Estado != "Inactivo" && p.Estado != "Descontinuado");
+        }
 
         if (!string.IsNullOrWhiteSpace(asociacion))
         {
@@ -318,7 +324,171 @@ public class InMemoryPuntoVentaService : IPuntoVentaService
         {
             producto.Id = Guid.NewGuid();
         }
+        ActualizarEstadoStock(producto);
         Productos[producto.Id] = producto;
+    }
+
+    public bool RegistrarProducto(ProductoPdv producto, string usuario, string rol, out string mensajeError)
+    {
+        mensajeError = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(producto.Nombre))
+        {
+            mensajeError = "El nombre del producto es obligatorio.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(producto.Codigo))
+        {
+            mensajeError = "El código único del producto es obligatorio.";
+            return false;
+        }
+
+        var codigoLimpio = producto.Codigo.Trim();
+        if (Productos.Values.Any(p => string.Equals(p.Codigo.Trim(), codigoLimpio, StringComparison.OrdinalIgnoreCase)))
+        {
+            mensajeError = $"El código '{codigoLimpio}' ya se encuentra asignado a otro producto en el catálogo.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(producto.Categoria))
+        {
+            mensajeError = "Debe seleccionar una categoría para el producto.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(producto.UnidadMedida))
+        {
+            mensajeError = "Debe especificar la unidad de venta o presentación.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(producto.AsociacionOrigen))
+        {
+            mensajeError = "Debe asociar el producto a una asociación proveedora registrada.";
+            return false;
+        }
+
+        if (producto.PrecioUnitario < 0)
+        {
+            mensajeError = "El precio de venta en COP no puede ser negativo.";
+            return false;
+        }
+
+        if (producto.CostoPromedio < 0)
+        {
+            mensajeError = "El costo de adquisición en COP no puede ser negativo.";
+            return false;
+        }
+
+        if (producto.StockDisponible < 0)
+        {
+            mensajeError = "La cantidad en stock no puede ser negativa.";
+            return false;
+        }
+
+        if (producto.StockMinimo < 0)
+        {
+            producto.StockMinimo = 0;
+        }
+
+        lock (SyncLock)
+        {
+            if (producto.Id == Guid.Empty) producto.Id = Guid.NewGuid();
+            producto.Codigo = codigoLimpio.ToUpperInvariant();
+            producto.FechaRegistro = DateTime.Now;
+            producto.RegistradoPor = usuario;
+            ActualizarEstadoStock(producto);
+
+            Productos[producto.Id] = producto;
+
+            // Si se ingresó con inventario inicial mayor a cero, registrar el movimiento de apertura en el Kardex
+            if (producto.StockDisponible > 0)
+            {
+                var ajusteApertura = new AjusteInventarioPdv
+                {
+                    Id = Guid.NewGuid(),
+                    ProductoId = producto.Id,
+                    CodigoProducto = producto.Codigo,
+                    NombreProducto = producto.Nombre,
+                    Fecha = DateTime.Now,
+                    StockAnterior = 0,
+                    StockNuevo = producto.StockDisponible,
+                    Motivo = "Inventario inicial de apertura al registrar producto en catálogo.",
+                    AutorizadoPor = usuario,
+                    Usuario = usuario
+                };
+                AjustesInventario[ajusteApertura.Id] = ajusteApertura;
+            }
+
+            return true;
+        }
+    }
+
+    public bool ActualizarProducto(ProductoPdv producto, string usuario, string rol, out string mensajeError)
+    {
+        mensajeError = string.Empty;
+
+        if (!Productos.TryGetValue(producto.Id, out var actual))
+        {
+            mensajeError = "El producto no fue encontrado en el catálogo.";
+            return false;
+        }
+
+        var codigoLimpio = producto.Codigo.Trim().ToUpperInvariant();
+        if (Productos.Values.Any(p => p.Id != producto.Id && string.Equals(p.Codigo.Trim(), codigoLimpio, StringComparison.OrdinalIgnoreCase)))
+        {
+            mensajeError = $"El código '{codigoLimpio}' ya está en uso por otro producto.";
+            return false;
+        }
+
+        lock (SyncLock)
+        {
+            actual.Nombre = producto.Nombre.Trim();
+            actual.Codigo = codigoLimpio;
+            actual.Categoria = producto.Categoria;
+            actual.Descripcion = producto.Descripcion;
+            actual.UnidadMedida = producto.UnidadMedida;
+            actual.AsociacionOrigen = producto.AsociacionOrigen;
+            actual.ProductorOrigen = producto.ProductorOrigen;
+            actual.MunicipioProcedencia = producto.MunicipioProcedencia;
+            actual.VeredaProcedencia = producto.VeredaProcedencia;
+            actual.VariedadClasificacion = producto.VariedadClasificacion;
+            actual.NumeroLote = producto.NumeroLote;
+            actual.FechaCosecha = producto.FechaCosecha;
+            actual.FechaRecepcion = producto.FechaRecepcion;
+            actual.PrecioUnitario = Math.Max(0, producto.PrecioUnitario);
+            actual.CostoPromedio = Math.Max(0, producto.CostoPromedio);
+            actual.VigenciaPrecio = producto.VigenciaPrecio;
+            actual.StockMinimo = Math.Max(0, producto.StockMinimo);
+            actual.StockReservado = Math.Max(0, producto.StockReservado);
+            actual.Estado = producto.Estado;
+            actual.Activo = producto.Estado != "Inactivo" && producto.Estado != "Descontinuado";
+            actual.ImagenUrl = producto.ImagenUrl;
+            actual.Observaciones = producto.Observaciones;
+            actual.SoporteNombre = producto.SoporteNombre ?? actual.SoporteNombre;
+
+            ActualizarEstadoStock(actual);
+            return true;
+        }
+    }
+
+    public bool CambiarEstadoProducto(Guid productoId, string nuevoEstado, string usuario, string rol, out string mensajeError)
+    {
+        mensajeError = string.Empty;
+        if (!Productos.TryGetValue(productoId, out var prod))
+        {
+            mensajeError = "Producto no encontrado.";
+            return false;
+        }
+
+        lock (SyncLock)
+        {
+            prod.Estado = nuevoEstado;
+            prod.Activo = nuevoEstado != "Inactivo" && nuevoEstado != "Descontinuado";
+            ActualizarEstadoStock(prod);
+            return true;
+        }
     }
 
     public bool ActualizarStock(Guid productoId, decimal nuevoStock)
@@ -326,6 +496,7 @@ public class InMemoryPuntoVentaService : IPuntoVentaService
         if (Productos.TryGetValue(productoId, out var prod))
         {
             prod.StockDisponible = Math.Max(0, nuevoStock);
+            ActualizarEstadoStock(prod);
             return true;
         }
         return false;
@@ -339,12 +510,221 @@ public class InMemoryPuntoVentaService : IPuntoVentaService
             {
                 var stockAnterior = prod.StockDisponible;
                 prod.StockDisponible = Math.Max(0, nuevoStock);
+                ActualizarEstadoStock(prod);
 
-                // Registramos auditoría en la descripción o historial del producto
-                prod.Descripcion = $"{prod.Descripcion} [Ajuste inventario {DateTime.Now:dd/MM/yyyy HH:mm}: de {stockAnterior} a {nuevoStock} {prod.UnidadMedida}. Motivo: {motivo}. Autorizado por: {autorizadoPor}. Operador: {usuario}]";
+                var ajuste = new AjusteInventarioPdv
+                {
+                    Id = Guid.NewGuid(),
+                    ProductoId = productoId,
+                    CodigoProducto = prod.Codigo,
+                    NombreProducto = prod.Nombre,
+                    Fecha = DateTime.Now,
+                    StockAnterior = stockAnterior,
+                    StockNuevo = prod.StockDisponible,
+                    Motivo = motivo.Trim(),
+                    AutorizadoPor = autorizadoPor.Trim(),
+                    Usuario = usuario.Trim()
+                };
+
+                AjustesInventario[ajuste.Id] = ajuste;
                 return true;
             }
             return false;
+        }
+    }
+
+    public IReadOnlyList<AjusteInventarioPdv> ObtenerAjustesInventario(Guid? productoId = null)
+    {
+        var q = AjustesInventario.Values.AsEnumerable();
+        if (productoId.HasValue && productoId.Value != Guid.Empty)
+        {
+            q = q.Where(a => a.ProductoId == productoId.Value);
+        }
+        return q.OrderByDescending(a => a.Fecha).ToList();
+    }
+
+    public IReadOnlyList<MovimientoKardexPdv> ObtenerKardexProducto(Guid productoId)
+    {
+        return ObtenerKardexGeneral(productoId: productoId);
+    }
+
+    public IReadOnlyList<MovimientoKardexPdv> ObtenerKardexGeneral(DateTime? desde = null, DateTime? hasta = null, Guid? productoId = null, string? asociacion = null)
+    {
+        var lista = new List<MovimientoKardexPdv>();
+
+        // 1. Recepciones
+        var recepciones = Recepciones.Values.AsEnumerable();
+        if (productoId.HasValue) recepciones = recepciones.Where(r => r.ProductoId == productoId.Value);
+        if (!string.IsNullOrWhiteSpace(asociacion)) recepciones = recepciones.Where(r => string.Equals(r.AsociacionOrigen, asociacion, StringComparison.OrdinalIgnoreCase) || r.AsociacionOrigen.Contains(asociacion, StringComparison.OrdinalIgnoreCase));
+
+        foreach (var r in recepciones)
+        {
+            Productos.TryGetValue(r.ProductoId, out var p);
+            lista.Add(new MovimientoKardexPdv
+            {
+                Id = r.Id,
+                Fecha = r.FechaRecepcion,
+                ProductoId = r.ProductoId,
+                CodigoProducto = r.CodigoProducto,
+                NombreProducto = r.ProductoNombre,
+                Categoria = p?.Categoria ?? "Cosechas",
+                AsociacionOrigen = r.AsociacionOrigen,
+                TipoMovimiento = "Recepción de Cosecha",
+                DocumentoReferencia = string.IsNullOrWhiteSpace(r.ConsecutivoRecepcion) ? (r.NumeroComprobante ?? "REC-S/N") : r.ConsecutivoRecepcion,
+                CantidadEntrada = r.Cantidad,
+                CantidadSalida = 0,
+                UnidadMedida = r.UnidadMedida,
+                CostoOPrecioUnitario = r.CostoUnitario,
+                Responsable = r.RegistradoPor,
+                Observaciones = $"Proveedor: {r.ProveedorNombre}. Remisión: {r.NumeroComprobante ?? "N/A"}. {r.Observaciones}".Trim()
+            });
+        }
+
+        // 2. Ventas
+        var ventas = Ventas.Values.AsEnumerable();
+        if (!string.IsNullOrWhiteSpace(asociacion)) ventas = ventas.Where(v => string.Equals(v.AsociacionOrigenPrincipal, asociacion, StringComparison.OrdinalIgnoreCase));
+
+        foreach (var v in ventas)
+        {
+            foreach (var it in v.Items)
+            {
+                if (productoId.HasValue && it.ProductoId != productoId.Value) continue;
+
+                if (v.Estado == "Completada")
+                {
+                    lista.Add(new MovimientoKardexPdv
+                    {
+                        Id = Guid.NewGuid(),
+                        Fecha = v.Fecha,
+                        ProductoId = it.ProductoId,
+                        CodigoProducto = it.CodigoProducto,
+                        NombreProducto = it.NombreProducto,
+                        Categoria = it.Categoria,
+                        AsociacionOrigen = it.AsociacionOrigen,
+                        TipoMovimiento = "Venta en Mostrador",
+                        DocumentoReferencia = v.NumeroTicket,
+                        CantidadEntrada = 0,
+                        CantidadSalida = it.Cantidad,
+                        UnidadMedida = it.UnidadMedida,
+                        CostoOPrecioUnitario = it.PrecioUnitario,
+                        Responsable = v.AtendidoPor,
+                        Observaciones = $"Venta mostrador a {v.ClienteNombre} (Doc: {v.ClienteDocumento}). Medio: {v.MetodoPago}"
+                    });
+                }
+                else if (v.Estado == "Anulada")
+                {
+                    // Registro de venta original
+                    lista.Add(new MovimientoKardexPdv
+                    {
+                        Id = Guid.NewGuid(),
+                        Fecha = v.Fecha,
+                        ProductoId = it.ProductoId,
+                        CodigoProducto = it.CodigoProducto,
+                        NombreProducto = it.NombreProducto,
+                        Categoria = it.Categoria,
+                        AsociacionOrigen = it.AsociacionOrigen,
+                        TipoMovimiento = "Venta en Mostrador",
+                        DocumentoReferencia = v.NumeroTicket,
+                        CantidadEntrada = 0,
+                        CantidadSalida = it.Cantidad,
+                        UnidadMedida = it.UnidadMedida,
+                        CostoOPrecioUnitario = it.PrecioUnitario,
+                        Responsable = v.AtendidoPor,
+                        Observaciones = $"Ticket original completado para {v.ClienteNombre}."
+                    });
+
+                    // Reingreso por anulación/devolución
+                    lista.Add(new MovimientoKardexPdv
+                    {
+                        Id = Guid.NewGuid(),
+                        Fecha = v.FechaAnulacion ?? v.Fecha.AddMinutes(5),
+                        ProductoId = it.ProductoId,
+                        CodigoProducto = it.CodigoProducto,
+                        NombreProducto = it.NombreProducto,
+                        Categoria = it.Categoria,
+                        AsociacionOrigen = it.AsociacionOrigen,
+                        TipoMovimiento = "Devolución / Anulación",
+                        DocumentoReferencia = v.ConsecutivoAnulacion ?? $"ANUL-{v.NumeroTicket}",
+                        CantidadEntrada = it.Cantidad,
+                        CantidadSalida = 0,
+                        UnidadMedida = it.UnidadMedida,
+                        CostoOPrecioUnitario = it.PrecioUnitario,
+                        Responsable = v.AnuladoPor ?? v.AtendidoPor,
+                        Observaciones = $"Reintegro formal a inventario por devolución/anulación. Motivo: {v.MotivoAnulacion}"
+                    });
+                }
+            }
+        }
+
+        // 3. Ajustes de inventario
+        var ajustes = AjustesInventario.Values.AsEnumerable();
+        if (productoId.HasValue) ajustes = ajustes.Where(a => a.ProductoId == productoId.Value);
+
+        foreach (var a in ajustes)
+        {
+            Productos.TryGetValue(a.ProductoId, out var p);
+            if (!string.IsNullOrWhiteSpace(asociacion) && p != null && !p.AsociacionOrigen.Contains(asociacion, StringComparison.OrdinalIgnoreCase)) continue;
+
+            lista.Add(new MovimientoKardexPdv
+            {
+                Id = a.Id,
+                Fecha = a.Fecha,
+                ProductoId = a.ProductoId,
+                CodigoProducto = a.CodigoProducto,
+                NombreProducto = a.NombreProducto,
+                Categoria = p?.Categoria ?? "Insumos",
+                AsociacionOrigen = p?.AsociacionOrigen ?? "ASOAGRO",
+                TipoMovimiento = "Ajuste de Inventario",
+                DocumentoReferencia = $"AJU-{a.Fecha:yyMMdd}-{a.Id.ToString()[..4].ToUpper()}",
+                CantidadEntrada = a.CantidadAjustada > 0 ? a.CantidadAjustada : 0,
+                CantidadSalida = a.CantidadAjustada < 0 ? Math.Abs(a.CantidadAjustada) : 0,
+                UnidadMedida = p?.UnidadMedida ?? "Unidades",
+                CostoOPrecioUnitario = p?.CostoPromedio ?? 0,
+                Responsable = a.Usuario,
+                Observaciones = $"Ajuste físico: de {a.StockAnterior} a {a.StockNuevo}. Motivo: {a.Motivo}. Autorizado por: {a.AutorizadoPor}"
+            });
+        }
+
+        // Filtro por fecha si aplica
+        if (desde.HasValue) lista = lista.Where(m => m.Fecha.Date >= desde.Value.Date).ToList();
+        if (hasta.HasValue) lista = lista.Where(m => m.Fecha.Date <= hasta.Value.Date).ToList();
+
+        // Calcular saldo acumulado para orden cronológico si se consulta por producto específico
+        if (productoId.HasValue)
+        {
+            var ordenadosAsc = lista.OrderBy(m => m.Fecha).ToList();
+            decimal runningBalance = 0;
+            foreach (var m in ordenadosAsc)
+            {
+                runningBalance += (m.CantidadEntrada - m.CantidadSalida);
+                m.SaldoResultante = runningBalance;
+            }
+            return ordenadosAsc.OrderByDescending(m => m.Fecha).ToList();
+        }
+
+        return lista.OrderByDescending(m => m.Fecha).ToList();
+    }
+
+    private static void ActualizarEstadoStock(ProductoPdv prod)
+    {
+        if (prod.Estado == "Inactivo" || prod.Estado == "Descontinuado")
+        {
+            prod.Activo = false;
+            return;
+        }
+
+        prod.Activo = true;
+        if (prod.StockDisponible <= 0)
+        {
+            prod.Estado = "Agotado";
+        }
+        else if (prod.StockDisponible <= prod.StockMinimo)
+        {
+            prod.Estado = "Bajo Stock";
+        }
+        else
+        {
+            prod.Estado = "Disponible";
         }
     }
 

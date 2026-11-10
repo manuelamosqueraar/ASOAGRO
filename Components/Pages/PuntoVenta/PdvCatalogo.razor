@@ -39,7 +39,7 @@
                         </div>
                         <h1 class="aso-hero-title">Catálogo e Inventario de Cosechas</h1>
                         <p class="aso-hero-desc">
-                            Supervisión de existencias disponibles, lotes por asociación proveedora, costos base, precios vigentes en pesos colombianos (COP) y control de ajustes autorizados.
+                            Centro de consulta y administración de productos agrícolas: registro de nuevas referencias, trazabilidad de lotes, costos, precios vigentes en COP y auditoría de movimientos.
                         </p>
                     </div>
                 </div>
@@ -59,7 +59,7 @@
                         <div class="pt-2 border-top border-white border-opacity-10 d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
                             <span class="text-white-50">Permiso Operativo:</span>
                             <span class="fw-bold @(esModoConsulta ? "text-warning" : "text-light")">
-                                @(esModoConsulta ? "Consulta y Supervisión" : "Gestión de Stock y Ajustes")
+                                @(esModoConsulta ? "Consulta y Supervisión" : "Gestión Completa de Catálogo")
                             </span>
                         </div>
                     </div>
@@ -90,7 +90,7 @@
                 </div>
                 <div class="small text-muted flex-grow-1">
                     <strong class="text-dark d-block">Supervisión Institucional (Modo Consulta)</strong>
-                    Usted ha ingresado con el rol de <strong>@rolUsuario</strong>. Puede consultar existencias, costos, márgenes y precios vigentes en tiempo real. Por control interno y custodia de inventarios, los ajustes físicos de stock corresponden al <em>Administrador del punto de venta</em>.
+                    Usted ha ingresado con el rol de <strong>@rolUsuario</strong>. Puede consultar existencias, detalles técnicos, costos, precios y trazabilidad en tiempo real. La creación y edición de productos corresponden exclusivamente al <em>Administrador del punto de venta</em>.
                 </div>
             </div>
         </div>
@@ -107,7 +107,7 @@
                     </span>
                 </div>
                 <div class="d-flex align-items-baseline gap-2">
-                    <h2 class="fw-bold text-dark mb-0 fs-3">@resumen.TotalProductos</h2>
+                    <h2 class="fw-bold text-dark mb-0 fs-3">@productos.Count(p => p.Activo)</h2>
                     <span class="text-muted small">productos activos</span>
                 </div>
                 <span class="text-primary small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
@@ -129,7 +129,7 @@
                     <span class="text-muted small">COP</span>
                 </div>
                 <span class="text-success small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
-                    <i class="bi bi-shield-check"></i> Valuación a costo promedio ponderado
+                    <i class="bi bi-shield-check"></i> Valuación a costo promedio
                 </span>
             </div>
         </div>
@@ -143,7 +143,7 @@
                     </span>
                 </div>
                 <div class="d-flex align-items-baseline gap-2">
-                    <h2 class="fw-bold text-dark mb-0 fs-3">@productos.Sum(p => p.StockDisponible).ToString("N0")</h2>
+                    <h2 class="fw-bold text-dark mb-0 fs-3">@productos.Where(p => p.Activo).Sum(p => p.StockDisponible).ToString("N0")</h2>
                     <span class="text-muted small">unidades físicas</span>
                 </div>
                 <span class="text-warning-emphasis small mt-2 d-flex align-items-center gap-1" style="font-size: 0.75rem;">
@@ -172,20 +172,30 @@
         </div>
     </div>
 
-    <!-- PANEL PRINCIPAL CON FILTROS Y VISTAS -->
+    <!-- PANEL PRINCIPAL CON BOTÓN DE REGISTRO, FILTROS Y VISTAS -->
     <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4 pb-3 border-bottom">
             <div>
                 <h5 class="fw-bold text-dark mb-1 fs-5">
-                    <i class="bi bi-grid-fill text-success me-2"></i>Catálogo de Cosechas Disponibles
+                    <i class="bi bi-grid-fill text-success me-2"></i>Catálogo de Cosechas y Productos
                 </h5>
                 <p class="text-muted small mb-0">
                     Fichas normalizadas con especificación de unidad, asociación productora, costo promedio, precio de venta en COP y vigencia.
                 </p>
             </div>
 
-            <!-- BOTONES DE CAMBIO DE VISTA -->
-            <div class="d-flex align-items-center gap-2">
+            <!-- BOTONES DE ACCIÓN PRINCIPAL Y VISTA -->
+            <div class="d-flex flex-wrap align-items-center gap-2">
+                @if (!esModoConsulta)
+                {
+                    <button type="button" class="btn btn-success rounded-pill px-3.5 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-2"
+                            style="background-color: #14532D; border-color: #14532D;"
+                            @onclick="AbrirModalNuevoProducto">
+                        <i class="bi bi-plus-circle-fill fs-6"></i>
+                        <span>Registrar Producto</span>
+                    </button>
+                }
+
                 <div class="btn-group btn-group-sm p-1 rounded-pill bg-light border" role="group">
                     <button type="button" class="btn rounded-pill px-3 py-1 fw-bold @(vistaActual == "fichas" ? "btn-success text-white" : "btn-light text-muted border-0")"
                             style="@(vistaActual == "fichas" ? "background-color: #14532D; border: none;" : "")"
@@ -201,20 +211,20 @@
             </div>
         </div>
 
-        <!-- FILTROS Y BÚSQUEDA -->
+        <!-- FILTROS Y BÚSQUEDA AVANZADA -->
         <div class="row g-3 mb-4">
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="input-group input-group-sm">
                     <span class="input-group-text bg-light border-end-0 text-muted">
                         <i class="bi bi-search"></i>
                     </span>
                     <input type="text" class="form-control border-start-0" 
-                           placeholder="Buscar por código o nombre..." 
+                           placeholder="Buscar por código, nombre o lote..." 
                            @bind="filtroBusqueda" 
                            @bind:event="oninput" />
                 </div>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-2">
                 <select class="form-select form-select-sm" @bind="filtroCategoria">
                     <option value="">Todas las categorías</option>
                     @foreach (var cat in categoriasDisponibles)
@@ -238,6 +248,17 @@
                     <option value="Disponible">Disponible</option>
                     <option value="BajoStock">Bajo stock</option>
                     <option value="Agotado">Agotado</option>
+                    <option value="Inactivo">Inactivo / Descontinuado</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select form-select-sm" @bind="criterioOrden">
+                    <option value="nombre_asc">Nombre (A - Z)</option>
+                    <option value="nombre_desc">Nombre (Z - A)</option>
+                    <option value="precio_desc">Precio (Mayor a menor)</option>
+                    <option value="precio_asc">Precio (Menor a mayor)</option>
+                    <option value="stock_desc">Stock (Mayor a menor)</option>
+                    <option value="stock_asc">Stock (Menor a mayor)</option>
                 </select>
             </div>
         </div>
@@ -258,15 +279,15 @@
                 {
                     @foreach (var prod in ProductosFiltrados)
                     {
-                        var estadoClase = prod.StockDisponible <= 0 
-                            ? "bg-danger-subtle text-danger border-danger-subtle" 
-                            : (prod.StockDisponible <= prod.StockMinimo 
-                                ? "bg-warning-subtle text-warning-emphasis border-warning-subtle" 
-                                : "bg-success-subtle text-success border-success-subtle");
+                        var estadoClase = prod.Estado switch
+                        {
+                            "Agotado" => "bg-danger-subtle text-danger border-danger-subtle",
+                            "Bajo Stock" => "bg-warning-subtle text-warning-emphasis border-warning-subtle",
+                            "Inactivo" or "Descontinuado" => "bg-secondary-subtle text-secondary border-secondary-subtle",
+                            _ => "bg-success-subtle text-success border-success-subtle"
+                        };
 
-                        var estadoTexto = prod.StockDisponible <= 0 
-                            ? "Agotado" 
-                            : (prod.StockDisponible <= prod.StockMinimo ? "Bajo Stock" : "Disponible");
+                        var iconoCategoria = ObtenerIconoCategoria(prod.Categoria);
 
                         <div class="col-md-6 col-lg-4 col-xl-4 d-flex">
                             <div class="card w-100 border rounded-4 shadow-sm d-flex flex-column bg-white position-relative" 
@@ -276,10 +297,10 @@
                                 <div class="p-3 border-bottom bg-light bg-opacity-50 rounded-top-4">
                                     <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
                                         <span class="badge bg-white text-dark border px-2.5 py-1 rounded-pill fw-semibold" style="font-size: 0.72rem;">
-                                            <i class="bi bi-tag-fill text-success me-1"></i>@prod.Categoria
+                                            <i class="bi @iconoCategoria text-success me-1"></i>@prod.Categoria
                                         </span>
                                         <span class="badge border px-2.5 py-1 rounded-pill fw-bold @estadoClase" style="font-size: 0.72rem;">
-                                            <i class="bi @(prod.StockDisponible <= 0 ? "bi-x-circle-fill" : (prod.StockDisponible <= prod.StockMinimo ? "bi-exclamation-circle-fill" : "bi-check-circle-fill")) me-1"></i>@estadoTexto
+                                            @prod.Estado
                                         </span>
                                     </div>
                                     <div class="d-flex align-items-baseline justify-content-between">
@@ -293,7 +314,7 @@
                                 <!-- CUERPO DE LA FICHA CON METADATOS CLAVE -->
                                 <div class="p-3 flex-grow-1 d-flex flex-column justify-content-between gap-3">
                                     
-                                    <!-- ASOCIACIÓN PROVEEDORA -->
+                                    <!-- ASOCIACIÓN PROVEEDORA Y LUGAR -->
                                     <div class="p-2 rounded-3" style="background-color: #F8FAFC; border: 1px solid #EDF2F7;">
                                         <div class="d-flex align-items-center gap-2">
                                             <i class="bi bi-building text-success fs-6"></i>
@@ -302,11 +323,17 @@
                                                 <strong class="text-dark small d-block text-truncate" title="@prod.AsociacionOrigen">
                                                     @prod.AsociacionOrigen
                                                 </strong>
+                                                @if (!string.IsNullOrEmpty(prod.MunicipioProcedencia))
+                                                {
+                                                    <span class="text-muted d-block" style="font-size: 0.68rem;">
+                                                        <i class="bi bi-geo-alt me-0.5"></i>@prod.MunicipioProcedencia @(!string.IsNullOrEmpty(prod.VeredaProcedencia) ? $"· {prod.VeredaProcedencia}" : "")
+                                                    </span>
+                                                }
                                             </div>
                                         </div>
                                     </div>
 
-                                    <!-- CUADÍCULA DE VALORES: EXISTENCIAS, COSTO Y PRECIO DE VENTA -->
+                                    <!-- CUADRÍCULA DE VALORES: EXISTENCIAS, COSTO Y PRECIO DE VENTA -->
                                     <div class="row g-2">
                                         <div class="col-6">
                                             <div class="p-2.5 rounded-3 border h-100" style="background-color: #FAFAFA;">
@@ -315,7 +342,7 @@
                                                     <span class="fs-5 fw-bold text-dark">@prod.StockDisponible.ToString("N0")</span>
                                                     <span class="text-muted small fw-semibold">@prod.UnidadMedida</span>
                                                 </div>
-                                                <small class="text-muted d-block mt-0.5" style="font-size: 0.68rem;">Mínimo: @prod.StockMinimo @prod.UnidadMedida</small>
+                                                <small class="text-muted d-block mt-0.5" style="font-size: 0.68rem;">Mín: @prod.StockMinimo @prod.UnidadMedida</small>
                                             </div>
                                         </div>
 
@@ -332,7 +359,7 @@
 
                                         <div class="col-6">
                                             <div class="p-2 rounded-3 border bg-light h-100">
-                                                <span class="text-muted d-block" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700;">Costo Promedio</span>
+                                                <span class="text-muted d-block" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700;">Costo Adquisición</span>
                                                 <strong class="text-dark small">$@prod.CostoPromedio.ToString("N0") COP</strong>
                                             </div>
                                         </div>
@@ -341,7 +368,7 @@
                                             <div class="p-2 rounded-3 border bg-light h-100">
                                                 <span class="text-muted d-block" style="font-size: 0.68rem; text-transform: uppercase; font-weight: 700;">Vigencia Precio</span>
                                                 <span class="text-dark small fw-semibold">
-                                                    @(prod.VigenciaPrecio.HasValue ? prod.VigenciaPrecio.Value.ToString("dd/MM/yyyy") : "Vigente")
+                                                    @(prod.VigenciaPrecio.HasValue ? prod.VigenciaPrecio.Value.ToString("dd/MM/yyyy") : "Permanente")
                                                 </span>
                                             </div>
                                         </div>
@@ -350,22 +377,19 @@
                                 </div>
 
                                 <!-- PIE DE LA TARJETA: ACCIONES -->
-                                <div class="p-3 border-top bg-light bg-opacity-25 rounded-bottom-4 d-flex justify-content-between align-items-center">
-                                    <span class="text-muted" style="font-size: 0.72rem;">
-                                        <i class="bi bi-clock me-1"></i>Actualizado hoy
-                                    </span>
+                                <div class="p-3 border-top bg-light bg-opacity-25 rounded-bottom-4 d-flex justify-content-between align-items-center gap-2">
+                                    <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 py-1 fw-bold"
+                                            @onclick="() => AbrirFichaDetalles(prod)">
+                                        <i class="bi bi-eye-fill me-1"></i> Ver Detalles
+                                    </button>
+
                                     @if (!esModoConsulta)
                                     {
-                                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1 fw-bold"
-                                                @onclick="() => AbrirModalAjusteInventario(prod)">
-                                            <i class="bi bi-sliders me-1"></i> Ajustar Stock
+                                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2.5 py-1 fw-bold"
+                                                @onclick="() => AbrirModalAjusteInventario(prod)"
+                                                title="Ajuste físico de existencias">
+                                            <i class="bi bi-sliders me-1"></i> Ajustar
                                         </button>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-light text-muted border px-2.5 py-1">
-                                            <i class="bi bi-lock me-1"></i>Solo lectura
-                                        </span>
                                     }
                                 </div>
 
@@ -388,8 +412,8 @@
                             <th class="py-2.5">Asociación Proveedora</th>
                             <th class="py-2.5 text-end">Costo Promedio</th>
                             <th class="py-2.5 text-end">Precio Venta COP</th>
-                            <th class="py-2.5 text-center">Vigencia Precio</th>
-                            <th class="py-2.5 text-center">Stock Disponible</th>
+                            <th class="py-2.5 text-center">Vigencia</th>
+                            <th class="py-2.5 text-center">Stock</th>
                             <th class="py-2.5 text-center">Estado</th>
                             <th class="py-2.5 pe-3 text-center">Acciones</th>
                         </tr>
@@ -401,7 +425,7 @@
                                 <td class="ps-3 fw-bold text-muted">@prod.Codigo</td>
                                 <td>
                                     <strong class="text-dark d-block">@prod.Nombre</strong>
-                                    <small class="text-muted">Unidad: @prod.UnidadMedida</small>
+                                    <small class="text-muted">Presentación: @prod.UnidadMedida @(!string.IsNullOrEmpty(prod.VariedadClasificacion) ? $"· {prod.VariedadClasificacion}" : "")</small>
                                 </td>
                                 <td>
                                     <span class="badge bg-light text-success border">@prod.Categoria</span>
@@ -434,35 +458,26 @@
                                     <small class="text-muted d-block" style="font-size: 0.7rem;">Mín: @prod.StockMinimo @prod.UnidadMedida</small>
                                 </td>
                                 <td class="text-center">
-                                    @if (prod.StockDisponible <= 0)
-                                    {
-                                        <span class="badge bg-danger rounded-pill px-2.5 py-1">Agotado</span>
-                                    }
-                                    else if (prod.StockDisponible <= prod.StockMinimo)
-                                    {
-                                        <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle rounded-pill px-2.5 py-1">
-                                            Bajo Stock
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1">
-                                            Disponible
-                                        </span>
-                                    }
+                                    <span class="badge rounded-pill px-2.5 py-1 @(prod.Estado == "Agotado" ? "bg-danger" : (prod.Estado == "Bajo Stock" ? "bg-warning text-dark" : (prod.Estado == "Disponible" ? "bg-success" : "bg-secondary")))">
+                                        @prod.Estado
+                                    </span>
                                 </td>
                                 <td class="text-center pe-3">
-                                    @if (!esModoConsulta)
-                                    {
-                                        <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-2 py-0.5" 
-                                                @onclick="() => AbrirModalAjusteInventario(prod)">
-                                            <i class="bi bi-sliders"></i> Ajustar
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-success rounded-pill px-2.5 py-0.5 me-1" 
+                                                title="Ver Ficha de Detalles"
+                                                @onclick="() => AbrirFichaDetalles(prod)">
+                                            <i class="bi bi-eye"></i> Detalles
                                         </button>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted small">Solo lectura</span>
-                                    }
+                                        @if (!esModoConsulta)
+                                        {
+                                            <button type="button" class="btn btn-outline-secondary rounded-pill px-2 py-0.5" 
+                                                    title="Ajustar Stock"
+                                                    @onclick="() => AbrirModalAjusteInventario(prod)">
+                                                <i class="bi bi-sliders"></i>
+                                            </button>
+                                        }
+                                    </div>
                                 </td>
                             </tr>
                         }
@@ -472,7 +487,489 @@
         }
     </div>
 
-    <!-- MODAL DE AJUSTE DE INVENTARIO -->
+    <!-- ======================================================== -->
+    <!-- MODAL / FORMULARIO: REGISTRAR NUEVO PRODUCTO EN CATÁLOGO -->
+    <!-- ======================================================== -->
+    @if (mostrarModalNuevoProducto)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);" role="dialog">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content rounded-4 border-0 shadow-24">
+                    <div class="modal-header bg-dark text-white p-3.5">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-plus-circle-fill text-success fs-4"></i>
+                            <div>
+                                <h6 class="modal-title fw-bold text-white mb-0">Registrar Producto en Catálogo e Inventario</h6>
+                                <small class="text-white-50">Alta de referencias agrícolas federadas ASOAGRO - FAAUA</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" @onclick="() => mostrarModalNuevoProducto = false"></button>
+                    </div>
+
+                    <div class="modal-body p-4 bg-light bg-opacity-25">
+                        @if (!string.IsNullOrEmpty(errorRegistro))
+                        {
+                            <div class="alert alert-danger py-2 small mb-3">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> @errorRegistro
+                            </div>
+                        }
+
+                        <!-- SECCIÓN 1: DATOS BÁSICOS -->
+                        <div class="card border rounded-3 p-3 mb-3 bg-white shadow-sm">
+                            <span class="text-success fw-bold text-uppercase d-block mb-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                                1. Identificación y Clasificación Básica
+                            </span>
+                            <div class="row g-3">
+                                <div class="col-md-8">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Nombre del Producto: <span class="text-danger">* (Obligatorio)</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" 
+                                           placeholder="Ej.: Plátano Dominico Hartón Primera Selección" 
+                                           @bind="nuevoProducto.Nombre" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Código Único: <span class="text-danger">* (Obligatorio)</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm font-monospace text-uppercase" 
+                                           placeholder="Ej.: PLA-DOM-01" 
+                                           @bind="nuevoProducto.Codigo" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Categoría: <span class="text-danger">* (Obligatorio)</span>
+                                    </label>
+                                    <select class="form-select form-select-sm" @bind="nuevoProducto.Categoria">
+                                        <option value="">-- Seleccionar Categoría --</option>
+                                        <option value="Plátano">Plátano</option>
+                                        <option value="Cacao">Cacao</option>
+                                        <option value="Apicultura">Apicultura</option>
+                                        <option value="Frutas">Frutas</option>
+                                        <option value="Insumos">Insumos y Abonos</option>
+                                        <option value="Granos">Granos y Cereales</option>
+                                        <option value="Lácteos">Lácteos y Derivados</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Unidad de Venta / Presentación: <span class="text-danger">* (Obligatorio)</span>
+                                    </label>
+                                    <select class="form-select form-select-sm" @bind="nuevoProducto.UnidadMedida">
+                                        <option value="Kilos">Kilos</option>
+                                        <option value="Cajas (20 kg)">Cajas (20 kg)</option>
+                                        <option value="Racimos">Racimos</option>
+                                        <option value="Frascos (500 g)">Frascos (500 g)</option>
+                                        <option value="Bultos (50 kg)">Bultos (50 kg)</option>
+                                        <option value="Litros">Litros</option>
+                                        <option value="Unidades">Unidades</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Variedad / Calidad: <span class="text-muted fw-normal">(Opcional)</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" 
+                                           placeholder="Ej.: Primera Calibre 44 - Exportación" 
+                                           @bind="nuevoProducto.VariedadClasificacion" />
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Descripción Comercial del Producto: <span class="text-muted fw-normal">(Opcional)</span>
+                                    </label>
+                                    <textarea class="form-control form-control-sm" rows="2" 
+                                              placeholder="Ej.: Fruta fresca con maduración fisiológica óptima, producida bajo buenas prácticas agrícolas." 
+                                              @bind="nuevoProducto.Descripcion"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 2: ORIGEN Y TRAZABILIDAD -->
+                        <div class="card border rounded-3 p-3 mb-3 bg-white shadow-sm">
+                            <span class="text-success fw-bold text-uppercase d-block mb-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                                2. Asociación Proveedora y Procedencia de Finca
+                            </span>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Asociación Proveedora: <span class="text-danger">* (Obligatorio)</span>
+                                    </label>
+                                    <select class="form-select form-select-sm" @bind="nuevoProducto.AsociacionOrigen">
+                                        <option value="">-- Seleccionar Asociación Base --</option>
+                                        @foreach (var asoc in listaAsociaciones)
+                                        {
+                                            <option value="@asoc">@asoc</option>
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Productor o Finca de Origen: <span class="text-muted fw-normal">(Opcional)</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" 
+                                           placeholder="Ej.: Finca La Esperanza - Don Hernán Pérez" 
+                                           @bind="nuevoProducto.ProductorOrigen" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Municipio de Procedencia: <span class="text-muted fw-normal">(Opcional)</span>
+                                    </label>
+                                    <select class="form-select form-select-sm" @bind="nuevoProducto.MunicipioProcedencia">
+                                        <option value="Apartadó">Apartadó</option>
+                                        <option value="Carepa">Carepa</option>
+                                        <option value="Turbo">Turbo</option>
+                                        <option value="Chigorodó">Chigorodó</option>
+                                        <option value="Necoclí">Necoclí</option>
+                                        <option value="San Pedro de Urabá">San Pedro de Urabá</option>
+                                        <option value="Mutatá">Mutatá</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Vereda / Paraje: <span class="text-muted fw-normal">(Opcional)</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" 
+                                           placeholder="Ej.: Vereda El Reposo" 
+                                           @bind="nuevoProducto.VeredaProcedencia" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Número de Lote: <span class="text-muted fw-normal">(Opcional)</span>
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm font-monospace" 
+                                           placeholder="Ej.: LOT-2026-08" 
+                                           @bind="nuevoProducto.NumeroLote" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 3: PRECIOS, COSTOS Y STOCK -->
+                        <div class="card border rounded-3 p-3 mb-3 bg-white shadow-sm">
+                            <span class="text-success fw-bold text-uppercase d-block mb-2" style="font-size: 0.72rem; letter-spacing: 0.05em;">
+                                3. Valores Económicos (COP) y Control de Stock
+                            </span>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Costo Adquisición (COP): <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" step="100" class="form-control form-control-sm" 
+                                           placeholder="Ej.: 1800" 
+                                           @bind="nuevoProducto.CostoPromedio" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Precio Venta (COP): <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" step="100" class="form-control form-control-sm fw-bold text-success" 
+                                           placeholder="Ej.: 2500" 
+                                           @bind="nuevoProducto.PrecioUnitario" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Stock Inicial Apertura: <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" step="1" class="form-control form-control-sm fw-bold" 
+                                           placeholder="Ej.: 100" 
+                                           @bind="nuevoProducto.StockDisponible" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Stock Mínimo (Alerta): <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="number" step="1" class="form-control form-control-sm" 
+                                           placeholder="Ej.: 15" 
+                                           @bind="nuevoProducto.StockMinimo" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Fecha Vigencia del Precio: <span class="text-muted fw-normal">(Opcional)</span>
+                                    </label>
+                                    <input type="date" class="form-control form-control-sm" 
+                                           @bind="nuevoProducto.VigenciaPrecio" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label text-muted small fw-bold mb-1">
+                                        Estado Inicial: <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select form-select-sm" @bind="nuevoProducto.Estado">
+                                        <option value="Disponible">Disponible para venta</option>
+                                        <option value="Bajo Stock">Bajo stock</option>
+                                        <option value="Agotado">Agotado</option>
+                                        <option value="Inactivo">Inactivo</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer p-3 bg-light d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" 
+                                @onclick="() => mostrarModalNuevoProducto = false">
+                            Cancelar
+                        </button>
+                        <button type="button" class="btn btn-success btn-sm rounded-pill px-4 fw-bold" 
+                                @onclick="GuardarNuevoProducto">
+                            <i class="bi bi-check-circle-fill me-1"></i> Guardar Producto
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ======================================================== -->
+    <!-- FICHA DE DETALLES DEL PRODUCTO Y TRAZABILIDAD (KARDEX)   -->
+    <!-- ======================================================== -->
+    @if (productoSeleccionadoDetalle != null)
+    {
+        <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(3px);" role="dialog">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content rounded-4 border-0 shadow-24">
+                    
+                    <div class="modal-header bg-dark text-white p-3.5">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rounded-3 d-flex align-items-center justify-content-center text-white" style="width: 44px; height: 44px; background: #059669;">
+                                <i class="bi @ObtenerIconoCategoria(productoSeleccionadoDetalle.Categoria) fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold text-white mb-0">
+                                    @productoSeleccionadoDetalle.Nombre
+                                </h5>
+                                <div class="d-flex align-items-center gap-2 mt-0.5">
+                                    <code class="bg-white text-dark px-1.5 py-0.2 rounded font-monospace small">@productoSeleccionadoDetalle.Codigo</code>
+                                    <span class="badge bg-success bg-opacity-75">@productoSeleccionadoDetalle.Categoria</span>
+                                    <span class="badge @(productoSeleccionadoDetalle.Estado == "Disponible" ? "bg-success" : (productoSeleccionadoDetalle.Estado == "Bajo Stock" ? "bg-warning text-dark" : "bg-danger"))">
+                                        @productoSeleccionadoDetalle.Estado
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-white" @onclick="() => productoSeleccionadoDetalle = null"></button>
+                    </div>
+
+                    <div class="modal-body p-4 bg-light bg-opacity-25">
+                        
+                        <!-- PESTAÑAS DE LA FICHA: INFORMACIÓN GENERAL vs HISTORIAL DE MOVIMIENTOS (KARDEX) -->
+                        <ul class="nav nav-pills mb-3 gap-2 border-bottom pb-2" role="tablist">
+                            <li class="nav-item">
+                                <button class="btn btn-sm rounded-pill px-3 py-1.5 fw-bold @(pestanaDetalle == "info" ? "btn-success text-white" : "btn-light text-muted border")"
+                                        style="@(pestanaDetalle == "info" ? "background-color: #14532D; border: none;" : "")"
+                                        @onclick='@(() => pestanaDetalle = "info")'>
+                                    <i class="bi bi-info-circle me-1"></i> Ficha Técnica y Económica
+                                </button>
+                            </li>
+                            <li class="nav-item">
+                                <button class="btn btn-sm rounded-pill px-3 py-1.5 fw-bold @(pestanaDetalle == "kardex" ? "btn-success text-white" : "btn-light text-muted border")"
+                                        style="@(pestanaDetalle == "kardex" ? "background-color: #14532D; border: none;" : "")"
+                                        @onclick='@(() => pestanaDetalle = "kardex")'>
+                                    <i class="bi bi-clock-history me-1"></i> Historial de Movimientos y Trazabilidad
+                                    <span class="badge bg-white text-dark ms-1">@kardexProductoActual.Count</span>
+                                </button>
+                            </li>
+                        </ul>
+
+                        @if (pestanaDetalle == "info")
+                        {
+                            <!-- INFORMACIÓN ECONÓMICA Y DE INVENTARIO -->
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-3">
+                                    <div class="card border rounded-3 p-3 bg-white shadow-sm h-100">
+                                        <span class="text-muted d-block small fw-bold text-uppercase" style="font-size: 0.68rem;">Existencias Actuales</span>
+                                        <div class="d-flex align-items-baseline gap-1 mt-1">
+                                            <span class="fs-4 fw-bold text-dark">@productoSeleccionadoDetalle.StockDisponible.ToString("N0")</span>
+                                            <span class="text-muted small fw-semibold">@productoSeleccionadoDetalle.UnidadMedida</span>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Stock Mínimo: @productoSeleccionadoDetalle.StockMinimo @productoSeleccionadoDetalle.UnidadMedida</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border rounded-3 p-3 bg-white shadow-sm h-100" style="border-top: 3px solid #059669 !important;">
+                                        <span class="text-success d-block small fw-bold text-uppercase" style="font-size: 0.68rem;">Precio de Venta COP</span>
+                                        <div class="d-flex align-items-baseline gap-1 mt-1">
+                                            <span class="fs-4 fw-bold text-success">$@productoSeleccionadoDetalle.PrecioUnitario.ToString("N0")</span>
+                                            <span class="text-muted small">COP</span>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Vigencia: @(productoSeleccionadoDetalle.VigenciaPrecio.HasValue ? productoSeleccionadoDetalle.VigenciaPrecio.Value.ToString("dd/MM/yyyy") : "Permanente")</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border rounded-3 p-3 bg-white shadow-sm h-100">
+                                        <span class="text-muted d-block small fw-bold text-uppercase" style="font-size: 0.68rem;">Costo de Adquisición</span>
+                                        <div class="d-flex align-items-baseline gap-1 mt-1">
+                                            <span class="fs-4 fw-bold text-dark">$@productoSeleccionadoDetalle.CostoPromedio.ToString("N0")</span>
+                                            <span class="text-muted small">COP</span>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">Costo ponderado de lotes</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card border rounded-3 p-3 bg-white shadow-sm h-100">
+                                        <span class="text-muted d-block small fw-bold text-uppercase" style="font-size: 0.68rem;">Margen Bruto Estimado</span>
+                                        @{
+                                            var margen = productoSeleccionadoDetalle.PrecioUnitario - productoSeleccionadoDetalle.CostoPromedio;
+                                            var pct = productoSeleccionadoDetalle.PrecioUnitario > 0 ? (margen / productoSeleccionadoDetalle.PrecioUnitario) * 100 : 0;
+                                        }
+                                        <div class="d-flex align-items-baseline gap-1 mt-1">
+                                            <span class="fs-4 fw-bold text-primary">@pct.ToString("N1")%</span>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" style="font-size: 0.7rem;">+$@margen.ToString("N0") COP / unidad</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ORIGEN, PROCEDENCIA Y LOTE -->
+                            <div class="card border rounded-3 p-3 mb-3 bg-white shadow-sm">
+                                <span class="text-muted fw-bold text-uppercase d-block mb-2" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                    Trazabilidad de Origen y Procedencia
+                                </span>
+                                <div class="row g-2 small">
+                                    <div class="col-sm-6">
+                                        <span class="text-muted d-block" style="font-size: 0.7rem;">Asociación Base Proveedora:</span>
+                                        <strong class="text-dark">@productoSeleccionadoDetalle.AsociacionOrigen</strong>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <span class="text-muted d-block" style="font-size: 0.7rem;">Productor o Finca:</span>
+                                        <span class="text-dark">@(!string.IsNullOrEmpty(productoSeleccionadoDetalle.ProductorOrigen) ? productoSeleccionadoDetalle.ProductorOrigen : "Comunitario / Asociativo")</span>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block" style="font-size: 0.7rem;">Ubicación:</span>
+                                        <span class="text-dark">@productoSeleccionadoDetalle.MunicipioProcedencia @(!string.IsNullOrEmpty(productoSeleccionadoDetalle.VeredaProcedencia) ? $"· {productoSeleccionadoDetalle.VeredaProcedencia}" : "")</span>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block" style="font-size: 0.7rem;">Lote de Producción:</span>
+                                        <span class="text-dark font-monospace fw-semibold">@(!string.IsNullOrEmpty(productoSeleccionadoDetalle.NumeroLote) ? productoSeleccionadoDetalle.NumeroLote : "Sin lote asignado")</span>
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <span class="text-muted d-block" style="font-size: 0.7rem;">Variedad y Clasificación:</span>
+                                        <span class="text-dark">@(!string.IsNullOrEmpty(productoSeleccionadoDetalle.VariedadClasificacion) ? productoSeleccionadoDetalle.VariedadClasificacion : "Estándar")</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- DESCRIPCIÓN Y OBSERVACIONES -->
+                            <div class="card border rounded-3 p-3 bg-white shadow-sm">
+                                <span class="text-muted fw-bold text-uppercase d-block mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em;">
+                                    Descripción Técnica y Observaciones
+                                </span>
+                                <p class="small text-muted mb-0">
+                                    @(!string.IsNullOrWhiteSpace(productoSeleccionadoDetalle.Descripcion) ? productoSeleccionadoDetalle.Descripcion : "Sin descripción complementaria registrada.")
+                                </p>
+                            </div>
+                        }
+                        else
+                        {
+                            <!-- HISTORIAL DE MOVIMIENTOS (KARDEX COMPLETO) -->
+                            <div class="card border rounded-3 p-3 bg-white shadow-sm">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fw-bold text-dark mb-0 fs-6">
+                                        <i class="bi bi-clock-history text-success me-1"></i> Trazabilidad Operativa de Existencias (Kardex)
+                                    </h6>
+                                    <span class="badge bg-light text-dark border">@kardexProductoActual.Count movimiento(s)</span>
+                                </div>
+
+                                <div class="table-responsive aso-table-wrap">
+                                    <table class="table table-hover align-middle mb-0" style="font-size: 0.8rem;">
+                                        <thead class="aso-thead-unified">
+                                            <tr>
+                                                <th class="ps-3 py-2">Fecha y Hora</th>
+                                                <th class="py-2">Tipo de Movimiento</th>
+                                                <th class="py-2">Documento / Ref.</th>
+                                                <th class="py-2 text-end text-success">Entrada (+)</th>
+                                                <th class="py-2 text-end text-danger">Salida (-)</th>
+                                                <th class="py-2 text-end">Saldo Resultante</th>
+                                                <th class="pe-3 py-2">Responsable / Detalle</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @if (!kardexProductoActual.Any())
+                                            {
+                                                <tr>
+                                                    <td colspan="7" class="text-center py-4 text-muted">
+                                                        No hay movimientos registrados para este producto todavía.
+                                                    </td>
+                                                </tr>
+                                            }
+                                            else
+                                            {
+                                                @foreach (var m in kardexProductoActual)
+                                                {
+                                                    <tr>
+                                                        <td class="ps-3">
+                                                            <strong class="text-dark d-block">@m.Fecha.ToString("dd/MM/yyyy HH:mm")</strong>
+                                                        </td>
+                                                        <td>
+                                                            <span class="badge rounded-pill px-2.5 py-1 @(m.TipoMovimiento == "Recepción de Cosecha" ? "bg-success" : (m.TipoMovimiento == "Venta en Mostrador" ? "bg-primary" : (m.TipoMovimiento == "Devolución / Anulación" ? "bg-warning text-dark" : "bg-secondary")))">
+                                                                @m.TipoMovimiento
+                                                            </span>
+                                                        </td>
+                                                        <td class="font-monospace fw-bold text-muted">@m.DocumentoReferencia</td>
+                                                        <td class="text-end fw-bold text-success">
+                                                            @(m.CantidadEntrada > 0 ? $"+{m.CantidadEntrada:N0} {m.UnidadMedida}" : "-")
+                                                        </td>
+                                                        <td class="text-end fw-bold text-danger">
+                                                            @(m.CantidadSalida > 0 ? $"-{m.CantidadSalida:N0} {m.UnidadMedida}" : "-")
+                                                        </td>
+                                                        <td class="text-end fw-bold text-dark">
+                                                            @m.SaldoResultante.ToString("N0") @m.UnidadMedida
+                                                        </td>
+                                                        <td class="pe-3">
+                                                            <span class="text-dark d-block fw-semibold">@m.Responsable</span>
+                                                            <small class="text-muted d-block text-truncate" style="max-width: 250px;" title="@m.Observaciones">@m.Observaciones</small>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+
+                    <div class="modal-footer p-3 bg-light d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-secondary btn-sm rounded-pill px-3" 
+                                @onclick="() => productoSeleccionadoDetalle = null">
+                            Cerrar Ficha
+                        </button>
+
+                        @if (!esModoConsulta)
+                        {
+                            <div class="d-flex gap-2">
+                                @if (productoSeleccionadoDetalle.Activo)
+                                {
+                                    <button type="button" class="btn btn-outline-danger btn-sm rounded-pill px-3" 
+                                            @onclick="DesactivarProductoActual"
+                                            title="Desactivar producto conservando historial">
+                                        <i class="bi bi-pause-circle me-1"></i> Desactivar
+                                    </button>
+                                }
+                                else
+                                {
+                                    <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3" 
+                                            @onclick="ReactivarProductoActual">
+                                        <i class="bi bi-play-circle me-1"></i> Reactivar Producto
+                                    </button>
+                                }
+
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3" 
+                                        @onclick="() => AbrirModalAjusteInventario(productoSeleccionadoDetalle)">
+                                    <i class="bi bi-sliders me-1"></i> Ajustar Stock
+                                </button>
+                            </div>
+                        }
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- ======================================================== -->
+    <!-- MODAL DE AJUSTE DE INVENTARIO AUTORIZADO                 -->
+    <!-- ======================================================== -->
     @if (productoPorAjustar != null)
     {
         <div class="modal fade show d-block" tabindex="-1" style="background: rgba(0,0,0,0.5); backdrop-filter: blur(3px);" role="dialog">
@@ -490,7 +987,7 @@
                     <div class="modal-body p-4">
                         <div class="alert alert-light border rounded-3 small text-muted mb-3">
                             <i class="bi bi-info-circle text-primary me-1"></i>
-                            Los ajustes manuales quedan registrados con responsable y motivo justificatorio en la auditoría contable.
+                            Los ajustes manuales quedan registrados con responsable y motivo justificatorio en el Kardex y auditoría contable.
                         </div>
 
                         <div class="mb-3">
@@ -503,7 +1000,7 @@
                             <label class="form-label text-muted small fw-bold mb-1">
                                 Nuevo Stock Físico Verificado (@productoPorAjustar.UnidadMedida): <span class="text-danger">* (Obligatorio)</span>
                             </label>
-                            <input type="number" step="0.01" class="form-control form-control-sm fs-6 fw-bold" @bind="nuevoStockAjuste" />
+                            <input type="number" step="1" class="form-control form-control-sm fs-6 fw-bold" @bind="nuevoStockAjuste" />
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-muted small fw-bold mb-1">
@@ -550,12 +1047,23 @@
     private string filtroCategoria = string.Empty;
     private string filtroAsociacion = string.Empty;
     private string filtroEstadoStock = string.Empty;
+    private string criterioOrden = "nombre_asc";
 
     // Feedback
     private string? mensajeFeedback;
     private bool esFeedbackExito = true;
 
-    // Ajuste de stock
+    // Modal Registrar Producto
+    private bool mostrarModalNuevoProducto = false;
+    private ProductoPdv nuevoProducto = new();
+    private string errorRegistro = string.Empty;
+
+    // Ficha de Detalles
+    private ProductoPdv? productoSeleccionadoDetalle;
+    private string pestanaDetalle = "info";
+    private List<MovimientoKardexPdv> kardexProductoActual = new();
+
+    // Modal Ajuste de Stock
     private ProductoPdv? productoPorAjustar;
     private decimal nuevoStockAjuste = 0;
     private string autorizadoPorAjuste = string.Empty;
@@ -591,22 +1099,138 @@
 
     private void CargarDatos()
     {
-        productos = PuntoVentaService.ObtenerProductos().ToList();
+        productos = PuntoVentaService.ObtenerProductos(incluirInactivos: true).ToList();
         resumen = PuntoVentaService.ObtenerResumen();
         categoriasDisponibles = productos.Select(p => p.Categoria).Distinct().OrderBy(c => c).ToList();
     }
 
-    private IEnumerable<ProductoPdv> ProductosFiltrados => productos.Where(p =>
-        (string.IsNullOrWhiteSpace(filtroBusqueda) || 
-         p.Nombre.Contains(filtroBusqueda, StringComparison.OrdinalIgnoreCase) || 
-         p.Codigo.Contains(filtroBusqueda, StringComparison.OrdinalIgnoreCase)) &&
-        (string.IsNullOrWhiteSpace(filtroCategoria) || p.Categoria.Equals(filtroCategoria, StringComparison.OrdinalIgnoreCase)) &&
-        (string.IsNullOrWhiteSpace(filtroAsociacion) || p.AsociacionOrigen.Equals(filtroAsociacion, StringComparison.OrdinalIgnoreCase)) &&
-        (string.IsNullOrWhiteSpace(filtroEstadoStock) ||
-         (filtroEstadoStock == "Agotado" && p.StockDisponible <= 0) ||
-         (filtroEstadoStock == "BajoStock" && p.StockDisponible > 0 && p.StockDisponible <= p.StockMinimo) ||
-         (filtroEstadoStock == "Disponible" && p.StockDisponible > p.StockMinimo))
-    );
+    private IEnumerable<ProductoPdv> ProductosFiltrados
+    {
+        get
+        {
+            var q = productos.Where(p =>
+                (string.IsNullOrWhiteSpace(filtroBusqueda) || 
+                 p.Nombre.Contains(filtroBusqueda, StringComparison.OrdinalIgnoreCase) || 
+                 p.Codigo.Contains(filtroBusqueda, StringComparison.OrdinalIgnoreCase) ||
+                 (!string.IsNullOrEmpty(p.NumeroLote) && p.NumeroLote.Contains(filtroBusqueda, StringComparison.OrdinalIgnoreCase))) &&
+                (string.IsNullOrWhiteSpace(filtroCategoria) || p.Categoria.Equals(filtroCategoria, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrWhiteSpace(filtroAsociacion) || p.AsociacionOrigen.Equals(filtroAsociacion, StringComparison.OrdinalIgnoreCase)) &&
+                (string.IsNullOrWhiteSpace(filtroEstadoStock) ||
+                 (filtroEstadoStock == "Agotado" && p.Estado == "Agotado") ||
+                 (filtroEstadoStock == "BajoStock" && p.Estado == "Bajo Stock") ||
+                 (filtroEstadoStock == "Disponible" && p.Estado == "Disponible") ||
+                 (filtroEstadoStock == "Inactivo" && (!p.Activo || p.Estado == "Inactivo" || p.Estado == "Descontinuado")))
+            );
+
+            return criterioOrden switch
+            {
+                "nombre_desc" => q.OrderByDescending(p => p.Nombre),
+                "precio_desc" => q.OrderByDescending(p => p.PrecioUnitario),
+                "precio_asc" => q.OrderBy(p => p.PrecioUnitario),
+                "stock_desc" => q.OrderByDescending(p => p.StockDisponible),
+                "stock_asc" => q.OrderBy(p => p.StockDisponible),
+                _ => q.OrderBy(p => p.Nombre)
+            };
+        }
+    }
+
+    private void AbrirModalNuevoProducto()
+    {
+        nuevoProducto = new ProductoPdv
+        {
+            AsociacionOrigen = listaAsociaciones.FirstOrDefault() ?? "ASOAGRO - Asociación Agropecuaria de Urabá",
+            MunicipioProcedencia = "Apartadó",
+            UnidadMedida = "Kilos",
+            Estado = "Disponible",
+            StockMinimo = 10,
+            FechaRecepcion = DateTime.Today
+        };
+        errorRegistro = string.Empty;
+        mostrarModalNuevoProducto = true;
+    }
+
+    private void GuardarNuevoProducto()
+    {
+        errorRegistro = string.Empty;
+
+        var exito = PuntoVentaService.RegistrarProducto(
+            nuevoProducto,
+            nombreUsuario,
+            rolUsuario,
+            out var mensajeErr
+        );
+
+        if (exito)
+        {
+            mensajeFeedback = $"El producto '{nuevoProducto.Nombre}' ({nuevoProducto.Codigo}) ha sido registrado exitosamente en el catálogo.";
+            esFeedbackExito = true;
+            mostrarModalNuevoProducto = false;
+            CargarDatos();
+        }
+        else
+        {
+            errorRegistro = mensajeErr;
+        }
+    }
+
+    private void AbrirFichaDetalles(ProductoPdv prod)
+    {
+        productoSeleccionadoDetalle = prod;
+        pestanaDetalle = "info";
+        kardexProductoActual = PuntoVentaService.ObtenerKardexProducto(prod.Id).ToList();
+    }
+
+    private void DesactivarProductoActual()
+    {
+        if (productoSeleccionadoDetalle == null || esModoConsulta) return;
+
+        var exito = PuntoVentaService.CambiarEstadoProducto(
+            productoSeleccionadoDetalle.Id,
+            "Inactivo",
+            nombreUsuario,
+            rolUsuario,
+            out var err
+        );
+
+        if (exito)
+        {
+            mensajeFeedback = $"El producto '{productoSeleccionadoDetalle.Nombre}' ha sido marcado como inactivo. Su historial se conserva intacto.";
+            esFeedbackExito = true;
+            CargarDatos();
+            productoSeleccionadoDetalle = PuntoVentaService.ObtenerProductoPorId(productoSeleccionadoDetalle.Id);
+        }
+        else
+        {
+            mensajeFeedback = err;
+            esFeedbackExito = false;
+        }
+    }
+
+    private void ReactivarProductoActual()
+    {
+        if (productoSeleccionadoDetalle == null || esModoConsulta) return;
+
+        var exito = PuntoVentaService.CambiarEstadoProducto(
+            productoSeleccionadoDetalle.Id,
+            "Disponible",
+            nombreUsuario,
+            rolUsuario,
+            out var err
+        );
+
+        if (exito)
+        {
+            mensajeFeedback = $"El producto '{productoSeleccionadoDetalle.Nombre}' ha sido reactivado en el catálogo.";
+            esFeedbackExito = true;
+            CargarDatos();
+            productoSeleccionadoDetalle = PuntoVentaService.ObtenerProductoPorId(productoSeleccionadoDetalle.Id);
+        }
+        else
+        {
+            mensajeFeedback = err;
+            esFeedbackExito = false;
+        }
+    }
 
     private void AbrirModalAjusteInventario(ProductoPdv prod)
     {
@@ -617,7 +1241,7 @@
         errorAjuste = string.Empty;
     }
 
-    private async Task ConfirmarAjusteInventario()
+    private void ConfirmarAjusteInventario()
     {
         if (productoPorAjustar == null) return;
 
@@ -653,11 +1277,27 @@
             esFeedbackExito = true;
             productoPorAjustar = null;
             CargarDatos();
+            if (productoSeleccionadoDetalle != null)
+            {
+                productoSeleccionadoDetalle = PuntoVentaService.ObtenerProductoPorId(productoSeleccionadoDetalle.Id);
+                kardexProductoActual = PuntoVentaService.ObtenerKardexProducto(productoSeleccionadoDetalle!.Id).ToList();
+            }
         }
         else
         {
             errorAjuste = "No fue posible registrar el ajuste de inventario.";
         }
     }
-}
 
+    private static string ObtenerIconoCategoria(string categoria) => categoria switch
+    {
+        "Plátano" => "bi-tree-fill",
+        "Cacao" => "bi-cup-hot-fill",
+        "Apicultura" => "bi-flower1",
+        "Frutas" => "bi-apple",
+        "Insumos" or "Insumos y Abonos" => "bi-droplet-half",
+        "Granos" or "Granos y Cereales" => "bi-grid-fill",
+        "Lácteos" or "Lácteos y Derivados" => "bi-cup-straw",
+        _ => "bi-boxes"
+    };
+}

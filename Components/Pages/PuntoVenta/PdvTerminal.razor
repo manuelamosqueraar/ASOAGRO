@@ -159,68 +159,125 @@
         <!-- CATÁLOGO DE PRODUCTOS -->
         <div class="col-lg-7 col-xl-8">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
-                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-3">
+                <!-- CABECERA DEL CATÁLOGO Y HERRAMIENTAS DE BÚSQUEDA -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 pb-3 mb-3 border-bottom">
                     <div>
-                        <h2 class="fw-bold text-dark mb-0 fs-6">
-                            <i class="bi bi-grid-fill text-success me-1"></i> Cosechas Disponibles para Venta
-                        </h2>
-                        <small class="text-muted">Seleccione los productos para agregarlos a la canasta</small>
-                    </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <div class="input-group input-group-sm" style="max-width: 200px;">
-                            <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-                            <input type="text" class="form-control border-start-0" placeholder="Buscar producto..." @bind="busquedaCatalogo" @bind:event="oninput" />
+                        <div class="d-flex align-items-center gap-2">
+                            <h2 class="fw-bold text-dark mb-0 fs-6">
+                                <i class="bi bi-grid-fill text-success me-1.5"></i> Cosechas Disponibles para Venta
+                            </h2>
+                            <span class="badge bg-light text-muted border px-2 py-0.5 rounded-pill" style="font-size: 0.72rem;">
+                                @ProductosFiltrados.Count() de @productos.Count
+                            </span>
                         </div>
-                        <select class="form-select form-select-sm" style="max-width: 170px;" @bind="filtroCategoriaCatalogo">
-                            <option value="">Todas las categorías</option>
-                            <option value="Plátano">Plátano</option>
-                            <option value="Cacao">Cacao</option>
-                            <option value="Apicultura">Apicultura</option>
-                            <option value="Frutas">Frutas</option>
-                            <option value="Insumos">Insumos</option>
-                        </select>
+                        <small class="text-muted">Seleccione los productos para agregarlos a la canasta de mostrador</small>
+                    </div>
+
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <div class="input-group input-group-sm" style="min-width: 200px; max-width: 260px;">
+                            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                            <input type="text" class="form-control border-start-0 bg-light" placeholder="Buscar producto o código..." @bind="busquedaCatalogo" @bind:event="oninput" />
+                            @if (!string.IsNullOrWhiteSpace(busquedaCatalogo))
+                            {
+                                <button class="btn btn-outline-secondary border-start-0 bg-light" type="button" @onclick="() => busquedaCatalogo = string.Empty">
+                                    <i class="bi bi-x"></i>
+                                </button>
+                            }
+                        </div>
+                        <div class="d-flex align-items-center gap-1">
+                            <label class="small text-muted d-none d-sm-inline fw-semibold" style="font-size: 0.75rem;">Categoría:</label>
+                            <select class="form-select form-select-sm" style="min-width: 170px;" @bind="filtroCategoriaCatalogo">
+                                <option value="">Todas las categorías (@productos.Count)</option>
+                                <option value="Plátano">Plátano (@productos.Count(p => p.Categoria == "Plátano"))</option>
+                                <option value="Cacao">Cacao (@productos.Count(p => p.Categoria == "Cacao"))</option>
+                                <option value="Apicultura">Apicultura (@productos.Count(p => p.Categoria == "Apicultura"))</option>
+                                <option value="Frutas">Frutas (@productos.Count(p => p.Categoria == "Frutas"))</option>
+                                <option value="Insumos">Insumos (@productos.Count(p => p.Categoria == "Insumos"))</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
 
+                <!-- SELECTOR RÁPIDO DE CATEGORÍAS (CHIPS) -->
+                <div class="d-flex flex-wrap gap-1.5 mb-3 align-items-center">
+                    <span class="text-muted small fw-semibold me-1" style="font-size: 0.72rem;">Filtro rápido:</span>
+                    <button type="button" class="btn btn-sm rounded-pill py-0.5 px-2.5 fw-semibold @(string.IsNullOrEmpty(filtroCategoriaCatalogo) ? "btn-success text-white" : "btn-light text-muted border")"
+                            style="font-size: 0.72rem; @(string.IsNullOrEmpty(filtroCategoriaCatalogo) ? "background-color: #059669; border-color: #059669;" : "")"
+                            @onclick='@(() => filtroCategoriaCatalogo = "")'>
+                        Todas
+                    </button>
+                    @foreach (var cat in new[] { "Plátano", "Cacao", "Apicultura", "Frutas", "Insumos" })
+                    {
+                        var isSelected = filtroCategoriaCatalogo == cat;
+                        <button type="button" class="btn btn-sm rounded-pill py-0.5 px-2.5 fw-semibold @(isSelected ? "btn-success text-white" : "btn-light text-muted border")"
+                                style="font-size: 0.72rem; @(isSelected ? "background-color: #059669; border-color: #059669;" : "")"
+                                @onclick='@(() => filtroCategoriaCatalogo = isSelected ? "" : cat)'>
+                            @cat
+                        </button>
+                    }
+                </div>
+
+                <!-- CUADRÍCULA DE TARJETAS ALINEADAS Y CONSISTENTES -->
                 <div class="row g-3">
                     @foreach (var prod in ProductosFiltrados)
                     {
-                        <div class="col-sm-6 col-md-4">
-                            <div class="card h-100 border rounded-4 p-3 d-flex flex-column shadow-sm"
-                                 style="transition: all 0.2s ease; border-color: rgba(23, 96, 58, 0.15) !important;">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <span class="badge bg-light text-success border fw-bold" style="font-size: 0.68rem;">
+                        <div class="col-12 col-sm-6 col-xl-4 d-flex">
+                            <div class="card w-100 border rounded-4 p-3 d-flex flex-column shadow-sm bg-white position-relative"
+                                 style="border-color: #E2E8F0 !important; transition: transform 0.15s ease, box-shadow 0.15s ease;">
+                                
+                                <!-- CABECERA DE LA TARJETA: CATEGORÍA Y ESTADO DE STOCK -->
+                                <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+                                    <span class="badge bg-light text-success border border-success-subtle fw-bold px-2 py-1 rounded-pill" style="font-size: 0.7rem;">
                                         @prod.Categoria
                                     </span>
-                                    <span class="badge @(prod.StockDisponible <= 0 ? "bg-danger" : (prod.StockDisponible <= prod.StockMinimo ? "bg-warning text-dark" : "bg-success")) rounded-pill" style="font-size: 0.65rem;">
+                                    <span class="badge @(prod.StockDisponible <= 0 ? "bg-danger-subtle text-danger border border-danger-subtle" : (prod.StockDisponible <= prod.StockMinimo ? "bg-warning-subtle text-warning-emphasis border border-warning-subtle" : "bg-success-subtle text-success border border-success-subtle")) rounded-pill px-2.5 py-1 fw-bold" style="font-size: 0.68rem;">
+                                        <i class="bi @(prod.StockDisponible <= 0 ? "bi-x-circle" : (prod.StockDisponible <= prod.StockMinimo ? "bi-exclamation-circle" : "bi-check2")) me-1"></i>
                                         @(prod.StockDisponible <= 0 ? "Agotado" : $"Stock: {prod.StockDisponible:N0} {prod.UnidadMedida}")
                                     </span>
                                 </div>
-                                <h3 class="fw-bold text-dark mb-1" style="font-size: 0.88rem; line-height: 1.3;">
+
+                                <!-- TÍTULO CON ALTURA UNIFORME -->
+                                <h3 class="fw-bold text-dark mb-2" style="font-size: 0.92rem; line-height: 1.35; min-height: 2.55rem; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="@prod.Nombre">
                                     @prod.Nombre
                                 </h3>
-                                <small class="text-muted mb-2 d-block text-truncate" title="@prod.AsociacionOrigen" style="font-size: 0.72rem;">
-                                    <i class="bi bi-building me-1"></i>@prod.AsociacionOrigen
-                                </small>
 
-                                @if (prod.VigenciaPrecio.HasValue)
-                                {
-                                    <small class="text-muted d-block mb-2" style="font-size: 0.68rem;">
-                                        <i class="bi bi-calendar-event me-1"></i>Vigencia: @prod.VigenciaPrecio.Value.ToString("dd/MM/yyyy")
-                                    </small>
-                                }
+                                <!-- BLOQUE DE ASOCIACIÓN ORIGEN Y VIGENCIA (SIN CORTES) -->
+                                <div class="p-2.5 rounded-3 mb-3" style="background-color: #F8FAFC; border: 1px solid #EDF2F7; min-height: 4.1rem; display: flex; flex-direction: column; justify-content: center;">
+                                    <div class="d-flex align-items-start gap-2 mb-1">
+                                        <i class="bi bi-building text-success flex-shrink-0 mt-0.5" style="font-size: 0.8rem;"></i>
+                                        <div class="lh-sm">
+                                            <span class="d-block text-muted text-uppercase fw-bold" style="font-size: 0.62rem; letter-spacing: 0.04em;">Asociación Productora</span>
+                                            <span class="text-dark fw-semibold" style="font-size: 0.76rem; word-break: break-word;">
+                                                @prod.AsociacionOrigen
+                                            </span>
+                                        </div>
+                                    </div>
+                                    @if (prod.VigenciaPrecio.HasValue)
+                                    {
+                                        <div class="d-flex align-items-center gap-1.5 text-muted pt-1 border-top border-light-subtle" style="font-size: 0.68rem;">
+                                            <i class="bi bi-calendar-check text-muted"></i>
+                                            <span>Vigencia precio: <strong class="text-dark">@prod.VigenciaPrecio.Value.ToString("dd/MM/yyyy")</strong></span>
+                                        </div>
+                                    }
+                                </div>
 
-                                <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <span class="d-block text-muted" style="font-size: 0.65rem;">Precio COP</span>
-                                        <strong class="text-success fs-6">$@prod.PrecioUnitario.ToString("N0")</strong>
-                                        <span class="text-muted" style="font-size: 0.65rem;">/@prod.UnidadMedida</span>
+                                <!-- PIE DE TARJETA: PRECIO DE VENTA Y BOTÓN AGREGAR ALINEADOS -->
+                                <div class="mt-auto pt-2.5 border-top d-flex justify-content-between align-items-center gap-2">
+                                    <div class="lh-1">
+                                        <span class="d-block text-muted text-uppercase fw-bold mb-1" style="font-size: 0.62rem; letter-spacing: 0.04em;">Precio COP</span>
+                                        <div class="d-flex align-items-baseline gap-1">
+                                            <span class="fs-5 fw-bolder text-success">$@prod.PrecioUnitario.ToString("N0")</span>
+                                            <span class="text-muted small fw-semibold">COP</span>
+                                        </div>
+                                        <span class="text-muted d-block mt-0.5" style="font-size: 0.68rem;">Por @prod.UnidadMedida</span>
                                     </div>
                                     <button type="button"
-                                            class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
+                                            class="btn btn-sm btn-success rounded-pill px-3 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-1.5"
+                                            style="background-color: #059669; border-color: #059669; white-space: nowrap;"
                                             disabled="@(esModoConsulta || prod.StockDisponible <= 0)"
                                             @onclick="() => AgregarAlCarrito(prod)">
-                                        <i class="bi bi-plus-lg"></i> Agregar
+                                        <i class="bi bi-plus-lg fs-6"></i>
+                                        <span>Agregar</span>
                                     </button>
                                 </div>
                             </div>
@@ -231,6 +288,7 @@
                         <div class="col-12 py-5 text-center text-muted">
                             <i class="bi bi-search fs-1 text-muted opacity-50 d-block mb-2"></i>
                             <p class="mb-0 fw-semibold">No se encontraron productos con los filtros seleccionados.</p>
+                            <small class="text-muted">Intente cambiar la categoría o limpiar el texto de búsqueda.</small>
                         </div>
                     }
                 </div>
@@ -239,46 +297,60 @@
 
         <!-- CANASTA Y RADICACIÓN DE VENTA -->
         <div class="col-lg-5 col-xl-4">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 90px;">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="fw-bold text-dark mb-0 fs-6">
-                        <i class="bi bi-cart-fill text-success me-1"></i> Canasta de Venta
-                    </h2>
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white sticky-top" style="top: 90px; border-top: 4px solid #10B981 !important;">
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-3 p-1.5 bg-success-subtle text-success d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                            <i class="bi bi-cart-fill fs-6"></i>
+                        </div>
+                        <div>
+                            <h2 class="fw-bold text-dark mb-0 fs-6">Canasta de Venta</h2>
+                            <span class="text-muted" style="font-size: 0.72rem;">
+                                @(carrito.Any() ? $"{carrito.Sum(c => c.Cantidad)} cosechas cargadas" : "Mostrador listo")
+                            </span>
+                        </div>
+                    </div>
                     @if (carrito.Any())
                     {
-                        <button type="button" class="btn btn-link text-danger p-0 small text-decoration-none" @onclick="VaciarCarrito">
-                            <i class="bi bi-trash"></i> Vaciar
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-2.5 py-0.5 fw-semibold" style="font-size: 0.72rem;" @onclick="VaciarCarrito">
+                            <i class="bi bi-trash3 me-1"></i> Vaciar
                         </button>
+                    }
+                    else
+                    {
+                        <span class="badge bg-light text-muted border px-2 py-1 rounded-pill" style="font-size: 0.7rem;">0 items</span>
                     }
                 </div>
 
                 @if (carrito.Any())
                 {
-                    <div class="list-group list-group-flush mb-3" style="max-height: 240px; overflow-y: auto;">
+                    <div class="list-group list-group-flush mb-3" style="max-height: 280px; overflow-y: auto;">
                         @foreach (var item in carrito)
                         {
-                            <div class="list-group-item px-0 py-2 border-light-subtle d-flex justify-content-between align-items-center">
-                                <div style="max-width: 170px;">
+                            <div class="list-group-item px-2 py-2.5 border-light-subtle rounded-3 mb-1 bg-light bg-opacity-25 d-flex justify-content-between align-items-center">
+                                <div class="me-2 overflow-hidden" style="max-width: 170px;">
                                     <strong class="text-dark small d-block text-truncate" title="@item.NombreProducto">@item.NombreProducto</strong>
-                                    <span class="text-muted" style="font-size: 0.7rem;">$@item.PrecioUnitario.ToString("N0") COP x @item.Cantidad @item.UnidadMedida</span>
+                                    <span class="text-muted d-block" style="font-size: 0.7rem;">$@item.PrecioUnitario.ToString("N0") COP x @item.UnidadMedida</span>
                                 </div>
-                                <div class="d-flex align-items-center gap-1">
-                                    <button type="button" class="btn btn-sm btn-light border p-1" style="width: 26px; height: 26px; line-height: 1;"
-                                            disabled="@esModoConsulta" @onclick="() => ModificarCantidad(item, -1)">-</button>
-                                    <span class="fw-bold small px-1">@item.Cantidad</span>
-                                    <button type="button" class="btn btn-sm btn-light border p-1" style="width: 26px; height: 26px; line-height: 1;"
-                                            disabled="@esModoConsulta" @onclick="() => ModificarCantidad(item, 1)">+</button>
-                                    <strong class="text-success small ms-2">$@item.Subtotal.ToString("N0")</strong>
+                                <div class="d-flex align-items-center gap-1.5 flex-shrink-0">
+                                    <div class="btn-group btn-group-sm rounded-pill border bg-white p-0.5" role="group">
+                                        <button type="button" class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold text-muted"
+                                                disabled="@esModoConsulta" @onclick="() => ModificarCantidad(item, -1)">-</button>
+                                        <span class="fw-bold small px-2 align-self-center text-dark">@item.Cantidad</span>
+                                        <button type="button" class="btn btn-sm btn-light border-0 py-0 px-2 fw-bold text-muted"
+                                                disabled="@esModoConsulta" @onclick="() => ModificarCantidad(item, 1)">+</button>
+                                    </div>
+                                    <strong class="text-success small ms-1" style="min-width: 65px; text-align: right;">$@item.Subtotal.ToString("N0")</strong>
                                 </div>
                             </div>
                         }
                     </div>
 
                     <!-- TOTALES -->
-                    <div class="border-top pt-3 mb-3">
-                        <div class="d-flex justify-content-between small text-muted mb-1">
+                    <div class="p-3 rounded-3 bg-light border mb-3">
+                        <div class="d-flex justify-content-between text-muted small mb-1.5" style="font-size: 0.75rem;">
                             <span>Subtotal Cosechas:</span>
-                            <span>$@SubtotalCarrito.ToString("N0") COP</span>
+                            <span class="fw-semibold text-dark">$@SubtotalCarrito.ToString("N0") COP</span>
                         </div>
                         <div class="d-flex justify-content-between align-items-baseline pt-2 border-top">
                             <strong class="text-dark">TOTAL A COBRAR:</strong>
@@ -286,18 +358,40 @@
                         </div>
                     </div>
 
-                    <button type="button" class="btn btn-success w-100 rounded-pill py-2.5 fw-bold shadow-sm"
+                    <button type="button" class="btn btn-success w-100 rounded-pill py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2"
+                            style="background-color: #059669; border-color: #059669;"
                             disabled="@esModoConsulta" @onclick="AbrirModalCobro">
-                        <i class="bi bi-cash-stack me-1"></i> Cobrar y Registrar Venta
+                        <i class="bi bi-cash-stack fs-5"></i>
+                        <span>Cobrar y Registrar Venta</span>
                     </button>
                 }
                 else
                 {
-                    <div class="text-center py-5 text-muted">
-                        <i class="bi bi-cart-x fs-1 text-muted opacity-50 d-block mb-2"></i>
-                        <p class="small mb-0">La canasta de ventas está vacía.</p>
-                        <small>Haga clic en "+ Agregar" sobre cualquier cosecha del catálogo.</small>
+                    <!-- ESTADO VACÍO ELEGANTE Y PROPORCIONADO -->
+                    <div class="p-3 text-center rounded-4 mb-3" style="background-color: #F8FAFC; border: 1px dashed #CBD5E1;">
+                        <div class="rounded-circle bg-white shadow-sm d-inline-flex align-items-center justify-content-center mb-2" style="width: 48px; height: 48px; border: 1px solid #E2E8F0;">
+                            <i class="bi bi-basket3 text-success fs-4"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1" style="font-size: 0.88rem;">Canasta sin cosechas</h6>
+                        <p class="text-muted small mb-0 px-2" style="font-size: 0.75rem; line-height: 1.4;">
+                            Haga clic en el botón <strong>"+ Agregar"</strong> de cualquier ficha del catálogo para iniciar el cobro.
+                        </p>
                     </div>
+
+                    <div class="p-3 rounded-3 bg-light border mb-3">
+                        <div class="d-flex justify-content-between text-muted small mb-1.5" style="font-size: 0.75rem;">
+                            <span>Subtotal cosechas:</span>
+                            <span class="fw-semibold text-dark">$0 COP</span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-baseline pt-2 border-top">
+                            <span class="fw-bold text-dark small">TOTAL A COBRAR:</span>
+                            <strong class="text-muted fs-4">$0 <span class="fs-6 text-muted">COP</span></strong>
+                        </div>
+                    </div>
+
+                    <button type="button" class="btn btn-light text-muted w-100 rounded-pill py-2.5 small fw-bold border" disabled>
+                        <i class="bi bi-cart me-1"></i> Esperando cosechas...
+                    </button>
                 }
             </div>
         </div>

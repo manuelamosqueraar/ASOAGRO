@@ -10,14 +10,30 @@ public class ProductoPdv
     public string Nombre { get; set; } = string.Empty;
     public string Categoria { get; set; } = "Plátano";
     public string AsociacionOrigen { get; set; } = "ASOAGRO - Asociación Agropecuaria de Urabá";
+    public string ProductorOrigen { get; set; } = string.Empty;
+    public string MunicipioProcedencia { get; set; } = "Apartadó";
+    public string VeredaProcedencia { get; set; } = string.Empty;
+    public string VariedadClasificacion { get; set; } = "Primera Calidad";
+    public string NumeroLote { get; set; } = string.Empty;
+    public DateTime? FechaCosecha { get; set; }
+    public DateTime? FechaRecepcion { get; set; } = DateTime.Today;
     public string UnidadMedida { get; set; } = "Kilos";
     public decimal PrecioUnitario { get; set; }
     public decimal CostoPromedio { get; set; }
     public DateTime? VigenciaPrecio { get; set; }
     public decimal StockDisponible { get; set; }
+    public decimal StockReservado { get; set; } = 0;
     public decimal StockMinimo { get; set; } = 10;
+    public string Estado { get; set; } = "Disponible"; // "Disponible", "Bajo Stock", "Agotado", "Inactivo", "Descontinuado"
     public bool Activo { get; set; } = true;
     public string? Descripcion { get; set; }
+    public string? ImagenUrl { get; set; }
+    public List<string> GaleriaImagenes { get; set; } = new();
+    public string? Observaciones { get; set; }
+    public string? SoporteNombre { get; set; }
+    public byte[]? SoporteContenido { get; set; }
+    public DateTime FechaRegistro { get; set; } = DateTime.Now;
+    public string RegistradoPor { get; set; } = "Administrador PDV";
 }
 
 public class ItemVentaPdv
@@ -124,4 +140,40 @@ public class ResumenPdv
     public int TotalProductos { get; set; }
     public int ProductosBajoStock { get; set; }
     public decimal TotalCostoInventario { get; set; }
+}
+
+public class AjusteInventarioPdv
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public Guid ProductoId { get; set; }
+    public string CodigoProducto { get; set; } = string.Empty;
+    public string NombreProducto { get; set; } = string.Empty;
+    public DateTime Fecha { get; set; } = DateTime.Now;
+    public decimal StockAnterior { get; set; }
+    public decimal StockNuevo { get; set; }
+    public decimal CantidadAjustada => StockNuevo - StockAnterior;
+    public string Motivo { get; set; } = string.Empty;
+    public string AutorizadoPor { get; set; } = string.Empty;
+    public string Usuario { get; set; } = string.Empty;
+}
+
+public class MovimientoKardexPdv
+{
+    public Guid Id { get; set; } = Guid.NewGuid();
+    public DateTime Fecha { get; set; } = DateTime.Now;
+    public Guid ProductoId { get; set; }
+    public string CodigoProducto { get; set; } = string.Empty;
+    public string NombreProducto { get; set; } = string.Empty;
+    public string Categoria { get; set; } = string.Empty;
+    public string AsociacionOrigen { get; set; } = string.Empty;
+    public string TipoMovimiento { get; set; } = string.Empty; // "Recepción de Cosecha", "Venta en Mostrador", "Devolución / Anulación", "Ajuste de Inventario"
+    public string DocumentoReferencia { get; set; } = string.Empty;
+    public decimal CantidadEntrada { get; set; }
+    public decimal CantidadSalida { get; set; }
+    public decimal SaldoResultante { get; set; }
+    public string UnidadMedida { get; set; } = "Kilos";
+    public decimal CostoOPrecioUnitario { get; set; }
+    public decimal MontoTotal => (CantidadEntrada > 0 ? CantidadEntrada : CantidadSalida) * CostoOPrecioUnitario;
+    public string Responsable { get; set; } = string.Empty;
+    public string Observaciones { get; set; } = string.Empty;
 }
