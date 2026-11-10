@@ -1,5 +1,5 @@
 @page "/seguimiento-asociados"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Presidenta,Presidente")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Presidenta,Presidente,Administrador,Admin")]
 @rendermode InteractiveServer
 @using System.ComponentModel.DataAnnotations
 @using System.Security.Claims
@@ -11,6 +11,7 @@
 @inject IDocumentoAsociacionService DocumentoService
 @inject NotificacionService Notificaciones
 @inject AuthenticationStateProvider AuthProvider
+@inject ILogger<SeguimientoAsociados> Logger
 @implements IDisposable
 
 <PageTitle>Seguimiento de asociados · ASOAGRO</PageTitle>
@@ -639,6 +640,73 @@
     </div>
 }
 
+<!-- Modal de historial de encuentros del asociado seleccionado -->
+@if (mostrarModalHistorial)
+{
+    var nombreHistorial = asociadoEnHistorial?.NombreCompleto ?? $"Asociado #{idHistorialSeleccionado}";
+    var cedulaHistorial = asociadoEnHistorial?.Cedula;
+
+    <div class="sa-modal-backdrop" @onclick="CerrarHistorialModal" @onkeydown="ManejarTeclaHistorial" tabindex="-1">
+        <section class="sa-modal" role="dialog" aria-modal="true" aria-labelledby="sa-history-modal-title" @onclick:stopPropagation="true">
+            <header class="sa-modal-header">
+                <div>
+                    <span class="sa-section-kicker">Bitácora de seguimiento</span>
+                    <h2 id="sa-history-modal-title">Historial de encuentros</h2>
+                    <p>@nombreHistorial@(!string.IsNullOrWhiteSpace(cedulaHistorial) ? $" · CC {cedulaHistorial}" : "") · @historialModalRegistros.Count registro(s)</p>
+                </div>
+                <button type="button" class="sa-modal-close" @onclick="CerrarHistorialModal" aria-label="Cerrar historial">&times;</button>
+            </header>
+
+            <div class="sa-modal-body">
+                @if (!string.IsNullOrWhiteSpace(errorHistorial))
+                {
+                    <div class="sa-alert sa-alert-error" role="alert">@errorHistorial</div>
+                }
+                else if (historialModalRegistros.Count == 0)
+                {
+                    <div class="sa-empty" style="padding: 1.75rem 1.25rem;">
+                        <span class="sa-empty-icon">
+                            <svg class="sa-icon" width="22" height="22" viewBox="0 0 24 24"><use href="#ico-lista" /></svg>
+                        </span>
+                        <h3>Aún no hay encuentros registrados</h3>
+                        <p>Esta persona asociada todavía no cuenta con registros de seguimiento ni acuerdos guardados.</p>
+                    </div>
+                }
+                else
+                {
+                    <ol class="sa-history-list">
+                        @foreach (var gestion in historialModalRegistros)
+                        {
+                            <li>
+                                <div class="sa-history-item-top">
+                                    <strong>@NombreTipoGestion(gestion.TipoGestion)</strong>
+                                    <span class="sa-history-date">
+                                        @gestion.FechaGestion.ToLocalTime().ToString("dd/MM/yyyy · hh:mm tt", CulturaEspanol)
+                                    </span>
+                                </div>
+                                <p>@gestion.Descripcion</p>
+                                <div class="sa-history-meta">
+                                    <small>Responsable: <strong>@(string.IsNullOrWhiteSpace(gestion.GestionadoPor) ? "No especificado" : gestion.GestionadoPor)</strong></small>
+                                    @if (gestion.ProximaGestion.HasValue)
+                                    {
+                                        <small class="sa-history-next">
+                                            Próxima reunión: <strong>@gestion.ProximaGestion.Value.ToString("dd/MM/yyyy")@(!string.IsNullOrWhiteSpace(gestion.HoraReunion) ? $" · {FormatearHora(gestion.HoraReunion)}" : "")</strong>
+                                        </small>
+                                    }
+                                </div>
+                            </li>
+                        }
+                    </ol>
+                }
+            </div>
+
+            <footer class="sa-modal-actions">
+                <button type="button" class="sa-cancel-button" @onclick="CerrarHistorialModal">Cerrar</button>
+            </footer>
+        </section>
+    </div>
+}
+
 @code {
     [SupplyParameterFromQuery(Name = "q")]
     public string? BusquedaUrl { get; set; }
@@ -661,6 +729,12 @@
     private FormularioSeguimiento formulario = new();
     private int? historialAbierto;
     private bool guardando;
+
+    private bool mostrarModalHistorial;
+    private int idHistorialSeleccionado;
+    private AsociadoModel? asociadoEnHistorial;
+    private List<SeguimientoAsociado> historialModalRegistros = new();
+    private string errorHistorial = string.Empty;
 
     private DateOnly Hoy => DateOnly.FromDateTime(DateTime.Today);
 
@@ -865,9 +939,46 @@
 
     private void IrAHistorialAsociado(int asociadoId)
     {
-        filtroEstado = "Todos";
-        textoBusqueda = string.Empty;
-        historialAbierto = asociadoId;
+        errorHistorial = string.Empty;
+        idHistorialSeleccionado = asociadoId;
+        asociadoEnHistorial = ObtenerAsociadoPorId(asociadoId);
+
+        try
+        {
+            historialModalRegistros = SeguimientoService.ObtenerPorAsociado(asociadoId).ToList();
+            if (asociadoEnHistorial is null)
+            {
+                var refAsoc = historialModalRegistros.FirstOrDefault(s => s.Asociado != null)?.Asociado;
+                if (refAsoc is not null)
+                {
+                    asociadoEnHistorial = AsociadoMapper.ToModel(refAsoc);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error al consultar el historial de encuentros para el asociado {AsociadoId}.", asociadoId);
+            historialModalRegistros = new List<SeguimientoAsociado>();
+            errorHistorial = "No fue posible consultar el historial en este momento. Inténtalo nuevamente.";
+        }
+
+        mostrarModalHistorial = true;
+    }
+
+    private void CerrarHistorialModal()
+    {
+        mostrarModalHistorial = false;
+        asociadoEnHistorial = null;
+        historialModalRegistros.Clear();
+        errorHistorial = string.Empty;
+    }
+
+    private void ManejarTeclaHistorial(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            CerrarHistorialModal();
+        }
     }
 
     private void AbrirFormularioGeneral()

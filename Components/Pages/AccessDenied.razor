@@ -1,10 +1,28 @@
 @page "/access-denied"
 @attribute [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+@using Asoagro.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@inject AuthenticationStateProvider AuthProvider
 
 <PageTitle>Acceso denegado</PageTitle>
 
 <main class="container py-5 text-center">
-    <h1>Acceso denegado</h1>
-    <p>Tu cuenta inició sesión, pero no tiene permisos para abrir esa sección.</p>
-    <a class="btn btn-primary" href="/">Volver al inicio</a>
+    <div class="card shadow-sm border-0 p-4 mx-auto rounded-4" style="max-width: 520px; background: #ffffff;">
+        <h1 class="h4 fw-bold text-dark mb-2">Acceso denegado</h1>
+        <p class="text-muted mb-4">Tu cuenta inició sesión, pero tu rol actual no tiene permisos para abrir esa sección.</p>
+        <div class="d-flex justify-content-center gap-2">
+            <a class="btn btn-success rounded-pill px-4" style="background-color: #17603a; border-color: #17603a;" href="@rutaRegreso">Ir a mi panel</a>
+            <a class="btn btn-outline-secondary rounded-pill px-4" href="/login">Cambiar de sesión</a>
+        </div>
+    </div>
 </main>
+
+@code {
+    private string rutaRegreso = "/login";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var estado = await AuthProvider.GetAuthenticationStateAsync();
+        rutaRegreso = AuthRoleHelper.ObtenerPanelPorUsuario(estado.User);
+    }
+}

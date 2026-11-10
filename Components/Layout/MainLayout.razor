@@ -7,7 +7,9 @@
 @inject NavigationManager Navigation
 @inject AuthenticationStateProvider AuthProvider
 @inject NotificacionService Notificaciones
+@inject IJSRuntime JS
 @implements IDisposable
+@implements IAsyncDisposable
 
 <style>
     /* Avisos en tiempo real: campana, panel y aviso emergente */
@@ -257,7 +259,7 @@
                                 <div class="hv-notif-pop-footer">
                                     @if (PuedeVerPanelAlertasCompleto)
                                     {
-                                        <a href="/alertas-documentos" class="hv-notif-footer-link" @onclick="IrAPanelCompleto">
+                                        <a href="/alertas-documentos" class="hv-notif-footer-link" @onclick="IrAPanelCompleto" @onclick:preventDefault="true">
                                             <i class="bi bi-shield-exclamation me-1"></i> Ver panel central de alertas
                                         </a>
                                     }
@@ -282,14 +284,13 @@
                                 aria-label="Menú de perfil y cuenta de usuario" 
                                 aria-haspopup="true"
                                 aria-expanded="@(mostrarMenuUsuario ? "true" : "false")">
-                            @if (!string.IsNullOrWhiteSpace(fotoUsuarioActual))
-                            {
-                                <span class="hv-user-avatar-circle"><img src="@fotoUsuarioActual" alt="@nombreUsuarioActual" onerror="this.style.display='none'" /></span>
-                            }
-                            else
-                            {
-                                <span class="hv-user-avatar-circle">@inicialesUsuarioActual</span>
-                            }
+                            <span class="hv-user-avatar-circle" style="position: relative;">
+                                @inicialesUsuarioActual
+                                @if (!string.IsNullOrWhiteSpace(fotoUsuarioActual))
+                                {
+                                    <img src="@fotoUsuarioActual" alt="@nombreUsuarioActual" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.remove();" />
+                                }
+                            </span>
                             <div class="hv-user-meta">
                                 <span class="hv-user-name">@nombreUsuarioActual</span>
                                 <span class="hv-user-loc">@rolUsuarioLegible · Urabá</span>
@@ -305,14 +306,13 @@
                         {
                             <div class="hv-user-popover" tabindex="-1" @onclick:stopPropagation="true" @onkeydown="@(e => { if (e.Key == "Escape") CerrarTodo(); })">
                                 <div class="hv-user-pop-cab">
-                                    @if (!string.IsNullOrWhiteSpace(fotoUsuarioActual))
-                                    {
-                                        <span class="hv-user-avatar-lg"><img src="@fotoUsuarioActual" alt="@nombreUsuarioActual" /></span>
-                                    }
-                                    else
-                                    {
-                                        <span class="hv-user-avatar-lg">@inicialesUsuarioActual</span>
-                                    }
+                                    <span class="hv-user-avatar-lg" style="position: relative;">
+                                        @inicialesUsuarioActual
+                                        @if (!string.IsNullOrWhiteSpace(fotoUsuarioActual))
+                                        {
+                                            <img src="@fotoUsuarioActual" alt="@nombreUsuarioActual" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;" onerror="this.remove();" />
+                                        }
+                                    </span>
                                     <div style="flex: 1; min-width: 0;">
                                         <strong style="font-size: 0.88rem; color: #0d2c1c; font-weight: 700; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@nombreUsuarioActual</strong>
                                         <small style="font-size: 0.72rem; color: #64748b; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">@correoUsuarioActual</small>
@@ -348,7 +348,7 @@
 
                                 <div class="hv-pop-divider"></div>
 
-                                <a href="/Auth/logout" class="hv-pop-action-item peligro" title="Cerrar sesión de Asoagro" @onclick="CerrarTodo">
+                                <a href="/Auth/logout" data-enhance-nav="false" class="hv-pop-action-item peligro" title="Cerrar sesión de Asoagro" @onclick="CerrarTodo">
                                     <svg class="hv-pop-action-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
                                         <polyline points="16 17 21 12 16 7" />
@@ -566,20 +566,20 @@ else
     private bool autenticado;
     private string claveUsuario = string.Empty;
     private List<string> roles = new();
-    private string nombreUsuarioActual = "Manuela Andrea Mosquera";
-    private string correoUsuarioActual = "admin@asoagro-faaua.org";
+    private string nombreUsuarioActual = "Usuario autenticado";
+    private string correoUsuarioActual = string.Empty;
     private string fotoUsuarioActual = "";
-    private string rolUsuarioActual = "Administrador";
-    private string inicialesUsuarioActual = "MM";
+    private string rolUsuarioActual = string.Empty;
+    private string inicialesUsuarioActual = "AS";
 
     private string rolUsuarioLegible => rolUsuarioActual switch
     {
-        "Administrador" or "Admin" => "Administrador de la Plataforma",
+        "Administrador" or "Admin" => "Administrador del Sistema",
         "Presidenta" or "Presidente" => "Presidente FAAUA",
         "Secretaria" or "Secretaría" => "Secretaría FAAUA",
         "Tesorero" or "Tesorera" => "Tesorería FAAUA",
         "AdministradorPdv" or "PuntoVenta" or "Vendedor" => "Administrador Punto de Venta",
-        _ => !string.IsNullOrWhiteSpace(rolUsuarioActual) ? rolUsuarioActual : "Administrador de la Plataforma"
+        _ => !string.IsNullOrWhiteSpace(rolUsuarioActual) ? rolUsuarioActual : "Usuario"
     };
 
     private static string ObtenerIniciales(string? nombre)
@@ -631,11 +631,12 @@ else
                 "punto-de-venta/cierre-turno" => "Cierre de turno y arqueo",
                 "punto-de-venta/historial" => "Historial, devoluciones y anulaciones",
                 "punto-de-venta/reportes" => "Reportes del punto de venta",
-                "panel-administrador" => "Supervisión central del sistema",
-                "panel-administrador/usuarios" or "admin/usuarios" => "Usuarios y cuentas",
-                "panel-administrador/auditoria" or "admin/auditoria" => "Auditoría técnica",
+                "panel-administrador" or "panel-administrador/supervision" => "Supervisión del sistema",
+                "panel-administrador/usuarios" or "admin/usuarios" => "Usuarios, roles y permisos",
+                "panel-administrador/auditoria" or "admin/auditoria" => "Auditoría y seguridad",
                 "panel-administrador/catalogos" or "admin/catalogos" => "Catálogos y parámetros",
-                _ => "Directorio de asociaciones federadas"
+                "panel-administrador/integraciones" or "admin/integraciones" => "Estado de datos e integraciones",
+                _ => "Panel de la plataforma"
             };
         }
     }
@@ -647,6 +648,9 @@ else
             var r = RutaLimpiaActual;
             if (r.StartsWith("editar-asociado")) return "Padrón de Productores";
             if (r.StartsWith("punto-de-venta")) return "Punto de Venta Agropecuario";
+            if (r.StartsWith("panel-administrador") || r.StartsWith("admin/")) return "Administración del Sistema";
+            if (r.StartsWith("actas-estatutos")) return "Presidencia y Gobernanza";
+            if (r.StartsWith("gestion-financiera") || r.StartsWith("financiera")) return "Tesorería y Finanzas";
             return r switch
             {
                 "asociaciones" or "directorio-asociaciones" => "Asociaciones Federadas",
@@ -1017,10 +1021,63 @@ else
         return fecha.ToString("dd/MM/yyyy");
     }
 
+    private DotNetObjectReference<MainLayout>? _dotNetRef;
+    private bool _escRegistrado;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_escRegistrado && !_disposed)
+        {
+            _escRegistrado = true;
+            try
+            {
+                _dotNetRef ??= DotNetObjectReference.Create(this);
+                await JS.InvokeVoidAsync("asoagroLayoutEsc.registrar", _dotNetRef);
+            }
+            catch
+            {
+                // Ignorar en prerender o si el circuito aún no está listo
+                _escRegistrado = false;
+            }
+        }
+    }
+
+    [JSInvokable]
+    public Task CerrarDesdeTecladoAsync()
+    {
+        if (_disposed) return Task.CompletedTask;
+        if (modalUsuarioActivo != null)
+        {
+            modalUsuarioActivo = null;
+            StateHasChanged();
+            return Task.CompletedTask;
+        }
+        if (mostrarNotificaciones || mostrarMenuUsuario || grupoAbierto != null)
+        {
+            CerrarTodo();
+        }
+        return Task.CompletedTask;
+    }
+
     public void Dispose()
     {
         _disposed = true;
         Navigation.LocationChanged -= EnCambioDeRuta;
         Notificaciones.NotificacionPublicada -= EnNuevaNotificacion;
+        _dotNetRef?.Dispose();
+        _dotNetRef = null;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await JS.InvokeVoidAsync("asoagroLayoutEsc.quitar");
+        }
+        catch
+        {
+            // Ignorar si el circuito ya se cerró
+        }
+        Dispose();
     }
 }

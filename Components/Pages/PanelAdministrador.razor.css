@@ -1,0 +1,659 @@
+/* Panel de Administración del Sistema · Estilos Visuales y Responsivos ASOAGRO */
+
+.adm-shell {
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #0F172A;
+}
+
+/* Barra superior de pestañas de módulo */
+.adm-tabs-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    padding: 0.5rem;
+    background: #FFFFFF;
+    border: 1.5px solid #DCE7DF;
+    border-radius: 18px;
+    box-shadow: 0 4px 14px -6px rgba(15, 41, 30, 0.06);
+}
+
+.adm-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.55rem 1rem;
+    border-radius: 999px;
+    border: 1.5px solid transparent;
+    background: #F6FAF7;
+    color: #315443;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.25;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.16s ease;
+}
+
+.adm-tab-btn:hover {
+    background: #E8F5EC;
+    color: #14532D;
+    border-color: #B7DFC5;
+}
+
+.adm-tab-btn.is-active {
+    background: #14532D;
+    color: #FFFFFF;
+    border-color: #14532D;
+    box-shadow: 0 6px 14px -6px rgba(20, 83, 45, 0.45);
+}
+
+.adm-tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.35rem;
+    height: 1.35rem;
+    padding: 0 0.4rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    background: #FFFFFF;
+    color: #14532D;
+    border: 1px solid #CBE0D2;
+}
+
+.adm-tab-btn.is-active .adm-tab-count {
+    background: #A3E635;
+    color: #0B261A;
+    border-color: transparent;
+}
+
+/* Superficies y encabezados de módulo */
+.adm-surface {
+    background: #FFFFFF;
+    border: 1.5px solid #DCE7DF;
+    border-radius: 20px;
+    padding: 1.4rem 1.5rem;
+    box-shadow: 0 6px 20px -10px rgba(15, 41, 30, 0.08);
+}
+
+.adm-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.85rem;
+    margin-bottom: 1.15rem;
+}
+
+.adm-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #0F291E;
+    margin: 0 0 0.25rem 0;
+    letter-spacing: -0.01em;
+}
+
+.adm-section-sub {
+    font-size: 0.82rem;
+    color: #475569;
+    margin: 0;
+    line-height: 1.45;
+}
+
+.adm-chip-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.32rem 0.75rem;
+    border-radius: 999px;
+    background: #F0FDF4;
+    border: 1px solid #BBF7D0;
+    color: #166534;
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Tarjetas analíticas y de visualización */
+.adm-viz-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 1.15rem;
+    margin-bottom: 1.35rem;
+}
+
+.adm-viz-col-5 {
+    grid-column: span 5;
+}
+
+.adm-viz-col-6 {
+    grid-column: span 6;
+}
+
+.adm-viz-col-7 {
+    grid-column: span 7;
+}
+
+.adm-viz-card {
+    background: #FFFFFF;
+    border: 1.5px solid #DCE7DF;
+    border-radius: 18px;
+    padding: 1.2rem 1.3rem;
+    box-shadow: 0 6px 18px -10px rgba(15, 41, 30, 0.07);
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    position: relative;
+}
+
+.adm-viz-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.65rem;
+    margin-bottom: 0.9rem;
+}
+
+.adm-viz-title {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #0F291E;
+    margin: 0 0 0.15rem 0;
+}
+
+.adm-viz-desc {
+    font-size: 0.76rem;
+    color: #64748B;
+    margin: 0;
+}
+
+.adm-period-group {
+    display: inline-flex;
+    background: #F1F5F9;
+    padding: 0.2rem;
+    border-radius: 999px;
+    border: 1px solid #E2E8F0;
+    gap: 0.15rem;
+}
+
+.adm-period-btn {
+    border: none;
+    background: transparent;
+    color: #475569;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.adm-period-btn.is-active {
+    background: #14532D;
+    color: #FFFFFF;
+    box-shadow: 0 2px 6px rgba(20, 83, 45, 0.25);
+}
+
+/* Donut + leyenda interactiva */
+.adm-donut-layout {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex: 1;
+}
+
+.adm-donut-wrap {
+    position: relative;
+    width: 158px;
+    height: 158px;
+    flex-shrink: 0;
+}
+
+.adm-donut-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.adm-donut-total {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #0F291E;
+    line-height: 1.05;
+}
+
+.adm-donut-caption {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #64748B;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-top: 2px;
+}
+
+.adm-legend-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    flex: 1;
+    min-width: 0;
+}
+
+.adm-legend-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.42rem 0.65rem;
+    border-radius: 10px;
+    border: 1px solid #E6EFE9;
+    background: #FAFDFB;
+    font-size: 0.78rem;
+    cursor: pointer;
+    text-align: left;
+    width: 100%;
+    transition: all 0.14s ease;
+}
+
+.adm-legend-item:hover,
+.adm-legend-item.is-selected {
+    background: #ECFDF5;
+    border-color: #10B981;
+}
+
+.adm-legend-left {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.adm-swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    flex-shrink: 0;
+}
+
+.adm-legend-label {
+    font-weight: 600;
+    color: #1E293B;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.adm-legend-val {
+    font-weight: 800;
+    color: #0F291E;
+    white-space: nowrap;
+}
+
+/* Gráficos de barras SVG + tooltip */
+.adm-chart-stage {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: 185px;
+}
+
+.adm-bar-chart-svg {
+    width: 100%;
+    height: 170px;
+    display: block;
+    overflow: visible;
+}
+
+.adm-axis-labels {
+    display: grid;
+    gap: 4px;
+    margin-top: 4px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #64748B;
+    text-align: center;
+}
+
+.adm-tooltip-box {
+    margin-top: 0.65rem;
+    padding: 0.5rem 0.75rem;
+    border-radius: 10px;
+    background: #0F291E;
+    color: #FFFFFF;
+    font-size: 0.75rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.adm-tooltip-muted {
+    background: #F8FAFC;
+    color: #475569;
+    border: 1px dashed #CBD5E1;
+}
+
+/* Barras horizontales de resumen / móvil */
+.adm-hbar-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.adm-hbar-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: 10px;
+    transition: background-color 0.14s ease;
+}
+
+.adm-hbar-row:hover {
+    background: #F6FAF7;
+}
+
+.adm-hbar-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+}
+
+.adm-hbar-track {
+    width: 100%;
+    height: 8px;
+    border-radius: 999px;
+    background: #E9F0EC;
+    overflow: hidden;
+    display: flex;
+}
+
+.adm-hbar-fill {
+    height: 100%;
+    transition: width 0.25s ease;
+}
+
+/* Estado vacío honesto */
+.adm-empty-state {
+    padding: 1.75rem 1.25rem;
+    border-radius: 14px;
+    background: #F8FBF9;
+    border: 1.5px dashed #CBE0D2;
+    text-align: center;
+    color: #475569;
+}
+
+.adm-empty-state i {
+    font-size: 1.65rem;
+    color: #15803D;
+    display: block;
+    margin-bottom: 0.4rem;
+}
+
+/* Barra de filtros limpia sin recortes ni desalineación */
+.adm-filter-toolbar {
+    display: grid;
+    grid-template-columns: minmax(220px, 1.8fr) minmax(175px, 1fr) minmax(165px, 0.9fr) auto;
+    gap: 0.75rem;
+    align-items: center;
+    padding: 0.85rem 1rem;
+    background: #F7FAF8;
+    border: 1px solid #DCE7DF;
+    border-radius: 14px;
+    margin-bottom: 1rem;
+}
+
+.adm-filter-toolbar .form-control,
+.adm-filter-toolbar .form-select {
+    border-color: #CBDCD1;
+    border-radius: 10px;
+    font-size: 0.82rem;
+    min-height: 38px;
+    background-color: #FFFFFF;
+}
+
+.adm-result-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.45rem 0.9rem;
+    border-radius: 999px;
+    background: #ECFDF5;
+    border: 1px solid #A7F3D0;
+    color: #065F46;
+    font-size: 0.78rem;
+    font-weight: 800;
+    white-space: nowrap;
+}
+
+/* Tablas organizadas y botones uniformes */
+.adm-table {
+    font-size: 0.8rem;
+    width: 100%;
+    table-layout: auto;
+}
+
+.adm-table thead th {
+    padding: 0.68rem 0.55rem !important;
+    white-space: nowrap;
+}
+
+.adm-table tbody td {
+    padding: 0.68rem 0.55rem;
+    border-bottom: 1px solid #EDF3EF;
+    vertical-align: middle;
+}
+
+.aso-table-wrap td {
+    overflow-wrap: anywhere;
+}
+
+.adm-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.adm-user-cell {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.55rem;
+    max-width: 245px;
+}
+
+.adm-user-mini-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: #E6F4EA;
+    color: #14532D;
+    font-size: 0.72rem;
+    font-weight: 800;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid #C6E3CF;
+}
+
+.adm-role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.24rem 0.58rem;
+    border-radius: 999px;
+    font-size: 0.71rem;
+    font-weight: 700;
+    background: #F1F5F9;
+    color: #1E293B;
+    border: 1px solid #CBD5E1;
+    white-space: nowrap;
+}
+
+.adm-actions-grid {
+    display: grid;
+    grid-template-columns: auto auto;
+    gap: 0.35rem;
+    justify-content: end;
+    margin-left: auto;
+}
+
+.adm-act-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.28rem;
+    padding: 0.3rem 0.52rem;
+    border-radius: 8px;
+    font-size: 0.71rem;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.14s ease;
+    text-align: center;
+}
+
+.adm-act-edit {
+    background: #F8FAFC;
+    color: #334155;
+    border-color: #CBD5E1;
+}
+.adm-act-edit:hover {
+    background: #E2E8F0;
+    color: #0F172A;
+}
+
+.adm-act-warn {
+    background: #FFFBEB;
+    color: #92400E;
+    border-color: #FCD34D;
+}
+.adm-act-warn:hover {
+    background: #FEF3C7;
+    color: #78350F;
+}
+
+.adm-act-enable {
+    background: #ECFDF5;
+    color: #065F46;
+    border-color: #6EE7B7;
+}
+.adm-act-enable:hover {
+    background: #D1FAE5;
+}
+
+.adm-act-danger {
+    background: #FEF2F2;
+    color: #B91C1C;
+    border-color: #FECACA;
+}
+.adm-act-danger:hover {
+    background: #FEE2E2;
+    color: #991B1B;
+}
+
+.adm-act-info {
+    background: #EFF6FF;
+    color: #1D4ED8;
+    border-color: #BFDBFE;
+}
+.adm-act-info:hover {
+    background: #DBEAFE;
+    color: #1E40AF;
+}
+
+/* KPI mini resumen en sub-módulos */
+.adm-mini-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 1.05rem;
+}
+
+.adm-mini-stat {
+    background: #F8FBF9;
+    border: 1px solid #DCE7DF;
+    border-radius: 14px;
+    padding: 0.75rem 0.95rem;
+}
+
+.adm-mini-stat-label {
+    font-size: 0.71rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #64748B;
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.adm-mini-stat-val {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #0F291E;
+    line-height: 1.15;
+}
+
+.adm-mini-stat-hint {
+    font-size: 0.72rem;
+    color: #475569;
+    display: block;
+    margin-top: 0.15rem;
+}
+
+/* Responsivo Tablet y Móvil */
+@media (max-width: 1100px) {
+    .adm-viz-col-5,
+    .adm-viz-col-6,
+    .adm-viz-col-7 {
+        grid-column: span 12;
+    }
+
+    .adm-filter-toolbar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 767.98px) {
+    .adm-surface,
+    .adm-viz-card {
+        padding: 1rem;
+        border-radius: 16px;
+    }
+
+    .adm-donut-layout {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .adm-donut-wrap {
+        margin: 0 auto;
+    }
+
+    .adm-filter-toolbar {
+        grid-template-columns: 1fr;
+    }
+
+    .adm-tab-btn {
+        font-size: 0.78rem;
+        padding: 0.48rem 0.82rem;
+    }
+}

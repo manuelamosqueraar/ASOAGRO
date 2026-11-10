@@ -1,6 +1,6 @@
 @page "/asociaciones"
 @page "/directorio-asociaciones"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Presidenta,Presidente")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Secretaria,Secretaría,Presidenta,Presidente,Administrador,Admin")]
 @rendermode InteractiveServer
 @implements IAsyncDisposable
 @using System.Security.Claims
@@ -306,8 +306,6 @@
                     <option value="">Todas las organizaciones</option>
                     <option value="Asociación campesina">Asociación campesina</option>
                     <option value="Asociación agropecuaria">Asociación agropecuaria</option>
-                    <option value="Cooperativa agropecuaria">Cooperativa agropecuaria</option>
-                    <option value="Otra">Otra entidad</option>
                 </select>
             </div>
 
@@ -316,11 +314,8 @@
                 <select class="form-select aso-select-modern" @bind="filtroActividad" aria-label="Actividad productiva">
                     <option value="">Todas las actividades</option>
                     <option value="Agrícola">Agrícola</option>
-                    <option value="Pecuario o ganadero">Pecuario o ganadero</option>
-                    <option value="Mixto">Mixto</option>
-                    <option value="Forestal">Forestal</option>
-                    <option value="Piscícola o acuícola">Piscícola o acuícola</option>
-                    <option value="Otro">Otro enfoque</option>
+                    <option value="Pecuaria">Pecuaria</option>
+                    <option value="Mixta">Mixta</option>
                 </select>
             </div>
 
@@ -422,7 +417,7 @@
                                             <div class="text-muted d-flex flex-wrap align-items-center gap-1 mt-1" style="font-size: 0.73rem; line-height: 1.25;">
                                                 <span class="text-secondary fw-semibold">@asoc.TipoOrganizacion</span>
                                                 <span class="text-muted">·</span>
-                                                <span class="text-success fw-bold">@asoc.ActividadProductiva</span>
+                                                <span class="text-success fw-bold">@NormalizarActividadProductiva(asoc.ActividadProductiva)</span>
                                                 <span class="text-muted">·</span>
                                                 <span>@asoc.Ambito</span>
                                             </div>
@@ -676,7 +671,7 @@
                                 <span class="badge bg-success-subtle text-success-emphasis border border-success fw-bold">
                                     @(asociacionSeleccionada.ActividadProductiva == "Otro" && !string.IsNullOrWhiteSpace(asociacionSeleccionada.ActividadProductivaOtro)
                                         ? $"Otro ({asociacionSeleccionada.ActividadProductivaOtro})"
-                                        : asociacionSeleccionada.ActividadProductiva)
+                                        : NormalizarActividadProductiva(asociacionSeleccionada.ActividadProductiva))
                                 </span>
                             </div>
                             <div class="col-sm-6"><strong>Ámbito territorial:</strong> <span class="text-dark">@asociacionSeleccionada.Ambito</span></div>
@@ -894,8 +889,6 @@
                                     <select class="form-select" @bind="formularioModelo.TipoOrganizacion">
                                         <option value="Asociación campesina">Asociación campesina</option>
                                         <option value="Asociación agropecuaria">Asociación agropecuaria</option>
-                                        <option value="Cooperativa agropecuaria">Cooperativa agropecuaria</option>
-                                        <option value="Otra">Otra</option>
                                     </select>
                                     <small class="text-muted" style="font-size: 0.72rem;">Naturaleza jurídica estatutaria de la entidad.</small>
                                 </div>
@@ -905,11 +898,8 @@
                                     <label class="form-label fw-bold mb-1">Actividad o enfoque productivo <span class="text-danger">*</span></label>
                                     <select class="form-select" @bind="formularioModelo.ActividadProductiva">
                                         <option value="Agrícola">Agrícola</option>
-                                        <option value="Pecuario o ganadero">Pecuario o ganadero</option>
-                                        <option value="Mixto">Mixto</option>
-                                        <option value="Forestal">Forestal</option>
-                                        <option value="Piscícola o acuícola">Piscícola o acuícola</option>
-                                        <option value="Otro">Otro</option>
+                                        <option value="Pecuaria">Pecuaria</option>
+                                        <option value="Mixta">Mixta</option>
                                     </select>
                                     <small class="text-muted" style="font-size: 0.72rem;">Línea de producción o vocación económica de los asociados.</small>
                                 </div>
@@ -1376,7 +1366,7 @@
                                             <span class="badge bg-success-subtle text-success-emphasis border border-success fw-bold">
                                                 @(formularioModelo.ActividadProductiva == "Otro" && !string.IsNullOrWhiteSpace(formularioModelo.ActividadProductivaOtro)
                                                     ? $"Otro ({formularioModelo.ActividadProductivaOtro})"
-                                                    : formularioModelo.ActividadProductiva)
+                                                    : NormalizarActividadProductiva(formularioModelo.ActividadProductiva))
                                             </span>
                                         </div>
                                         <div class="col-sm-6"><strong>Ámbito:</strong> <span class="text-dark">@formularioModelo.Ambito</span></div>
@@ -1676,7 +1666,7 @@
                 string.Equals(a.TipoOrganizacion, filtroTipo, StringComparison.OrdinalIgnoreCase);
 
             var matchActividad = string.IsNullOrWhiteSpace(filtroActividad) ||
-                string.Equals(a.ActividadProductiva, filtroActividad, StringComparison.OrdinalIgnoreCase);
+                string.Equals(NormalizarActividadProductiva(a.ActividadProductiva), filtroActividad, StringComparison.OrdinalIgnoreCase);
 
             var matchAmbito = string.IsNullOrWhiteSpace(filtroAmbito) ||
                 string.Equals(a.Ambito, filtroAmbito, StringComparison.OrdinalIgnoreCase);
@@ -2034,6 +2024,14 @@
         await BloquearScrollModalAsync(true);
     }
 
+    private static string NormalizarActividadProductiva(string? actividad) => actividad?.Trim() switch
+    {
+        "Pecuario o ganadero" => "Pecuaria",
+        "Mixto" => "Mixta",
+        var v when !string.IsNullOrWhiteSpace(v) => v,
+        _ => "Agrícola"
+    };
+
     private async Task AbrirModalEditar(AsociacionInstitucional asoc)
     {
         editandoExistente = true;
@@ -2049,7 +2047,7 @@
             Sigla = asoc.Sigla,
             TipoOrganizacion = asoc.TipoOrganizacion,
             TipoOrganizacionOtro = asoc.TipoOrganizacionOtro,
-            ActividadProductiva = asoc.ActividadProductiva,
+            ActividadProductiva = NormalizarActividadProductiva(asoc.ActividadProductiva),
             ActividadProductivaOtro = asoc.ActividadProductivaOtro,
             Ambito = asoc.Ambito,
             GradoOrganizacion = asoc.GradoOrganizacion,

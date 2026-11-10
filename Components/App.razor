@@ -8,8 +8,8 @@
     <link rel="stylesheet" href="lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="app.css?v=35" />
-    <link rel="stylesheet" href="css/harvest-theme.css?v=35" />
-    <link rel="stylesheet" href="Asoagro.styles.css?v=35" />
+    <link rel="stylesheet" href="css/harvest-theme.css?v=36" />
+    <link rel="stylesheet" href="Asoagro.styles.css?v=36" />
     <HeadOutlet @rendermode="InteractiveServer" />
 </head>
 
@@ -45,6 +45,24 @@
                 setTimeout(() => URL.revokeObjectURL(url), 3000);
             } catch (err) {
                 console.error("Error al descargar archivo:", err);
+            }
+        };
+
+        window.asoagroLayoutEsc = {
+            registrar: function (dotNetRef) {
+                this.quitar();
+                this._handler = function (e) {
+                    if (e.key === 'Escape') {
+                        dotNetRef.invokeMethodAsync('CerrarDesdeTecladoAsync').catch(function () {});
+                    }
+                };
+                document.addEventListener('keydown', this._handler);
+            },
+            quitar: function () {
+                if (this._handler) {
+                    document.removeEventListener('keydown', this._handler);
+                    this._handler = null;
+                }
             }
         };
     </script>

@@ -280,10 +280,34 @@
                         Usuario o contraseña incorrectos. Por favor verifica tus credenciales.
                     </p>
                 }
+                else if (Error == "account_disabled")
+                {
+                    <p class="ag-error" role="alert">
+                        Esta cuenta se encuentra desactivada por el Administrador del sistema. Contacta a soporte técnico para habilitarla.
+                    </p>
+                }
                 else if (Error == "google_oauth")
                 {
                     <p class="ag-error" role="alert">
                         Google no pudo completar el inicio de sesión. Revisa las credenciales OAuth y la URI de redirección; el detalle técnico está en el registro de la aplicación.
+                    </p>
+                }
+                else if (Error == "auth_failed")
+                {
+                    <p class="ag-error" role="alert">
+                        No fue posible validar tu sesión. Intenta iniciar sesión nuevamente o contacta al Administrador del sistema.
+                    </p>
+                }
+                else if (Error == "no_role")
+                {
+                    <p class="ag-error" role="alert">
+                        Tu cuenta no tiene un rol institucional válido asignado en ASOAGRO. Solicita al Administrador del sistema asignar tu perfil correspondiente.
+                    </p>
+                }
+                else if (Error == "admin_unconfigured")
+                {
+                    <p class="ag-error" role="alert">
+                        La cuenta admin@asoagro-faaua.org aún no tiene contraseña inicial configurada. Define la variable de entorno ASOAGRO_ADMIN_INITIAL_PASSWORD (o Asoagro:AdminBootstrap:InitialPassword mediante user-secrets) con mínimo 8 caracteres y reinicia la aplicación.
                     </p>
                 }
 
@@ -343,7 +367,7 @@
 
                 <div class="ag-separador"><span>o continúa con</span></div>
 
-                <a href="/Auth/login-google" class="ag-btn ag-btn-google">
+                <a href="@UrlGoogleLogin" class="ag-btn ag-btn-google">
                     <svg viewBox="0 0 48 48" aria-hidden="true">
                         <path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z" />
                         <path fill="#FF3D00" d="m6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z" />
@@ -373,6 +397,20 @@
     [SupplyParameterFromQuery(Name = "error")]
     private string? Error { get; set; }
 
+    [SupplyParameterFromQuery(Name = "ReturnUrl")]
+    private string? ReturnUrlUpper { get; set; }
+
+    [SupplyParameterFromQuery(Name = "returnUrl")]
+    private string? ReturnUrlLower { get; set; }
+
+    private string ReturnUrlEfectiva => !string.IsNullOrWhiteSpace(ReturnUrlUpper)
+        ? ReturnUrlUpper
+        : (ReturnUrlLower ?? string.Empty);
+
+    private string UrlGoogleLogin => string.IsNullOrWhiteSpace(ReturnUrlEfectiva)
+        ? "/Auth/login-google"
+        : $"/Auth/login-google?returnUrl={Uri.EscapeDataString(ReturnUrlEfectiva)}";
+
     private void AlternarPassword() => _verPassword = !_verPassword;
 
     private async Task ManejarLogin()
@@ -383,7 +421,12 @@
         {
             var userParam = Uri.EscapeDataString(loginModel.Usuario?.Trim() ?? "");
             var passParam = Uri.EscapeDataString(loginModel.Password?.Trim() ?? "");
-            Navigation.NavigateTo($"/Auth/login-local?email={userParam}&password={passParam}", forceLoad: true);
+            var returnParam = string.IsNullOrWhiteSpace(ReturnUrlEfectiva)
+                ? string.Empty
+                : $"&returnUrl={Uri.EscapeDataString(ReturnUrlEfectiva)}";
+            Navigation.NavigateTo(
+                $"/Auth/login-local?email={userParam}&password={passParam}&rememberMe={loginModel.Recordarme}{returnParam}",
+                forceLoad: true);
             await Task.CompletedTask;
         }
         finally

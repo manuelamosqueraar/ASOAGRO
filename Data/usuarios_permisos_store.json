@@ -1,0 +1,388 @@
+{
+  "Usuarios": [
+    {
+      "Id": 1,
+      "NombreCompleto": "Administrador del Sistema ASOAGRO",
+      "DocumentoId": "900000001",
+      "Correo": "admin@asoagro-faaua.org",
+      "Telefono": null,
+      "ContrasenaHash": null,
+      "Rol": "Administrador",
+      "AsociacionId": null,
+      "Activo": true,
+      "UltimoAcceso": null,
+      "CreadoEn": "2026-11-10T19:21:37.1507518Z",
+      "Asociacion": null
+    },
+    {
+      "Id": 2,
+      "NombreCompleto": "Karen Argumedo",
+      "DocumentoId": "100000002",
+      "Correo": "karen.argumedoco@amigo.edu.co",
+      "Telefono": null,
+      "ContrasenaHash": null,
+      "Rol": "AdministradorPdv",
+      "AsociacionId": null,
+      "Activo": true,
+      "UltimoAcceso": null,
+      "CreadoEn": "2026-11-10T19:21:37.1507546Z",
+      "Asociacion": null
+    },
+    {
+      "Id": 3,
+      "NombreCompleto": "Juan Padilla",
+      "DocumentoId": "100000003",
+      "Correo": "juan.padillamo@amigo.edu.co",
+      "Telefono": null,
+      "ContrasenaHash": null,
+      "Rol": "Tesorero",
+      "AsociacionId": null,
+      "Activo": true,
+      "UltimoAcceso": null,
+      "CreadoEn": "2026-11-10T19:21:37.1507549Z",
+      "Asociacion": null
+    },
+    {
+      "Id": 4,
+      "NombreCompleto": "Manuela Andrea Mosquera",
+      "DocumentoId": "100000004",
+      "Correo": "manuela.mosqueraar@amigo.edu.co",
+      "Telefono": null,
+      "ContrasenaHash": null,
+      "Rol": "Secretaria",
+      "AsociacionId": null,
+      "Activo": true,
+      "UltimoAcceso": null,
+      "CreadoEn": "2026-11-10T19:21:37.1507551Z",
+      "Asociacion": null
+    },
+    {
+      "Id": 5,
+      "NombreCompleto": "Manuela Mosquera",
+      "DocumentoId": "100000005",
+      "Correo": "manumosque743@gmail.com",
+      "Telefono": null,
+      "ContrasenaHash": null,
+      "Rol": "Presidenta",
+      "AsociacionId": null,
+      "Activo": true,
+      "UltimoAcceso": null,
+      "CreadoEn": "2026-11-10T19:21:37.1507554Z",
+      "Asociacion": null
+    },
+    {
+      "Id": 6,
+      "NombreCompleto": "Secretar\u00EDa General FAAUA",
+      "DocumentoId": "100000006",
+      "Correo": "secretaria@asoagro-faaua.org",
+      "Telefono": null,
+      "ContrasenaHash": null,
+      "Rol": "Secretaria",
+      "AsociacionId": null,
+      "Activo": true,
+      "UltimoAcceso": null,
+      "CreadoEn": "2026-11-10T19:21:37.1507566Z",
+      "Asociacion": null
+    },
+    {
+      "Id": 7,
+      "NombreCompleto": "Tesorer\u00EDa FAAUA",
+      "DocumentoId": "100000007",
+      "Correo": "tesoreria@asoagro-faaua.org",
+      "Telefono": null,
+      "ContrasenaHash": null,
+      "Rol": "Tesorero",
+      "AsociacionId": null,
+      "Activo": true,
+      "UltimoAcceso": null,
+      "CreadoEn": "2026-11-10T19:21:37.1507568Z",
+      "Asociacion": null
+    },
+    {
+      "Id": 8,
+      "NombreCompleto": "Administrador Punto de Venta",
+      "DocumentoId": "100000008",
+      "Correo": "pdv@asoagro-faaua.org",
+      "Telefono": null,
+      "ContrasenaHash": null,
+      "Rol": "AdministradorPdv",
+      "AsociacionId": null,
+      "Activo": true,
+      "UltimoAcceso": null,
+      "CreadoEn": "2026-11-10T19:21:37.150757Z",
+      "Asociacion": null
+    }
+  ],
+  "Permisos": [
+    {
+      "Id": 1,
+      "Rol": "Administrador",
+      "Modulo": "Supervisi\u00F3n del sistema",
+      "PuedeVer": true,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 2,
+      "Rol": "Administrador",
+      "Modulo": "Usuarios, roles y permisos",
+      "PuedeVer": true,
+      "PuedeCrear": true,
+      "PuedeEditar": true,
+      "PuedeEliminar": true
+    },
+    {
+      "Id": 3,
+      "Rol": "Administrador",
+      "Modulo": "Auditor\u00EDa y seguridad",
+      "PuedeVer": true,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 4,
+      "Rol": "Administrador",
+      "Modulo": "Cat\u00E1logos y par\u00E1metros",
+      "PuedeVer": true,
+      "PuedeCrear": true,
+      "PuedeEditar": true,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 5,
+      "Rol": "Administrador",
+      "Modulo": "Estado de datos e integraciones",
+      "PuedeVer": true,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 6,
+      "Rol": "Administrador",
+      "Modulo": "Actas y Estatutos",
+      "PuedeVer": true,
+      "PuedeCrear": true,
+      "PuedeEditar": true,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 7,
+      "Rol": "Administrador",
+      "Modulo": "Secretar\u00EDa y Padr\u00F3n",
+      "PuedeVer": true,
+      "PuedeCrear": true,
+      "PuedeEditar": true,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 8,
+      "Rol": "Administrador",
+      "Modulo": "Tesorer\u00EDa y Finanzas",
+      "PuedeVer": true,
+      "PuedeCrear": true,
+      "PuedeEditar": true,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 9,
+      "Rol": "Administrador",
+      "Modulo": "Punto de Venta",
+      "PuedeVer": true,
+      "PuedeCrear": true,
+      "PuedeEditar": true,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 10,
+      "Rol": "Presidenta",
+      "Modulo": "Supervisi\u00F3n del sistema",
+      "PuedeVer": false,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 11,
+      "Rol": "Presidenta",
+      "Modulo": "Usuarios, roles y permisos",
+      "PuedeVer": false,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 12,
+      "Rol": "Presidenta",
+      "Modulo": "Auditor\u00EDa y seguridad",
+      "PuedeVer": false,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 13,
+      "Rol": "Presidenta",
+      "Modulo": "Actas y Estatutos",
+      "PuedeVer": true,
+      "PuedeCrear": true,
+      "PuedeEditar": true,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 14,
+      "Rol": "Presidenta",
+      "Modulo": "Secretar\u00EDa y Padr\u00F3n",
+      "PuedeVer": true,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 15,
+      "Rol": "Presidenta",
+      "Modulo": "Tesorer\u00EDa y Finanzas",
+      "PuedeVer": true,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 16,
+      "Rol": "Presidenta",
+      "Modulo": "Punto de Venta",
+      "PuedeVer": true,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 17,
+      "Rol": "Secretaria",
+      "Modulo": "Secretar\u00EDa y Padr\u00F3n",
+      "PuedeVer": true,
+      "PuedeCrear": true,
+      "PuedeEditar": true,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 18,
+      "Rol": "Secretaria",
+      "Modulo": "Expediente Documental",
+      "PuedeVer": true,
+      "PuedeCrear": true,
+      "PuedeEditar": true,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 19,
+      "Rol": "Secretaria",
+      "Modulo": "Seguimiento de Asociados",
+      "PuedeVer": true,
+      "PuedeCrear": true,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 20,
+      "Rol": "Secretaria",
+      "Modulo": "Usuarios, roles y permisos",
+      "PuedeVer": false,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 21,
+      "Rol": "Secretaria",
+      "Modulo": "Tesorer\u00EDa y Finanzas",
+      "PuedeVer": false,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 22,
+      "Rol": "Secretaria",
+      "Modulo": "Punto de Venta",
+      "PuedeVer": false,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 23,
+      "Rol": "Tesorero",
+      "Modulo": "Tesorer\u00EDa y Finanzas",
+      "PuedeVer": true,
+      "PuedeCrear": true,
+      "PuedeEditar": true,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 24,
+      "Rol": "Tesorero",
+      "Modulo": "Punto de Venta",
+      "PuedeVer": true,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 25,
+      "Rol": "Tesorero",
+      "Modulo": "Secretar\u00EDa y Padr\u00F3n",
+      "PuedeVer": false,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 26,
+      "Rol": "Tesorero",
+      "Modulo": "Usuarios, roles y permisos",
+      "PuedeVer": false,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 27,
+      "Rol": "AdministradorPdv",
+      "Modulo": "Punto de Venta",
+      "PuedeVer": true,
+      "PuedeCrear": true,
+      "PuedeEditar": true,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 28,
+      "Rol": "AdministradorPdv",
+      "Modulo": "Secretar\u00EDa y Padr\u00F3n",
+      "PuedeVer": false,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 29,
+      "Rol": "AdministradorPdv",
+      "Modulo": "Tesorer\u00EDa y Finanzas",
+      "PuedeVer": false,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    },
+    {
+      "Id": 30,
+      "Rol": "AdministradorPdv",
+      "Modulo": "Usuarios, roles y permisos",
+      "PuedeVer": false,
+      "PuedeCrear": false,
+      "PuedeEditar": false,
+      "PuedeEliminar": false
+    }
+  ]
+}

@@ -22,6 +22,19 @@ public class InMemorySeguimientoAsociadoService(IAsociadoService asociadoService
         }
     }
 
+    public IReadOnlyCollection<SeguimientoAsociado> ObtenerPorAsociado(int asociadoId)
+    {
+        var asociados = asociadoService.ObtenerTodos().ToDictionary(asociado => asociado.Id);
+        lock (syncRoot)
+        {
+            return seguimientos
+                .Where(seguimiento => seguimiento.AsociadoId == asociadoId)
+                .Select(seguimiento => Copiar(seguimiento, asociados.GetValueOrDefault(seguimiento.AsociadoId)))
+                .OrderByDescending(seguimiento => seguimiento.FechaGestion)
+                .ToList();
+        }
+    }
+
     public ResultadoRegistroSeguimientoAsociado Registrar(SeguimientoAsociado seguimiento)
     {
         var asociado = asociadoService.ObtenerTodos()

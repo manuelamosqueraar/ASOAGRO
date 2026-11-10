@@ -1,24 +1,33 @@
+@using Asoagro.Services
 <Router AppAssembly="typeof(Program).Assembly" NotFoundPage="typeof(Pages.NotFound)">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
             <NotAuthorized>
-                <div class="container py-5 text-center">
-                    <div class="card shadow-sm border-0 p-4 mx-auto rounded-4" style="max-width: 520px; background: #ffffff;">
-                        <div class="mb-3 text-warning">
-                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-                                <line x1="12" y1="8" x2="12" y2="12"/>
-                                <line x1="12" y1="16" x2="12.01" y2="16"/>
-                            </svg>
-                        </div>
-                        <h3 class="fw-bold text-dark mb-2">Acceso Restringido</h3>
-                        <p class="text-muted mb-4">Tu rol actual no tiene autorización para acceder a este módulo. Por favor consulta las opciones asignadas a tu perfil en el menú lateral.</p>
-                        <div class="d-flex justify-content-center gap-2">
-                            <a href="/" class="btn btn-outline-secondary rounded-pill px-4">Ir al inicio</a>
-                            <a href="/login" class="btn btn-success rounded-pill px-4" style="background-color: #17603a; border-color: #17603a;">Cambiar de sesión</a>
+                @if (context.User.Identity?.IsAuthenticated != true)
+                {
+                    <RedirectToLogin />
+                }
+                else
+                {
+                    var panelPropio = AuthRoleHelper.ObtenerPanelPorUsuario(context.User);
+                    <div class="container py-5 text-center">
+                        <div class="card shadow-sm border-0 p-4 mx-auto rounded-4" style="max-width: 520px; background: #ffffff;">
+                            <div class="mb-3 text-warning">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                    <line x1="12" y1="8" x2="12" y2="12"/>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                            </div>
+                            <h3 class="fw-bold text-dark mb-2">Acceso Restringido</h3>
+                            <p class="text-muted mb-4">Tu rol actual no tiene autorización para acceder a este módulo. Por favor consulta las opciones asignadas a tu perfil en el menú lateral.</p>
+                            <div class="d-flex justify-content-center gap-2">
+                                <a href="@panelPropio" class="btn btn-outline-secondary rounded-pill px-4">Ir a mi panel</a>
+                                <a href="/login" class="btn btn-success rounded-pill px-4" style="background-color: #17603a; border-color: #17603a;">Cambiar de sesión</a>
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
             </NotAuthorized>
             <Authorizing>
                 <div class="p-5 text-center text-muted">

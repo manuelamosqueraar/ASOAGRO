@@ -1,6 +1,343 @@
 {
   "Notificaciones": [
     {
+      "Id": "0a4fc89e-a414-4489-8d8b-d6bc33dcfb9d",
+      "FechaCreacion": "2026-11-10T12:11:27.0604269-05:00",
+      "Titulo": "Pago registrado: ING-2026-005",
+      "Descripcion": "Se registr\u00F3 el pago de $8,600,000 COP de ASOPL\u00C1TANO - Asociaci\u00F3n de Productores de Pl\u00E1tano de Urab\u00E1.",
+      "Etiqueta": "Finanzas",
+      "Enlace": "/panel-tesorero",
+      "Icono": "check",
+      "Categoria": 3,
+      "Nivel": 0,
+      "RolesDestino": [
+        "Tesorero",
+        "Tesorera",
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa"
+      ],
+      "RolesEnlace": [
+        "Tesorero",
+        "Tesorera",
+        "Administrador",
+        "Admin",
+        "Presidenta",
+        "Presidente"
+      ],
+      "ClaveUnica": "fin-pag-e44c5fd0-cdbc-4486-988b-7824f5e0dcb6-639299094870604346"
+    },
+    {
+      "Id": "ef5e0317-e819-4bdb-929d-9219ffb4f908",
+      "FechaCreacion": "2026-11-10T12:09:18.2918895-05:00",
+      "Titulo": "Operaci\u00F3n validada: COS-2026-002",
+      "Descripcion": "Tesorer\u00EDa valid\u00F3 la operaci\u00F3n de $14,200,000 COP en ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1.",
+      "Etiqueta": "Finanzas",
+      "Enlace": "/panel-tesorero",
+      "Icono": "check",
+      "Categoria": 3,
+      "Nivel": 0,
+      "RolesDestino": [
+        "Administrador",
+        "Admin",
+        "Tesorero",
+        "Tesorera"
+      ],
+      "RolesEnlace": [
+        "Administrador",
+        "Admin",
+        "Tesorero",
+        "Tesorera",
+        "Presidenta",
+        "Presidente"
+      ],
+      "ClaveUnica": "fin-val-ef982a56-58fd-41c5-b011-9005d1aa8386-639299093582919096"
+    },
+    {
+      "Id": "ada79f80-8d79-4416-a7c7-ff6b2cbc7dc7",
+      "FechaCreacion": "2026-11-10T12:09:17.251665-05:00",
+      "Titulo": "Operaci\u00F3n validada: ING-2026-005",
+      "Descripcion": "Tesorer\u00EDa valid\u00F3 la operaci\u00F3n de $12,600,000 COP en ASOPL\u00C1TANO - Asociaci\u00F3n de Productores de Pl\u00E1tano de Urab\u00E1.",
+      "Etiqueta": "Finanzas",
+      "Enlace": "/panel-tesorero",
+      "Icono": "check",
+      "Categoria": 3,
+      "Nivel": 0,
+      "RolesDestino": [
+        "Administrador",
+        "Admin",
+        "Tesorero",
+        "Tesorera"
+      ],
+      "RolesEnlace": [
+        "Administrador",
+        "Admin",
+        "Tesorero",
+        "Tesorera",
+        "Presidenta",
+        "Presidente"
+      ],
+      "ClaveUnica": "fin-val-e44c5fd0-cdbc-4486-988b-7824f5e0dcb6-639299093572516826"
+    },
+    {
+      "Id": "39cf150a-9e02-4d44-8333-9123887ccb26",
+      "FechaCreacion": "2026-11-10T12:09:15.2776012-05:00",
+      "Titulo": "Operaci\u00F3n validada: DES-2026-006",
+      "Descripcion": "Tesorer\u00EDa valid\u00F3 la operaci\u00F3n de $5,800,000 COP en ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1.",
+      "Etiqueta": "Finanzas",
+      "Enlace": "/panel-tesorero",
+      "Icono": "check",
+      "Categoria": 3,
+      "Nivel": 0,
+      "RolesDestino": [
+        "Administrador",
+        "Admin",
+        "Tesorero",
+        "Tesorera"
+      ],
+      "RolesEnlace": [
+        "Administrador",
+        "Admin",
+        "Tesorero",
+        "Tesorera",
+        "Presidenta",
+        "Presidente"
+      ],
+      "ClaveUnica": "fin-val-c5f59f5c-c249-481b-84c7-d9ced3cd1645-639299093552776150"
+    },
+    {
+      "Id": "74801486-5eb8-4aaf-a38b-bb6dc6dc665c",
+      "FechaCreacion": "2026-11-10T12:09:12.4118778-05:00",
+      "Titulo": "Operaci\u00F3n validada: COS-2026-003",
+      "Descripcion": "Tesorer\u00EDa valid\u00F3 la operaci\u00F3n de $3,240,000 COP en ASOPL\u00C1TANO - Asociaci\u00F3n de Productores de Pl\u00E1tano de Urab\u00E1.",
+      "Etiqueta": "Finanzas",
+      "Enlace": "/panel-tesorero",
+      "Icono": "check",
+      "Categoria": 3,
+      "Nivel": 0,
+      "RolesDestino": [
+        "Administrador",
+        "Admin",
+        "Tesorero",
+        "Tesorera"
+      ],
+      "RolesEnlace": [
+        "Administrador",
+        "Admin",
+        "Tesorero",
+        "Tesorera",
+        "Presidenta",
+        "Presidente"
+      ],
+      "ClaveUnica": "fin-val-616a4685-8a6f-4cc3-ae56-dcd2438b67c9-639299093524118972"
+    },
+    {
+      "Id": "0138318f-42c6-42f5-9235-63a4e921ef11",
+      "FechaCreacion": "2026-11-10T12:02:09.8531097-05:00",
+      "Titulo": "Encuentro agendado: Carlos Julio Ram\u00EDrez",
+      "Descripcion": "Reuni\u00F3n o visita presencial \u00B7 17/11/2026 a las 9:00 a. m. \u00B7 Registrado por Karen Argumedo.",
+      "Etiqueta": "Seguimiento",
+      "Enlace": "/seguimiento-asociados",
+      "Icono": "check",
+      "Categoria": 2,
+      "Nivel": 0,
+      "RolesDestino": [
+        "Secretaria",
+        "Administrador"
+      ],
+      "RolesEnlace": [
+        "Secretaria",
+        "Administrador"
+      ],
+      "ClaveUnica": null
+    },
+    {
+      "Id": "0e536324-0ed5-43ef-8356-07a39734e146",
+      "FechaCreacion": "2026-11-10T11:41:09.2432445-05:00",
+      "Titulo": "Documento registrado",
+      "Descripcion": "sxa.s \u00B7 Documento institucional \u00B7 por manuela.mosqueraar@amigo.edu.co.",
+      "Etiqueta": "Documento registrado",
+      "Enlace": "/actas-estatutos/documentos",
+      "Icono": "doc",
+      "Categoria": 1,
+      "Nivel": 0,
+      "RolesDestino": [
+        "Presidenta",
+        "Administrador",
+        "Secretaria",
+        "Tesorero"
+      ],
+      "RolesEnlace": [
+        "Presidenta"
+      ],
+      "ClaveUnica": null
+    },
+    {
+      "Id": "bbea481e-4e80-4b02-ae8c-549cc3329cf8",
+      "FechaCreacion": "2026-11-10T11:37:42.3895318-05:00",
+      "Titulo": "Nuevo productor registrado",
+      "Descripcion": "Omaira Luz Martinez Batista \u00B7 Finca Yao, Villa Carolina. Registrado por Manuela Andrea Mosquera Martinez.",
+      "Etiqueta": "Registro",
+      "Enlace": "/consultar-asociados",
+      "Icono": "usuario-mas",
+      "Categoria": 0,
+      "Nivel": 0,
+      "RolesDestino": [],
+      "RolesEnlace": [
+        "Secretaria",
+        "Administrador"
+      ],
+      "ClaveUnica": null
+    },
+    {
+      "Id": "94cbf962-6ca0-4d68-a843-12bb8af334e8",
+      "FechaCreacion": "2026-11-10T11:21:07.476833-05:00",
+      "Titulo": "Contacto programado para ma\u00F1ana: Juan Perez",
+      "Descripcion": "3004097822 \u00B7 pr\u00F3xima gesti\u00F3n: 11/11/2026.",
+      "Etiqueta": "Seguimiento",
+      "Enlace": "/seguimiento-asociados",
+      "Icono": "alerta",
+      "Categoria": 2,
+      "Nivel": 2,
+      "RolesDestino": [
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin",
+        "Presidenta",
+        "Presidente"
+      ],
+      "RolesEnlace": [
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin",
+        "Presidenta",
+        "Presidente"
+      ],
+      "ClaveUnica": "seguimiento|48|2026-11-11|1"
+    },
+    {
+      "Id": "6b6b13f0-dc2b-4faf-8be6-713c790dbfd7",
+      "FechaCreacion": "2026-11-10T11:21:07.4768141-05:00",
+      "Titulo": "Contacto vencido: Lucia Fernandez",
+      "Descripcion": "3006526504 \u00B7 pr\u00F3xima gesti\u00F3n: 09/11/2026.",
+      "Etiqueta": "Vencido",
+      "Enlace": "/seguimiento-asociados",
+      "Icono": "alerta",
+      "Categoria": 2,
+      "Nivel": 2,
+      "RolesDestino": [
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin",
+        "Presidenta",
+        "Presidente"
+      ],
+      "RolesEnlace": [
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin",
+        "Presidenta",
+        "Presidente"
+      ],
+      "ClaveUnica": "seguimiento|57|2026-11-09|-1"
+    },
+    {
+      "Id": "e220c25b-d4ab-4580-aa43-4094e7e6baf6",
+      "FechaCreacion": "2026-11-10T11:21:07.4767966-05:00",
+      "Titulo": "Contacto programado en 5 d\u00EDas: Carmen Sanchez",
+      "Descripcion": "3004193190 \u00B7 pr\u00F3xima gesti\u00F3n: 15/11/2026.",
+      "Etiqueta": "Seguimiento",
+      "Enlace": "/seguimiento-asociados",
+      "Icono": "alerta",
+      "Categoria": 2,
+      "Nivel": 1,
+      "RolesDestino": [
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin",
+        "Presidenta",
+        "Presidente"
+      ],
+      "RolesEnlace": [
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin",
+        "Presidenta",
+        "Presidente"
+      ],
+      "ClaveUnica": "seguimiento|47|2026-11-15|7"
+    },
+    {
+      "Id": "86299a6f-02e8-4f7a-b341-1d2bc3b89fca",
+      "FechaCreacion": "2026-11-10T11:21:07.474801-05:00",
+      "Titulo": "Declaraci\u00F3n de Renta e Ingresos Institucionales - Declaraci\u00F3n Anual de Ingresos vence en 25 d\u00EDas",
+      "Descripcion": "ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1 \u00B7 fecha de vencimiento: 05/12/2026.",
+      "Etiqueta": "Por vencer",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 0,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [],
+      "ClaveUnica": "documento|ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1|Declaraci\u00F3n de Renta e Ingresos Institucionales - Declaraci\u00F3n Anual de Ingresos|2026-12-05|30"
+    },
+    {
+      "Id": "f9ae288d-7178-4544-8f53-48e910f7ca15",
+      "FechaCreacion": "2026-11-10T11:21:07.4747774-05:00",
+      "Titulo": "P\u00F3liza de Responsabilidad y Cumplimiento - P\u00F3liza Seguros del Estado vence en 12 d\u00EDas",
+      "Descripcion": "ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1 \u00B7 fecha de vencimiento: 22/11/2026.",
+      "Etiqueta": "Por vencer",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 1,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [],
+      "ClaveUnica": "documento|ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1|P\u00F3liza de Responsabilidad y Cumplimiento - P\u00F3liza Seguros del Estado|2026-11-22|15"
+    },
+    {
+      "Id": "c35f3173-0790-43fe-b9d9-c41368f745d1",
+      "FechaCreacion": "2026-11-10T11:21:07.4745047-05:00",
+      "Titulo": "Certificado de Existencia y Representaci\u00F3n Legal (C\u00E1mara de Comercio) - C\u00E1mara de Comercio de Urab\u00E1 vence en 5 d\u00EDas",
+      "Descripcion": "ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1 \u00B7 fecha de vencimiento: 15/11/2026.",
+      "Etiqueta": "Por vencer",
+      "Enlace": "/alertas-documentos",
+      "Icono": "alerta",
+      "Categoria": 1,
+      "Nivel": 2,
+      "RolesDestino": [
+        "Presidenta",
+        "Presidente",
+        "Secretaria",
+        "Secretar\u00EDa",
+        "Administrador",
+        "Admin"
+      ],
+      "RolesEnlace": [],
+      "ClaveUnica": "documento|ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1|Certificado de Existencia y Representaci\u00F3n Legal (C\u00E1mara de Comercio) - C\u00E1mara de Comercio de Urab\u00E1|2026-11-15|7"
+    },
+    {
       "Id": "f9038ffa-e860-4f2e-8062-84bac707b500",
       "FechaCreacion": "2026-11-09T22:07:36.4504259-05:00",
       "Titulo": "Contacto programado en 6 d\u00EDas: Ana Martinez",
@@ -439,7 +776,44 @@
     "documento|DEC-2025|Declaraci\u00F3n de ingresos|2026-11-28|30",
     "documento|Ana Martinez|Certificado BPA|2026-12-03|30",
     "documento|ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1|Declaraci\u00F3n de Renta e Ingresos Institucionales - Declaraci\u00F3n Anual de Ingresos|2026-12-04|30",
-    "seguimiento|51|2026-11-15|7"
+    "seguimiento|51|2026-11-15|7",
+    "documento|ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1|Certificado de Existencia y Representaci\u00F3n Legal (C\u00E1mara de Comercio) - C\u00E1mara de Comercio de Urab\u00E1|2026-11-15|7",
+    "documento|ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1|P\u00F3liza de Responsabilidad y Cumplimiento - P\u00F3liza Seguros del Estado|2026-11-22|15",
+    "documento|ASOAGRO - Asociaci\u00F3n Agropecuaria de Urab\u00E1|Declaraci\u00F3n de Renta e Ingresos Institucionales - Declaraci\u00F3n Anual de Ingresos|2026-12-05|30",
+    "seguimiento|47|2026-11-15|7",
+    "seguimiento|57|2026-11-09|-1",
+    "seguimiento|48|2026-11-11|1",
+    "fin-val-616a4685-8a6f-4cc3-ae56-dcd2438b67c9-639299093524118972",
+    "fin-val-c5f59f5c-c249-481b-84c7-d9ced3cd1645-639299093552776150",
+    "fin-val-e44c5fd0-cdbc-4486-988b-7824f5e0dcb6-639299093572516826",
+    "fin-val-ef982a56-58fd-41c5-b011-9005d1aa8386-639299093582919096",
+    "fin-pag-e44c5fd0-cdbc-4486-988b-7824f5e0dcb6-639299094870604346"
   ],
-  "LeidasPorUsuario": {}
+  "LeidasPorUsuario": {
+    "manuela.mosqueraar@amigo.edu.co": [
+      "0e536324-0ed5-43ef-8356-07a39734e146",
+      "bbea481e-4e80-4b02-ae8c-549cc3329cf8",
+      "94cbf962-6ca0-4d68-a843-12bb8af334e8",
+      "6b6b13f0-dc2b-4faf-8be6-713c790dbfd7",
+      "e220c25b-d4ab-4580-aa43-4094e7e6baf6",
+      "86299a6f-02e8-4f7a-b341-1d2bc3b89fca",
+      "f9ae288d-7178-4544-8f53-48e910f7ca15",
+      "c35f3173-0790-43fe-b9d9-c41368f745d1",
+      "f9038ffa-e860-4f2e-8062-84bac707b500",
+      "d827039c-57e0-4705-bbcc-211c7a6f686a",
+      "e55982cb-234e-43cd-af79-262f12cbfc35",
+      "5e083f84-d81c-478e-9ad9-61c7de5db4e6",
+      "53744e84-f267-4c24-b33c-49a178521b5d",
+      "bd151fa1-77bc-493b-95e8-24a44a25f894",
+      "a08ec4ae-2404-43f0-b9b1-1e201d509bc0",
+      "85b60add-f0d6-44e4-ae3d-4fb2da12a00c",
+      "d88a9e93-4f10-40f1-8067-5d4f6878122c",
+      "39ce57e3-46f8-4fdf-bbfc-1fbbe25a98e1",
+      "81093529-d423-4664-89cd-bdbb532d19ab",
+      "cf7e0a43-7da0-4392-9513-d02586965737",
+      "b9a679be-a1ec-41dd-84b8-9844e3dd02b0"
+    ],
+    "secretaria@asoagro-faaua.org": [],
+    "manumosque743@gmail.com": []
+  }
 }

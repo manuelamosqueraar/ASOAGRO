@@ -1938,7 +1938,7 @@
     border-bottom: 1px solid #dce4d8 !important;
     position: sticky !important;
     top: 0 !important;
-    z-index: 1000 !important;
+    z-index: 1300;
     pointer-events: auto !important;
     box-shadow: 0 2px 8px rgba(16, 40, 24, 0.05) !important;
 }
@@ -4535,7 +4535,7 @@ img, video {
 .hv-topbar {
     position: sticky !important;
     top: 0 !important;
-    z-index: 1000 !important;
+    z-index: 1300;
     margin: 0 !important;
     border-radius: 0 !important;
     background: #FFFFFF !important;

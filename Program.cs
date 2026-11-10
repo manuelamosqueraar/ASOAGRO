@@ -34,14 +34,63 @@ var googleAuthenticationConfigured =
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = googleAuthenticationConfigured
-        ? GoogleDefaults.AuthenticationScheme
-        : CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 })
 .AddCookie(options =>
 {
     options.LoginPath = "/login";
     options.AccessDeniedPath = "/access-denied";
+    options.Events = new CookieAuthenticationEvents
+    {
+        OnValidatePrincipal = async context =>
+        {
+            var email = context.Principal?.FindFirstValue(ClaimTypes.Email)
+                ?? context.Principal?.FindFirstValue("email")
+                ?? context.Principal?.Identity?.Name;
+            var authIat = context.Principal?.FindFirstValue("auth_iat");
+
+            var monitor = context.HttpContext.RequestServices.GetRequiredService<SistemaMonitoreoService>();
+            if (monitor.EstaSesionRevocada(email, authIat))
+            {
+                context.RejectPrincipal();
+                await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(email))
+            {
+                var adminSvc = context.HttpContext.RequestServices.GetRequiredService<AdminSistemaService>();
+                var usuarioDb = await adminSvc.BuscarUsuarioPorCorreoAsync(email);
+                if (usuarioDb != null && !usuarioDb.Activo)
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                }
+            }
+        },
+        OnRedirectToAccessDenied = async context =>
+        {
+            var adminSvc = context.HttpContext.RequestServices.GetRequiredService<AdminSistemaService>();
+            var user = context.HttpContext.User;
+            var nombre = user.Identity?.Name ?? "Anónimo";
+            var correo = user.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+            var rol = string.Join(", ", user.FindAll(ClaimTypes.Role).Select(c => c.Value));
+            var ip = context.HttpContext.Connection.RemoteIpAddress?.ToString();
+
+            await adminSvc.RegistrarAuditoriaAsync(
+                nombre,
+                correo,
+                string.IsNullOrWhiteSpace(rol) ? "Sin rol" : rol,
+                "Seguridad / Acceso",
+                "Acceso denegado por falta de permisos",
+                context.Request.Path.Value ?? "/",
+                "Denegado",
+                $"Solicitud rechazada hacia ruta protegida: {context.Request.Path.Value}",
+                ip);
+
+            context.Response.Redirect(context.RedirectUri);
+        }
+    };
 });
 
 if (googleAuthenticationConfigured)
@@ -53,7 +102,7 @@ if (googleAuthenticationConfigured)
             options.ClientSecret = googleClientSecret!;
 
             // Asignación de roles dinámica basada en el correo que inicia sesión
-            options.Events.OnCreatingTicket = context =>
+            options.Events.OnCreatingTicket = async context =>
             {
                 var email = context.Identity?.FindFirst(ClaimTypes.Email)?.Value?.ToLower() ?? "";
                 var identity = (ClaimsIdentity?)context.Identity;
@@ -69,33 +118,63 @@ if (googleAuthenticationConfigured)
                         }
                     }
 
-                    // ===== ASIGNACIÓN DE ROLES SEGÚN CORREO INSTITUCIONAL =====
-                    if (email == "karen.argumedoco@amigo.edu.co" || email == "admin@asoagro-faaua.org" || email == "admin@asoagro.com")
-                    {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "Administrador"));
-                    }
-                    else if (email == "juan.padillamo@amigo.edu.co")
-                    {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "Presidenta"));
-                    }
-                    else if (email == "manuela.mosqueraar@amigo.edu.co" || email == "secretaria@asoagro-faaua.org")
-                    {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "Secretaria"));
-                    }
-                    else if (email == "manumosque743@gmail.com" || email == "tesoreria@asoagro-faaua.org")
-                    {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "Tesorero"));
-                    }
-                    else if (email == "pdv@asoagro-faaua.org" || email == "puntoventa@asoagro.com" || email?.Contains("pdv") == true || email?.Contains("pos") == true)
-                    {
-                        identity.AddClaim(new Claim(ClaimTypes.Role, "AdministradorPdv"));
-                    }
-                }
+                    identity.AddClaim(new Claim("auth_iat", DateTime.UtcNow.Ticks.ToString()));
 
-                return Task.CompletedTask;
+                    var adminSvc = context.HttpContext.RequestServices.GetRequiredService<AdminSistemaService>();
+                    var usuarioBd = await adminSvc.BuscarUsuarioPorCorreoAsync(email);
+                    if (usuarioBd != null)
+                    {
+                        if (!usuarioBd.Activo)
+                        {
+                            await adminSvc.RegistrarAuditoriaAsync(
+                                usuarioBd.NombreCompleto,
+                                usuarioBd.Correo,
+                                usuarioBd.Rol,
+                                "Autenticación",
+                                "Inicio de sesión Google OAuth rechazado (cuenta inactiva)",
+                                usuarioBd.Correo,
+                                "Denegado",
+                                "La cuenta existe pero se encuentra desactivada por el Administrador.",
+                                context.HttpContext.Connection.RemoteIpAddress?.ToString(),
+                                usuarioBd.Id,
+                                usuarioBd.Id);
+                            context.Fail("La cuenta se encuentra desactivada.");
+                            return;
+                        }
+
+                        var rolCanonica = AuthRoleHelper.NormalizarRolCanonica(usuarioBd.Rol);
+                        if (!string.IsNullOrWhiteSpace(rolCanonica))
+                        {
+                            identity.AddClaim(new Claim(ClaimTypes.Role, rolCanonica));
+                        }
+                        await adminSvc.RegistrarAccesoUsuarioAsync(email);
+                    }
+                    else
+                    {
+                        var rolFallback = AuthRoleHelper.ResolverRolPorCorreoFallback(email);
+                        if (!string.IsNullOrWhiteSpace(rolFallback))
+                        {
+                            identity.AddClaim(new Claim(ClaimTypes.Role, rolFallback));
+                        }
+                    }
+
+                    var emailSafe = string.IsNullOrWhiteSpace(email) ? "google-oauth@desconocido" : email;
+                    var rolLog = identity.FindFirst(ClaimTypes.Role)?.Value ?? "Sin rol";
+                    var nombreLog = identity.FindFirst(ClaimTypes.Name)?.Value ?? emailSafe;
+                    await adminSvc.RegistrarAuditoriaAsync(
+                        nombreLog,
+                        emailSafe,
+                        rolLog,
+                        "Autenticación",
+                        "Inicio de sesión con Google OAuth",
+                        emailSafe,
+                        "Autorizado",
+                        "Autenticación federada mediante Google OAuth 2.0.",
+                        context.HttpContext.Connection.RemoteIpAddress?.ToString());
+                }
             };
 
-            options.Events.OnRemoteFailure = context =>
+            options.Events.OnRemoteFailure = async context =>
             {
                 var logger = context.HttpContext.RequestServices
                     .GetRequiredService<ILoggerFactory>()
@@ -105,9 +184,23 @@ if (googleAuthenticationConfigured)
                     "Google OAuth failed. Failure type: {FailureType}",
                     context.Failure?.GetType().Name ?? "unknown");
 
+                var adminSvc = context.HttpContext.RequestServices.GetRequiredService<AdminSistemaService>();
+                await adminSvc.RegistrarAuditoriaAsync(
+                    "Desconocido",
+                    string.Empty,
+                    "Sin rol",
+                    "Autenticación",
+                    "Fallo de inicio de sesión Google OAuth",
+                    "OAuth2",
+                    "Error",
+                    $"Tipo de fallo: {context.Failure?.GetType().Name ?? "unknown"}",
+                    context.HttpContext.Connection.RemoteIpAddress?.ToString());
+
                 context.HandleResponse();
-                context.Response.Redirect("/login?error=google_oauth");
-                return Task.CompletedTask;
+                var errorCode = context.Failure?.Message?.Contains("desactivada", StringComparison.OrdinalIgnoreCase) == true
+                    ? "account_disabled"
+                    : "google_oauth";
+                context.Response.Redirect($"/login?error={errorCode}");
             };
         });
 }
@@ -243,11 +336,20 @@ builder.Services.AddScoped(sp =>
 // Avisos en tiempo real: una sola lista compartida por todas las pantallas conectadas
 builder.Services.AddSingleton<NotificacionService>();
 builder.Services.AddSingleton<MunicipiosColombiaService>();
+builder.Services.AddSingleton<SistemaMonitoreoService>();
+builder.Services.AddSingleton<ILoggerProvider>(sp => sp.GetRequiredService<SistemaMonitoreoService>());
+builder.Services.AddSingleton<AdminSistemaService>();
 
 // Revisa los vencimientos de documentos cada hora y crea los avisos
 builder.Services.AddHostedService<AlertasVencimientoWorker>();
 builder.Services.AddHostedService<AlertasSeguimientoWorker>();
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var adminBootstrap = scope.ServiceProvider.GetRequiredService<AdminSistemaService>();
+    await adminBootstrap.AsegurarCuentasYAdminInicialAsync();
+}
 
 if (string.IsNullOrWhiteSpace(supabaseConnection))
 {
@@ -275,6 +377,35 @@ app.UseStaticFiles();
 // 2. Middlewares de Autenticación y Autorización en el orden correcto
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Exige cambio obligatorio de contraseña inicial antes de abrir cualquier panel
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated == true &&
+        context.User.HasClaim("must_change_password", "true"))
+    {
+        var path = context.Request.Path.Value ?? "/";
+        var esRutaPermitida =
+            path.StartsWith("/recuperar", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("/Auth/", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("/_blazor", StringComparison.OrdinalIgnoreCase) ||
+            path.StartsWith("/_framework", StringComparison.OrdinalIgnoreCase) ||
+            path.Contains('.', StringComparison.Ordinal);
+
+        if (!esRutaPermitida)
+        {
+            var correo = context.User.FindFirstValue(ClaimTypes.Email) ?? string.Empty;
+            var adminSvc = context.RequestServices.GetRequiredService<AdminSistemaService>();
+            if (adminSvc.RequiereCambioContrasena(correo))
+            {
+                context.Response.Redirect("/recuperar?primerAcceso=true");
+                return;
+            }
+        }
+    }
+
+    await next();
+});
 
 app.UseAntiforgery();
 

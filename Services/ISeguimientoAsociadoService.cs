@@ -8,5 +8,7 @@ public interface ISeguimientoAsociadoService
 
     IReadOnlyCollection<SeguimientoAsociado> ObtenerTodos();
 
+    IReadOnlyCollection<SeguimientoAsociado> ObtenerPorAsociado(int asociadoId);
+
     ResultadoRegistroSeguimientoAsociado Registrar(SeguimientoAsociado seguimiento);
 }

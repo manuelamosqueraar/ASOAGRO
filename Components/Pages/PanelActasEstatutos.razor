@@ -1,7 +1,7 @@
 @page "/actas-estatutos"
 @page "/presidencia"
 @page "/panel-presidencia"
-@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Presidenta,Presidente")]
+@attribute [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Presidenta,Presidente,Administrador,Admin")]
 @rendermode InteractiveServer
 @using System.Security.Claims
 @using Microsoft.AspNetCore.Components.Authorization
@@ -899,9 +899,9 @@
 </div>
 
 @code {
-    private string nombrePresidente = "Juan Diego Padilla Moreno";
-    private string correoPresidente = "juan.padillamo@amigo.edu.co";
-    private string rolUsuario = "Presidente";
+    private string nombrePresidente = "Presidencia FAAUA";
+    private string correoPresidente = string.Empty;
+    private string rolUsuario = "Presidenta";
 
     private string pestanaActiva = "resumen";
     private string filtroAsociacion = "";
@@ -933,13 +933,14 @@
 
         nombrePresidente = user.Identity?.Name 
             ?? user.FindFirst(ClaimTypes.Name)?.Value 
-            ?? "Juan Diego Padilla Moreno";
+            ?? "Presidencia FAAUA";
 
         correoPresidente = user.FindFirst(ClaimTypes.Email)?.Value 
-            ?? "juan.padillamo@amigo.edu.co";
+            ?? string.Empty;
 
-        rolUsuario = user.IsInRole("Presidenta") ? "Presidenta" :
-                     user.IsInRole("Presidente") ? "Presidente" : "Presidente";
+        rolUsuario = user.IsInRole("Administrador") || user.IsInRole("Admin") ? "Administrador" :
+                     user.IsInRole("Presidenta") ? "Presidenta" :
+                     user.IsInRole("Presidente") ? "Presidente" : "Presidenta";
 
         await CargarDatosCompletos();
     }

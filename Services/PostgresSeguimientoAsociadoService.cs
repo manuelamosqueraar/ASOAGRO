@@ -23,6 +23,24 @@ public class PostgresSeguimientoAsociadoService(
             .OrderByDescending(seguimiento => seguimiento.FechaGestion)
             .ToList();
 
+        return NormalizarHoras(lista);
+    }
+
+    public IReadOnlyCollection<SeguimientoAsociado> ObtenerPorAsociado(int asociadoId)
+    {
+        using var context = dbContextFactory.CreateDbContext();
+        var lista = context.SeguimientosAsociados
+            .AsNoTracking()
+            .Include(seguimiento => seguimiento.Asociado)
+            .Where(seguimiento => seguimiento.AsociadoId == asociadoId)
+            .OrderByDescending(seguimiento => seguimiento.FechaGestion)
+            .ToList();
+
+        return NormalizarHoras(lista);
+    }
+
+    private static List<SeguimientoAsociado> NormalizarHoras(List<SeguimientoAsociado> lista)
+    {
         foreach (var seg in lista)
         {
             var desc = seg.Descripcion ?? string.Empty;
